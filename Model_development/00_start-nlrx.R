@@ -14,9 +14,8 @@ getwd()
 
 ## ---------------------------
 ## Options (plotting, memory limit, decimal digits)
-install.packages('unixtools', repos = 'http://www.rforge.net/')
-unixtools::set.tempdir("<path-to-temp-dir>")
-
+# install.packages('unixtools', repos = 'http://www.rforge.net/')
+# unixtools::set.tempdir("<path-to-temp-dir>")
 
 if(Sys.getenv("JAVA_HOME") == "") {
         Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
@@ -34,8 +33,9 @@ vignette(nlrx) # not available. Try:
 
 # Step 1: Create nl object
 netlogopath <- file.path("C:/Program Files/NetLogo 6.2.0")
-modelpath <- here("Model_Mayara2020", "BLT_model_2020.nlogo")
-outpath <- here("Model_development", "runtime")
+# modelpath <- here("Model_Mayara2020", "BLT_model_2020.nlogo")
+modelpath <- here("BLT_model.nlogo")
+outpath <- here("runtime")
 
 nl <- nl(nlversion = "6.2.0",
          nlpath = netlogopath,
