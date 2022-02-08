@@ -14,8 +14,6 @@ getwd()
 
 ## ---------------------------
 ## Options (plotting, memory limit, decimal digits)
-# install.packages('unixtools', repos = 'http://www.rforge.net/')
-# unixtools::set.tempdir("<path-to-temp-dir>")
 
 if(Sys.getenv("JAVA_HOME") == "") {
         Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
@@ -33,9 +31,9 @@ vignette(nlrx) # not available. Try:
 
 # Step 1: Create nl object
 netlogopath <- file.path("C:/Program Files/NetLogo 6.2.0")
-# modelpath <- here("Model_Mayara2020", "BLT_model_2020.nlogo")
-modelpath <- here("BLT_model.nlogo")
-outpath <- here("runtime")
+modelpath <- here("Model_development", "Model-cleaning", "BLT_model_2022-developm.nlogo")
+# modelpath <- here("Model_development", "BLT_model.nlogo")
+outpath <- here("Model_development", "Model-cleaning", "runtime")
 
 nl <- nl(nlversion = "6.2.0",
          nlpath = netlogopath,
@@ -47,13 +45,17 @@ report_model_parameters(nl)
 # Step 2: Attach an experiment
 # Let's say I want to test the energy related varibles from the model. That includes:
 # start_energy and energy from specific food items
-nl@experiment <- experiment(expname = "Guarei-Mayara_setup-experiment",
+expname = "Guarei-Mayara_setup-experiment"
+outpath = here("Model-development", "Model-cleaning", "runtime", expname)
+  
+nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
                             repetition = 1,
                             tickmetrics = "false", # I want tick_counts and no_days of the end of simulations
                             idsetup = "setup",
                             idgo = "run_days",
                             # idfinal = "",
+                            idrunnum = "nlrx_id",
                             runtime = 110, #(if = NA_integer_, define stopcond_)
                             # stopcond= x, # reporter that returns TRUE
                             evalticks = 110,
@@ -73,6 +75,10 @@ nl@experiment <- experiment(expname = "Guarei-Mayara_setup-experiment",
                             # 'energy-loss-resting' = list(min=0, max=15, qfun="qunif")
                             # 
                             constants = list("no_days" = 31,
+                                             # "working_dir" = as.character(outpath),
+                                             "simulation-time" = 108,
+                                             "show-energy?" = "false",
+                                             "show-path?" = "true",
                                              # "travel_speed",
                                              # "foraging_speed",
                                              # "foraging_time",
@@ -86,35 +92,11 @@ nl@experiment <- experiment(expname = "Guarei-Mayara_setup-experiment",
                                              )
                             )
 
-
-# 
-# # OR
-# nl@experiment <- experiment(expname = "Guarei-Mayara_setup-experiment",
-#                             outpath = outpath,
-#                             repetition = 1,
-#                             tickmetrics = "false",
-#                             idsetup = "setup",
-#                             idgo = "run_days",
-#                             runtime = (31*110),
-#                             evalticks = 110,
-#                             # metrics = c(list("turtles" = c("who", "pxcor", "pycor", "color",
-#                             #                                "energy", "steps-moved")
-#                             # )),
-#                             # variables = list('start-energy' = list(min=10, max=170, qfun="qunif")
-#                             # ),
-#                             # constants = list()
-#                             )
-
 # Step 3: Attach a simulation design.
 nl@simdesign <- simdesign_lhs(nl=nl,
-                              samples=30,
-                              nseeds=3,
+                              samples=1,
+                              nseeds=1,
                               precision=3)
-
-# nl@simdesign <- simdesign_simple(nl=nl,
-#                                  nseeds=3,
-#                                  )
-
 
 # Step 4: Run simulations
 # Evaluate nl object:
@@ -129,11 +111,7 @@ progressr::handlers("progress")
 results <- run_nl_one(nl,
                       seed = getsim(nl, "simseeds")[1],
                       siminputrow = 1)
-
-
-
-
-
+# This gives n_days = 1552
 
 
 # Step 5: Attach results to nl and run analysis
@@ -141,12 +119,19 @@ results <- run_nl_one(nl,
 # Attach results to nl object:
 setsim(nl, "simoutput") <- results
 
-# Write output to outpath of experiment within nl
-write_simoutput(nl)
+nl@experiment@metrics.turtles
+nl@experiment@variables
 
-# Do further analysis:
-analyze_nl(nl)
 
+
+#### Screening data ####
+results_unnest <- unnest_simoutput(nl)
+
+# Split tibble into turtles and patches tibbles and select each 10th step:
+results_unnest_turtles <- results_unnest %>% 
+  dplyr::filter(agent=="monkey")
+
+nl
 
 
 
