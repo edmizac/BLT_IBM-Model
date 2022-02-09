@@ -1,3 +1,6 @@
+; TO-DO:
+; bounds and scale: https://stackoverflow.com/questions/56317520/loading-gis-data-in-a-complex-netlogo-model
+
 extensions [gis]
 
 globals [scale bb-gis ]
@@ -119,7 +122,7 @@ CHOOSER
 study-area
 study-area
 "Guareí" "Suzano" "Taquara"
-2
+0
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -1,14 +1,13 @@
 ; ==== Black lion tamarin model ============
-; Eduardo Zanette & Ronald Bialozyt
+; Last change: August 2020
+; By Mayara Mulato and Ronald Bialozyt
 ; ------ -------- ------- -------- -------- ------
-; Code by Mayara and Ronald:
 ; feeding trees available according to phenology
 ; simulated resting and sleeping trees
 ; ------------------------------------------------
 
 extensions [ gis ] ; using the GIS extension of NetLogo
 
-;; BREEDS ;;
 ; trees
 breed [feeding-trees feeding-tree]
 feeding-trees-own [ species id-tree ] ; feeding trees have species and id code
@@ -38,32 +37,27 @@ monkeys-own [
   seed_mem_list ; list of timesteps since the tamarin ate the seed
   seed_add_list ; helper list to increase the mem list
 ]
-
-;; GLOBALS ;;
+; globals
 globals [
   timestep ; step counter during one day
   day  ; present day in the simulation
+  output-locations ; base filename for the result files
+  output-seeds-locations ; base filename for the seeds results files
+  output-rest-locations ; base filename for data from the simulated resting trees
+  output-sleep-locations ; base filename for data from the simulated sleeping trees
+  output-trees-locations ; base filename to check the geo coordinates for feeding trees
+  tree-file ; filename with the tree location and type
   scale ; to fit the data to the simulation area
   meanxcoord ; translating the geo coordinates to world coordinates
   meanycoord ; translating the geo coordinates to world coordinates
   input_forget ; amount of timesteps until the tamarin forgets to be in that tree
   midday ; the time of the middle of the day (important for resting)
-
-  ;; INPUT ;;
-  tree-file ; filename with the tree location and type
   gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
   travel_speed ; global speed for travel
   foraging_speed ; global speed for foraging
 ; foraging_time ; global for how long the tamarins should spend on foraging (3 timesteps)
   species_time ; how long the tamarin feeds on the tree species
   energy_species ; value of energy they get from feeding of each species
-
-  ;; OUTPUT ;;
-  output-locations ; base filename for the result files
-  output-seeds-locations ; base filename for the seeds results files
-  output-rest-locations ; base filename for data from the simulated resting trees
-  output-sleep-locations ; base filename for data from the simulated sleeping trees
-  output-trees-locations ; base filename to check the geo coordinates for feeding trees
 ]
 ;--------------------------------------------------------------------------------
 ; SETTING UP
@@ -71,48 +65,21 @@ globals [
 to setup
   clear-all
   setup-patches
-  setup-gis
-  setup-trees
-  setup-monkeys
-
-  create-legend
-  set input_forget 18
-  set day 1
-  set midday 58
-  set gut_transit_time 18
-  set travel_speed 0.7
-  set foraging_speed 0.5
-  set species_time 3
-
-  ;; OUTPUT ;;
-set output-locations word ( runtime ) "locations_monkey.txt"
-  if ( file-exists? output-locations ) [ file-delete output-locations ]
-set output-seeds-locations word ( runtime ) "locations_seeds.txt"
-  if ( file-exists? output-seeds-locations ) [ file-delete output-seeds-locations ]
-set output-trees-locations word ( runtime ) "locations_trees.txt"
-  if ( file-exists? output-trees-locations ) [ file-delete output-trees-locations ]
-set output-rest-locations word ( runtime ) "locations_rest.txt"
-  if ( file-exists? output-rest-locations ) [ file-delete output-rest-locations ]
-set output-sleep-locations word ( runtime ) "locations_sleep.txt"
-  if ( file-exists? output-sleep-locations ) [ file-delete output-sleep-locations ]
-
-  reset-ticks
-end
-
-;--- patch -----------------------------------------------------------------
-to setup-patches
-  ask patches [set pcolor yellow + 4]
-end
-
-; GIS
-to setup-gis
-  set scale 32 ; scale-size. Is this being used?
+  set scale 32 ; scale-size
   let mcp-gis gis:load-dataset "poligono_matriz.shp" ; area containing fragment and matrix
   let trees-gis gis:load-dataset "bbox_certo_buffer.shp" ; home range bounding box
   let bb-gis gis:load-dataset "polig_fragmento.shp" ; fragment/study area polygon
   let all-gis gis:load-dataset "all_trees_shape.shp" ; points shape for the all the trees
-
-  gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
+  ; load tree-file according to scenario
+  ; set tree-file "trees_all_2.txt" ; all trees for the 5 months (153 days, tree types: 1-9, 10 resting, 11 sleeping)
+  ; set tree-file "trees_all_1.txt" ; all trees for the 5 months without rest and sleeping sites (153 days, tree types: 1-9)
+  ; set tree-file "trees_april_1.txt" ; for April simulation (30 days - tree types: 1,7,9)
+  ; set tree-file "trees_may_1.txt" ; for May (31 days - tree types: 2,6,7,9)
+  ; set tree-file "trees_june_1.txt" ; for June (30 days - tree types: 3,6,7,8,9)
+   set tree-file "trees_july_1.txt" ; for July (31 days - tree types: 4,8,9)
+  ; set tree-file "trees_aug_1.txt" ; for August (31 days - tree types: 5,8,9)
+  set input_forget 18
+  gis:set-world-envelope (gis:envelope-of bb-gis)
   gis:set-drawing-color lime + 3
   gis:draw mcp-gis 2
   gis:set-drawing-color yellow
@@ -121,8 +88,42 @@ to setup-gis
   foreach gis:feature-list-of all-gis [ vector-feature ->
     gis:set-drawing-color scale-color lime (gis:property-value vector-feature "id") 500 1
     gis:fill vector-feature 2.0 ]
+  setup-trees
+  create-legend
+  setup-monkeys
+  set day 1
+  set midday 58
+  set gut_transit_time 18
+  set travel_speed 0.7
+  set foraging_speed 0.5
+  set species_time 3
+; set foraging_time 3
+  set output-locations "monkey_locations.txt"
+  set output-seeds-locations "locations_seeds.txt"
+  set output-rest-locations "locations_rest.txt"
+  set output-sleep-locations "locations_sleep.txt"
+  set output-trees-locations "locations_trees.txt"
+  if file-exists? output-locations [
+    file-delete output-locations
+  ]
+  if file-exists? output-seeds-locations [
+    file-delete output-seeds-locations
+  ]
+  if file-exists? output-rest-locations [
+    file-delete output-rest-locations
+  ]
+   if file-exists? output-sleep-locations [
+    file-delete output-sleep-locations
+  ]
+   if file-exists? output-trees-locations [
+    file-delete output-trees-locations
+  ]
+  reset-ticks
+end
 
-  ; transform
+;--- patch -----------------------------------------------------------------
+to setup-patches
+  ask patches [set pcolor yellow + 4]
 end
 
 ;---- trees ----------------------------------------------------------------
@@ -134,17 +135,7 @@ to setup-trees
   let tree-type 0 ; phenology types
   let tree-id-tree 0
 
-  ;; INPUT ;;
-  ; load tree-file according to tree-scenario chooser
-  if ( tree-scenario = "trees_all_1" )   [ set tree-file "trees_all_1.shp" ]   ; for simulated sleeping and resting trees; all trees for the 5 months without rest and sleeping sites (153 days, tree types: 1-9)
-  if ( tree-scenario = "trees_all_2" )   [ set tree-file "trees_all_2.shp" ]   ; for real-data sleeping and resting trees; all trees for the 5 months (153 days, tree types: 1-9 = feeding, 10 = resting, 11 = sleeping)
-  if ( tree-scenario = "trees_april_1" ) [ set tree-file "trees_april_1.shp" ] ; for April simulation (30 days - tree types: 1,7,9)
-  if ( tree-scenario = "trees_may_1" )   [ set tree-file "trees_may_1.shp" ]   ; for May (31 days - tree types: 2,6,7,9)
-  if ( tree-scenario = "trees_june_1" )  [ set tree-file "trees_june_1.shp" ]  ; for June (30 days - tree types: 3,6,7,8,9)
-  if ( tree-scenario = "trees_july_1" )  [ set tree-file "trees_july_1.shp" ]  ; for July (31 days - tree types: 4,8,9)
-  if ( tree-scenario = "trees_aug_1" )   [ set tree-file "trees_aug_1.shp" ]   ; for August (31 days - tree types: 5,8,9)
-
-  let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
+  let trees-gis gis:load-dataset "trees_july_1.shp" ; points shape for the all trees (same name as tree-file)
   foreach gis:feature-list-of trees-gis [ vector-feature ->
     let location gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
     set tree-type gis:property-value vector-feature "type"
@@ -225,16 +216,12 @@ to setup-monkeys
     set shape "banana"
     set size 2
     set Color yellow
-
-    if sleeping-trees-scenario = "empirical" [
-      ; remove when simulating resting and sleeping sites:
-      let start one-of sleeping-trees
-      setxy [xcor] of start [ycor] of start
-    ]
-
+; remove when simulating resting and sleeping sites:
+    ;let start one-of sleeping-trees
+    ;setxy [xcor] of start [ycor] of start
+; -----------------
     set status "none"
     set energy start-energy
-
     ; create empty lists
     set tree_ate_list []
     set tree_mem_list []
@@ -243,7 +230,6 @@ to setup-monkeys
     set seed_ate_list []
     set seed_mem_list []
     set seed_add_list []
-
     ; fill the potential feeding tree list
     let let_pot_list []
     ask feeding-trees [
@@ -267,6 +253,11 @@ end
 ; Activities commands
 ;--------------------------------------------------------------------------------------------
 to go
+
+;  if (day = no_days) [
+;    stop
+;    ;setup
+;  ]
 
   if all? monkeys [status = "sleeping"] [
     ask monkeys [
@@ -300,9 +291,7 @@ to move-monkeys
     if timestep = 1
     [ morning-defecation
       set energy start-energy ]
-
-    ;; BLT ROUTINE
-    ifelse timestep > simulation-time [ ; if the day is over  ; MAYARA CODE WAS SENDING TAMARINS TO SLEEPING-TREES ONLY IN THE LAST STEP
+    ifelse timestep > simulation-time [ ; if the day is over
       set action "to sleeping tree"
       sleeping
     ][ ; energy levels: level 1 = 80 and level 2 = 150
@@ -608,23 +597,22 @@ end
 ;---------------------------------------------------------------------------------------------
 ; Sleeping commands
 ;---------------------------------------------------------------------------------------------
-;; MAYARA CODE:
 to sleeping
   ifelse tree_target = 0 and tree_current = 0 [
-   search-sleeping-tree     ; when simulating trees  ; ONLY WORKS WITH THIS PROCEDURE
-   ;search-sleeping-defined ; when using field trees ; WITH THIS IT DOES NOT
+   search-sleeping-tree ; when simulating trees
+   ;search-sleeping-defined ; when using field trees
   ][
-;    set steps-moved steps-moved + 1
-;    set energy energy + energy-loss-traveling
-;      set tree_current tree_target
-;      set tree_target 0
-;      set status "sleeping"
-;      set action ""
-;      ; trees in the tree_ate_list[] had to get back to the tree_pot_list[]
-;      while [length tree_ate_list > 0] [
-;        set tree_pot_list lput first tree_ate_list tree_pot_list
-;        set tree_ate_list remove (first tree_ate_list) tree_ate_list
-;      ]
+    set steps-moved steps-moved + 1
+    set energy energy + energy-loss-traveling
+      set tree_current tree_target
+      set tree_target 0
+      set status "sleeping"
+      set action ""
+      ; trees in the tree_ate_list[] had to get back to the tree_pot_list[]
+      while [length tree_ate_list > 0] [
+        set tree_pot_list lput first tree_ate_list tree_pot_list
+        set tree_ate_list remove (first tree_ate_list) tree_ate_list
+      ]
       set tree_mem_list []
       set tree_add_list []
       output
@@ -644,20 +632,18 @@ end
 ;----- activate when simulating sleeping trees --------------
 to search-sleeping-tree
 
-;; NOT SURE FOR WHAT THIS CODE IS
-;  let n random 100
-;  ifelse n <= 15 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 1 ] [forward 1 ]]
-;  [ ifelse n <= 30 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 2 ] [ forward 2 ]]
-;    [ ifelse n <= 50 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 3.5 ][ forward 3.5 ]]
-;      [ ifelse n <= 70 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 4 ][ forward 4 ]]
-;        [ ifelse n <= 85 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 6 ][ forward 6 ]]
-;          [ if n <= 100 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 8 ][ forward 8 ]]
-;          ]
-;        ]
-;      ]
-;    ]
-;  ]
-
+let n random 100
+  ifelse n <= 15 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 1 ] [forward 1 ]]
+  [ ifelse n <= 30 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 2 ] [ forward 2 ]]
+    [ ifelse n <= 50 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 3.5 ][ forward 3.5 ]]
+      [ ifelse n <= 70 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 4 ][ forward 4 ]]
+        [ ifelse n <= 85 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 6 ][ forward 6 ]]
+          [ if n <= 100 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 8 ][ forward 8 ]]
+          ]
+        ]
+      ]
+    ]
+  ]
   ;forward travel_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-loss-traveling
@@ -670,7 +656,7 @@ to search-sleeping-tree
         set species "sleeptree"
         set id-tree who
   ]
-  ;set tree_target sleeping-trees-here ;; sleeping-trees-here does not exist anywhere else
+  set tree_target sleeping-trees-here
   set status "sleeping"
 end
 
@@ -784,24 +770,23 @@ to next_day
   output-type "===== Day: "
   output-type day
   output-print " ====="
-;  if day > 99 [
-;    set output-locations word "monkey_locations-day_" day
-;    set output-locations word output-locations ".txt"
-;  ]
-;  ifelse day > 9 [
-;    set output-locations word "monkey_locations-day_0" day
-;    set output-locations word output-locations ".txt"
-;  ]
-;  [
-;    set output-locations word "monkey_locations-day_00" day
-;    set output-locations word output-locations ".txt"
-;  ]
-;  if file-exists? output-locations [ file-delete output-locations ]
+  if day > 99 [
+    set output-locations word "monkey_locations-day_" day
+    set output-locations word output-locations ".txt"
+  ]
+  ifelse day > 9 [
+    set output-locations word "monkey_locations-day_0" day
+    set output-locations word output-locations ".txt"
+  ]
+  [
+    set output-locations word "monkey_locations-day_00" day
+    set output-locations word output-locations ".txt"
+  ]
+  if file-exists? output-locations [ file-delete output-locations ]
   ask monkeys [
     set status "none"
     set action-time 0
   ]
-
   loop [
     if all? monkeys [status = "sleeping"][
       ask monkeys [ set tree_target  0 ]
@@ -821,6 +806,7 @@ to run_days
   write-rest
   write-sleep
   write-trees
+
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -838,6 +824,7 @@ end
 
 ;---------------------------------------------------------------
 to write-to-file
+
   file-open output-locations
   file-write ticks
   foreach sort monkeys [ ?1 ->
@@ -858,12 +845,10 @@ end
 
 ;-----------------------------------------------------------------
 to write-seeds
-  file-open output-seeds-locations
+ file-open output-seeds-locations
   file-write ticks
   foreach sort seeds [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
       file-write id-seed
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
@@ -877,12 +862,10 @@ end
 
 ;---------------------------------------------------------------
 to write-trees
-  file-open output-trees-locations
+ file-open output-trees-locations
   file-write ticks
   foreach sort feeding-trees [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
       file-write species
@@ -895,12 +878,10 @@ end
 
 ;---------------------------------------------------------------
 to write-rest
-  file-open output-rest-locations
+ file-open output-rest-locations
   file-write ticks
   foreach sort resting-trees [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
       file-write species
@@ -913,12 +894,10 @@ end
 
 ;---------------------------------------------------------------
 to write-sleep
-  file-open output-sleep-locations
+file-open output-sleep-locations
   file-write ticks
   foreach sort sleeping-trees [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
       file-write species
@@ -968,17 +947,17 @@ start-energy
 start-energy
 0
 170
-63.0
+60.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-714
-47
-788
-89
+759
+42
+826
+75
 RESET
 setup
 NIL
@@ -1062,7 +1041,7 @@ simulation-time
 simulation-time
 0
 170
-106.0
+108.0
 1
 1
 NIL
@@ -1152,10 +1131,10 @@ NIL
 1
 
 INPUTBOX
-808
-17
-884
-77
+962
+122
+1038
+182
 no_days
 4.0
 1
@@ -1171,7 +1150,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-4.6
+5.4
 0.1
 1
 NIL
@@ -1186,7 +1165,7 @@ energy-loss-traveling
 energy-loss-traveling
 -10
 0
--2.0
+-1.6
 0.1
 1
 NIL
@@ -1201,7 +1180,7 @@ energy-loss-foraging
 energy-loss-foraging
 -10
 0
--2.2
+-1.3
 0.1
 1
 NIL
@@ -1223,10 +1202,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-895
-24
-971
-69
+962
+45
+1038
+90
 timestep
 timestep
 17
@@ -1248,37 +1227,6 @@ TEXTBOX
 Tamarin
 12
 0.0
-1
-
-INPUTBOX
-700
-612
-1107
-698
-runtime
-\\runtime\\
-1
-0
-String
-
-CHOOSER
-925
-87
-1068
-132
-tree-scenario
-tree-scenario
-"trees_all_1" "trees_all_2" "trees_april_1" "trees_may_1" "trees_june_1" "trees_july_1" "trees_aug_1"
-1
-
-CHOOSER
-930
-146
-1084
-191
-sleeping-trees-scenario
-sleeping-trees-scenario
-"empirical" "simulated"
 1
 
 @#$#@#$#@

@@ -30,12 +30,12 @@ vignette(nlrx) # not available. Try:
 # https://docs.ropensci.org/nlrx/articles/getstarted.html
 
 # Step 1: Create nl object
-netlogopath <- file.path("C:/Program Files/NetLogo 6.2.0")
+netlogopath <- file.path("C:/Program Files/NetLogo 6.0.3")
 modelpath <- here("Model_development", "Model-cleaning", "BLT_model_2022-developm.nlogo")
-# modelpath <- here("Model_development", "BLT_model.nlogo")
+# modelpath <- here("Model_development", "Model-cleaning",  "BLT_model_2020_Ronald.nlogo")
 outpath <- here("Model_development", "Model-cleaning", "runtime")
 
-nl <- nl(nlversion = "6.2.0",
+nl <- nl(nlversion = "6.0.3",
          nlpath = netlogopath,
          modelpath = modelpath,
          jvmmem = 4096)
@@ -45,8 +45,9 @@ report_model_parameters(nl)
 # Step 2: Attach an experiment
 # Let's say I want to test the energy related varibles from the model. That includes:
 # start_energy and energy from specific food items
+
+# Simple design
 expname = "Guarei-Mayara_setup-experiment"
-outpath = here("Model-development", "Model-cleaning", "runtime", expname)
   
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
@@ -55,18 +56,19 @@ nl@experiment <- experiment(expname = expname,
                             idsetup = "setup",
                             idgo = "run_days",
                             # idfinal = "",
-                            idrunnum = "nlrx_id",
-                            runtime = 110, #(if = NA_integer_, define stopcond_)
+                            # idrunnum = "nlrx_id",
+                            runtime = 108, #(if = NA_integer_, define stopcond_)
                             # stopcond= x, # reporter that returns TRUE
-                            evalticks = 110,
+                            evalticks = 108,
                             # reporters:
                             metrics = c("count sleeping-trees", "count resting-trees"), # e.g. "count sheep" or "count patches with [pcolor = green]"
                             metrics.turtles = list("monkeys" = c("who", "pxcor", "pycor", 
                                                                  "energy", "steps-moved")), # "who" "color"
                             # metrics.patches = c(c("pxcor", "pycor", "pcolor"))),
                             # global variables:
-                            variables = list('start-energy' = list(min=10, max=170, step = 1, qfun="qunif")
-                                             ),
+                            # variables = list('start-energy' = list(min=10, max=170, step = 10, qfun="qunif")
+                            #                  ),
+                            variables = list(),
                             # ,
                             # 'energy-from-seeds' = list(min=0, max=15, qfun="qunif"),
                             # 'energy-from-prey' = list(min=0, max=15, qfun="qunif"),
@@ -74,8 +76,11 @@ nl@experiment <- experiment(expname = expname,
                             # 'energy-loss-foraging' = list(min=0, max=15, qfun="qunif"),
                             # 'energy-loss-resting' = list(min=0, max=15, qfun="qunif")
                             # 
-                            constants = list("no_days" = 31,
-                                             # "working_dir" = as.character(outpath),
+                            constants = list("no_days" = 4,
+                                             'runtime' = "/runtime/",
+                                             'tree-scenario' = "trees_all_2",
+                                             'sleeping-trees-scenario' = "simulated",
+                                             'start-energy' = 70,
                                              "simulation-time" = 108,
                                              "show-energy?" = "false",
                                              "show-path?" = "true",
@@ -93,10 +98,15 @@ nl@experiment <- experiment(expname = expname,
                             )
 
 # Step 3: Attach a simulation design.
-nl@simdesign <- simdesign_lhs(nl=nl,
-                              samples=1,
-                              nseeds=1,
-                              precision=3)
+# Simple
+nl@simdesign <- simdesign_simple(nl,
+                                 nseeds = 1)
+
+# LHS
+# nl@simdesign <- simdesign_lhs(nl=nl,
+#                               samples=1,
+#                               nseeds=1,
+#                               precision=3)
 
 # Step 4: Run simulations
 # Evaluate nl object:
@@ -104,8 +114,8 @@ eval_variables_constants(nl) # energy variables not recognized a constants?
 print(nl)
 
 # Run all simulations (loop over all siminputrows and simseeds)
-progressr::handlers("progress")
-results <- run_nl_all(nl)
+# progressr::handlers("progress")
+# results <- run_nl_all(nl)
 
 progressr::handlers("progress")
 results <- run_nl_one(nl,
