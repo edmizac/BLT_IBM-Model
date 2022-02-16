@@ -59,12 +59,16 @@ globals [
   energy_species ; value of energy they get from feeding of each species
 
   ;; OUTPUT ;;
-  output-locations ; base filename for the result files
-  output-seeds-locations ; base filename for the seeds results files
+  output-locations ; base filename for the monkey locations
+  output-seeds-locations ; base filename for the seed locations
   output-rest-locations ; base filename for data from the simulated resting trees
   output-sleep-locations ; base filename for data from the simulated sleeping trees
   output-trees-locations ; base filename to check the geo coordinates for feeding trees
 ]
+
+
+
+
 ;--------------------------------------------------------------------------------
 ; SETTING UP
 ;--------------------------------------------------------------------------------
@@ -75,6 +79,8 @@ to setup
   setup-trees
   setup-monkeys
 
+  output-files
+
   create-legend
   set input_forget 18
   set day 1
@@ -84,22 +90,10 @@ to setup
   set foraging_speed 0.5
   set species_time 3
 
-  ;; OUTPUT ;;
-set output-locations word ( runtime ) "locations_monkey.txt"
-  if ( file-exists? output-locations ) [ file-delete output-locations ]
-set output-seeds-locations word ( runtime ) "locations_seeds.txt"
-  if ( file-exists? output-seeds-locations ) [ file-delete output-seeds-locations ]
-set output-trees-locations word ( runtime ) "locations_trees.txt"
-  if ( file-exists? output-trees-locations ) [ file-delete output-trees-locations ]
-set output-rest-locations word ( runtime ) "locations_rest.txt"
-  if ( file-exists? output-rest-locations ) [ file-delete output-rest-locations ]
-set output-sleep-locations word ( runtime ) "locations_sleep.txt"
-  if ( file-exists? output-sleep-locations ) [ file-delete output-sleep-locations ]
-
   reset-ticks
 end
 
-;--- patch -----------------------------------------------------------------
+; PATCHES
 to setup-patches
   ask patches [set pcolor yellow + 4]
 end
@@ -125,7 +119,7 @@ to setup-gis
   ; transform
 end
 
-;---- trees ----------------------------------------------------------------
+; TREES
 to setup-trees
   let number 0
   let xcoord 0
@@ -180,7 +174,7 @@ to setup-trees
   ]
 end
 
-;---- legend ------------------------------------------------------------------------
+; LEGEND
 to create-legend
 
    create-legend-trees 1 [ ; tamarin
@@ -215,7 +209,8 @@ to create-legend
     ]
 
 end
-;---- tamarin ----------------------------------------------------------------------
+
+; TAMARINS
 to setup-monkeys
 
   create-monkeys 1
@@ -263,6 +258,52 @@ to setup-monkeys
     [ set pen-mode "up" ]
   ] ; end ask monkeys
 end
+
+to output-files
+  ;; OUTPUT FILE NAMES
+  set output-locations word ( runtime ) "locations_monkey.txt"               ;; word (date-and-time "_" "e-" start-energy) for adding the day and start-energy to the filename
+  set output-seeds-locations word ( runtime ) "locations_seeds.txt"
+  set output-trees-locations word ( runtime ) "locations_trees.txt"
+  set output-rest-locations word ( runtime ) "locations_rest.txt"
+  set output-sleep-locations word ( runtime ) "locations_sleep.txt"
+
+  ;; CHECK MILLES ET AL 2020 FOR NOT NEEDING TO DELETE FILES
+  if ( file-exists? output-locations ) [ file-delete output-locations ]
+  if ( file-exists? output-seeds-locations ) [ file-delete output-seeds-locations ]
+  if ( file-exists? output-trees-locations ) [ file-delete output-trees-locations ]
+  if ( file-exists? output-rest-locations ) [ file-delete output-rest-locations ]
+  if ( file-exists? output-sleep-locations ) [ file-delete output-sleep-locations ]
+
+  ;; DEFINE OUTPUT FILE HEADERS
+  file-open output-locations
+;  file-print (word "ticks" "," "day" "," "timestep" "," "x" "," "y" "," "energy" "," "status" "," "action") ;; FOR CSV
+  file-print (word " " "ticks" " " "day" " " "timestep" " " "x" " " "y" " " "energy" " " "status" " " "action") ;; FOR TXT
+  file-close
+
+  file-open output-seeds-locations
+;  file-print ("id-seed" "," ) ;; FOR CSV
+  file-print (word " " "id-seed" " " "x" " " "y" " " "species" " " "mother-tree") ;; FOR TXT
+  file-close
+
+  file-open output-trees-locations
+;  file-print ("x" "," ) ;; FOR CSV
+  file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
+  file-close
+
+  file-open output-rest-locations
+;  file-print ("x" "," ) ;; FOR CSV
+  file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
+  file-close
+
+  file-open output-sleep-locations
+;  file-print ("x" "," ) ;; FOR CSV
+  file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
+  file-close
+
+end
+
+
+
 ;--------------------------------------------------------------------------------------------
 ; Activities commands
 ;--------------------------------------------------------------------------------------------
@@ -276,19 +317,79 @@ to go
     set day day + 1
     stop
   ]
-  if timestep = simulation-time [
-    ask monkeys [
-      set status "night"
-      set action ""
-      set tree_target 0
-      set tree_current 0
-    ]
-  ]
+
   move-monkeys
   set timestep timestep + 1
   tick
-  write-to-file
+  write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day(), BUT IT CAN'T BE COMMENTED OUT FROM HERE, JUST THERE
 end
+
+
+;-------------------------------------------------------------
+to run_days
+
+  repeat no_days [ next_day ]
+  write-seeds
+  write-rest
+  write-sleep
+  write-trees
+end
+
+;-------------------------------------------------------------
+to next_day
+
+; export the landscape as a .png if neccessary  (= Milles et al 2020)
+  if day = no_days AND export-png = TRUE [
+   let file-id random 9999
+   let world-name (word runtime no_days "_" "e-" start-energy "_" file-id "_world.png") ; date-and-time
+   export-view world-name
+;   export-interface world-name
+  ]
+
+  set timestep 0
+
+  ;; DEBUGGING
+  output-type "===== Day: "
+  output-type day
+  output-print " ====="
+  output-type "*simulation-time* "
+  output-type simulation-time
+  output-print " ----"
+  ask monkeys [
+;    output-type "action-time "
+;    output-print action-time
+    output-type "energy "
+    output-print energy
+  ]
+
+
+  ;; STOP CONDITION ;; NOT NECESSARY BECAUSE THE CODE RUNS repeat run_days
+  if simulation-time-end = TRUE [
+    stop
+    reset-ticks
+  ]
+
+
+  ask monkeys [
+    set status "none"
+    set action-time 0
+  ]
+
+  loop [
+    if all? monkeys [status = "sleeping"][
+      ask monkeys [ set tree_target  0 ]
+      set day day + 1
+      stop
+    ]
+    go
+
+  ]
+
+  ;write-to-file
+
+end
+
+
 ;-------------------------------------------------------------------------------
 
 to move-monkeys
@@ -298,25 +399,38 @@ to move-monkeys
     if patch-ahead pcolor = yellow + 4 [ right 180 forward 0.5 ] ; no use of the matrix
     if energy < 1 [die]
     if timestep = 1
-    [ morning-defecation
+    [ morning-defecation                 ;; MORNING-DEFECATION PROCEDURE
       set energy start-energy ]
 
-    ;; BLT ROUTINE
-    ifelse timestep > simulation-time [ ; if the day is over  ; MAYARA CODE WAS SENDING TAMARINS TO SLEEPING-TREES ONLY IN THE LAST STEP
+  ;; BLT ROUTINE
+
+    if timestep = simulation-time [ ; if the day is in the end  ; MAYARA HAS LET THIS IN THE SETUP BEFORE move-monkeys PROCEDURE
+      ask monkeys [
+        set status "night"
+        set action ""
+        set tree_target 0
+        set tree_current 0
+      ]
+    ]
+
+    ;; ASK RONALD: WHY KEEPING THIS AS IFELSE MAKES THE MODEL RUN INFINETLY
+    if timestep > simulation-time [ ; if the day is over and if not  ; MAYARA CODE WAS SENDING TAMARINS TO SLEEPING-TREES ONLY IN THE LAST STEP
       set action "to sleeping tree"
-      sleeping
-    ][ ; energy levels: level 1 = 80 and level 2 = 150
+      sleeping                           ;; SLEEPING PROCEDURE
+    ]
+
+    if timestep < simulation-time [ ; energy levels: level 1 = 80 and level 2 = 150
       ifelse energy > 80 [
         ifelse (status = "hungry" or status = "none") [
           ifelse energy > 150 [ ; energy > level 2 ==> other activities
             ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
               if status != "resting" [ set tree_target 0 set tree_current 0 ]
               set status "resting"
-              resting
+              resting                    ;; RESTING PROCEDURE
             ][
               set tree_target 0
-              random-action
-            ]
+              random-action              ;; RANDOM-ACTION PROCEDURE
+             ]
       ][ ; 80 < energy < 150
               ifelse action = "on feeding tree" [
               ifelse random (2 * species_time) > action-time [
@@ -329,20 +443,20 @@ to move-monkeys
 
                 let let_pot_list tree_pot_list
                 set tree_current 0
-                to-feeding-tree
+                to-feeding-tree          ;; TO-FEEDING-TREE PROCEDURE
               ]
             ][
-                to-feeding-tree
+                to-feeding-tree          ;; TO-FEEDING-TREE PROCEDURE
               ]
           ]
         ][ ; status != "hungry"
           ifelse random (2 * 5) > action-time [ ; action time for other than feeding
             set action-time action-time + 1
-            last-action-again
+            last-action-again            ;; LAST-ACTION-AGAIN PROCEDURE
           ][
             set action-time 0
             set tree_target 0
-            change-bonus
+            change-bonus                 ;; CHANGE-BONUS PROCEDURE
           ]
         ]
       ][ ; energy < 80 (level 1)
@@ -350,7 +464,7 @@ to move-monkeys
         ifelse action = "on feeding tree" [
           ifelse random (2 * species_time) > action-time [
             set action-time action-time + 1
-            feeding
+            feeding                      ;; FEEDING PROCEDURE
           ][
             set action-time 0
             set tree_ate_list lput [who] of tree_current tree_ate_list
@@ -359,14 +473,14 @@ to move-monkeys
 
             let let_pot_list tree_pot_list
             set tree_current 0
-            to-feeding-tree
+            to-feeding-tree              ;; TO-FEEDING TREE PROCEDURE
           ]
         ][
-          to-feeding-tree
+          to-feeding-tree                ;; TO-FEEDING TREE PROCEDURE
         ]
       ]
-      forget_trees
-      defecation
+      forget_trees                       ;; FORGET_TREES PROCEDURE
+      defecation                         ;; DEFECATION PROCEDURE
     ] ; end of daily routine
 
  ; for the display
@@ -627,7 +741,7 @@ to sleeping
 ;      ]
       set tree_mem_list []
       set tree_add_list []
-      output
+      output-day-stats
   ]
 end
 
@@ -644,19 +758,19 @@ end
 ;----- activate when simulating sleeping trees --------------
 to search-sleeping-tree
 
-;; NOT SURE FOR WHAT THIS CODE IS
-;  let n random 100
-;  ifelse n <= 15 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 1 ] [forward 1 ]]
-;  [ ifelse n <= 30 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 2 ] [ forward 2 ]]
-;    [ ifelse n <= 50 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 3.5 ][ forward 3.5 ]]
-;      [ ifelse n <= 70 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 4 ][ forward 4 ]]
-;        [ ifelse n <= 85 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 6 ][ forward 6 ]]
-;          [ if n <= 100 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 8 ][ forward 8 ]]
-;          ]
-;        ]
-;      ]
-;    ]
-;  ]
+; THIS CODE IS WHAT BASICALLY MAKES TAMARINS MOVE OUT OF WHERE THEY ARE AND GO TO OTHER PART OF THE HOME RANGE
+  let n random 100
+  ifelse n <= 15 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 1 ] [forward 1 ]]
+  [ ifelse n <= 30 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 2 ] [ forward 2 ]]
+    [ ifelse n <= 50 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 3.5 ][ forward 3.5 ]]
+      [ ifelse n <= 70 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 4 ][ forward 4 ]]
+        [ ifelse n <= 85 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 6 ][ forward 6 ]]
+          [ if n <= 100 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 8 ][ forward 8 ]]
+          ]
+        ]
+      ]
+    ]
+  ]
 
   ;forward travel_speed
   set steps-moved steps-moved + 1
@@ -760,6 +874,8 @@ to change-bonus
   last-action-again
 end
 
+
+
 ;---------------------------------------------------------------------------------------------
 ; Extra commands
 ;---------------------------------------------------------------------------------------------
@@ -778,55 +894,13 @@ to forget_trees
   set tree_mem_list (map + tree_add_list tree_mem_list)
 end
 
-;-------------------------------------------------------------
-to next_day
-  set timestep 0
-  output-type "===== Day: "
-  output-type day
-  output-print " ====="
-;  if day > 99 [
-;    set output-locations word "monkey_locations-day_" day
-;    set output-locations word output-locations ".txt"
-;  ]
-;  ifelse day > 9 [
-;    set output-locations word "monkey_locations-day_0" day
-;    set output-locations word output-locations ".txt"
-;  ]
-;  [
-;    set output-locations word "monkey_locations-day_00" day
-;    set output-locations word output-locations ".txt"
-;  ]
-;  if file-exists? output-locations [ file-delete output-locations ]
-  ask monkeys [
-    set status "none"
-    set action-time 0
-  ]
 
-  loop [
-    if all? monkeys [status = "sleeping"][
-      ask monkeys [ set tree_target  0 ]
-      set day day + 1
-      stop
-    ]
-    go
-  ]
-  write-to-file
-end
 
-;-------------------------------------------------------------
-to run_days
-
-  repeat no_days [ next_day ]
-  write-seeds
-  write-rest
-  write-sleep
-  write-trees
-end
 
 ;---------------------------------------------------------------------------------------------
 ; Output commands
 ;---------------------------------------------------------------------------------------------
-to output
+to output-day-stats
 
   output-type "steps-moved "
   output-print steps-moved
@@ -839,9 +913,9 @@ end
 ;---------------------------------------------------------------
 to write-to-file
   file-open output-locations
-  file-write ticks
   foreach sort monkeys [ ?1 ->
     ask ?1 [
+      file-write ticks
       file-write day
       file-write timestep
       ; write back the true geographical coordinates
@@ -859,11 +933,11 @@ end
 ;-----------------------------------------------------------------
 to write-seeds
   file-open output-seeds-locations
-  file-write ticks
   foreach sort seeds [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
+      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
+      file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
+      file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
       file-write id-seed
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
@@ -878,11 +952,11 @@ end
 ;---------------------------------------------------------------
 to write-trees
   file-open output-trees-locations
-  file-write ticks
   foreach sort feeding-trees [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
+      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
+      ;file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
+      ;file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
       file-write species
@@ -896,11 +970,11 @@ end
 ;---------------------------------------------------------------
 to write-rest
   file-open output-rest-locations
-  file-write ticks
   foreach sort resting-trees [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
+      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
+      ;file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
+      ;file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
       file-write species
@@ -914,11 +988,11 @@ end
 ;---------------------------------------------------------------
 to write-sleep
   file-open output-sleep-locations
-  file-write ticks
   foreach sort sleeping-trees [ ?1 ->
     ask ?1 [
-      file-write day
-      file-write timestep
+      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
+      ;file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
+      ;file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
       file-write species
@@ -931,6 +1005,17 @@ end
 ;-----------------------------------------------------------------
 ; end of commands ================================================
 ;-----------------------------------------------------------------
+
+
+;; REPORTERS
+
+to-report simulation-time-end
+  ifelse ticks = simulation-time
+  [   report TRUE   ]
+  [   report FALSE  ]
+
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 10
@@ -1062,7 +1147,7 @@ simulation-time
 simulation-time
 0
 170
-106.0
+108.0
 1
 1
 NIL
@@ -1077,7 +1162,7 @@ energy-from-seeds
 energy-from-seeds
 0
 15
-2.0
+0.0
 1
 1
 NIL
@@ -1103,9 +1188,9 @@ NIL
 BUTTON
 800
 99
-881
+908
 132
-Continue
+go (Continue)
 go
 T
 1
@@ -1157,7 +1242,7 @@ INPUTBOX
 884
 77
 no_days
-4.0
+7.0
 1
 0
 Number
@@ -1171,7 +1256,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-4.6
+4.3
 0.1
 1
 NIL
@@ -1216,7 +1301,7 @@ energy-loss-resting
 energy-loss-resting
 -10
 0
--1.0
+-1.4
 0.1
 1
 NIL
@@ -1262,24 +1347,35 @@ runtime
 String
 
 CHOOSER
-925
-87
-1068
-132
+980
+16
+1123
+61
 tree-scenario
 tree-scenario
 "trees_all_1" "trees_all_2" "trees_april_1" "trees_may_1" "trees_june_1" "trees_july_1" "trees_aug_1"
 1
 
 CHOOSER
-930
-146
-1084
-191
+980
+66
+1125
+111
 sleeping-trees-scenario
 sleeping-trees-scenario
 "empirical" "simulated"
 1
+
+SWITCH
+948
+179
+1074
+212
+export-png
+export-png
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1669,7 +1765,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
