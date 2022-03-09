@@ -1,4 +1,5 @@
 library(nlrx)
+library(here)
 modelpath <- here("Model_Mayara2020", "BLT_model_2020.nlogo")
 nw <- nldoc_network(modelpath) 
 

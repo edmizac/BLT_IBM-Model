@@ -292,9 +292,21 @@ p1 <- ggplot() +
   ggtitle("Output maps of each 10th simulation tick")
 
 # Animate the plot and use 1 frame for each step of the model simulations
-gganimate::animate(p1, "setup-for-workflow-simple_multiple-layers.gif")
-# gganimate::animate(p1, nframes = length(unique(results_unnest_patches$`[step]`)), 
-#                    width=400, height=400, fps=4)
+library(gapminder)
+library(gganimate)
+library(gifski)
+
+
+animate(p1,
+        width=400, height=400,
+        renderer = gifski_renderer())
+anim_save("setup-for-workflow-simple_multiple-layers.gif")
+
+animate(p1, nframes = length(unique(results_unnest_patches$`[step]`)),
+        width=400, height=400, fps=4,
+        duration = 5, renderer = gifski_renderer())
+anim_save("setup-for-workflow-simple_multiple-layers-by10.gif")
+
 
 ## Method 2: nl_to_points()
 results_points_x <- nl_to_points(nl, coords = "px")
