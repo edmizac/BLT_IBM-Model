@@ -1,0 +1,224 @@
+---
+title: "Black Lion Tamarin Analysis"
+author: "Ronald Bialozyt"
+date:  "`r format(Sys.time(), '%d/%m/%Y -- %H:%M:%S')`"
+output: 
+  rmarkdown::word_document:
+    toc: yes
+    reference_docx: "./BLT_analysis_template.docx"
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(rmarkdown)
+library(flextable) ## having nice tables working also in LibreOffice
+library(officer)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+# Introduction
+
+Here we analyse the original and the simulation data from the black lion tamarin.
+
+## Research Question
+
+We would like to find out if the simulation can produce the same pattern.
+
+# Methods
+
+## Read tree data
+
+```{r read.trees}
+tree_file <- "tamarin-trees2.txt"
+trees <- read.table(tree_file, sep="\t", header=FALSE)
+names(trees) <- c("name", "geo_x", "geo_y", "type", "species")
+num.tree.type <- table(trees$type)
+names(num.tree.type) <- c("Feeding","Resting","Sleeping")
+tt <- as.data.frame(num.tree.type)
+names(tt) <- c("Tree type", "Amount")
+myft <- flextable(tt)
+myft <- set_caption(myft, "The amount of trees for each type")
+myft
+# kable(t(num.tree.type), caption = "The amount of trees for each type")
+
+```
+
+```{r tree_map, fig.cap="These are the locations of all trees.", fig.height=7, fig.width=7}
+par(mar=c(4,5,1,1))
+par(las=1)
+par(xpd=FALSE)
+##         FEEDING  RESTING  SLEEPING
+cols <- c("green", "red", "blue")
+pchs <- c(19,19,19)
+plot(trees$geo_x, trees$geo_y, col=cols[trees$type], asp=1,
+     pch=pchs[trees$type], cex=0.8,
+     xlab="longitude", ylab="" #"latitude"
+     )
+grid(); axis(1); axis(2)
+legend("topright", #703710, 9517990,
+       legend=c("Feeding", "Resting", "Sleeping"),
+       pch=pchs, col=cols, pt.cex=c(1,1,1),
+       bg="white",
+       title="Tree type", title.col="darkblue")
+```
+
+We start first with our simulation data from NetLogo and will analyse the observational data afterwards.
+
+## Simulation data
+
+### Daily path length 
+
+```{r input_files}
+f.names <- list.files("./",  pattern="monkey_locations-day_")
+n.files <- length(f.names)
+
+```
+
+We did simulate `r n.files` days.
+
+```{r sim_locations, fig.cap=c(paste("Histogram of the daily path length over ", n.files, " simulated days.", sep=""), paste("Histogram of daily path length. The mean is indicated by the red dashed line.", sep="")), fig.height=4.5, fig.width=7.5, fig.pos='H', dpi=144, dev=c('pdf','png')}
+agent_list <- numeric()
+dist_list <- numeric()
+all.data <- numeric()
+for(filename in f.names) {
+    ad <- read.table(filename, header=FALSE)
+    names(ad) <- c("time", "day", "timestep",
+                   "x_out", "y_out", "energy", "target tree",
+                   "current tree", "status", "action")
+    all.data <- rbind(all.data, ad)
+    ## == should be now the geographical coordinates
+    ##    ad$x_out  <- ad$x_out * 25
+    ##    ad$y_out  <- ad$y_out * 25
+    dist <- 0
+    for(i in 2:nrow(ad)) {
+        dist <- dist + sqrt((ad$x_out[i] - ad$x_out[i-1])^2 +
+                            (ad$y_out[i] - ad$y_out[i-1])^2)
+    }
+    dist_list <- c(dist_list, dist)
+    agent_list <- rbind(agent_list, ad)
+}
+avg_dist <- mean(dist_list)
+sd_dist <- sd(dist_list)
+
+par(xpd=TRUE)
+par(oma=c(0,0,0,0))
+par(mar=c(4,4,2,1))
+sim_hist <- hist(x=dist_list, ## breaks=seq(500,4000,by=200),
+     col="lightblue",
+     xlab="daily path length [m]", main=""
+     )
+abline(v=avg_dist, col="red", lty=2)
+text(x=min(sim_hist$breaks), y=max(sim_hist$counts)
+   , sprintf("sd = %7.2f", sd_dist)
+   , adj = c(0, 0))
+text(x=avg_dist, y=max(sim_hist$counts)
+   , sprintf("mean = %7.2f", avg_dist)
+   , col = "red"
+   , adj = c(-0.1, -0.3))
+
+```
+
+### Homerange 
+
+
+```{r homerange, fig.cap=c(paste("The image of the homerange of tamarin group 'BLT' from ", n.files, " simulation days. The 95\\% kernel is outlined 'blue'.", sep=""), paste("Image of homerange", sep="")), fig.height=8, fig.width=8.5, fig.pos='H', dpi=144, dev=c('pdf','png')}
+
+require("adehabitatHR", quietly = TRUE, warn.conflicts = FALSE)
+agent_data <- agent_list[,c("x_out","y_out")]
+agent_data$Name <- "BLT"
+coordinates(agent_data) <- c("x_out","y_out")
+
+
+## kud <- kernelUD(agent_data, h="href")
+kud <- kernelUD(agent_data, h=38.7) ## taken from Sebastian (and Paper)
+# image(kernelUD(agent_data, grid=150, extent=0.01, h="href"))
+
+vud <- getvolumeUD(kud)
+
+## image(kernelUD(agent_data, grid=150, extent=0.01, h="href"))
+par(xpd=TRUE)
+par(oma=c(0,0,0,0))
+image(getvolumeUD(kernelUD(agent_data, grid=80, extent=0.05, h="href")))
+xyzv <- as.image.SpatialGridDataFrame(vud[[1]])
+contour(xyzv, add=TRUE)
+
+homerange <- getverticeshr(kud)
+# plot(homerange, col=2)
+
+plot(getverticeshr(kud, 95), add=TRUE, lwd=1, border="blue")
+##plot(getverticeshr(kud, 80), add=TRUE, lwd=1, border="red")
+##plot(getverticeshr(kud, 65), add=TRUE, lwd=1, border="green")
+##         FEEDING  RESTING  SLEEPING
+cols <- c("green", "red3", "blue")
+pchs <- c(19,19,19)
+points(trees$geo_x, trees$geo_y, col=cols[trees$type], asp=1,
+       pch=pchs[trees$type], cex=0.8,
+       xlab="longitude", ylab="" #"latitude"
+       )
+grid(); ## axis(1); axis(2)
+legend("topleft",
+       ## 703500, 9518300,
+       legend=c("Feeding", "Resting", "Sleeping"), ## 1,2,3
+       pch=pchs, col=cols, pt.cex=c(1,1,1),
+       bg="white",
+       title="Tree type", title.col="darkblue")
+
+```
+
+
+```{r kernel_area, eval=TRUE}
+obs.kernel.file <- "observed_kernelArea_Field136_Katrin.txt"
+obs.kernel  <-  read.table(obs.kernel.file)
+names(obs.kernel) <- "Obs. Kernel"
+sim.kernel <- kernel.area(kud, percent=seq(20, 95, by=5))
+names(sim.kernel) <- "Sim. Kernel"
+tt <- cbind(obs.kernel, sim.kernel)
+tt$perc <- tt[,2] / tt[,1]
+names(tt)[3] <- "Factor"
+
+```
+
+```{r kernel_plort, fig.cap="Home range sizes estimated from simulated (red, filled circles) and observed (black, open circles) locations of a group over several days.", fig.height=5.5, fig.width=8.5, fig.pos='H', dpi=144, dev=c('pdf','png')}
+
+par(mgp=c(2,0.7,0)) # set the default lines for c(xlab, ylab, main)
+par(oma=c(0,0,0,0))
+par(mar=c(4,4,0,1))
+plot(tt[,1], type="b", ylim=c(0, 52)
+   , xaxt = 'n' 
+   , xlab="home range level [%]"
+   , ylab="home range kernel area [ha]")
+axis(1, at = c(1:16), labels = seq(20, 95, by=5))
+points(tt[,2], type="b", pch=19, col="red")
+
+```
+
+```{r kernel_table}
+my.caption <- "The homerange sizes of the different kernel percentages. The first column are the values for the observed kernel by Kathrin Lüttmann (2007) and the second one are the values for the simulated kernel."
+require(flextable)
+require(officer)
+myft <- flextable(tt)
+myft <- theme_vanilla(myft)
+myft <- bg(myft, bg = "#DDDDDD", part = "header")
+myft <- set_caption(myft, my.caption)
+myft
+# kable(tt, digits = c(0,2,2,2), caption = my.caption, label = "kernel_table")
+
+```
+
+
+
+### Running the simulation
+
+At the moment per hand and later on from this script.
+
+### Analysing the simulation
+
+We read the simulation data from our files produced by NetLogo.
+
+
+
+
+
+## Observational data
+

@@ -1,0 +1,453 @@
+---
+title: "First model output pattern analysis for validation"
+author: "Eduardo Zanette"
+date: "10/03/2022"
+abstract: |
+  This document was produced for the purpose of presentation to Laurence, Eckhard and Ronald on 11/03/2022, the first BLT Model Meeting while in Germany. We will consider two runs (simple, n = 28 days each) with distinct values of `input_forget_val` (18 and 700, less and more memory, respectively). This value is similar to a 'working memory' and, the higher the value, more trees the tamarins remember.
+  
+output: 
+  pdf_document:
+  
+fontsize: 12pt
+# baselinestretch: 1.12
+# linestretch: 1.22
+# toc: yes
+# toc_depth: 3
+# lof: True
+# lot: True
+# papersize: a4
+# tables: true
+# number_sections: yes
+---
+\pagebreak
+\pagenumbering{arabic}
+
+
+```{r setup, include=FALSE}
+# Packages
+library(knitr)
+library(rmarkdown)
+library(flextable) ## having nice tables working also in LibreOffice
+library(officer)
+library(here)
+library(ggplot2)
+library(ggspatial)
+library(dplyr)
+library(sp)
+library(adehabitatHR)
+library(circular)
+
+# GIS
+our_crs <- "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+gua_xlim_all = c(780000, 782350)
+gua_ylim_all = c(7407080, 7408250)
+gua.x.min = 781587
+gua.x.max = 782361.5
+gua_xlim_set = c(781200, 782350)
+gua_ylim_set = c(7407250, 7408250) 
+sma_xlim_set = c(364400, 366000)
+sma_ylim_set = c(7540500, 7541700)
+taq_xlim_set = c(370500, 373200)
+taq_ylim_set = c(7498750, 7500550)
+suz_xlim_set = c(705300, 706200)
+suz_ylim_set = c(7480800, 7481600) # 7480990,
+
+# Plots
+theme_set(theme_bw())
+
+# Knitr
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align='center')
+```
+
+```{r Load shapefiles, results="hide", warning=F, echo=F}
+gua.polyg <- sf::st_read(here("Data", "shapefiles", "Fragment polygon.shp"))
+```
+
+# Data
+
+### Empirical
+```{r, results='hide'}
+dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Guarei_Felipe_EMZ1.csv", dec = ".", stringsAsFactors = TRUE)
+dat.gua.orig <- dat.gua.orig %>%
+  rename(datetime = POSIXct) %>%
+  mutate(datetime = lubridate::ymd_hms(datetime))
+
+dat.gua.orig <- dat.gua.orig %>% 
+  mutate(day = lubridate::day(datetime)) %>% 
+  mutate(month = lubridate::month(datetime))
+unique(paste0(dat.gua.orig$day, "-", dat.gua.orig$month))
+```
+
+### Simulated
+```{r}
+ifv_18_tam <- read.table(here("Model_development", "BLT_Model_Meeting1", "input_forget_val_18", "locations_monkey.txt"), header = 1, stringsAsFactors = TRUE)
+ifv_18_fru <- read.table(here("Model_development", "BLT_Model_Meeting1", "input_forget_val_18", "locations_trees.txt"), header = 1, stringsAsFactors = TRUE)
+ifv_18_slp <- read.table(here("Model_development", "BLT_Model_Meeting1", "input_forget_val_18", "locations_sleep.txt"), header = 1, stringsAsFactors = TRUE)
+
+ifv_700_tam <- read.table(here("Model_development", "BLT_Model_Meeting1", "input_forget_val_700", "locations_monkey.txt"), header = 1, stringsAsFactors = TRUE)
+ifv_700_fru <- read.table(here("Model_development", "BLT_Model_Meeting1", "input_forget_val_700", "locations_trees.txt"), header = 1, stringsAsFactors = TRUE)
+ifv_700_slp <- read.table(here("Model_development", "BLT_Model_Meeting1", "input_forget_val_700", "locations_sleep.txt"), header = 1, stringsAsFactors = TRUE)
+```
+
+
+# Spatial plots
+
+```{r Base Guarei sf plot, include=FALSE}
+gua.sf <- ggplot2::ggplot() +
+  geom_sf(data = gua.polyg,
+          color = "black",
+          fill = "#A9DFBF") +
+  coord_sf(
+    datum = sf::st_crs(our_crs),
+    xlim = gua_xlim_set,    
+    ylim = gua_ylim_set) +  
+  theme_bw() +
+  annotation_scale(location = "bl", width_hint = .35) +
+  annotation_north_arrow(location = "bl", which_north = "true",
+                         pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
+                         style = north_arrow_fancy_orienteering)
+```
+
+### Guareí empirical (all data, 28 days)
+```{r, echo=F}
+gua.plot <- gua.sf +
+  geom_point(data = dat.gua.orig,
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior)) +
+  ggtitle("Guareí - empirical") +
+  scale_shape_manual(values = c(1, 19, 1, 1, 1, 1, 1, 1, 1, 17, 1, 1)) +
+  scale_color_manual(values = c("grey", "#1E8449", "grey", "grey", "grey", "grey", "grey", 
+                                "grey", "grey", "#E74C3C", "grey", "grey"))
+  
+gua.plot
+```
+
+### Guareí simulated
+
+```{r, results='hide', echo=F}
+levels(ifv_18_tam$action)
+ifv_18_tam[ifv_18_tam$action == "", ] # These values are always one step beforing entering the sleeping site. I will debug it in the future, but for now I'll just remove them.
+
+ifv_18_tam <- ifv_18_tam %>% filter(action != "")
+ifv_700_tam <- ifv_700_tam %>% filter(action != "")
+
+ifv_18_tam$action <- ifv_18_tam$action %>% droplevels()
+ifv_700_tam$action <- ifv_700_tam$action %>% droplevels()
+```
+
+```{r How a simulated plot should look like in general, include=FALSE}
+gua.plot.general <- gua.sf +
+  geom_point(data = ifv_18_tam,
+             aes(x = x, y = y, group = action,
+                 color = action,
+                 shape = action)) +
+  ggtitle("Guareí - simulated (General")
+gua.plot.general
+```
+
+```{r, echo=F}
+gua.plot <- gua.sf +
+  geom_point(data = ifv_18_tam,
+             aes(x = x, y = y, group = action,
+                 color = action,
+                 shape = action)) +
+  ggtitle("Guareí - simulated (input_forget = 18)") +
+  scale_shape_manual(values = c(1, 19, 1, 1, 1, 17)) +
+  scale_color_manual(values = c("grey", "#1E8449", "grey", "grey", "grey", "#E74C3C"))
+  
+gua.plot
+
+gua.plot <- gua.sf +
+  geom_point(data = ifv_700_tam,
+             aes(x = x, y = y, group = action,
+                 color = action,
+                 shape = action)) +
+  ggtitle("Guareí - simulated (input_forget = 700)") +
+  scale_shape_manual(values = c(1, 19, 1, 1, 1, 17)) +
+  scale_color_manual(values = c("grey", "#1E8449", "grey", "grey", "grey", "#E74C3C"))
+  
+gua.plot
+```
+
+# Patterns of validation
+
+We are not checking seed dispersal patterns now, just movement related patterns.
+
+## Dayly Path Lenght (DPL)
+
+Calculate DPL
+```{r}
+dpl <- function(df) {
+  dist_list <- numeric()
+  dist <- numeric()
+  for (df in split(df, df$day)) {
+    dist <- 0
+    for (i in 2:nrow(df)) {
+      dist <- dist + sqrt((df$x[i] - df$x[i - 1]) ^ 2 +
+                            (df$y[i] - df$y[i - 1]) ^ 2)
+    }
+    dist_list <- c(dist_list, dist)
+  }
+  return(dist_list)
+}
+
+dpl_18 <- dpl(df = ifv_18_tam)
+dpl_700 <- dpl(df = ifv_700_tam)
+
+avg_dist18 <- mean(dpl_18)
+sd_dist18 <- sd(dpl_18)
+avg_dist700 <- mean(dpl_700)
+sd_dist700 <- sd(dpl_700)
+
+# # ifv 18
+# dist_list <- numeric()
+# ad <- ifv_18_tam
+# 
+# for(df in split(ad, ad$day)) {
+# dist <- 0
+#   for (i in 2:nrow(df)) {
+#     dist <- dist + sqrt((df$x[i] - df$x[i - 1]) ^ 2 +
+#                           (df$y[i] - df$y[i - 1]) ^ 2)
+#   }
+#   dist_list <- c(dist_list, dist)
+# }
+```
+
+Plot DPL
+```{r, echo=F}
+par(xpd=TRUE)
+par(oma=c(0,0,0,0))
+par(mar=c(4,4,2,1))
+par(mfrow=c(1,2))
+
+sim_hist18 <- hist(x=dpl_18, ## breaks=seq(500,4000,by=200),
+     col="lightblue",
+     xlab="daily path length [m]", main="Guareí - simulated (if = 18)"
+     )
+abline(v=avg_dist18, col="red", lty=2)
+text(x=min(sim_hist18$breaks), y=max(sim_hist18$counts)
+   , sprintf("sd = %7.2f", sd_dist18)
+   , adj = c(0, 0))
+text(x=avg_dist18, y=max(sim_hist18$counts)
+   , sprintf("mean = %7.2f", avg_dist18)
+   , col = "red"
+   , adj = c(-0.1, -0.3))
+
+sim_hist700 <- hist(x=dpl_700, ## breaks=seq(500,4000,by=200),
+     col="lightblue",
+     xlab="daily path length [m]", main="Guareí - simulated (if = 700)"
+     )
+abline(v=avg_dist700, col="red", lty=2)
+text(x=min(sim_hist700$breaks), y=max(sim_hist700$counts)
+   , sprintf("sd = %7.2f", sd_dist700)
+   , adj = c(0, 0))
+text(x=avg_dist700, y=max(sim_hist700$counts)
+   , sprintf("mean = %7.2f", avg_dist700)
+   , col = "red"
+   , adj = c(-0.1, -0.3))
+
+```
+
+
+## Home Range
+
+Based on this [vignette](https://jamesepaterson.github.io/jamespatersonblog/04_trackingworkshop_kernels) and Ronaald code
+
+```{r, echo=F}
+# Create SpatialPoints
+hr18 <- ifv_18_tam %>% dplyr::select("x", "y")
+hr18$Name <- "if = 18"
+coords <- SpatialPoints(hr18[, c("x", "y")])
+kud_18 <- kernelUD(coords, h="href")
+vud_18 <- getvolumeUD(kud_18)
+
+image(kud_18)
+hr_18_poly <- getverticeshr(kud_18, percent = 95) 
+paste(hr_18_poly$area, "ha")
+
+
+
+
+hr700 <- ifv_700_tam %>% dplyr::select("x", "y")
+hr700$Name <- "if = 700"
+coords <- SpatialPoints(hr700[, c("x", "y")])
+kud_700 <- kernelUD(coords, h="href")
+vud_700 <- getvolumeUD(kud_700)
+
+image(kud_700)
+
+hr_700_poly <- getverticeshr(kud_700, percent = 95) 
+paste(hr_700_poly$area, "ha")
+
+
+# Plot home ranges
+# class(hr_18_poly)
+
+
+
+cols <- c("green", "red3", "blue")
+pchs <- c(19,19,19)
+
+plot(hr_18_poly, lwd=1, border="blue")
+points(ifv_18_tam$x, ifv_18_tam$y,
+       col=ifv_18_tam$action,
+       asp=1,
+       cex=0.8,
+       xlab="longitude", ylab="")
+grid()
+
+# table(ifv_18_tam$action)
+
+
+legend("topleft",
+       legend=c("Feeding", "Resting", "Sleeping"), ## 1,2,3
+       # pch=pchs, col=cols, pt.cex=c(1,1,1),
+       bg="white",
+       title="Tree type", title.col="darkblue")
+
+# as sf?
+# sf <- sf::st_as_sf(ifv_700_tam, coords = c("x","y"))
+# ggplot() + 
+#   geom_point(sf, aes(x=x, y=y), group=sf$action)
+
+```
+
+
+## Turning Angles and Step Lenghts
+
+### Empirical
+```{r}
+
+```
+
+### Simulated
+```{r, echo=F}
+ifv_18_tam$id <-  "Guareí_18ifv" 
+ifv_18_tam$id <- as.factor(ifv_18_tam$id)
+ifv_18_tam$dayfct <- as.factor(paste("Day ", ifv_18_tam$day))
+
+ifv_18_ltraj <- adehabitatLT::as.ltraj(xy = ifv_18_tam[, c("x", "y")], 
+                                       id = ifv_18_tam$id,
+                                       burst = ifv_18_tam$dayfct,
+                                       proj4string = CRS(our_crs),
+                                       typeII = FALSE,
+                                       infolocs = ifv_18_tam[ , c(1:3, 6, 7, 8, 10)]
+                                       )
+
+# ifv_18_ltraj # Type I (time not recorded) -> OK. Infolocs -> OK
+ifv_18_ltraj_df <- ld(ifv_18_ltraj) # Transform to df
+
+# levels(ifv_18_ltraj_df$action)
+# "forage"              "on feeding tree"     "on resting tree"    
+# "search feeding tree" "to resting tree"     "to sleeping tree" 
+
+# ifv_18_ltraj_df %>% filter(action == "to sleeping tree") # 28 days, ok.
+
+
+# and for ifv = 700
+ifv_700_tam$id <-  "Guareí_ifv700" 
+ifv_700_tam$id <- as.factor(ifv_700_tam$id)
+ifv_700_tam$dayfct <- as.factor(paste("Day ", ifv_700_tam$day))
+
+ifv_700_ltraj <- adehabitatLT::as.ltraj(xy = ifv_700_tam[, c("x", "y")], 
+                                       id = ifv_700_tam$id,
+                                       burst = ifv_700_tam$dayfct,
+                                       proj4string = CRS(our_crs),
+                                       typeII = FALSE,
+                                       infolocs = ifv_700_tam[ , c(1:3, 6, 7, 8, 10)]
+                                       )
+
+# ifv_700_ltraj # Type I (time not recorded) -> OK. Infolocs -> OK
+ifv_700_ltraj_df <- ld(ifv_700_ltraj) # Transform to df
+
+
+# Explore trajaectory plots
+
+plot_lt <- function(x) plot(x, xlab = "x", ylab = "y", main = character())
+
+# ifv_18
+# plot_lt(ifv_18_ltraj)
+# plot_lt(ifv_18_ltraj[3])
+# plot_lt(ifv_18_ltraj[4])
+
+# ivf_700
+# plot_lt(ifv_18_ltraj)
+# plot_lt(ifv_18_ltraj[3])
+# plot_lt(ifv_18_ltraj[4])
+
+```
+
+```{r Mean step lenght and turning angles, warning=FALSE, echo=F}
+# mean rel angle (degrees)
+paste("Mean Relative Angle (degrees) ifv = 18:", ifv_18_ltraj_df$rel.angle %>% mean(na.rm = T))
+paste("Mean Relative Angle (degrees) ifv = 700:", ifv_700_ltraj_df$rel.angle %>% mean(na.rm = T))
+
+# mean rel angle (radians)
+ifv_18_ltraj_df$rel.angle.rad <- ifv_18_ltraj_df$rel.angle * (180 / pi)
+ifv_700_ltraj_df$rel.angle.rad <- ifv_700_ltraj_df$rel.angle * (180 / pi)
+
+ifv_18_ra_mean <- ifv_18_ltraj_df$rel.angle.rad %>%  mean(na.rm = TRUE)
+ifv_700_ra_mean <- ifv_700_ltraj_df$rel.angle.rad %>% mean(na.rm = TRUE)
+
+paste("Mean Relative Angle (degrees) ifv = 18:", ifv_18_ra_mean)
+paste("Mean Relative Angle (degrees) ifv = 700:", ifv_700_ra_mean)
+
+
+# mean step lenght
+paste("Mean Step lenght (meters) ifv = 18:", ifv_18_ltraj_df$dist %>% mean(na.rm = T))
+paste("Mean Step lenght (meters) ifv = 700:", ifv_700_ltraj_df$dist %>% mean(na.rm = T))
+```
+```{r Plot Step lenght + turnig angles, echo=F, warning=FALSE}
+
+# Plot Step lengh
+par(mfrow=c(1,2))
+graphics::hist(ifv_18_ltraj_df$dist, 
+               # breaks=10, 
+               xlim = c(0, 400), ylim = c(0, 1000),
+               xlab = "Step length (m)", main = "\nifv = 18") %>%
+  abline(v = mean(ifv_18_ltraj_df$dist, na.rm = TRUE), col = "red", lwd = 3)
+  text(200, 400, paste("mean = ", round(mean(ifv_18_ltraj_df$dist, na.rm = TRUE), 2), 
+                      " m"), cex = 1.4)
+  
+graphics::hist(ifv_700_ltraj_df$dist, 
+               # breaks=10, 
+               xlim = c(0, 400), ylim = c(0, 1000),
+               xlab = "Step length (m)", main = "\nifv = 700")  %>%
+  abline(v = mean(ifv_700_ltraj_df$dist, na.rm = TRUE), col = "red", lwd = 3)
+  text(200, 400, paste("mean = ", round(mean(ifv_700_ltraj_df$dist, na.rm = TRUE), 2), 
+                      " m"), cex = 1.4)
+
+# Plot Turning angles
+par(mfrow=c(1,2))
+
+circular::rose.diag(ifv_18_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees", tol = 0,
+                    main = "\nifv=18", cex = 1.2, shrink = 1.2, ticks = F)
+circular::rose.diag(ifv_700_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees", tol = 0,                     main = "\nifv=700", cex = 1.2, shrink = 1.2, ticks = F)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+### Revisitations (coming soon)
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,27 @@
+---
+title: "First model output pattern analysis for validation"
+author: "Eduardo Zanette"
+date: "10/03/2022"
+output: 
+  rmarkdown::pdf_document:
+    toc: yes
+    reference_docx: "BLT_model_pattern_validation.pdf"
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(rmarkdown)
+library(flextable) ## having nice tables working also in LibreOffice
+library(officer)
+library(here)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+loc_tam <- read.table(here("Model_development", "", "", "locations_monkey.txt"), header = 1)
+loc_fru <- read.table(here("Model_development", "", "", "locations_trees.txt"), header = 1)
+loc_slp <- read.table(here("Model_development", "", "", "locations_sleeping.txt"), header = 1)
+
+```
+
+
