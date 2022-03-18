@@ -200,14 +200,6 @@ to setup-trees
     ]] ;
   ]
 
-
-
-
-
-
-
-
-
 end
 
 
@@ -390,11 +382,18 @@ to step ; FOR DEBUG PURPOSES ONLY
   write-to-file
 
   ;; DEBUGGING
+  if print? = TRUE [
   ask monkeys [
+    type "---- STEP ---- " print timestep
     type "tree_target " type tree_target type " "
     type "tree_current " type tree_current type " "
-    type "status " print status
-    type "behavior " print behavior
+    type "status " type status type " "
+    type "behavior " type behavior type " "
+    type "action " print action
+    type "tree_pot_list " print length tree_pot_list
+    type "tree_ate_list " print length tree_ate_list
+    type "tree_mem_list " print length tree_mem_list
+    ]
   ]
 
 end
@@ -550,7 +549,7 @@ to move-monkeys
           to-feeding-tree
         ]
       ] ;; energy > level 1
-      forget_trees
+;      forget_trees
       defecation
     ] ; end of daily routine
 
@@ -599,7 +598,7 @@ to to-feeding-tree
     if distance tree_target < 0.8 [
       set tree_current tree_target
       set tree_target 0
-      set tree_pot_list remove-item position [who] of tree_current tree_pot_list tree_pot_list
+;      set tree_pot_list remove-item ( position [who] of tree_current tree_pot_list ) tree_pot_list
       set action "on feeding tree"
 
     ]
@@ -831,12 +830,12 @@ to sleeping
       set behavior "sleeping"
       set action "none"
       set action-time 0
-      ; trees in the tree_ate_list[] had to get back to the tree_pot_list[]
-      ; they forget about the trees they visited last day
-;      while [length tree_ate_list > 0] [
-;        set tree_pot_list lput first tree_ate_list tree_pot_list
-;        set tree_ate_list remove (first tree_ate_list) tree_ate_list
-;      ]
+;       trees in the tree_ate_list[] had to get back to the tree_pot_list[]
+;       they forget about the trees they visited last day
+      while [length tree_ate_list > 0] [
+        set tree_pot_list lput first tree_ate_list tree_pot_list
+        set tree_ate_list remove (first tree_ate_list) tree_ate_list
+      ]
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
       output-day-stats
@@ -896,7 +895,7 @@ to search-sleeping-tree
   ]
   ;set tree_target sleeping-trees-here ;; sleeping-trees-here does not exist anywhere else
   set status "sleeping"
-;  set behavior ""
+  set behavior "sleeping"
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -934,11 +933,11 @@ end
 to random-action
 
 set action-time 0
-if action = "on feeding tree" [
-    set tree_ate_list lput [who] of tree_current tree_ate_list
-    set tree_mem_list lput 0 tree_mem_list
-    set tree_add_list lput 1 tree_add_list
-  ]
+;if action = "on feeding tree" [
+;    set tree_ate_list lput [who] of tree_current tree_ate_list
+;    set tree_mem_list lput 0 tree_mem_list
+;    set tree_add_list lput 1 tree_add_list
+;  ]
 set tree_target 0
 set tree_current 0
 let choice random 100
@@ -1003,6 +1002,9 @@ to forget_trees
   ]
   ; increase the memory counter
   set tree_mem_list (map + tree_add_list tree_mem_list)
+
+  set tree_pot_list remove-item ( position [who] of tree_current tree_pot_list ) tree_pot_list
+
 end
 
 
@@ -1465,7 +1467,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
-3
+2
 
 CHOOSER
 990
@@ -1497,7 +1499,7 @@ input_forget_val
 input_forget_val
 0
 1000
-136.0
+1.0
 1
 1
 NIL
@@ -1676,7 +1678,7 @@ CHOOSER
 empirical-trees-choice
 empirical-trees-choice
 "closest" "random"
-1
+0
 
 MONITOR
 915
@@ -1752,6 +1754,55 @@ make all trees from study period available:
 11
 0.0
 1
+
+BUTTON
+707
+156
+793
+189
+108 steps
+repeat 108 [ step ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SWITCH
+799
+158
+889
+191
+print?
+print?
+0
+1
+-1000
+
+PLOT
+1270
+357
+1470
+507
+Memory
+tick
+count memory lists
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "ask monkeys [ plot length tree_pot_list ]"
+"pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
+"pen-2" 1.0 0 -7500403 true "" "ask monkeys [ plot length tree_ate_list ]"
+"pen-3" 1.0 0 -14439633 true "" "ask monkeys [ plot length seed_mem_list ]"
 
 @#$#@#$#@
 ## WHAT IS IT?
