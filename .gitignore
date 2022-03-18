@@ -11,5 +11,10 @@
 .prj
 .shp
 
+# Folders:
+/Data
+
+# Temporary files
 **/runtime
 runtime/
+
