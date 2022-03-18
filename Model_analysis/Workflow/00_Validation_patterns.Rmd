@@ -25,3 +25,18 @@ loc_slp <- read.table(here("Model_development", "", "", "locations_sleeping.txt"
 ```
 
 
+## Dayly Path Lenght (DPL)
+
+
+## Home Range
+Comparison between methods: https://doi.org/10.1111/2041-210X.13786
+
+
+## Turning Angles and Step Lenghts
+
+
+## Revisitations (coming soon)
+
+
+
+

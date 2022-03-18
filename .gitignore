@@ -4,5 +4,12 @@
 .Ruserdata
 .png
 
+.cpg
+.qpj
+.shx
+.dbf
+.prj
+.shp
+
 **/runtime
 runtime/
