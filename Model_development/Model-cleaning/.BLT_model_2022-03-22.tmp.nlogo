@@ -25,20 +25,20 @@ seeds-own [ id-seed species mother-tree ]
 breed [monkeys monkey]
 monkeys-own [
   energy        ; energy the tamarin has left
-  status        ; what is the desire
+  status        ; what is the desire ===== DO WE REALLY NEED THIS? ==============
   action        ; what was the last action
   action-time   ; how long you do the same action again
   behavior      ; as in activity budget data tables
   steps-moved   ; number of steps taken
   tree_target   ; memory
   tree_current  ; old_tree
+  tree_pot_list ; list of all feeding trees in homerange for that tamarin
   tree_ate_list ; list of trees the tamarins did eat
   tree_mem_list ; list of timesteps since the tamarin feeded on that tree
   tree_add_list ; helper list to increase the mem list
-  tree_pot_list ; list of all feeding trees in homerange for that tamarin
   seed_ate_list ; list of the seeds they fed on
   seed_mem_list ; list of timesteps since the tamarin ate the seed
-  seed_add_list ; helper list to increase the mem list
+  seed_add_list ; helper list to increase the mem list by 1 each time step
 ]
 
 ;; GLOBALS ;;
@@ -48,7 +48,7 @@ globals [
   scale ; to fit the data to the simulation area
   meanxcoord ; translating the geo coordinates to world coordinates
   meanycoord ; translating the geo coordinates to world coordinates
-  input_forget ; amount of timesteps until the tamarin forgets to be in that tree
+  ;step_forget ; amount of timesteps until the tamarin forgets to be in that tree
   midday ; the time of the middle of the day (important for resting)
 
   ;; INPUT ;;
@@ -85,7 +85,7 @@ to setup
   output-files
 
   create-legend
-  set input_forget input_forget_val
+
   set day 1
   set midday 58
   set timestep 0
@@ -214,12 +214,15 @@ to setup-monkeys
 
     if sleeping-trees-scenario = "empirical" AND sleeping-trees? = FALSE [
       setxy random xcor random ycor
+      set tree_current ""
     ]
 
     if sleeping-trees-scenario = "empirical" AND sleeping-trees? = TRUE [
       let start one-of sleeping-trees
       setxy [xcor] of start [ycor] of start
+      set tree_current start
     ]
+    set tree_target -1
 
     set steps-moved 0
     set action-time 0
@@ -366,7 +369,7 @@ to step ; FOR DEBUG PURPOSES ONLY
 
   if all? monkeys [status = "sleeping"] [
     ask monkeys [
-      set status "none"
+;      set status "none"
       set action-time 0
       type timestep type " - Energy: " type energy type " Status: " type status type " "
       type tree_target  type " " show action
@@ -390,9 +393,10 @@ to step ; FOR DEBUG PURPOSES ONLY
     type "status " type status type " "
     type "behavior " type behavior type " "
     type "action " print action
-    type "tree_pot_list " print length tree_pot_list
-    type "tree_ate_list " print length tree_ate_list
-    type "tree_mem_list " print length tree_mem_list
+    type "tree_pot_list " print length tree_pot_list print tree_pot_list
+    type "tree_ate_list " print length tree_ate_list print tree_ate_list
+    type "tree_mem_list " print length tree_mem_list print tree_mem_list
+;    type "tree_add_list " print length tree_add_list print tree_add_list
     ]
   ]
 
@@ -463,7 +467,7 @@ to next_day
 
   ; export the landscape as a .png if neccessary  (= Milles et al 2020)
   if day = no_days AND export-png = TRUE [
-   let file-id random 9999
+   let file-id random -1
    let world-name (word runtime no_days "_" "e-" start-energy "_" file-id "_world.png") ; date-and-time
    export-view world-name
 ;   export-interface world-name
@@ -502,22 +506,28 @@ to move-monkeys
       ifelse energy > energy_level_1 [
         ifelse (status = "hungry" or status = "none") [
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
+            if action = "on feeding tree" [
+              mod_memory
+            ]
+            set tree_target -1
+            set tree_current -1
+            set action "none"
             ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
-              if status != "resting" [ set tree_target 0 set tree_current 0 ]
+              if status != "resting" [ set tree_target -1 set tree_current -1 ]
               resting
             ][
-              set tree_target 0
+              set tree_target -1
               random-action
             ]
           ][ ; energy_level_1 < energy < energy_level_2
               ifelse action = "on feeding tree" [
               ifelse random (2 * species_time) > action-time [
+                set action-time action-time + 1
                 feeding
               ][
-                set tree_ate_list lput [who] of tree_current tree_ate_list
-                set tree_mem_list lput 0 tree_mem_list
-                set tree_add_list lput 1 tree_add_list
-                let let_pot_list tree_pot_list
+                set action-time 0
+                mod_memory
+                ; set tree_current -1
                 to-feeding-tree
               ]
             ][
@@ -525,11 +535,11 @@ to move-monkeys
             ]
           ] ;; energy > level 2 ==> other activities
         ][ ; status != "hungry"
-          ifelse random (2 * 5) > action-time [ ; action time for other than feeding
+          ifelse random (2 * duration) < action-time [ ; action time for other than feeding
+            change-bonus
+          ][
             set action-time action-time + 1
             last-action-again
-          ][
-            change-bonus
           ]
         ]
       ][ ; energy < level 1
@@ -539,17 +549,18 @@ to move-monkeys
             set action-time action-time + 1
             feeding
           ][
-            set tree_ate_list lput [who] of tree_current tree_ate_list
-            set tree_mem_list lput 0 tree_mem_list
-            set tree_add_list lput 1 tree_add_list
-            let let_pot_list tree_pot_list
+
+            set action-time 0
+            mod_memory
+            ; set tree_current -1
+
             to-feeding-tree
           ]
         ][
           to-feeding-tree
         ]
       ] ;; energy > level 1
-;      forget_trees
+      forget_trees
       defecation
     ] ; end of daily routine
 
@@ -575,21 +586,58 @@ to feeding
   set status "feeding"
   set behavior "frugivory"
   set energy energy + energy-from-seeds + energy_species
-  set action-time action-time + 1
+  ; set action-time action-time + 1 ;; IS ALREADY IN MOVE-MONKEYS
+  ; change mem list
+  if( length tree_ate_list = 0 ) [
+    ;; THIS REMOVES THE TREE THAT THE TAMARINS JUST ATE FROM THE POT LIST, THUS IT SHOULD STAY IN THE FEEDING COMAMND
+    set tree_pot_list remove-item ( position [who] of tree_current tree_pot_list ) tree_pot_list
+    set tree_ate_list lput [who] of tree_current tree_ate_list
+    set tree_mem_list lput 0 tree_mem_list
+    set tree_add_list lput 1 tree_add_list
+    remove_trees_surrounding
+  ]
+  ifelse( last tree_ate_list = [who] of tree_current ) [
+    set tree_mem_list replace-item (length tree_mem_list - 1) tree_mem_list 0
+    set tree_add_list replace-item (length tree_add_list - 1) tree_add_list 1
+  ][
+    ;; THIS REMOVES THE TREE THAT THE TAMARINS JUST ATE FROM THE POT LIST, THUS IT SHOULD STAY IN THE FEEDING COMAMND
+    set tree_pot_list remove-item ( position [who] of tree_current tree_pot_list ) tree_pot_list
+    set tree_ate_list lput [who] of tree_current tree_ate_list
+    set tree_mem_list lput 0 tree_mem_list
+    set tree_add_list lput 1 tree_add_list
+    ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (25m ?)
+    remove_trees_surrounding
+  ]
+  ; consume seeds:
   set seed_ate_list lput [who] of tree_current seed_ate_list
-  set seed_mem_list lput 0 seed_mem_list
+  set seed_mem_list lput 1 seed_mem_list
   set seed_add_list lput 1 seed_add_list
 end
 
 ;-----------------------------------------
+to remove_trees_surrounding
+  ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (25m ?)
+  ;; set tree_pot_list remove-item ( position [who] of
+  ;; let trees_remove [ who ] of feeding-trees in-radius 2
+  ;;  let trees_remove filter [ s -> member? s [ who ] of feeding-trees in-radius visual ] tree_pot_list
+  let trees_remove filter [ s -> member? s [ who ] of feeding-trees with [ distance myself < visual] ] tree_pot_list
+  let l length trees_remove
+  while [ l > 0 ]
+  [
+    set l l - 1
+    set tree_pot_list remove-item ( position (item l trees_remove) tree_pot_list ) tree_pot_list
+    set tree_ate_list lput (item l trees_remove) tree_ate_list
+    set tree_mem_list lput 0 tree_mem_list
+    set tree_add_list lput 1 tree_add_list
+  ]
+end
+;-----------------------------------------
 
 to to-feeding-tree
 
-  set action-time 0
-  set tree_current 0
-
-  ifelse tree_target = 0 [
+  ifelse tree_target = -1 [
     search-feeding-tree
+    set tree_current -1
   ][
     set heading towards tree_target
     forward travel_speed
@@ -597,10 +645,8 @@ to to-feeding-tree
     set energy energy + energy-loss-traveling
     if distance tree_target < 0.8 [
       set tree_current tree_target
-      set tree_target 0
-;      set tree_pot_list remove-item ( position [who] of tree_current tree_pot_list ) tree_pot_list
+      set tree_target -1
       set action "on feeding tree"
-
     ]
   ]
 end
@@ -611,7 +657,7 @@ to search-feeding-tree
 
   set action "search feeding tree"
   let let_pot_list tree_pot_list
-  set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself]
+  set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
   set heading towards tree_target
   let tree_target_species [ species ] of tree_target
 
@@ -698,7 +744,7 @@ to defecation
         set id-seed who
         set label ""
         set shape "plant"
-        set size 0.3
+        set size 0.45
         set color 1
       ]
     ]
@@ -739,18 +785,18 @@ to resting
   ][
     to-resting-tree
   ]
-  if energy < energy_level_1 [ ; change from resting to feeding to forget the tree
-    set status "hungry"
-    set tree_target 0
-    set tree_current 0
-  ]
+;  if energy < energy_level_1 [ ; change from resting to feeding to forget the tree
+;    set status "hungry"
+;    set tree_target -1
+;    set tree_current -1
+;  ]
 end
 
 ;----------------------------------------------------
 
 to to-resting-tree
 
-  ifelse tree_target = 0 [
+  ifelse tree_target = -1 [
     search-resting-tree ; when simulating trees
     ;search-resting-defined ; when using field trees
   ][
@@ -758,7 +804,7 @@ to to-resting-tree
     set energy energy + energy-loss-traveling
     if distance tree_target < 0.8 [
       set tree_current tree_target
-      set tree_target 0
+      set tree_target -1
       set action "on resting tree"
       set status "resting"
       set behavior "resting"
@@ -816,7 +862,7 @@ end
 ;; MAYARA CODE:
 to sleeping
 
-  ifelse tree_target = 0 [
+  ifelse tree_target = -1 [
 
     if sleeping-trees-scenario = "empirical" [ search-sleeping-defined ]  ; when using field trees ; WITH THIS IT DOES NOT           ;; EMPIRICAL
     if sleeping-trees-scenario = "simulated" [ search-sleeping-tree ]     ; when simulating trees  ; ONLY WORKS WITH THIS PROCEDURE ;; SIMULATED
@@ -825,17 +871,17 @@ to sleeping
     set heading towards tree_target
     if distance tree_target < travel_speed * 0.6 [
       set tree_current tree_target
-      set tree_target 0
+      set tree_target -1
       set status "sleeping"
       set behavior "sleeping"
       set action "none"
       set action-time 0
 ;       trees in the tree_ate_list[] had to get back to the tree_pot_list[]
 ;       they forget about the trees they visited last day
-      while [length tree_ate_list > 0] [
-        set tree_pot_list lput first tree_ate_list tree_pot_list
-        set tree_ate_list remove (first tree_ate_list) tree_ate_list
-      ]
+;      while [length tree_ate_list > 0] [
+;        set tree_pot_list lput first tree_ate_list tree_pot_list
+;        set tree_ate_list remove (first tree_ate_list) tree_ate_list
+;      ]
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
       output-day-stats
@@ -934,20 +980,18 @@ to random-action
 
 set action-time 0
 ;if action = "on feeding tree" [
-;    set tree_ate_list lput [who] of tree_current tree_ate_list
-;    set tree_mem_list lput 0 tree_mem_list
-;    set tree_add_list lput 1 tree_add_list
+;    mod_memory
 ;  ]
-set tree_target 0
-set tree_current 0
+;set tree_target -1
+;set tree_current -1
 let choice random 100
   ifelse choice < 50 [
     forage
   ][
     resting
   ]
-set tree_target 0
-set tree_current 0
+set tree_target -1
+set tree_current -1
 end
 
 ;-------------------------------------------------------------
@@ -962,8 +1006,8 @@ end
 to change-bonus
 
   set action-time 0
-  set tree_target 0
-  set action-time 0
+  set tree_target -1
+
   let choice random 2
   let pot-status ["forage" "resting"]
   let old-status status
@@ -978,8 +1022,8 @@ to change-bonus
     set action new-status
   ]
   if status != "resting" [
-    set tree_target 0
-    set tree_current 0
+    set tree_target -1
+    set tree_current -1
   ]
   last-action-again
 end
@@ -989,21 +1033,33 @@ end
 ;---------------------------------------------------------------------------------------------
 ; Extra commands
 ;---------------------------------------------------------------------------------------------
+to mod_memory ; Modulate memory list
+;  set tree_ate_list lput [who] of tree_current tree_ate_list
+;  set tree_mem_list lput 0 tree_mem_list
+;  set tree_add_list lput 1 tree_add_list
+;  let let_pot_list tree_pot_list
+end
+
 to forget_trees
 
-  ; testing if the monkey forgets a tree AND returns this one back to the available list
-  if member? input_forget tree_mem_list [
-    let loc_index position input_forget tree_mem_list
-    let loc_who item loc_index tree_ate_list
-    set tree_ate_list remove-item loc_index tree_ate_list
-    set tree_add_list remove-item loc_index tree_add_list
-    set tree_mem_list remove input_forget tree_mem_list
-    set tree_pot_list lput loc_who tree_pot_list
-  ]
-  ; increase the memory counter
-  set tree_mem_list (map + tree_add_list tree_mem_list)
+  ;; INCREASE MM
 
-  set tree_pot_list remove-item ( position [who] of tree_current tree_pot_list ) tree_pot_list
+
+  ; testing if the monkey forgets a tree AND returns this one back to the available list
+  while [ member? step_forget tree_mem_list ][                    ; suppose step_forget is 18:         if 18 is in the mem list
+    let loc_index position step_forget tree_mem_list        ; set loc_index as the position where 18 is in the mem_list (starting on 0, not 1) -> should be always 0
+    let loc_who item loc_index tree_ate_list                 ; set loc_who as the first turtle (0) of the ate_list (e.g. feeding-tree 23)
+    set tree_ate_list remove-item loc_index tree_ate_list    ; remove first item (loc_index = 0) from ate_list
+    set tree_add_list remove-item loc_index tree_add_list    ; remove first item (loc_index = 0) from add_list
+    set tree_mem_list remove-item loc_index tree_mem_list      ; remove the item which corresponds to step_forget (18) from mem_list
+    set tree_pot_list lput loc_who tree_pot_list             ; include loc_who (e.g. feeding-tree 23) again in the potential list
+  ]
+
+
+    ; increase the memory counter
+  set tree_mem_list (map + tree_add_list tree_mem_list)     ;; THIS IS NECESSARY FOR ADDING + 1 TO THE MEMORY LIST (= STEP NUMBERS) , AND NOT BECOMING [0, 0, 0, 0 ... ]
+
+;  set tree_pot_list remove-item ( position [who] of tree_current tree_pot_list ) tree_pot_list    ;; THIS REMOVES THE TREE THAT THE TAMARINS JUST ATE FROM THE POT LIST, THUS IT SHOULD STAY IN THE FEEDING COMAMND
 
 end
 
@@ -1166,7 +1222,7 @@ start-energy
 start-energy
 0
 170
-65.0
+48.0
 1
 1
 NIL
@@ -1275,7 +1331,7 @@ energy-from-seeds
 energy-from-seeds
 0
 15
-6.0
+7.0
 1
 1
 NIL
@@ -1384,7 +1440,7 @@ energy-loss-traveling
 energy-loss-traveling
 -10
 0
--0.5
+-1.3
 0.1
 1
 NIL
@@ -1460,20 +1516,20 @@ runtime
 String
 
 CHOOSER
-1144
+1205
 31
-1294
+1355
 76
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
-2
+1
 
 CHOOSER
-990
-31
-1136
-76
+1022
+51
+1168
+96
 sleeping-trees-scenario
 sleeping-trees-scenario
 "empirical" "simulated"
@@ -1486,50 +1542,50 @@ SWITCH
 227
 export-png
 export-png
-1
+0
 1
 -1000
 
 SLIDER
-905
+914
 350
-1085
+1076
 383
-input_forget_val
-input_forget_val
+step_forget
+step_forget
 0
 1000
-1.0
+25.0
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-760
+738
 324
 874
 360
-energy related
+2. energy related
 14
 0.0
 1
 
 TEXTBOX
-939
+929
 325
-1043
-345
-memory related
+1066
+359
+3. memory related
 14
 0.0
 1
 
 SLIDER
-927
-487
-1051
-520
+923
+488
+1074
+521
 gut_transit_time_val
 gut_transit_time_val
 0
@@ -1541,20 +1597,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1107
-322
-1225
-342
-movement related
+1096
+326
+1253
+360
+4. movement related
 14
 0.0
 1
 
 SLIDER
-1085
-352
-1227
-385
+1101
+349
+1243
+382
 travel_speed_val
 travel_speed_val
 0
@@ -1566,10 +1622,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1084
-397
-1230
-430
+1099
+386
+1245
+419
 foraging_speed_val
 foraging_speed_val
 0
@@ -1581,10 +1637,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1087
-475
-1235
-508
+1098
+518
+1246
+551
 species_time_val
 species_time_val
 0
@@ -1596,20 +1652,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1097
-449
-1216
-469
+1108
+492
+1227
+512
 phenology related
 14
 0.0
 1
 
 TEXTBOX
-1093
-518
-1229
-554
+1104
+561
+1240
+597
 CHECK tree_target_species
 14
 0.0
@@ -1656,10 +1712,10 @@ dispersal related
 1
 
 SLIDER
-928
-526
-1051
-559
+924
+527
+1073
+560
 n_seeds_hatched
 n_seeds_hatched
 0
@@ -1671,10 +1727,10 @@ NIL
 HORIZONTAL
 
 CHOOSER
-990
-76
-1136
-121
+1022
+96
+1168
+141
 empirical-trees-choice
 empirical-trees-choice
 "closest" "random"
@@ -1692,9 +1748,9 @@ day
 11
 
 SWITCH
-1150
+1211
 108
-1269
+1330
 141
 sleeping-trees?
 sleeping-trees?
@@ -1703,9 +1759,9 @@ sleeping-trees?
 -1000
 
 SWITCH
-1150
+1211
 140
-1269
+1330
 173
 resting-trees?
 resting-trees?
@@ -1714,9 +1770,9 @@ resting-trees?
 -1000
 
 SWITCH
-1150
+1211
 76
-1269
+1330
 109
 feeding-trees?
 feeding-trees?
@@ -1725,41 +1781,41 @@ feeding-trees?
 -1000
 
 TEXTBOX
-1072
+986
 10
-1194
-28
-Resources scenario
+1163
+44
+1. Resources scenario
 14
 0.0
 1
 
 SWITCH
-1281
-109
-1407
+1033
 142
+1159
+175
 all-slp-trees?
 all-slp-trees?
-1
+0
 1
 -1000
 
 TEXTBOX
-1293
-78
-1443
-106
+932
+142
+1037
+170
 make all trees from study period available:
-11
+9
 0.0
 1
 
 BUTTON
 707
-156
+148
 793
-189
+181
 108 steps
 repeat 108 [ step ]
 NIL
@@ -1786,8 +1842,8 @@ print?
 PLOT
 1270
 357
-1470
-507
+1532
+574
 Memory
 tick
 count memory lists
@@ -1801,8 +1857,86 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "ask monkeys [ plot length tree_pot_list ]"
 "pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
-"pen-2" 1.0 0 -7500403 true "" "ask monkeys [ plot length tree_ate_list ]"
-"pen-3" 1.0 0 -14439633 true "" "ask monkeys [ plot length seed_mem_list ]"
+"pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ plot length tree_ate_list ]"
+"pen-3" 1.0 0 -14439633 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) ]"
+
+TEXTBOX
+988
+33
+1185
+61
+1.2 Choose sleeping site scenario
+11
+0.0
+1
+
+TEXTBOX
+1180
+13
+1391
+41
+1.1 Choose resource trees scenario
+11
+0.0
+1
+
+BUTTON
+706
+180
+794
+213
+50 steps
+repeat 50 [ step ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+1100
+423
+1245
+456
+duration
+duration
+0
+20
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+930
+408
+1071
+453
+Energy
+[ energy ] of monkeys
+17
+1
+11
+
+SLIDER
+1341
+613
+1513
+646
+visual
+visual
+0
+100
+25.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2192,7 +2326,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
