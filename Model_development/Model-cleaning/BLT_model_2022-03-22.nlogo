@@ -1202,7 +1202,7 @@ start-energy
 start-energy
 0
 170
-48.0
+76.0
 1
 1
 NIL
@@ -1503,7 +1503,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
-1
+0
 
 CHOOSER
 1016
@@ -1522,7 +1522,7 @@ SWITCH
 227
 export-png
 export-png
-0
+1
 1
 -1000
 
@@ -1535,7 +1535,7 @@ step_forget
 step_forget
 0
 1000
-50.0
+194.0
 1
 1
 NIL
@@ -1745,7 +1745,7 @@ SWITCH
 173
 resting-trees?
 resting-trees?
-0
+1
 1
 -1000
 
@@ -2265,7 +2265,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
