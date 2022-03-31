@@ -25,7 +25,7 @@ seeds-own [ id-seed species mother-tree ]
 breed [monkeys monkey]
 monkeys-own [
   energy        ; energy the tamarin has left
-  status        ; what is the desire ===== DO WE REALLY NEED THIS? ==============
+;  status        ; what is the desire ===== DO WE REALLY NEED THIS? ==============
   action        ; what was the last action
   action-time   ; how long you do the same action again
   behavior      ; as in activity budget data tables
@@ -312,8 +312,8 @@ to output-files
 
   ;; DEFINE OUTPUT FILE HEADERS
   file-open output-locations
-;  file-print (word "ticks" "," "day" "," "timestep" "," "x" "," "y" "," "energy" "," "status" "," "action" "," "behavior) ;; FOR CSV
-  file-print (word " " "ticks" " " "day" " " "timestep" " " "x" " " "y" " " "energy" " " "status" " " "action" " " "behavior") ;; FOR TXT
+;  file-print (word "ticks" "," "day" "," "timestep" "," "x" "," "y" "," "energy" "," "action" "," "behavior) ;; FOR CSV
+  file-print (word " " "ticks" " " "day" " " "timestep" " " "x" " " "y" " " "energy" " " "action" " " "behavior") ;; FOR TXT
   file-close
 
   file-open output-seeds-locations
@@ -349,7 +349,7 @@ to go
 
   if all? monkeys [action = "sleeping"] [
     ask monkeys [
-      type timestep type " - Energy: " type energy type " Status: " type status type " "
+      type timestep type " - Energy: " type energy type " "
       type tree_target  type " " show action
       ]
     set day day + 1
@@ -365,13 +365,10 @@ end
 
 to step ; FOR DEBUG PURPOSES ONLY
 
-;  if all? monkeys [status = "none"] [next_day]
-
   if all? monkeys [action = "sleeping"] [
     ask monkeys [
-;      set status "none"
       set action-time 0
-      type timestep type " - Energy: " type energy type " Status: " type status type " "
+      type timestep type " - Energy: " type energy type " "
       type tree_target  type " " show action
       ]
     set day day + 1
@@ -391,7 +388,6 @@ to step ; FOR DEBUG PURPOSES ONLY
       type "---- STEP ---- " print timestep
       type "tree_target: " type tree_target type " "
       type "tree_current: " type tree_current type " "
-      type "status: " type status type " "
       type "behavior: " type behavior type " "
       type "action: " print action
       type "tree_pot_list: " print length tree_pot_list print tree_pot_list
@@ -446,7 +442,7 @@ to next_day
       ask monkeys [
         ; set action "travel"
         set action-time 0
-        type timestep type " - Energy: " type energy type " Status: " type status type " "
+        type timestep type " - Energy: " type energy type " "
         type tree_target  type " " show action
       ]
       set day day + 1
@@ -494,7 +490,6 @@ to move-monkeys
 
     if timestep < simulation-time [ ; energy levels: energy_level_1 = 80 and energy_level_2 = 150
       ifelse energy < energy_level_1 [ ; energy < level 1
-        ; set status "hungry"
         frugivory
       ][
         ifelse (action = "feeding" or action = "travel") [
@@ -502,16 +497,16 @@ to move-monkeys
             set tree_target -1
             set tree_current -1
             ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
-              if action != "resting" [ set tree_target -1 set tree_current -1 ]
+;              if action != "resting" [ set tree_target -1 set tree_current -1 ]
               resting
             ][
-              set tree_target -1
+;              set tree_target -1
               random-action
             ]
           ][ ; energy_level_1 < energy < energy_level_2
             frugivory
           ] ;; energy > level 2 ==> other activities
-        ][ ; status != "hungry"
+        ][ ; action = "foraging"
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
             change-bonus
           ][
@@ -775,71 +770,22 @@ to resting
 
   set energy energy + energy-loss-resting
   set action "resting"
-  search-resting-tree
-end
-
-;----------------------------------------------------
-
-;to to-resting-tree
-;
-;  ifelse tree_target = -1 [
-;    search-resting-tree ; when simulating trees
-;    ;search-resting-defined ; when using field trees
-;  ][
-;    set steps-moved steps-moved + 1
-;    set energy energy + energy-loss-traveling
-;    if distance tree_target < 0.8 [
-;      set tree_current tree_target
-;      set tree_target -1
-;      set action "on resting tree"
-;      set action "resting"
-;      set behavior "resting"
-;    ]
-;  ]
-;end
-
-;; (IN MY OPINION THIS CODE SHOULD NOT BE USED BECAUSE TAMARINS SHOULD NOT BE RESTRICTED TO CHOOSING TREES THAT WERE OBSERVED EMPIRICALLY; RATHER, RESTING TREES
-;; ARE EXPECTED TO BE EVERYWHERE
-;----- active when NOT simulating resting trees (data from field) --------------
-;to search-resting-defined
-;
-;  set action "to resting tree"
-;  set tree_target min-one-of resting-trees [distance myself]
-;  forward travel_speed
-;  set behavior "travel"
+  set behavior "resting"
 ;  set steps-moved steps-moved + 1
 ;  set energy energy + energy-loss-traveling
-;end
 
-;----- active when simulating resting trees --------------
-to search-resting-tree
-
-set action "to resting tree"
-set behavior "travel"
-let n random 100
-  ifelse n <= 30 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 0.12 ] [forward 0.12 ]]
-  [ ifelse n <= 75 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 0.3 ] [ forward 0.3 ]]
-    [ ifelse n <= 85 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 0.44 ][ forward 0.44 ]]
-      [ ifelse n <= 95 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 0.84 ][ forward 0.84 ]]
-            [ if n <= 100 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 1.84 ][ forward 1.84 ]]
-          ]
-        ]
-      ]
+  if display-hatched-trees? = TRUE [
+    hatch-resting-trees 1 [
+      set size 1
+      set shape "tree"
+      set color 77
+      set label ""
+      setxy xcor ycor
+      set species "rest"
+      set id-tree who
     ]
-  hatch-resting-trees 1 [
-        set size 1
-        set shape "tree"
-        set color 77
-        set label ""
-        setxy xcor ycor
-        set species "rest"
-        set id-tree who
   ]
-;set tree_target resting-trees-here
-;;;set tree_target min-one-of resting-trees [distance myself] ;;; THIS SHOULD NOT BE HERE BECAUSE THE TAMARINS HATCH ONE TREE, IT DOES NOT NEED A TARGET
-;;;  set tree_current tree_target                             ;;; THIS SHOULD NOT BE HERE BECAUSE THE TAMARINS HATCH ONE TREE, IT DOES NOT NEED A TARGET
-set steps-moved steps-moved + 1
-set energy energy + energy-loss-traveling
+
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -934,7 +880,6 @@ end
 ;---------------------------------------------------------------------------------------------
 to forage
 
-  set action "forage"
   set action "forage"
   set behavior "foraging"
 
@@ -1075,7 +1020,6 @@ to write-to-file
       file-write precision first gis:envelope-of self 2
       file-write precision  last gis:envelope-of self 2
       file-write precision energy 1
-      file-write status
       file-write action
       file-write behavior
     ]
@@ -1206,7 +1150,7 @@ start-energy
 start-energy
 0
 170
-48.0
+56.0
 1
 1
 NIL
@@ -1531,15 +1475,15 @@ export-png
 -1000
 
 SLIDER
-914
-350
-1076
-383
+915
+373
+1077
+406
 step_forget
 step_forget
 0
 1000
-25.0
+92.0
 1
 1
 NIL
@@ -1638,9 +1582,9 @@ HORIZONTAL
 TEXTBOX
 1108
 492
-1227
-512
-phenology related
+1248
+528
+6. phenology related
 14
 0.0
 1
@@ -1688,9 +1632,9 @@ HORIZONTAL
 TEXTBOX
 935
 468
-1050
-488
-dispersal related
+1062
+504
+5. dispersal related
 14
 0.0
 1
@@ -1786,10 +1730,10 @@ all-slp-trees?
 -1000
 
 TEXTBOX
-932
-142
-1037
-170
+927
+149
+1032
+177
 make all trees from study period available:
 9
 0.0
@@ -1897,21 +1841,21 @@ NIL
 HORIZONTAL
 
 MONITOR
-930
-408
-1071
-453
+916
+99
+974
+145
 Energy
-[ energy ] of monkeys
-17
+[ round energy ] of monkeys
+3
 1
 11
 
 SLIDER
-1341
-613
-1513
-646
+915
+422
+1079
+456
 visual
 visual
 0
@@ -1921,6 +1865,37 @@ visual
 1
 NIL
 HORIZONTAL
+
+TEXTBOX
+908
+348
+1075
+373
+How many timesteps BLTs take to forget a tree:
+10
+0.0
+1
+
+TEXTBOX
+910
+407
+1077
+427
+remember-trees-in-radii:
+10
+0.0
+1
+
+SWITCH
+1273
+279
+1453
+313
+display-hatched-trees?
+display-hatched-trees?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2310,7 +2285,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
