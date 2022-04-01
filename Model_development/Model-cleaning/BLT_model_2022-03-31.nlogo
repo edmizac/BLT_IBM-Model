@@ -493,24 +493,28 @@ to move-monkeys
         frugivory
       ][
         ifelse (action = "feeding" or action = "travel") [
+;          set tree_target -1
+;          set tree_current -1
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
             set tree_target -1
             set tree_current -1
             ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
-;              if action != "resting" [ set tree_target -1 set tree_current -1 ]
               resting
             ][
-;              set tree_target -1
               random-action
             ]
           ][ ; energy_level_1 < energy < energy_level_2
             frugivory
           ] ;; energy > level 2 ==> other activities
 <<<<<<< HEAD
+<<<<<<< HEAD
         ][ ; action = "foraging"
 =======
         ][ ; action = "foraging" or "resting"
 >>>>>>> more Model cleaning
+=======
+        ][ ; action = "foraging" or "resting"
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
             change-bonus
           ][
@@ -766,11 +770,10 @@ end
 ;---------------------------------------------------------------------------------------------
 to resting
 
-  set energy energy + energy-loss-resting
   set action "resting"
   set behavior "resting"
-;  set steps-moved steps-moved + 1
-;  set energy energy + energy-loss-traveling
+  set steps-moved steps-moved + 1
+  set energy energy + energy-loss-traveling
 
   if display-hatched-trees? = TRUE [
     hatch-resting-trees 1 [
@@ -897,10 +900,11 @@ to forage ;;
       ]
     ]
   ]
-  ;
+
   forward foraging_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-from-prey + energy-loss-foraging
+
 end
 
 ;-------------------------------------------------------------
@@ -1829,10 +1833,14 @@ MONITOR
 99
 974
 <<<<<<< HEAD
+<<<<<<< HEAD
 145
 =======
 144
 >>>>>>> more Model cleaning
+=======
+144
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
 Energy
 [ round energy ] of monkeys
 3
@@ -1844,10 +1852,14 @@ SLIDER
 422
 1079
 <<<<<<< HEAD
+<<<<<<< HEAD
 456
 =======
 455
 >>>>>>> more Model cleaning
+=======
+455
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
 visual
 visual
 0
@@ -1883,10 +1895,14 @@ SWITCH
 279
 1453
 <<<<<<< HEAD
+<<<<<<< HEAD
 313
 =======
 312
 >>>>>>> more Model cleaning
+=======
+312
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
 display-hatched-trees?
 display-hatched-trees?
 1
