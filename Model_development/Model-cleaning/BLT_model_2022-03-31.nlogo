@@ -493,20 +493,20 @@ to move-monkeys
         frugivory
       ][
         ifelse (action = "feeding" or action = "travel") [
+;          set tree_target -1
+;          set tree_current -1
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
             set tree_target -1
             set tree_current -1
             ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
-;              if action != "resting" [ set tree_target -1 set tree_current -1 ]
               resting
             ][
-;              set tree_target -1
               random-action
             ]
           ][ ; energy_level_1 < energy < energy_level_2
             frugivory
           ] ;; energy > level 2 ==> other activities
-        ][ ; action = "foraging"
+        ][ ; action = "foraging" or "resting"
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
             change-bonus
           ][
@@ -768,11 +768,10 @@ end
 ;---------------------------------------------------------------------------------------------
 to resting
 
-  set energy energy + energy-loss-resting
   set action "resting"
   set behavior "resting"
-;  set steps-moved steps-moved + 1
-;  set energy energy + energy-loss-traveling
+  set steps-moved steps-moved + 1
+  set energy energy + energy-loss-traveling
 
   if display-hatched-trees? = TRUE [
     hatch-resting-trees 1 [
@@ -899,29 +898,23 @@ to forage
       ]
     ]
   ]
-  ;
+
   forward foraging_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-from-prey + energy-loss-foraging
+
 end
 
 ;-------------------------------------------------------------
 to random-action
 
 set action-time 0
-;if action = "on feeding tree" [
-;    mod_memory
-;  ]
-;set tree_target -1
-;set tree_current -1
 let choice random 100
   ifelse choice < 50 [
     forage
   ][
     resting
   ]
-set tree_target -1
-set tree_current -1
 end
 
 ;-------------------------------------------------------------
@@ -1844,7 +1837,7 @@ MONITOR
 916
 99
 974
-145
+144
 Energy
 [ round energy ] of monkeys
 3
@@ -1855,7 +1848,7 @@ SLIDER
 915
 422
 1079
-456
+455
 visual
 visual
 0
@@ -1890,7 +1883,7 @@ SWITCH
 1273
 279
 1453
-313
+312
 display-hatched-trees?
 display-hatched-trees?
 1
