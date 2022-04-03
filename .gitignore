@@ -17,4 +17,5 @@
 # Temporary files
 **/runtime
 runtime/
+**.tmp.**
 
