@@ -630,7 +630,7 @@ end
 to to-feeding-tree
 
   set action-time 0
-  if tree_target = -1 [
+  i tree_target = -1 [
     search-feeding-tree
   ]
   set heading towards tree_target
@@ -784,6 +784,7 @@ end
 ;---------------------------------------------------------------------------------------------
 ; Sleeping commands
 ;---------------------------------------------------------------------------------------------
+;; MAYARA CODE:
 to sleeping
 
   ifelse tree_target = -1 [

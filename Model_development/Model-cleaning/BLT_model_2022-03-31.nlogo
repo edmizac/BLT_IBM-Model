@@ -506,7 +506,15 @@ to move-monkeys
           ][ ; energy_level_1 < energy < energy_level_2
             frugivory
           ] ;; energy > level 2 ==> other activities
+<<<<<<< HEAD
+<<<<<<< HEAD
+        ][ ; action = "foraging"
+=======
         ][ ; action = "foraging" or "resting"
+>>>>>>> more Model cleaning
+=======
+        ][ ; action = "foraging" or "resting"
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
             change-bonus
           ][
@@ -543,6 +551,7 @@ to frugivory
     ifelse random (2 * species_time) > action-time [
       feeding
     ][
+      set tree_current -1
       to-feeding-tree ;; THIS WAS NOT INCLUDED IN THE FLOWCHART
     ]
   ][
@@ -629,15 +638,14 @@ end
 to to-feeding-tree
 
   set action-time 0
-  ifelse tree_target = -1 [
+  if tree_target = -1 [
     search-feeding-tree
-  ][
-    set heading towards tree_target
-    forward travel_speed
-    set steps-moved steps-moved + 1
-    set energy energy + energy-loss-traveling
-    ; set tree_current -1
   ]
+  set heading towards tree_target
+  forward travel_speed
+  set behavior "travel"
+  set steps-moved steps-moved + 1
+  set energy energy + energy-loss-traveling
 end
 
 ;----------------------------------------
@@ -647,7 +655,7 @@ to search-feeding-tree
   set action "travel"
   let let_pot_list tree_pot_list
   set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
-  set heading towards tree_target
+
   let tree_target_species [ species ] of tree_target
 
 ;; TREE ENERGY VARIABLE
@@ -707,12 +715,6 @@ to search-feeding-tree
     set species_time 3
     set energy_species 2
   ]
-
-  forward travel_speed
-  set behavior "travel"
-  set steps-moved steps-moved + 1
-  set energy energy + energy-loss-traveling
-  set tree_current -1
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -877,12 +879,12 @@ end
 ;---------------------------------------------------------------------------------------------
 ; Commands for other activities
 ;---------------------------------------------------------------------------------------------
-to forage
+to forage ;;
 
   set action "forage"
   set behavior "foraging"
 
-  let n random 100
+  let n random 100 ;; make it more diectional
   ifelse n <= 20 [  ]
   [ ifelse n <= 35 [ right 45 ]
     [ ifelse n <= 50 [ left 45 ]
@@ -929,25 +931,14 @@ end
 to change-bonus
 
   set action-time 0
-  set tree_target -1
 
   let choice random 2
-  let pot-action ["forage" "resting"]
-  let old-action action
-  let new-action ""
-  let other-action remove old-action pot-action
   if choice = 0 [
-    set action old-action
+    random-action
   ]
   if choice = 1 [
-    set new-action one-of other-action
-    set action new-action
+    last-action-again ; WHY THERE'S NO IFELSE HERE?
   ]
-  if action != "resting" [
-    set tree_target -1
-    set tree_current -1
-  ]
-  last-action-again ; WHY THERE'S NO IFELSE HERE?
 end
 
 
@@ -1476,7 +1467,11 @@ step_forget
 step_forget
 0
 1000
+<<<<<<< HEAD
 92.0
+=======
+30.0
+>>>>>>> more Model cleaning
 1
 1
 NIL
@@ -1837,7 +1832,15 @@ MONITOR
 916
 99
 974
+<<<<<<< HEAD
+<<<<<<< HEAD
+145
+=======
 144
+>>>>>>> more Model cleaning
+=======
+144
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
 Energy
 [ round energy ] of monkeys
 3
@@ -1848,7 +1851,15 @@ SLIDER
 915
 422
 1079
+<<<<<<< HEAD
+<<<<<<< HEAD
+456
+=======
 455
+>>>>>>> more Model cleaning
+=======
+455
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
 visual
 visual
 0
@@ -1883,7 +1894,15 @@ SWITCH
 1273
 279
 1453
+<<<<<<< HEAD
+<<<<<<< HEAD
+313
+=======
 312
+>>>>>>> more Model cleaning
+=======
+312
+>>>>>>> 911a01ec42433c097867c3cc487a1a899c38f870
 display-hatched-trees?
 display-hatched-trees?
 1
