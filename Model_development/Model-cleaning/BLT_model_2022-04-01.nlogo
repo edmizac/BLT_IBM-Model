@@ -7,7 +7,7 @@
 ; empirical or simulated resting and sleeping trees
 ; ------------------------------------------------
 
-extensions [ gis ] ; using the GIS extension of NetLogo
+extensions [ gis palette] ; using the GIS extension of NetLogo
 
 ;; BREEDS ;;
 ; trees
@@ -253,9 +253,12 @@ to setup-monkeys
     [set label ""]
     ifelse show-path? [
       set pen-mode "down"
+      set pen-size 0.2
+      set color gray
 ;;      set Color blue
     ][ set pen-mode "up" ]
   ] ; end ask monkeys
+
 end
 
 ; LEGEND
@@ -436,11 +439,15 @@ to next_day
     reset-ticks
   ]
 
-
   loop [
     if all? monkeys [action = "sleeping"] [
       ask monkeys [
-        ; set action "travel"
+        if path-color-by-day? = TRUE [
+          let color-days palette:scale-gradient palette:scheme-colors "Divergent" "Spectral" 10 no_days 0 9 ;; Spectral
+;          let color-days palette:scale-gradient [[255 0 0] [0 255 0] [0 0 255]] no_days 0 9               ;; RGB
+;          let color-days palette:set-alpha random 100              ;; manually choosen
+          set color one-of color-days
+        ]
         set action-time 0
         type timestep type " - Energy: " type energy type " "
         type tree_target  type " " show action
@@ -518,19 +525,6 @@ to move-monkeys
       forget_trees
       defecation
     ] ; end of daily routine
-
- ; for the display
- ifelse show-energy? [
-      set label round energy
-      set label-color black
-    ]
-    [set label ""]
-
-    ifelse show-path? [
-      set pen-mode "down"
-      set color gray
-    ]
-    [ set pen-mode "up" ]
 ] ; end ask monkeys
 end
 
@@ -876,21 +870,27 @@ to forage
   set behavior "foraging"
 
   let n random 100
-  ifelse n <= 20 [  ]
-  [ ifelse n <= 35 [ right 45 ]
-    [ ifelse n <= 50 [ left 45 ]
-      [ ifelse n <= 60 [ right 90 ]
-        [ ifelse n <= 70 [ left 90 ]
-          [ ifelse n <= 80 [ right 135 ]
-            [ ifelse n <= 90 [ left 135 ]
-              [ if n <= 100 [ left 180 ]
-              ]
-            ]
-          ]
-        ]
-      ]
-    ]
-  ]
+  if n <= 5 [ left random 180 ]
+  if n > 5 AND n <= 20 [ right random 60 ]
+  if n > 20 AND n <= 60 [ rt random 30 ]
+  if n > 60 [ lt random 30 ]
+
+
+;  ;; MAYARA FORAGING PROCEDURE:
+;  ifelse n <= 20 [  ]
+;  [ ifelse n <= 35 [ right 45 ]
+;      [ ifelse n <= 60 [ right 90 ]
+;        [ ifelse n <= 70 [ left 90 ]
+;          [ ifelse n <= 80 [ right 135 ]
+;            [ ifelse n <= 90 [ left 135 ]
+;              [ if n <= 100 [ left 180 ]
+;              ]
+;            ]
+;          ]
+;        ]
+;      ]
+;    ]
+;  ]
 
   forward foraging_speed
   set steps-moved steps-moved + 1
@@ -1125,7 +1125,7 @@ start-energy
 start-energy
 0
 170
-56.0
+61.0
 1
 1
 NIL
@@ -1226,15 +1226,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-719
+720
 349
-891
+892
 382
 energy-from-seeds
 energy-from-seeds
 0
 15
-4.0
+5.0
 1
 1
 NIL
@@ -1328,7 +1328,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-1.9
+1.8
 0.1
 1
 NIL
@@ -1358,7 +1358,7 @@ energy-loss-foraging
 energy-loss-foraging
 -10
 0
--2.2
+-2.8
 0.1
 1
 NIL
@@ -1426,7 +1426,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
-1
+0
 
 CHOOSER
 1022
@@ -1445,7 +1445,7 @@ SWITCH
 227
 export-png
 export-png
-0
+1
 1
 -1000
 
@@ -1458,7 +1458,7 @@ step_forget
 step_forget
 0
 1000
-92.0
+176.0
 1
 1
 NIL
@@ -1862,12 +1862,23 @@ remember-trees-in-radii:
 1
 
 SWITCH
-1273
-279
-1453
-312
+1272
+196
+1434
+230
 display-hatched-trees?
 display-hatched-trees?
+1
+1
+-1000
+
+SWITCH
+1272
+237
+1437
+271
+path-color-by-day?
+path-color-by-day?
 1
 1
 -1000
