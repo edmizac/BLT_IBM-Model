@@ -4,7 +4,7 @@ to initialize
   clear-all
   resize-world (- width) (width - 1) (- height) (height - 1)
 
-  let start-patch patch 0 0
+  let start-patch patch ( width / 2) ( height / 2)
 
   if setup-mode = "patch-shape-1982" [
     ask patches [
@@ -12,21 +12,22 @@ to initialize
     ]
 
     ask patches with [ pxcor <= A OR pxcor >= B ]  [
-;      set pcolor white
+      set pcolor white
       set allowed? FALSE
     ]
 
     ask patches with [ pycor <= A OR pycor >= B ]  [
-;      set pcolor white
+      set pcolor white
       set allowed? FALSE
     ]
   ]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   if setup-mode = "random" [
-    set start-patch one-of patches
+;    set start-patch one-of patches ( width / 2) ( height / 2)
     let blob-maker nobody
     crt 1 [ set blob-maker self
-      setxy ([pxcor] of start-patch) ([pycor] of start-patch)
+;      setxy ([pxcor] of start-patch) ([pycor] of start-patch)
+
     ]
     repeat lc-patch-size [
       ask blob-maker [
@@ -45,7 +46,7 @@ to initialize
 
 
   if setup-mode = "patch-shape-1982" [
-    set start-patch one-of patches
+    set start-patch start-patch
     let blob-maker nobody
     crt 1 [ set blob-maker self
       setxy ([pxcor] of start-patch) ([pycor] of start-patch)
@@ -161,7 +162,7 @@ INPUTBOX
 180
 267
 lc-patch-size
-10.0
+50.0
 1
 0
 Number
@@ -175,7 +176,7 @@ A
 A
 - width
 width
--20.0
+-15.0
 1
 1
 NIL
@@ -190,7 +191,7 @@ B
 B
 - width
 width
-20.0
+15.0
 1
 1
 NIL
@@ -205,7 +206,7 @@ C
 C
 - height
 height
--15.0
+16.0
 1
 1
 NIL
@@ -220,7 +221,7 @@ D
 D
 - height
 height
-15.0
+-8.0
 1
 1
 NIL
