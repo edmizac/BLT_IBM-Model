@@ -105,10 +105,10 @@ end
 ; GIS
 to setup-gis
   set scale 32 ; scale-size. Is this being used?
-  let mcp-gis gis:load-dataset "../../Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
-  let trees-gis gis:load-dataset "../../Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
-  let bb-gis gis:load-dataset "../../Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
-  let all-gis gis:load-dataset "../../Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
+  let mcp-gis gis:load-dataset "../../../Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
+  let trees-gis gis:load-dataset "../../../Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
+  let bb-gis gis:load-dataset "../../../Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
+  let all-gis gis:load-dataset "../../../Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
 
   gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
   gis:set-drawing-color lime + 3
@@ -131,7 +131,7 @@ to setup-trees
 
   if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
 
-    set sleep-file "../../Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
+    set sleep-file "../../../Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
 
   let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of sleep-gis [ vector-feature ->
@@ -156,11 +156,11 @@ to setup-trees
 
   ;; ALL TREES (DEFINED BY feeding-trees-scenario CHOOSER AND ****ing-tree INTERRUPTOR
 
-  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file "../../../Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file "../../../Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file "../../../Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file "../../../Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file "../../../Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
 
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
@@ -628,6 +628,7 @@ to to-feeding-tree
     search-feeding-tree
   ]
   set heading towards tree_target
+  rt random 61
   forward travel_speed
   set behavior "travel"
   set steps-moved steps-moved + 1
@@ -787,6 +788,7 @@ to sleeping
   ][
 
     set heading towards tree_target
+    rt random 61
     if distance tree_target < travel_speed * 0.8 [
       set tree_current tree_target
       set tree_target -1
@@ -869,11 +871,16 @@ to forage
   set action "forage"
   set behavior "foraging"
 
+  set color red
+
   let n random 100
   if n <= 5 [ left random 180 ]
   if n > 5 AND n <= 20 [ right random 60 ]
-  if n > 20 AND n <= 60 [ rt random 30 ]
-  if n > 60 [ lt random 30 ]
+  if n > 20 AND n <= 40 [ rt random 30 ]
+  if n > 40 AND n <= 60 [ lt random 30 ]
+  if n > 60 AND n <= 80 [ rt random 10 ]
+  if n > 80 AND n <= 100 [ lt random 10 ]
+
 
 
 ;  ;; MAYARA FORAGING PROCEDURE:
@@ -895,6 +902,8 @@ to forage
   forward foraging_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-from-prey + energy-loss-foraging
+
+  set color grey
 
 end
 
@@ -1234,7 +1243,7 @@ energy-from-seeds
 energy-from-seeds
 0
 15
-5.0
+7.0
 1
 1
 NIL
@@ -1358,7 +1367,7 @@ energy-loss-foraging
 energy-loss-foraging
 -10
 0
--2.8
+-5.0
 0.1
 1
 NIL
@@ -1458,7 +1467,7 @@ step_forget
 step_forget
 0
 1000
-176.0
+54.0
 1
 1
 NIL
@@ -1518,7 +1527,7 @@ travel_speed_val
 travel_speed_val
 0
 1
-0.7
+0.6
 0.1
 1
 NIL
@@ -1700,7 +1709,7 @@ SWITCH
 175
 all-slp-trees?
 all-slp-trees?
-0
+1
 1
 -1000
 
@@ -1809,7 +1818,7 @@ duration
 duration
 0
 20
-4.0
+6.0
 1
 1
 NIL
@@ -1865,7 +1874,7 @@ SWITCH
 1272
 196
 1434
-230
+229
 display-hatched-trees?
 display-hatched-trees?
 1
@@ -1876,7 +1885,7 @@ SWITCH
 1272
 237
 1437
-271
+270
 path-color-by-day?
 path-color-by-day?
 1
