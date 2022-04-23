@@ -362,7 +362,9 @@ to go
   move-monkeys
   set timestep timestep + 1
   tick
-  write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day(), BUT IT CAN'T BE COMMENTED OUT FROM HERE, JUST THERE
+  if output-files? = TRUE [
+    write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day() AND step()
+  ]
 end
 
 
@@ -383,10 +385,10 @@ to step ; FOR DEBUG PURPOSES ONLY
   repeat 1 [ move-monkeys ]
   set timestep timestep + 1
   tick
-  write-to-file
+  if output-files? = TRUE [ write-to-file ]
 
   ;; DEBUGGING
-  if print? = TRUE [
+  if print-step? = TRUE [
     ask monkeys [
       type "---- STEP ---- " print timestep
       type "tree_target: " type tree_target type " "
@@ -408,10 +410,12 @@ end
 to run_days
 
   repeat no_days [ next_day ]
-  write-seeds
-  write-rest
-  write-sleep
-  write-trees
+  if output-files? = TRUE [
+    write-seeds
+    write-rest
+    write-sleep
+    write-trees
+  ]
 end
 
 
@@ -1083,8 +1087,11 @@ end
 ;; REPORTERS
 
 to-report simulation-time-end
-  ifelse ticks = simulation-time
-  [   report TRUE   ]
+;  ifelse day = no_days AND all? monkeys [ behavior = "sleeping" ]
+  ifelse not any? turtles
+  [   report TRUE
+;    print "AHOY"
+  ]
   [   report FALSE  ]
 
 end
@@ -1419,10 +1426,10 @@ runtime
 String
 
 CHOOSER
-1205
-31
-1355
-76
+1173
+30
+1323
+75
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
@@ -1651,10 +1658,10 @@ day
 11
 
 SWITCH
-1211
-108
-1330
-141
+1179
+107
+1298
+140
 sleeping-trees?
 sleeping-trees?
 0
@@ -1662,10 +1669,10 @@ sleeping-trees?
 -1000
 
 SWITCH
-1211
-140
-1330
-173
+1179
+139
+1298
+172
 resting-trees?
 resting-trees?
 1
@@ -1673,10 +1680,10 @@ resting-trees?
 -1000
 
 SWITCH
-1211
-76
-1330
-109
+1179
+75
+1298
+108
 feeding-trees?
 feeding-trees?
 0
@@ -1732,12 +1739,12 @@ NIL
 1
 
 SWITCH
-799
-158
-889
-191
-print?
-print?
+1343
+29
+1459
+62
+print-step?
+print-step?
 0
 1
 -1000
@@ -1774,10 +1781,10 @@ TEXTBOX
 1
 
 TEXTBOX
-1180
-13
-1391
-41
+1148
+12
+1359
+40
 1.1 Choose resource trees scenario
 11
 0.0
@@ -1865,7 +1872,7 @@ SWITCH
 1272
 196
 1434
-230
+229
 display-hatched-trees?
 display-hatched-trees?
 1
@@ -1876,9 +1883,30 @@ SWITCH
 1272
 237
 1437
-271
+270
 path-color-by-day?
 path-color-by-day?
+1
+1
+-1000
+
+TEXTBOX
+1355
+10
+1505
+28
+Output related
+14
+0.0
+1
+
+SWITCH
+1342
+66
+1460
+99
+output-files?
+output-files?
 1
 1
 -1000
