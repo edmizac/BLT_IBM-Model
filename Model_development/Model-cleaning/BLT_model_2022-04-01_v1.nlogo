@@ -62,6 +62,7 @@ globals [
   energy_species ; value of energy they get from feeding of each species
 
   ;; OUTPUT ;;
+  local-path  ; path for the model to run in different CPUs
   output-locations ; base filename for the monkey locations
   output-seeds-locations ; base filename for the seed locations
   output-rest-locations ; base filename for data from the simulated resting trees
@@ -77,6 +78,11 @@ globals [
 ;--------------------------------------------------------------------------------
 to setup
   clear-all
+
+  ifelse USER = "Ronald"
+  [ set local-path "/media/rbialozyt/H/Projektideen/FAPESP_Project_Eduardo/BLT_IBM-Model/" ]
+  [ set local-path "D:/Data/Documentos/github/BLT_IBM-Model" ]
+
   setup-patches
   setup-gis
   setup-trees
@@ -105,10 +111,10 @@ end
 ; GIS
 to setup-gis
   set scale 32 ; scale-size. Is this being used?
-  let mcp-gis gis:load-dataset "../../Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
-  let trees-gis gis:load-dataset "../../Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
-  let bb-gis gis:load-dataset "../../Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
-  let all-gis gis:load-dataset "../../Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
+  let mcp-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
+  let trees-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
+  let bb-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
+  let all-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
 
   gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
   gis:set-drawing-color lime + 3
@@ -131,7 +137,8 @@ to setup-trees
 
   if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
 
-    set sleep-file "../../Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
+;    set sleep-file "../../Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
+    set sleep-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
 
   let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of sleep-gis [ vector-feature ->
@@ -156,11 +163,11 @@ to setup-trees
 
   ;; ALL TREES (DEFINED BY feeding-trees-scenario CHOOSER AND ****ing-tree INTERRUPTOR
 
-  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
 
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
@@ -299,45 +306,47 @@ to create-legend
 end
 
 to output-files
-  ;; OUTPUT FILE NAMES
-  set output-locations word ( runtime ) "locations_monkey.txt"               ;; word (date-and-time "_" "e-" start-energy) for adding the day and start-energy to the filename
-  set output-seeds-locations word ( runtime ) "locations_seeds.txt"
-  set output-trees-locations word ( runtime ) "locations_trees.txt"
-  set output-rest-locations word ( runtime ) "locations_rest.txt"
-  set output-sleep-locations word ( runtime ) "locations_sleep.txt"
+  if output-files? = TRUE [
+    ;; OUTPUT FILE NAMES
+    set output-locations word ( runtime ) "locations_monkey.txt"               ;; word (date-and-time "_" "e-" start-energy) for adding the day and start-energy to the filename
+    set output-seeds-locations word ( runtime ) "locations_seeds.txt"
+    set output-trees-locations word ( runtime ) "locations_trees.txt"
+    set output-rest-locations word ( runtime ) "locations_rest.txt"
+    set output-sleep-locations word ( runtime ) "locations_sleep.txt"
 
-  ;; CHECK MILLES ET AL 2020 FOR NOT NEEDING TO DELETE FILES
-  if ( file-exists? output-locations ) [ file-delete output-locations ]
-  if ( file-exists? output-seeds-locations ) [ file-delete output-seeds-locations ]
-  if ( file-exists? output-trees-locations ) [ file-delete output-trees-locations ]
-  if ( file-exists? output-rest-locations ) [ file-delete output-rest-locations ]
-  if ( file-exists? output-sleep-locations ) [ file-delete output-sleep-locations ]
+    ;; CHECK MILLES ET AL 2020 FOR NOT NEEDING TO DELETE FILES
+    if ( file-exists? output-locations ) [ file-delete output-locations ]
+    if ( file-exists? output-seeds-locations ) [ file-delete output-seeds-locations ]
+    if ( file-exists? output-trees-locations ) [ file-delete output-trees-locations ]
+    if ( file-exists? output-rest-locations ) [ file-delete output-rest-locations ]
+    if ( file-exists? output-sleep-locations ) [ file-delete output-sleep-locations ]
 
-  ;; DEFINE OUTPUT FILE HEADERS
-  file-open output-locations
-;  file-print (word "ticks" "," "day" "," "timestep" "," "x" "," "y" "," "energy" "," "action" "," "behavior) ;; FOR CSV
-  file-print (word " " "ticks" " " "day" " " "timestep" " " "x" " " "y" " " "energy" " " "action" " " "behavior") ;; FOR TXT
-  file-close
+    ;; DEFINE OUTPUT FILE HEADERS
+    file-open output-locations
+    ;  file-print (word "ticks" "," "day" "," "timestep" "," "x" "," "y" "," "energy" "," "action" "," "behavior) ;; FOR CSV
+    file-print (word " " "ticks" " " "day" " " "timestep" " " "x" " " "y" " " "energy" " " "action" " " "behavior") ;; FOR TXT
+    file-close
 
-  file-open output-seeds-locations
-;  file-print ("id-seed" "," ) ;; FOR CSV
-;  file-print (word " " "id-seed" " " "x" " " "y" " " "species" " " "mother-tree") ;; FOR TXT
-  file-close
+    file-open output-seeds-locations
+    ;  file-print ("id-seed" "," ) ;; FOR CSV
+    ;  file-print (word " " "id-seed" " " "x" " " "y" " " "species" " " "mother-tree") ;; FOR TXT
+    file-close
 
-  file-open output-trees-locations
-;  file-print ("x" "," ) ;; FOR CSV
-  file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
-  file-close
+    file-open output-trees-locations
+    ;  file-print ("x" "," ) ;; FOR CSV
+    file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
+    file-close
 
-  file-open output-rest-locations
-;  file-print ("x" "," ) ;; FOR CSV
-  file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
-  file-close
+    file-open output-rest-locations
+    ;  file-print ("x" "," ) ;; FOR CSV
+    file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
+    file-close
 
-  file-open output-sleep-locations
-;  file-print ("x" "," ) ;; FOR CSV
-  file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
-  file-close
+    file-open output-sleep-locations
+    ;  file-print ("x" "," ) ;; FOR CSV
+    file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
+    file-close
+  ]
 
 end
 
@@ -1739,10 +1748,10 @@ NIL
 1
 
 SWITCH
-1343
-29
-1459
-62
+1344
+81
+1460
+114
 print-step?
 print-step?
 0
@@ -1901,15 +1910,25 @@ Output related
 1
 
 SWITCH
-1342
-66
-1460
-99
+1343
+118
+1461
+151
 output-files?
 output-files?
 1
 1
 -1000
+
+CHOOSER
+1336
+32
+1474
+77
+USER
+USER
+"Ronald" "Eduardo"
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

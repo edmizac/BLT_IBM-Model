@@ -33,7 +33,12 @@ library(progressr)
 
 # Step 1: Create nl object
 netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-modelpath <- here("Model_development", "Model-cleaning", "BLT_model_2022-04-01_v1.nlogo")
+# modelpath <- here("Model_development", "Model-cleaning", "BLT_model_2022-04-01_v1.nlogo")
+modelpath <- "C:/Program Files/NetLogo 6.2.2/app/models"
+file.info(modelpath)
+
+
+
 # outpath <- here("Model_development", "Model-cleaning", "runtime")
 outpath <- here("Model_development")
 
