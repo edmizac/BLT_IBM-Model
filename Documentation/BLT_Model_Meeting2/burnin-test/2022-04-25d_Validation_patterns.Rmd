@@ -1,17 +1,22 @@
 ---
 title: "BLT Meeting output (Validation) burnin run v1"
 author: "Eduardo Zanette"
-date: "20/04/2022"
+date: "25/04/2022"
 abstract: |
 
-  This document was produced for the purpose of presentation to Laurence, Eckhard and Ronald on 25/04/2022, the second BLT Model Meeting while in Germany. For documentation reasons, this run was made with the version v1 of the model.
-  Here we analyze the comparison of empirical data with one run (n = 30 days), but we also differentiate between the whole run (30 days) and the 20 last days, because the step_forget paramater in the model seemed to make the tamarin move more after a "burn-in period" of 10 days.
-  The results show that the burn-in period does not make a difference in the v1 version of the model.
+  This document was produced for the purpose of presentation to Laurence and Ronald on 25/04/2022, the second BLT Model Meeting while in Germany. For documentation reasons, this run was made with the version v1 of the model. Here, we analyze the Memory and Foraging aspects of the model. 
+  The memory component is assessed through a comparison of empirical data with one run (n = 30 days), but we also differentiate between the whole run (30 days) and the 20 last days, because the step_forget paramater (= working memory) seemed to make the tamarin move more after a "burn-in period" of 10 days.
+  The results show that the burn-in period does not seem to make a difference in the v1 version of the model, but this should be throughly tested. Regarding foraging behavior, tamarins spend too much time foraging in a row.
+  
+  Obs: for easier visualization/discussion, check xlsx presentation "Presentation-for.Laurence.xlsx"
       
 output: 
   pdf_document:
   
 fontsize: 12pt
+toc: yes
+toc_depth: 3
+number_sections: yes
 # baselinestretch: 1.12
 # linestretch: 1.22
 # toc: yes
@@ -23,17 +28,19 @@ fontsize: 12pt
 # number_sections: yes
 ---
 
-\pagebreak
 \pagenumbering{arabic}
 
 > Conclusions
 
 #### The *four* problems with this model are:
 
-1) After the burnin they spend too much time foraging
+1) Regarding DPL and Turning angles, it is the same before and after the burn-in period, but revisitations and routes seem more "natural". Therefore, working memory (step_forget) still has to be throughly tested. 
+2) Tamarins spend too much time foraging
 2) Tamarins are still not properly bouncing at the border of the fragment (while foraging)
 3) Foraging occurs for too long
 4) Constant step lenght (velocity)
+
+\pagebreak
 
 ```{r setup, include=FALSE}
 # Packages
@@ -69,10 +76,11 @@ suz_ylim_set = c(7480800, 7481600) # 7480990,
 # Plots
 theme_set(theme_bw())
 simulated_shapes <- c(1, 19, 1, 17, 1)
-simulated_colors <- c("grey", "#1E8449", "grey", "#E74C3C", "grey")
+simulated_colors <- c("magenta", "#1E8449", "grey", "#E74C3C", "grey")
+simulated_colors_noforage <- c("grey", "#1E8449", "grey", "#E74C3C", "grey")
 
 empirical_shapes <- c(1, 19, 1, 1, 1, 1, 1, 1, 1, 17, 1, 1)
-empirical_colors <- c("grey", "#1E8449", "grey", "grey", "grey", "grey", "grey", 
+empirical_colors <- c("magenta", "#1E8449", "grey", "grey", "grey", "grey", "grey", 
                                 "grey", "grey", "#E74C3C", "grey", "grey")
 
 
@@ -102,7 +110,7 @@ gua.sf <- ggplot2::ggplot() +
 ```
 
 ### Guareí empirical (all data, 28 days) and July (6 days)
-```{r, echo=F, warnings = F}
+```{r, echo=F, warnings = F, message=F}
 dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Guarei_Felipe_EMZ1.csv", dec = ".", stringsAsFactors = TRUE)
 dat.gua.orig <- dat.gua.orig %>%
   rename(datetime = POSIXct) %>%
@@ -141,17 +149,17 @@ gua.plot <- gua.sf +
              size = 2.7) +
   ggtitle("Empirical (July only, 6 days)") +
   scale_shape_manual(values = c(1, 19, 1, 1, 1, 1, 17, 1, 1)) +
-  scale_color_manual(values = c("grey", "#1E8449", "grey", "grey", "grey", "grey", "#E74C3C", "grey", "grey"))
+  scale_color_manual(values = c("grey", "#1E8449", "magenta", "grey", "grey", "grey", "#E74C3C", "grey", "grey"))
   
 gua.plot
 ```
+
+\pagebreak
 
 ### Guareí simulated
 
 ```{r How a simulated plot should look like in general, include=FALSE}
 loc_tam <- read.table(here("Documentation", "BLT_Model_Meeting2", "burnin-test", "locations_monkey.txt"), header = 1, stringsAsFactors = TRUE)
-loc_fru <- read.table(here("Documentation", "BLT_Model_Meeting2", "burnin-test", "locations_trees.txt"), header = 1, stringsAsFactors = TRUE)
-loc_slp <- read.table(here("Documentation", "BLT_Model_Meeting2", "burnin-test", "locations_sleep.txt"), header = 1, stringsAsFactors = TRUE)
 
 gua.plot.general <- gua.sf +
   geom_point(data = loc_tam,
@@ -177,9 +185,25 @@ gua.plot <- gua.sf +
                  shape = behavior)) +
   ggtitle("Simulated (30 days - Resources from July)") +
   scale_shape_manual(values = simulated_shapes) +
-  scale_color_manual(values = simulated_colors)
+  scale_color_manual(values = simulated_colors_noforage)
   
 gua.plot
+
+
+gua.plot <- gua.sf +
+  geom_path(data = loc_tam %>% filter(day <= 6),
+            aes(x = x, y = y, group = day), 
+            size = 0.15) +
+  geom_point(data = loc_tam %>% filter(day <= 6),
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior)) +
+  ggtitle("Simulated (first 6 days - Resources from July)") +
+  scale_shape_manual(values = simulated_shapes) +
+  scale_color_manual(values = simulated_colors_noforage)
+
+gua.plot
+
 
 gua.plot <- gua.sf +
   geom_path(data = loc_tam %>% filter(day > 10),
@@ -191,7 +215,22 @@ gua.plot <- gua.sf +
                  shape = behavior)) +
   ggtitle("Simulated (20 days after burn in of 10 days - Resources from July)") +
   scale_shape_manual(values = simulated_shapes) +
-  scale_color_manual(values = simulated_colors)
+  scale_color_manual(values = simulated_colors_noforage)
+  
+gua.plot
+
+
+gua.plot <- gua.sf +
+  geom_path(data = loc_tam %>% filter(day > 10 & day < 17),
+            aes(x = x, y = y, group = day), 
+            size = 0.15) +
+  geom_point(data = loc_tam %>% filter(day > 10 & day < 17),
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior)) +
+  ggtitle("Simulated (6 days after burn in of 10 days - Resources from July)") +
+  scale_shape_manual(values = simulated_shapes) +
+  scale_color_manual(values = simulated_colors_noforage)
   
 gua.plot
 
@@ -200,13 +239,14 @@ gua.plot
 
 ***
 
+\pagebreak
 
-# Validation Patterns
+## Validation Patterns
 
 We are not checking seed dispersal patterns now, just movement and ranging patterns.
 
 
-## Dayly Path Lenght (DPL)
+### Dayly Path Lenght (DPL)
 
 Calculate and plot DPL
 ```{r DPL function, echo = FALSE, }
@@ -304,12 +344,15 @@ text(x=avg_dist_sim_lastdays, y=max(hist$counts)
 
 ```
 
+\pagebreak
 
-## Home Range
+### Home Range
+Still to be done
 Comparison between methods: https://doi.org/10.1111/2041-210X.13786
 
+\pagebreak
 
-## Turning Angles and Step Lenghts
+### Turning Angles and Step Lenghts
 ```{r, include=FALSE}
 dat.gua.orig.jul$id <- "Guareí Empirical"
 dat.gua.orig.jul$id <- as.factor(dat.gua.orig.jul$id)
@@ -431,8 +474,81 @@ circular::rose.diag(loc_tam_lastdays_ltraj_df$rel.angle, bins=30, prop=2.5, unit
 
 ```
 
+\pagebreak
 
-## Revisitations (coming soon)
+### Revisitations (coming soon)
 
 
+***
+
+\pagebreak
+
+## Foraging in empirical data and simulated runs
+```{r}
+gua.plot <- gua.sf +
+  geom_path(data = dat.gua.orig.jul,
+            aes(x = x, y = y, group = day_month), 
+            size = 0.15) +
+  geom_point(data = dat.gua.orig.jul,
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior), 
+             size = 2.7) +
+  ggtitle("Empirical (July only, 6 days)") +
+  scale_shape_manual(values = c(1, 19, 1, 1, 1, 1, 17, 1, 1)) +
+  scale_color_manual(values = c("grey", "#1E8449", "grey", "magenta", "grey", "grey", "#E74C3C", "grey", "grey"))
+  
+gua.plot
+
+
+dat.gua.orig <- dat.gua.orig %>% 
+  mutate(day = lubridate::day(datetime)) %>% 
+  mutate(month = lubridate::month(datetime)) %>% 
+  mutate(day_month = paste0(dat.gua.orig$day, "-", dat.gua.orig$month))
+
+gua.plot <- gua.sf +
+  geom_path(data = dat.gua.orig,
+            aes(x = x, y = y, group = day_month), 
+            size = 0.15) +
+  geom_point(data = dat.gua.orig,
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior), 
+             size = 2.7) +
+  ggtitle("Empirical (all data, 28 days)") +
+  scale_shape_manual(values = c(1, 19, 1, 1, 1, 1, 1, 1, 1, 17, 1, 1)) +
+  scale_color_manual(values = c("grey", "#1E8449", "grey", "magenta", "grey", "grey", "grey", "grey", "grey", "#E74C3C", "grey", "grey"))
+  
+gua.plot
+
+
+gua.plot <- gua.sf +
+  geom_path(data = loc_tam %>% filter(day <= 6),
+            aes(x = x, y = y, group = day), 
+            size = 0.15) +
+  geom_point(data = loc_tam %>% filter(day <= 6),
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior)) +
+  ggtitle("Simulated (first 6 days - Resources from July)") +
+  scale_shape_manual(values = simulated_shapes) +
+  scale_color_manual(values = simulated_colors)
+
+gua.plot
+
+gua.plot <- gua.sf +
+  geom_path(data = loc_tam %>% filter(day > 10 & day < 17),
+            aes(x = x, y = y, group = day), 
+            size = 0.15) +
+  geom_point(data = loc_tam %>% filter(day > 10 & day < 17),
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior)) +
+  ggtitle("Simulated (6 days after burn in of 10 days - Resources from July)") +
+  scale_shape_manual(values = simulated_shapes) +
+  scale_color_manual(values = simulated_colors)
+  
+gua.plot
+
+```
 
