@@ -59,6 +59,7 @@ globals [
   energy_species ; value of energy they get from feeding of each species
 
   ;; OUTPUT ;;
+  local-path  ; path for the model to run in different CPUs
   output-locations ; base filename for the monkey locations
   output-seeds-locations ; base filename for the seed locations
   output-rest-locations ; base filename for data from the simulated resting trees
@@ -74,6 +75,9 @@ globals [
 ;--------------------------------------------------------------------------------
 to setup
   clear-all
+
+  set local-path "D:/Data/Documentos/github/BLT_IBM-Model"
+
   setup-patches
   setup-gis
   setup-trees
@@ -101,10 +105,10 @@ end
 ; GIS
 to setup-gis
   set scale 32 ; scale-size. Is this being used?
-  let mcp-gis gis:load-dataset "poligono_matriz.shp" ; area containing fragment and matrix
-  let trees-gis gis:load-dataset "bbox_certo_buffer.shp" ; home range bounding box
-  let bb-gis gis:load-dataset "polig_fragmento.shp" ; fragment/study area polygon
-  let all-gis gis:load-dataset "all_trees_shape.shp" ; points shape for the all the trees
+let mcp-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
+  let trees-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
+  let bb-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
+  let all-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
 
   gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
   gis:set-drawing-color lime + 3
@@ -130,13 +134,19 @@ to setup-trees
 
   ;; INPUT ;;
   ; load tree-file according to tree-scenario chooser
-  if ( tree-scenario = "trees_all_1" )   [ set tree-file "trees_all_1.shp" ]   ; for simulated sleeping and resting trees; all trees for the 5 months without rest and sleeping sites (153 days, tree types: 1-9)
-  if ( tree-scenario = "trees_all_2" )   [ set tree-file "trees_all_2.shp" ]   ; for real-data sleeping and resting trees; all trees for the 5 months (153 days, tree types: 1-9 = feeding, 10 = resting, 11 = sleeping)
-  if ( tree-scenario = "trees_april_1" ) [ set tree-file "trees_april_1.shp" ] ; for April simulation (30 days - tree types: 1,7,9)
-  if ( tree-scenario = "trees_may_1" )   [ set tree-file "trees_may_1.shp" ]   ; for May (31 days - tree types: 2,6,7,9)
-  if ( tree-scenario = "trees_june_1" )  [ set tree-file "trees_june_1.shp" ]  ; for June (30 days - tree types: 3,6,7,8,9)
-  if ( tree-scenario = "trees_july_1" )  [ set tree-file "trees_july_1.shp" ]  ; for July (31 days - tree types: 4,8,9)
-  if ( tree-scenario = "trees_aug_1" )   [ set tree-file "trees_aug_1.shp" ]   ; for August (31 days - tree types: 5,8,9)
+  if ( feeding-trees-scenario = "trees_all_2" )   [ set tree-file word ( local-path) "/Data/Shapefiles/trees_all_2.shp" ]   ;
+;  if ( feeding-trees-scenario = "trees_may_1" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
+;  if ( feeding-trees-scenario = "trees_jun_1" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
+;  if ( feeding-trees-scenario = "trees_jul_1" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
+;  if ( feeding-trees-scenario = "trees_aug_1" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
+
+;  if ( tree-scenario = "trees_all_1" )   [ set tree-file "trees_all_1.shp" ]   ; for simulated sleeping and resting trees; all trees for the 5 months without rest and sleeping sites (153 days, tree types: 1-9)
+;  if ( tree-scenario = "trees_all_2" )   [ set tree-file "trees_all_2.shp" ]   ; for real-data sleeping and resting trees; all trees for the 5 months (153 days, tree types: 1-9 = feeding, 10 = resting, 11 = sleeping)
+;  if ( tree-scenario = "trees_april_1" ) [ set tree-file "trees_april_1.shp" ] ; for April simulation (30 days - tree types: 1,7,9)
+;  if ( tree-scenario = "trees_may_1" )   [ set tree-file "trees_may_1.shp" ]   ; for May (31 days - tree types: 2,6,7,9)
+;  if ( tree-scenario = "trees_june_1" )  [ set tree-file "trees_june_1.shp" ]  ; for June (30 days - tree types: 3,6,7,8,9)
+;  if ( tree-scenario = "trees_july_1" )  [ set tree-file "trees_july_1.shp" ]  ; for July (31 days - tree types: 4,8,9)
+;  if ( tree-scenario = "trees_aug_1" )   [ set tree-file "trees_aug_1.shp" ]   ; for August (31 days - tree types: 5,8,9)
 
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
@@ -321,7 +331,9 @@ to go
   move-monkeys
   set timestep timestep + 1
   tick
+  if output-files? = TRUE [
   write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day(), BUT IT CAN'T BE COMMENTED OUT FROM HERE, JUST THERE
+    ]
 end
 
 
@@ -329,10 +341,12 @@ end
 to run_days
 
   repeat no_days [ next_day ]
-  write-seeds
-  write-rest
-  write-sleep
-  write-trees
+  if output-files? = TRUE [
+    write-seeds
+    write-rest
+    write-sleep
+    write-trees
+  ]
 end
 
 ;-------------------------------------------------------------
@@ -349,19 +363,20 @@ to next_day
   set timestep 0
 
   ;; DEBUGGING
-  output-type "===== Day: "
-  output-type day
-  output-print " ====="
-  output-type "*simulation-time* "
-  output-type simulation-time
-  output-print " ----"
-  ask monkeys [
-;    output-type "action-time "
-;    output-print action-time
-    output-type "energy "
-    output-print energy
-  ]
-
+;  if output-files? = TRUE [
+    output-type "===== Day: "
+    output-type day
+    output-print " ====="
+    output-type "*simulation-time* "
+    output-type simulation-time
+    output-print " ----"
+    ask monkeys [
+      ;    output-type "action-time "
+      ;    output-print action-time
+      output-type "energy "
+      output-print energy
+    ]
+;  ]
 
   ;; STOP CONDITION ;; NOT NECESSARY BECAUSE THE CODE RUNS repeat run_days
   if simulation-time-end = TRUE [
@@ -1015,7 +1030,6 @@ to-report simulation-time-end
   [   report FALSE  ]
 
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 10
@@ -1349,10 +1363,10 @@ String
 CHOOSER
 980
 16
-1123
+1130
 61
-tree-scenario
-tree-scenario
+feeding-trees-scenario
+feeding-trees-scenario
 "trees_all_1" "trees_all_2" "trees_april_1" "trees_may_1" "trees_june_1" "trees_july_1" "trees_aug_1"
 1
 
@@ -1374,6 +1388,17 @@ SWITCH
 export-png
 export-png
 0
+1
+-1000
+
+SWITCH
+1004
+128
+1129
+161
+output-files?
+output-files?
+1
 1
 -1000
 

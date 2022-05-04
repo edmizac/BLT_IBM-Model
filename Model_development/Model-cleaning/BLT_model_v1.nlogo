@@ -79,9 +79,13 @@ globals [
 to setup
   clear-all
 
-  ifelse USER = "Ronald"
+  if USER = "Ronald"
   [ set local-path "/media/rbialozyt/H/Projektideen/FAPESP_Project_Eduardo/BLT_IBM-Model/" ]
+  if USER = "Eduardo"
   [ set local-path "D:/Data/Documentos/github/BLT_IBM-Model" ]
+  if USER = "Others"
+  [ set local-path "~/" ]
+
 
   setup-patches
   setup-gis
@@ -111,10 +115,10 @@ end
 ; GIS
 to setup-gis
   set scale 32 ; scale-size. Is this being used?
-  let mcp-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
-  let trees-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
-  let bb-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
-  let all-gis gis:load-dataset word ( local-path) "./Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
+  let mcp-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
+  let trees-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
+  let bb-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
+  let all-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
 
   gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
   gis:set-drawing-color lime + 3
@@ -136,16 +140,14 @@ to setup-trees
   let id-tree-slp 0
 
   if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
+    set sleep-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
 
-;    set sleep-file "../../Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
-    set sleep-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
+    let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
+    foreach gis:feature-list-of sleep-gis [ vector-feature ->
+      let location-slp gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
+      set id-tree-slp gis:property-value vector-feature "point"
 
-  let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
-  foreach gis:feature-list-of sleep-gis [ vector-feature ->
-    let location-slp gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
-    set id-tree-slp gis:property-value vector-feature "point"
-
-    create-sleeping-trees 1 [
+      create-sleeping-trees 1 [
         set size 1
         set shape "tree"
         set color magenta
@@ -163,11 +165,11 @@ to setup-trees
 
   ;; ALL TREES (DEFINED BY feeding-trees-scenario CHOOSER AND ****ing-tree INTERRUPTOR
 
-  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file word ( local-path) "./Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
 
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
@@ -357,8 +359,6 @@ end
 ;--------------------------------------------------------------------------------------------
 to go
 
-;  if not any? monkeys [ stop ]
-
   if all? monkeys [action = "sleeping"] [
     ask monkeys [
       type timestep type " - Energy: " type energy type " "
@@ -374,6 +374,9 @@ to go
   if output-files? = TRUE [
     write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day() AND step()
   ]
+
+  if not any? monkeys [ stop ]
+
 end
 
 
@@ -418,7 +421,15 @@ end
 ;-------------------------------------------------------------
 to run_days
 
+
   repeat no_days [ next_day ]
+
+  if simulation-time-end = TRUE [
+    output-print "AHOY"
+    print "AHOY"
+  ]
+
+
   if output-files? = TRUE [
     write-seeds
     write-rest
@@ -431,6 +442,9 @@ end
 ;-------------------------------------------------------------
 to next_day
 
+  if simulation-time-end = TRUE [ stop ]  ;; DON'T TAKE THIS OUT OF HERE -> MAKES NLRX STOP AFTER no_days
+
+
   ;; DEBUGGING
   output-type "===== Day: "
   output-type day
@@ -439,6 +453,7 @@ to next_day
   output-type simulation-time
   output-print " ----"
 
+
   ask monkeys [
 ;    output-type "action-time "
 ;    output-print action-time
@@ -446,11 +461,6 @@ to next_day
     output-print energy
   ]
 
-  ;; STOP CONDITION ;; NOT NECESSARY BECAUSE THE CODE RUNS repeat run_days
-  if simulation-time-end = TRUE [
-    stop
-    reset-ticks
-  ]
 
   loop [
     if all? monkeys [action = "sleeping"] [
@@ -483,8 +493,6 @@ to next_day
 ;   export-interface world-name
   ]
 
-  ;write-to-file
-
 end
 
 
@@ -498,6 +506,7 @@ to move-monkeys
     if patch-ahead pcolor = yellow + 4 [ right 180 forward 0.5 ] ; no use of the matrix
     if energy < 1 [ die ]
 
+
   ;; BLT ROUTINE
 
     if timestep = 1
@@ -506,6 +515,7 @@ to move-monkeys
     if timestep >= simulation-time [
       ; set action "travel"
       sleeping
+      output-day-stats
     ]
 
     if timestep < simulation-time [ ; energy levels: energy_level_1 = 80 and energy_level_2 = 150
@@ -814,7 +824,6 @@ to sleeping
 ;      ]
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
-      output-day-stats
     ]
   ]
   if action != "sleeping" [
@@ -823,6 +832,10 @@ to sleeping
     set energy energy + energy-loss-traveling
     set action "travel"
     set behavior "travel"
+  ]
+
+  if simulation-time-end = TRUE [
+    output-print "AHOY"
   ]
 
 end
@@ -882,11 +895,15 @@ to forage
   set action "forage"
   set behavior "foraging"
 
-  let n random 100
-  if n <= 5 [ left random 180 ]
-  if n > 5 AND n <= 20 [ right random 60 ]
-  if n > 20 AND n <= 60 [ rt random 30 ]
-  if n > 60 [ lt random 30 ]
+;; RANDOM movement while foraging 1:
+;  let n random 100
+;  if n <= 5 [ left random 180 ]
+;  if n > 5 AND n <= 20 [ right random 60 ]
+;  if n > 20 AND n <= 60 [ rt random 30 ]
+;  if n > 60 [ lt random 30 ]
+
+;; RANDOM movement while foraging 2 (much simpler):
+  rt (random 180) - 90
 
 
 ;  ;; MAYARA FORAGING PROCEDURE:
@@ -994,6 +1011,7 @@ to output-day-stats
   output-print ticks
   output-type "steps/ticks "
   output-print (steps-moved / ticks)
+
 end
 
 ;---------------------------------------------------------------
@@ -1096,11 +1114,9 @@ end
 ;; REPORTERS
 
 to-report simulation-time-end
-;  ifelse day = no_days AND all? monkeys [ behavior = "sleeping" ]
-  ifelse not any? turtles
-  [   report TRUE
-;    print "AHOY"
-  ]
+  ifelse day = no_days AND all? monkeys [ behavior = "sleeping" ]
+  ;  ifelse not any? monkeys
+  [   report TRUE   ]
   [   report FALSE  ]
 
 end
@@ -1141,7 +1157,7 @@ start-energy
 start-energy
 0
 170
-61.0
+69.0
 1
 1
 NIL
@@ -1250,7 +1266,7 @@ energy-from-seeds
 energy-from-seeds
 0
 15
-5.0
+7.0
 1
 1
 NIL
@@ -1474,7 +1490,7 @@ step_forget
 step_forget
 0
 1000
-176.0
+82.0
 1
 1
 NIL
@@ -1564,7 +1580,7 @@ species_time_val
 species_time_val
 0
 100
-6.0
+1.0
 1
 1
 NIL
@@ -1639,7 +1655,7 @@ n_seeds_hatched
 n_seeds_hatched
 0
 100
-1.0
+0.0
 1
 1
 NIL
@@ -1731,10 +1747,10 @@ make all trees from study period available:
 1
 
 BUTTON
-707
-148
-793
-181
+805
+146
+891
+179
 108 steps
 repeat 108 [ step ]
 NIL
@@ -1748,10 +1764,10 @@ NIL
 1
 
 SWITCH
-1344
-81
-1460
-114
+698
+159
+800
+192
 print-step?
 print-step?
 0
@@ -1800,10 +1816,10 @@ TEXTBOX
 1
 
 BUTTON
-706
-180
-794
-213
+805
+179
+891
+212
 50 steps
 repeat 50 [ step ]
 NIL
@@ -1850,8 +1866,8 @@ SLIDER
 visual
 visual
 0
-100
-3.0
+10
+2.0
 1
 1
 NIL
@@ -1927,7 +1943,7 @@ CHOOSER
 77
 USER
 USER
-"Ronald" "Eduardo"
+"Ronald" "Eduardo" "Others"
 1
 
 @#$#@#$#@
