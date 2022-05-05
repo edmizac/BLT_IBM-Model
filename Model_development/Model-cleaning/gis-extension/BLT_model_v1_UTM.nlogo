@@ -11,7 +11,6 @@ extensions [ gis palette] ; using the GIS extension of NetLogo
 
 ;; BREEDS ;;
 ; trees
-turtles-own [ x_UTM y_UTM ]
 breed [feeding-trees feeding-tree]
 feeding-trees-own [ species id-tree ] ; feeding trees have species and id code
 breed [sleeping-trees sleeping-tree]
@@ -40,8 +39,8 @@ monkeys-own [
   seed_ate_list ; list of the seeds they fed on
   seed_mem_list ; list of timesteps since the tamarin ate the seed
   seed_add_list ; helper list to increase the mem list by 1 each time step
-;  x_UTM
-;  y_UTM
+  x_UTM
+  y_UTM
 ]
 
 ;; GLOBALS ;;
@@ -53,18 +52,15 @@ globals [
   meanycoord ; translating the geo coordinates to world coordinates
   ;step_forget ; amount of timesteps until the tamarin forgets to be in that tree
   midday ; the time of the middle of the day (important for resting)
-
-  ;; INPUT ;;
-  ;gis;
   guarei-dataset
   shape-type
   property-names
   feature-list
   vertex-lists
+
+  ;; INPUT ;;
   tree-file ; filename with the tree location and type
   sleep-file ; filename with the location of all sleeping sites
-
-  ;param values;
   gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
   travel_speed ; global speed for travel
   foraging_speed ; global speed for foraging
@@ -131,8 +127,8 @@ to setup-gis
   resize-world -25 25 -25 25 ; same thing as selecting 25 x 25 in the interface
   set-patch-size 10
 
-  gis:load-coordinate-system word ( local-path) "/Data/Shapefiles/Guarei-poligono.prj"
-  set guarei-dataset gis:load-dataset word ( local-path) "/Data/Shapefiles/Guarei-poligono.shp"
+  gis:load-coordinate-system ( word "Guarei-poligono.prj")
+  set guarei-dataset gis:load-dataset "Guarei-poligono.shp"
 
   gis:set-drawing-color gray + 3
   let pen-width 1
@@ -145,13 +141,12 @@ to setup-gis
   set feature-list gis:feature-list-of guarei-dataset
   set vertex-lists gis:vertex-lists-of item 0 feature-list
 
+
 ;;;;;;;;; BLT Model v1 code:  ;;;;;;;;;;;
-;  set scale 32 ; scale-size. Is this being used?
 ;  let mcp-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
 ;  let trees-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
 ;  let bb-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
 ;  let all-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
-;
 ;
 ;  gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
 ;  gis:set-drawing-color lime + 3
@@ -163,7 +158,57 @@ to setup-gis
 ;    gis:set-drawing-color scale-color lime (gis:property-value vector-feature "id") 500 1
 ;    gis:fill vector-feature 2.0 ]
 
+  ; transform
 end
+
+to visit
+;  ask turtles [
+;    let chosen random (length feature-list)
+;    let my-feature (item chosen feature-list)
+;
+;    ; translate the centroid of the chosen feature from
+;    ; GIS space to NetLogo patch space, then move there
+;    ;
+;    let new-location gis:location-of (gis:random-point-inside my-feature)
+;;    print new-location
+;    let new-x (item 0 new-location)
+;    let new-y (item 1 new-location)
+;    setxy new-x new-y
+;
+;
+;;    print gis:location-of (gis:random-point-inside my-feature)
+;    print gis:envelope-of self
+;;    set x_UTM (item 0 new-location)
+;;    set y_UTM (item 1 new-location)
+;
+;;    foreach property-names [
+;;      print (list ? " = " gis:property-value my-feature ?)
+;;    ]
+;;    print " "
+;  ]
+
+  ask monkeys [
+    let chosen random (length feature-list)
+    let my-feature (item chosen feature-list)
+;
+    ; translate the centroid of the chosen feature from
+    ; GIS space to NetLogo patch space, then move there
+    ;
+    let new-location gis:location-of (gis:random-point-inside my-feature)
+;    print new-location
+    let new-x (item 0 new-location)
+    let new-y (item 1 new-location)
+    setxy new-x new-y
+
+
+;    print gis:location-of (gis:random-point-inside my-feature)
+    print gis:envelope-of self
+    set x_UTM (item 0 gis:envelope-of self)
+    set y_UTM (item 2 gis:envelope-of self)
+  ]
+
+end
+
 
 ; TREES INPUT
 to setup-trees
@@ -185,8 +230,6 @@ to setup-trees
         set color magenta
         setxy item 0 location-slp item 1 location-slp
         set id-tree-slp gis:property-value vector-feature "point"
-        set x_UTM (item 0 gis:envelope-of self)
-        set y_UTM (item 2 gis:envelope-of self)
   ]]]
 
  ;; load tree-file according to tree-scenario chooser (.SHP)
@@ -219,8 +262,6 @@ to setup-trees
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "species"
         set id-tree gis:property-value vector-feature "point"
-        set x_UTM (item 0 gis:envelope-of self)
-        set y_UTM (item 2 gis:envelope-of self)
     ]];
 
     if ( resting-trees? = TRUE AND tree-type = "resting" ) [
@@ -231,8 +272,6 @@ to setup-trees
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "species"
         set id-tree gis:property-value vector-feature "point"
-        set x_UTM (item 0 gis:envelope-of self)
-        set y_UTM (item 2 gis:envelope-of self)
     ]]
     ;
 
@@ -244,8 +283,6 @@ to setup-trees
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "species"
         set id-tree gis:property-value vector-feature "point"
-        set x_UTM (item 0 gis:envelope-of self)
-        set y_UTM (item 2 gis:envelope-of self)
     ]] ;
   ]
 
@@ -271,10 +308,6 @@ to setup-monkeys
       setxy [xcor] of start [ycor] of start
       set tree_current start
     ]
-
-    set x_UTM (item 0 gis:envelope-of self)
-    set y_UTM (item 2 gis:envelope-of self)
-
     set tree_target -1
 
     set steps-moved 0
@@ -552,8 +585,6 @@ to move-monkeys
     if patch-ahead pcolor = yellow + 4 [ right 180 forward 0.5 ] ; no use of the matrix
     if energy < 1 [ die ]
 
-    set x_UTM (item 0 gis:envelope-of self)
-    set y_UTM (item 2 gis:envelope-of self)
 
   ;; BLT ROUTINE
 
@@ -1205,10 +1236,10 @@ ticks
 30.0
 
 SLIDER
-560
-207
-732
-240
+718
+222
+890
+255
 start-energy
 start-energy
 0
@@ -1220,10 +1251,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-533
-12
-607
-54
+711
+15
+785
+57
 SETUP
 setup
 NIL
@@ -1277,9 +1308,9 @@ Defecated seeds
 1
 
 SWITCH
-1001
+1146
 236
-1119
+1264
 269
 show-energy?
 show-energy?
@@ -1288,9 +1319,9 @@ show-energy?
 -1000
 
 SWITCH
-1001
+1146
 278
-1121
+1266
 311
 show-path?
 show-path?
@@ -1299,25 +1330,25 @@ show-path?
 -1000
 
 SLIDER
-560
-241
-732
-274
+717
+267
+889
+300
 simulation-time
 simulation-time
 0
 170
-109.0
+108.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-567
-308
-739
-341
+720
+349
+892
+382
 energy-from-seeds
 energy-from-seeds
 0
@@ -1329,10 +1360,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-533
-140
-600
-173
+709
+66
+789
+99
 STEP
 step
 NIL
@@ -1346,11 +1377,11 @@ NIL
 0
 
 BUTTON
-533
-59
-607
-92
-go
+706
+107
+795
+140
+go (Continue)
 go
 T
 1
@@ -1363,10 +1394,10 @@ NIL
 1
 
 BUTTON
-612
-49
-695
-82
+806
+109
+889
+142
 Next Day
 next_day
 NIL
@@ -1380,10 +1411,10 @@ NIL
 1
 
 BUTTON
-612
-12
-696
-47
+806
+66
+892
+101
 Run Days
 run_days
 NIL
@@ -1397,10 +1428,10 @@ NIL
 1
 
 INPUTBOX
-699
-12
-761
-82
+812
+10
+886
+70
 no_days
 10.0
 1
@@ -1408,10 +1439,10 @@ no_days
 Number
 
 SLIDER
-567
-346
-739
-379
+720
+387
+892
+420
 energy-from-prey
 energy-from-prey
 0
@@ -1423,10 +1454,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-383
-740
-416
+720
+424
+893
+457
 energy-loss-traveling
 energy-loss-traveling
 -10
@@ -1438,10 +1469,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-421
-740
-454
+720
+462
+893
+495
 energy-loss-foraging
 energy-loss-foraging
 -10
@@ -1453,10 +1484,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-457
-740
-490
+720
+498
+893
+531
 energy-loss-resting
 energy-loss-resting
 -10
@@ -1468,10 +1499,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-773
-13
-849
-58
+896
+10
+972
+55
 timestep
 timestep
 17
@@ -1479,9 +1510,9 @@ timestep
 11
 
 OUTPUT
-759
+904
 199
-983
+1128
 312
 11
 
@@ -1496,10 +1527,10 @@ Tamarin
 1
 
 INPUTBOX
-62
-532
-469
-618
+700
+612
+1107
+698
 runtime
 ./runtime/
 1
@@ -1507,29 +1538,29 @@ runtime
 String
 
 CHOOSER
-1042
-34
-1192
-79
+1173
+30
+1323
+75
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
 0
 
 CHOOSER
-891
-55
-1037
-100
+1022
+51
+1168
+96
 sleeping-trees-scenario
 sleeping-trees-scenario
 "empirical" "simulated"
 0
 
 SWITCH
-1000
+1145
 194
-1120
+1265
 227
 export-png
 export-png
@@ -1538,9 +1569,9 @@ export-png
 -1000
 
 SLIDER
-770
+915
 373
-932
+1077
 406
 step_forget
 step_forget
@@ -1553,19 +1584,19 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-585
-283
-721
-319
+738
+324
+874
+360
 2. energy related
 14
 0.0
 1
 
 TEXTBOX
-784
+929
 325
-921
+1066
 359
 3. memory related
 14
@@ -1573,9 +1604,9 @@ TEXTBOX
 1
 
 SLIDER
-778
+923
 488
-929
+1074
 521
 gut_transit_time_val
 gut_transit_time_val
@@ -1588,9 +1619,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-951
+1096
 326
-1108
+1253
 360
 4. movement related
 14
@@ -1598,9 +1629,9 @@ TEXTBOX
 1
 
 SLIDER
-956
+1101
 349
-1098
+1243
 382
 travel_speed_val
 travel_speed_val
@@ -1613,9 +1644,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-954
+1099
 386
-1100
+1245
 419
 foraging_speed_val
 foraging_speed_val
@@ -1628,9 +1659,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-953
+1098
 518
-1101
+1246
 551
 species_time_val
 species_time_val
@@ -1643,9 +1674,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-963
+1108
 492
-1103
+1248
 528
 6. phenology related
 14
@@ -1653,9 +1684,9 @@ TEXTBOX
 1
 
 TEXTBOX
-959
+1104
 561
-1095
+1240
 597
 CHECK tree_target_species
 14
@@ -1663,10 +1694,10 @@ CHECK tree_target_species
 1
 
 SLIDER
-586
-498
-722
-531
+739
+539
+875
+572
 energy_level_1
 energy_level_1
 0
@@ -1678,10 +1709,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-586
-533
-722
-566
+739
+574
+875
+607
 energy_level_2
 energy_level_2
 0
@@ -1693,9 +1724,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-790
+935
 468
-917
+1062
 504
 5. dispersal related
 14
@@ -1703,9 +1734,9 @@ TEXTBOX
 1
 
 SLIDER
-779
+924
 527
-928
+1073
 560
 n_seeds_hatched
 n_seeds_hatched
@@ -1718,20 +1749,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-891
-100
-1037
-145
+1022
+96
+1168
+141
 empirical-trees-choice
 empirical-trees-choice
 "closest" "random"
 0
 
 MONITOR
-792
-57
-849
-102
+915
+54
+972
+99
 day
 day
 17
@@ -1739,10 +1770,10 @@ day
 11
 
 SWITCH
-1048
-111
-1167
-144
+1179
+107
+1298
+140
 sleeping-trees?
 sleeping-trees?
 0
@@ -1750,10 +1781,10 @@ sleeping-trees?
 -1000
 
 SWITCH
-1048
-143
-1167
-176
+1179
+139
+1298
+172
 resting-trees?
 resting-trees?
 1
@@ -1761,10 +1792,10 @@ resting-trees?
 -1000
 
 SWITCH
-1048
-79
-1167
-112
+1179
+75
+1298
+108
 feeding-trees?
 feeding-trees?
 0
@@ -1772,20 +1803,20 @@ feeding-trees?
 -1000
 
 TEXTBOX
-855
-14
-1032
-48
+986
+10
+1163
+44
 1. Resources scenario
 14
 0.0
 1
 
 SWITCH
-902
-146
-1028
-179
+1033
+142
+1159
+175
 all-slp-trees?
 all-slp-trees?
 0
@@ -1793,20 +1824,20 @@ all-slp-trees?
 -1000
 
 TEXTBOX
-806
-154
-911
-182
+927
+149
+1032
+177
 make all trees from study period available:
 9
 0.0
 1
 
 BUTTON
-693
-141
-769
-174
+805
+146
+891
+179
 108 steps
 repeat 108 [ step ]
 NIL
@@ -1820,10 +1851,10 @@ NIL
 1
 
 SWITCH
-605
-101
-707
-134
+698
+159
+800
+192
 print-step?
 print-step?
 0
@@ -1831,9 +1862,9 @@ print-step?
 -1000
 
 PLOT
-1125
+1270
 357
-1387
+1532
 574
 Memory
 tick
@@ -1852,30 +1883,30 @@ PENS
 "pen-3" 1.0 0 -14439633 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) ]"
 
 TEXTBOX
-857
-37
-1054
-65
+988
+33
+1185
+61
 1.2 Choose sleeping site scenario
 11
 0.0
 1
 
 TEXTBOX
-1017
-16
-1228
-44
+1148
+12
+1359
+40
 1.1 Choose resource trees scenario
 11
 0.0
 1
 
 BUTTON
-608
-140
-685
-173
+805
+179
+891
+212
 50 steps
 repeat 50 [ step ]
 NIL
@@ -1889,9 +1920,9 @@ NIL
 1
 
 SLIDER
-955
-423
 1100
+423
+1245
 456
 duration
 duration
@@ -1904,10 +1935,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-793
-102
-851
-147
+916
+99
+974
+144
 Energy
 [ round energy ] of monkeys
 3
@@ -1915,9 +1946,9 @@ Energy
 11
 
 SLIDER
-770
+915
 422
-934
+1079
 455
 visual
 visual
@@ -1930,9 +1961,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-763
+908
 348
-930
+1075
 373
 How many timesteps BLTs take to forget a tree:
 10
@@ -1940,9 +1971,9 @@ How many timesteps BLTs take to forget a tree:
 1
 
 TEXTBOX
-765
+910
 407
-932
+1077
 427
 remember-trees-in-radii:
 10
@@ -1950,9 +1981,9 @@ remember-trees-in-radii:
 1
 
 SWITCH
-1127
+1272
 196
-1289
+1434
 229
 display-hatched-trees?
 display-hatched-trees?
@@ -1961,9 +1992,9 @@ display-hatched-trees?
 -1000
 
 SWITCH
-1127
+1272
 237
-1292
+1437
 270
 path-color-by-day?
 path-color-by-day?
@@ -1972,20 +2003,20 @@ path-color-by-day?
 -1000
 
 TEXTBOX
-1224
-14
-1374
-32
+1355
+10
+1505
+28
 Output related
 14
 0.0
 1
 
 SWITCH
-1216
-87
-1334
-120
+1347
+83
+1465
+116
 output-files?
 output-files?
 1
@@ -1993,25 +2024,42 @@ output-files?
 -1000
 
 CHOOSER
-1205
-36
-1343
-81
+1336
+32
+1474
+77
 USER
 USER
 "Ronald" "Eduardo" "Others"
 1
 
 SWITCH
-1219
-128
-1347
-161
+1350
+124
+1478
+157
 output-print?
 output-print?
 1
 1
 -1000
+
+BUTTON
+570
+37
+633
+70
+NIL
+visit
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

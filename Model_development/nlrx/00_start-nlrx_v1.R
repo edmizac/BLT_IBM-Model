@@ -26,7 +26,7 @@ if(Sys.getenv("JAVA_HOME") == "") {
 library("nlrx")
 library("here")
 library("progressr")
-library("dplyr")
+library("tidyverse")
 ## ---------------------------
 
 # vignette(nlrx) # not available. Try:
@@ -77,8 +77,9 @@ nl@experiment <- experiment(expname = expname,
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
                             # reporters:
                             metrics = c("timestep", "day"), # e.g. "count sheep" or "count patches with [pcolor = green]"
-                            metrics.turtles = list("monkeys" = c("xcor", "ycor",
-                                                                 "energy")
+                            metrics.turtles = list("monkeys" = c("x_UTM", "y_UTM",
+                                                                 "energy", "behavior")
+                                                   
                                                                  # , "steps-moved"
                                                                  
                             ), # "who" "color"
@@ -181,15 +182,15 @@ library(future)
 library(tictoc)
 
 # With run_nl_one (with only the first seed)
-tictoc::tic()
-progressr::handlers("progress")
-results <- progressr::with_progress(
-  run_nl_one(nl,
-             seed = getsim(nl, "simseeds")[1],
-             siminputrow = 1
-             )
-)
-tictoc::toc()
+# tictoc::tic()
+# progressr::handlers("progress")
+# results <- progressr::with_progress(
+#   run_nl_one(nl,
+#              seed = getsim(nl, "simseeds")[1],
+#              siminputrow = 1
+#              )
+# )
+# tictoc::toc()
 
 
 # With run_nl_all (all 17 seeds)
@@ -202,6 +203,7 @@ results <- progressr::with_progress(
 )
 tictoc::toc()
 
+
 # Step 5: Attach results to nl and run analysis
 # In order to run the analyze_nl function, the simulation output has to be attached to the nl object first. The simdesign class within the nl object provides a slot for attaching output results (simoutput). An output results tibble can be attached to this slot by using the simdesign setter function setsim(nl, "simoutput"). After attaching the simulation results, these can also be written to the defined outpath of the experiment object.
 # Attach results to nl object:
@@ -211,238 +213,13 @@ nl@experiment@metrics.turtles
 nl@experiment@metrics.patches
 nl@experiment@variables
 
-
-##### Screening data #####
-nl
-eval_simoutput(nl)
-nl@simdesign@simoutput$metrics.monkeys[[1]]  # TURTLE X AND Y:
-
-
-## Method 2: nl to points ## Not working
-# results.sf.pat <- nl_to_points(nl, coords = "px") # why px/pycor are NA?
-# results.sf.age <- nl_to_points(nl, coords = "x")
-# 
-# results.sf.age %>% glimpse() %>% select(`[step]`)
+# Save RDS to avoid losing it by R abortion:
+filename <- here("Model_development", "Model-cleaning", "runtime", "tempRDS.Rdata")
+saveRDS(nl, file = filename) ; rm(results)
+nl <- readRDS(filename)
 
 rm(results)
 gc()
-
-## Method 1: unnest_simoutput ## Let's proceed with Method 1
-results_unnest <- unnest_simoutput(nl)
-results_unnest %>% glimpse()
-results_unnest$`[step]` %>% unique()
-results_unnest$timestep %>% unique()
-# results_unnest$ticks %>% unique()
-a <- results_unnest %>% filter(breed == "monkeys")
-rm(a)
-
-str(results_unnest)
-results_unnest$agent %>% as.factor() %>% levels() # no 'monkeys'
-results_unnest$breed %>% as.factor() %>% levels() # ya 'monkeys'!
-
-
-# Split tibble into turtles and patches tibbles and select each 10th step:
-results_unnest_turtles <- results_unnest %>% 
-  dplyr::filter(breed=="monkeys")
-results_unnest_turtles %>% glimpse()
-
-
-# Split tibble into turtles and patches tibbles and select each 10th step:
-# by random seed (= selecting one day)
-aux <- results_unnest$`random-seed` %>%
-  na.exclude() %>%
-  sample(size = 1)
-
-# # patches
-# results_unnest_patches <- results_unnest %>%
-#   dplyr::filter(agent=="patches") %>%
-#   # dplyr::filter(`random-seed` == aux) %>%
-#   dplyr::filter( `timestep` %in% seq(8, 108, by=10)) # `[step]` instead of timestep does not work
-
-# turtles
-results_unnest_turtles <- results_unnest %>%
-  dplyr::filter(agent=="turtles") %>%            # by agent
-  # dplyr::filter(`random-seed` == aux) %>%         # by day (=number of the agent = who)
-  dplyr::filter(`timestep` %in% seq(8, 108, by=10))# by steps
-
-# turtles (only last stap)
-results_unnest_turtles <- results_unnest %>%
-  dplyr::filter(agent=="turtles") %>%            # by agent
-  dplyr::group_by(day) %>% 
-  dplyr::slice(tail(row_number(), 1))           # 10 for last 10 steps
-
-results_unnest_turtles %>% glimpse()
-
-# Take unwanted breeds out
-# results_unnest <- results_unnest %>% filter(breed != "legend-trees")
-# results_unnest <- results_unnest %>% filter(breed != "resting-trees")
-# results_unnest$breed %>% as.factor() %>% levels()
-# results_unnest$agent %>% as.factor() %>% levels()
-
-# monkey locations
-results_unnest_monkeys <- results_unnest_turtles %>%
-  dplyr::filter(breed=="monkeys")
-
-# # feeding-trees
-# results_unnest_trees <- results_unnest_turtles %>%
-#   dplyr::filter(breed=="feeding-trees")
-# 
-# # sleeping-trees
-# results_unnest_sleep <- results_unnest_turtles %>%
-#   dplyr::filter(breed=="sleeping-trees")
-# 
-# # seeds
-# results_unnest_seeds <- results_unnest_turtles %>%
-#   dplyr::filter(breed=="seeds")
-
-
-# Create normal plot
-ggplot() +
-  coord_equal() +
-  geom_tile(data=results_unnest_patches, aes(x=pxcor, y=pycor, fill = factor(pcolor))) +
-  geom_point()
-
-
-# # Create facet plot with many dfs
-#   library(ggplot2)
-# ggplot() +
-#   facet_wrap(~`[step]`, ncol=6, nrow = 2) +
-#   coord_equal() +
-#   
-#   geom_tile(data=results_unnest_patches, 
-#             aes(x=pxcor, y=pycor, fill=factor(pcolor))) +
-#   scale_fill_manual(breaks=c("49", "68"),
-#                     values = c("49" = "#F6F9BF", "68" = "#BFF8B7")) +
-#   
-#   geom_point(data=results_unnest_seeds, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 0.5, color = "black", shape = 4) +
-#   
-#   geom_point(data=results_unnest_sleep, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 1.5, color = "#E3A9F7", shape = 15) +
-# 
-#   geom_point(data=results_unnest_trees, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 1, color = "black", shape = 23, fill = "#1FCD2B") +
-#   
-#   geom_point(data=results_unnest_monkeys, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 4, color = "red", shape = 10) +
-#   
-#   guides(fill=guide_legend(title="Patch color")) +
-#   theme_minimal() +
-#   ggtitle("Output maps of each 10th simulation tick")
-# 
-# ggsave(filename = "setup-for-workflow-simple_multiple-layers.png",
-#        dpi = 300, width = 30, height = 20, units = "cm")
-#   
-#   
-# 
-# # # Create facet plot with different dfs (patches and turtles)
-# # library(ggplot2)
-# # ggplot() +
-# #   facet_wrap(~`[step]`, ncol=6, nrow = 2) +
-# #   coord_equal() +
-# #   geom_tile(data=results_unnest_patches, aes(x=pxcor, y=pycor, fill=factor(pcolor))) +
-# #   geom_point(data=results_unnest_turtles, aes(x = xcor, y = ycor, 
-# #                                               group = breed, color = breed,
-# #                                               size = breed, shape = breed), 
-# #              size = 1) +
-# #   scale_fill_manual(breaks=c("49", "68"),
-# #                     values = c("49" = "#F6F9BF", "68" = "#BFF8B7")) +
-# #   
-# #   scale_color_manual(breaks=c("seeds", "feeding-trees", 
-# #                               "sleeping-trees", "monkeys"
-# #                               # "resting-trees", "seeds"
-# #                               ), 
-# #                      values = c("seeds" = "grey", "feeding-trees" = "green",
-# #                                 "sleeping-trees" = "magenta", "monkeys" = "black"
-# #                                 # "seeds" = "red"
-# #                                 )) + 
-# #   
-# #   scale_size_manual(breaks=c("seeds", "feeding-trees", 
-# #                               "sleeping-trees", "monkeys"
-# #                               ),
-# #                      values = c("seeds" = 0.3, "feeding-trees" = 1,
-# #                                 "sleeping-trees" = 1, "monkeys" = 1.5)) +
-# #   
-# #   scale_shape_manual(breaks=c("seeds", "feeding-trees", 
-# #                               "sleeping-trees", "monkeys"
-# #                               ),
-# #                     values = c("seeds" = 1, "feeding-trees" = 1,
-# #                                "sleeping-trees" = 1, "monkeys" = 8)) +
-# #   
-# #   guides(fill=guide_legend(title="Patch color")) +
-# #   theme_minimal() +
-# #   ggtitle("Output maps of each 10th simulation tick")
-# 
-# 
-# # Create animated plot (GIF)
-# require(gganimate)
-# p1 <- ggplot() +
-#   
-#   geom_tile(data=results_unnest_patches, 
-#             aes(x=pxcor, y=pycor, fill=factor(pcolor))) +
-#   scale_fill_manual(breaks=c("49", "68"),
-#                     values = c("49" = "#F6F9BF", "68" = "#BFF8B7")) +
-#   
-#   geom_point(data=results_unnest_seeds, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 0.5, color = "black", shape = 4) +
-#   
-#   geom_point(data=results_unnest_sleep, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 1.5, color = "#E3A9F7", shape = 15) +
-#   
-#   geom_point(data=results_unnest_trees, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 1, color = "black", shape = 23, fill = "#1FCD2B") +
-#   
-#   geom_point(data=results_unnest_monkeys, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 4, color = "red", shape = 10) +
-#   
-#   guides(fill=guide_legend(title="Patch color")) +
-#   transition_time(`[step]`) +
-#   coord_equal() +
-#   labs(title = 'Step: {frame_time}') +
-#   theme_minimal() +
-#   ggtitle("Output maps of each 10th simulation tick")
-# 
-# # Animate the plot and use 1 frame for each step of the model simulations
-# library(gapminder)
-# library(gganimate)
-# library(gifski)
-# 
-# 
-# animate(p1,
-#         width=400, height=400,
-#         renderer = gifski_renderer())
-# anim_save("setup-for-workflow-simple_multiple-layers.gif")
-# 
-# animate(p1, nframes = length(unique(results_unnest_patches$`[step]`)),
-#         width=400, height=400, fps=4,
-#         duration = 5, renderer = gifski_renderer())
-# anim_save("setup-for-workflow-simple_multiple-layers-by10.gif")
-# 
-# 
-# ## Method 2: nl_to_points()
-# results_points_x <- nl_to_points(nl, coords = "px")
-# results_points_y <- nl_to_points(nl, coords = "py")
-# 
-# 
-# 
-# # Other
-# nl
-# eval_simoutput(nl)
-
-
-
-
-
-
-
 
 
 
