@@ -60,22 +60,23 @@ report_model_parameters(nl)
 
 # Step 2: Attach an experiment
 expname = "v1-model-simple"
+# no_days = 10
 
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
                             repetition = 1, # number of repetitions with the same seed
                             tickmetrics = "true", # "false" for metrics only in the end of the simulation
                             idsetup = "setup",
-                            idgo = "run_days",
+                            idgo = "go",
                             # idfinal = "",
                             # idrunnum = "nlrx_id",
-                            runtime = 1, #(if = 0 or NA_integer_, define stopcond_)
-                            stopcond= "simulation-time-end", # reporter that returns TRUE
+                            runtime = 1500, #(if = 0 or NA_integer_, define stopcond_)
+                            stopcond= "day > no_days", # reporter that returns TRUE
                             # stopcond= "ifelse day = no_days AND all? monkeys [ behavior = "sleeping" ] ", # reporter that returns TRUE
                             # stopcond= "not any? monkeys", # reporter that returns TRUE
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
                             # reporters:
-                            metrics = c("ticks", "count sleeping-trees"), # e.g. "count sheep" or "count patches with [pcolor = green]"
+                            metrics = c("ticks", "day"), # e.g. "count sheep" or "count patches with [pcolor = green]"
                             metrics.turtles = list("monkeys" = c("xcor", "ycor")
                                                                  # "energy", "steps-moved")
                             ), # "who" "color"
@@ -109,7 +110,8 @@ nl@experiment <- experiment(expname = expname,
                             constants = list(
                               
                               ### "true" for output related stuff
-                              "output-files?" = "false", #THIS IS VERY IMPORTANT
+                              "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
+                              "output-print?" = "false", #true to output in the console
                               "USER" = "\"Eduardo\"",
                               "print-step?" = "false",
                               'export-png'= "false",
@@ -120,7 +122,7 @@ nl@experiment <- experiment(expname = expname,
                               "path-color-by-day?" = "false",
                               
                               ### resource scenario
-                              "no_days" = 20, # DON'T TRY no_days = 1
+                              "no_days" = 10, # DON'T TRY no_days = 1
                               'feeding-trees-scenario' = "\"trees_all\"",
                               'feeding-trees?' = "true",
                               'sleeping-trees?' = "true",
@@ -184,7 +186,7 @@ results <- progressr::with_progress(
 tictoc::toc()
 
 
-# With run_nl_all (all 20 seeds)
+# With run_nl_all (all 17 seeds)
 tictoc::tic()
 progressr::handlers("progress")
 results <- progressr::with_progress(
