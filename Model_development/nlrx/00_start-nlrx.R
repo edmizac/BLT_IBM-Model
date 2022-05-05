@@ -17,9 +17,9 @@
 # remotes::install_github("ropensci/nlrx")
 
 # Java memory:
-if(Sys.getenv("JAVA_HOME") == "") {
-        Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
-}
+#if(Sys.getenv("JAVA_HOME") == "") {
+#        Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
+#}
 
 ## ---------------------------
 ## Packages:
@@ -32,7 +32,8 @@ library(progressr)
 # https://docs.ropensci.org/nlrx/articles/getstarted.html
 
 # Step 1: Create nl object
-netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+## netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+netlogopath <- file.path("/opt/netlogo_622/")
 modelpath <- here("Model_development", "Model-cleaning", "BLT_model_2022-04-01_v1.nlogo")
 # outpath <- here("Model_development", "Model-cleaning", "runtime")
 outpath <- here("Model_development")
@@ -333,7 +334,7 @@ nl@experiment <- experiment(expname = expname,
                             tickmetrics = "false", # "false" for metrics only in the end of the simulation
                             idsetup = "setup",
                             idgo = "run_days",
-                            # idfinal = "",
+                            # idfinal = "r:stop",
                             # idrunnum = "nlrx_id",
                             runtime = 0, #(if = 0 or NA_integer_, define stopcond_)
                             stopcond= "simulation-time-end", # reporter that returns TRUE
@@ -459,7 +460,7 @@ expname = "v1-model-fullfact"
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
                             repetition = 1,
-                            tickmetrics = "false", # "false" for metrics only in the end of the simulation
+                            tickmetrics = "true", # "false" for metrics only in the end of the simulation
                             idsetup = "setup",
                             idgo = "run_days",
                             # idfinal = "",
@@ -565,26 +566,26 @@ results <- progressr::with_progress(
   run_nl_all(nl,
              split = 1)
 )
-tictoc::toc()
+# tictoc::toc()
 
 # Step 5: Attach results to nl and run analysis
 # In order to run the analyze_nl function, the simulation output has to be attached to the nl object first. The simdesign class within the nl object provides a slot for attaching output results (simoutput). An output results tibble can be attached to this slot by using the simdesign setter function setsim(nl, "simoutput"). After attaching the simulation results, these can also be written to the defined outpath of the experiment object.
 # Attach results to nl object:
-setsim(nl, "simoutput") <- results
+#setsim(nl, "simoutput") <- results
 
-nl@experiment@metrics.turtles
-nl@experiment@variables
+#nl@experiment@metrics.turtles
+#nl@experiment@variables
 
 
 
 
 #### Screening data ####
-results_unnest <- unnest_simoutput(nl)
-results.sf <- nl_to_points(nl, coords = "px")
+#results_unnest <- unnest_simoutput(nl)
+#results.sf <- nl_to_points(nl, coords = "px")
 
 # Split tibble into turtles and patches tibbles and select each 10th step:
-results_unnest_turtles <- results_unnest %>% 
-  dplyr::filter(agent=="monkeys")
+#results_unnest_turtles <- results_unnest %>% 
+#  dplyr::filter(agent=="monkeys")
 
-nl
-eval_simoutput(nl)
+#nl
+#eval_simoutput(nl)

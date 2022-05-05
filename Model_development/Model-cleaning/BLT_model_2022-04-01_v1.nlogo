@@ -7,8 +7,10 @@
 ; empirical or simulated resting and sleeping trees
 ; ------------------------------------------------
 
-extensions [ gis palette] ; using the GIS extension of NetLogo
-
+extensions [
+  gis ; using the GIS extension of NetLogo
+  palette
+]
 ;; BREEDS ;;
 ; trees
 breed [feeding-trees feeding-tree]
@@ -67,6 +69,7 @@ globals [
   output-rest-locations ; base filename for data from the simulated resting trees
   output-sleep-locations ; base filename for data from the simulated sleeping trees
   output-trees-locations ; base filename to check the geo coordinates for feeding trees
+  root-path ; the base directory for searching for files
 ]
 
 
@@ -77,6 +80,7 @@ globals [
 ;--------------------------------------------------------------------------------
 to setup
   clear-all
+  set root-path "/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/BLT_IBM-Model/"
   setup-patches
   setup-gis
   setup-trees
@@ -105,10 +109,10 @@ end
 ; GIS
 to setup-gis
   set scale 32 ; scale-size. Is this being used?
-  let mcp-gis gis:load-dataset "../../Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
-  let trees-gis gis:load-dataset "../../Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
-  let bb-gis gis:load-dataset "../../Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
-  let all-gis gis:load-dataset "../../Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
+  let mcp-gis gis:load-dataset word root-path "Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
+  let trees-gis gis:load-dataset word root-path "Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
+  let bb-gis gis:load-dataset word root-path "Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
+  let all-gis gis:load-dataset word root-path "Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
 
   gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
   gis:set-drawing-color lime + 3
@@ -131,7 +135,7 @@ to setup-trees
 
   if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
 
-    set sleep-file "../../Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
+    set sleep-file word root-path "Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
 
   let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of sleep-gis [ vector-feature ->
@@ -156,11 +160,11 @@ to setup-trees
 
   ;; ALL TREES (DEFINED BY feeding-trees-scenario CHOOSER AND ****ing-tree INTERRUPTOR
 
-  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file "../../Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file word root-path "Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file word root-path "Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file word root-path "Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file word root-path "Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
+  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file word root-path "Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
 
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
@@ -214,7 +218,7 @@ to setup-monkeys
 
     if sleeping-trees-scenario = "empirical" AND sleeping-trees? = FALSE [
       setxy random xcor random ycor
-      set tree_current -1
+      set tree_current NOBODY
     ]
 
     if sleeping-trees-scenario = "empirical" AND sleeping-trees? = TRUE [
@@ -222,7 +226,7 @@ to setup-monkeys
       setxy [xcor] of start [ycor] of start
       set tree_current start
     ]
-    set tree_target -1
+    set tree_target NOBODY
 
     set steps-moved 0
     set action-time 0
@@ -468,7 +472,7 @@ to next_day
 
   ; export the landscape as a .png if neccessary  (= Milles et al 2020)
   if day = no_days AND export-png = TRUE [
-   let file-id random -1
+   let file-id random NOBODY
    let world-name (word runtime no_days "_" "e-" start-energy "_" file-id "_world.png") ; date-and-time
    export-view world-name
 ;   export-interface world-name
@@ -504,11 +508,11 @@ to move-monkeys
         frugivory
       ][
         ifelse (action = "feeding" or action = "travel") [
-;          set tree_target -1
-;          set tree_current -1
+;          set tree_target NOBODY
+;          set tree_current NOBODY
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
-            set tree_target -1
-            set tree_current -1
+            set tree_target NOBODY
+            set tree_current NOBODY
             ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
               resting
             ][
@@ -541,7 +545,7 @@ to frugivory
     ifelse random (2 * species_time) > action-time [
       feeding
     ][
-      set tree_current -1
+      set tree_current NOBODY
       to-feeding-tree ;; THIS WAS NOT INCLUDED IN THE FLOWCHART
     ]
   ][
@@ -552,10 +556,10 @@ end
 ; --- report on feeding tree ---
 ;--------------------------------------------------------------------------------
 to-report on-feeding-tree?
-  ifelse action = "travel" and tree_target != -1 [
+  ifelse action = "travel" and tree_target != NOBODY [
     ifelse distance tree_target < 0.8 [
       set tree_current tree_target
-      set tree_target -1
+      set tree_target NOBODY
       report true
     ][
       report false
@@ -628,7 +632,7 @@ end
 to to-feeding-tree
 
   set action-time 0
-  if tree_target = -1 [
+  if tree_target = NOBODY [
     search-feeding-tree
   ]
   set heading towards tree_target
@@ -644,7 +648,8 @@ to search-feeding-tree
 
   set action "travel"
   let let_pot_list tree_pot_list
-  set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
+;;  set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
+  set tree_target one-of feeding-trees
 
   let tree_target_species [ species ] of tree_target
 
@@ -784,7 +789,7 @@ end
 ;---------------------------------------------------------------------------------------------
 to sleeping
 
-  ifelse tree_target = -1 [
+  ifelse tree_target = NOBODY [
 
     if sleeping-trees-scenario = "empirical" [ search-sleeping-defined ]  ; when using field trees ; WITH THIS IT DOES NOT           ;; EMPIRICAL
     if sleeping-trees-scenario = "simulated" [ search-sleeping-tree ]     ; when simulating trees  ; ONLY WORKS WITH THIS PROCEDURE ;; SIMULATED
@@ -793,7 +798,7 @@ to sleeping
     set heading towards tree_target
     if distance tree_target < travel_speed * 0.8 [
       set tree_current tree_target
-      set tree_target -1
+      set tree_target NOBODY
       set action "sleeping"
       set behavior "sleeping"
       set action-time 0

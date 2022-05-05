@@ -2,17 +2,20 @@
 .Rhistory
 .RData
 .Ruserdata
-.png
+*.png
+~*.*
 
-.cpg
-.qpj
-.shx
-.dbf
-.prj
-.shp
+*.cpg
+*.qpj
+*.shx
+*.dbf
+*.prj
+*.shp
 
 # Folders:
-/Data
+Data/
+Model_development/Model-cleaning/gis-extension/
+Model_development/shape_files/
 
 # Temporary files
 **/runtime
@@ -21,4 +24,31 @@ runtime/
 /locations_*
 
 Model_development/Model-cleaning/runtime
-Model_development/Model-cleaning/runtime
+Model_development/Model-cleaning/gis-extension/gis-debugg.nlogo
+Model_development/Model-cleaning/gis-extension/Guarei-matriz.cpg
+Model_development/Model-cleaning/gis-extension/Guarei-matriz.dbf
+Model_development/Model-cleaning/gis-extension/Guarei-matriz.prj
+Model_development/Model-cleaning/gis-extension/Guarei-matriz.qpj
+Model_development/Model-cleaning/gis-extension/Guarei-matriz.shp
+Model_development/Model-cleaning/gis-extension/Guarei-matriz.shx
+Model_development/Model-cleaning/gis-extension/Guarei-poligono.cpg
+Model_development/Model-cleaning/gis-extension/Guarei-poligono.dbf
+Model_development/Model-cleaning/gis-extension/Guarei-poligono.prj
+Model_development/Model-cleaning/gis-extension/Guarei-poligono.qpj
+Model_development/Model-cleaning/gis-extension/Guarei-poligono.shp
+Model_development/Model-cleaning/gis-extension/Guarei-poligono.shx
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.cpg
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.dbf
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.prj
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.sbn
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.sbx
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.shp
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.shx
+Model_development/Model-cleaning/gis-extension/Suzano-poligono.xml
+Model_development/Model-cleaning/gis-extension/Taquara-poligono.dbf
+Model_development/Model-cleaning/gis-extension/Taquara-poligono.prj
+Model_development/Model-cleaning/gis-extension/Taquara-poligono.sbn
+Model_development/Model-cleaning/gis-extension/Taquara-poligono.sbx
+Model_development/Model-cleaning/gis-extension/Taquara-poligono.shp
+Model_development/Model-cleaning/gis-extension/Taquara-poligono.shx
+Model_development/Model-cleaning/gis-extension/Taquara-poligono.xml
