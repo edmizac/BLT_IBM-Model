@@ -221,6 +221,8 @@ nl <- readRDS(filename)
 rm(results)
 gc()
 
+# Go to file 00_Validation_patterns_v1
+
 
 
 

@@ -4,7 +4,7 @@ author: "Eduardo Zanette"
 date: "05/05/2022"
 abstract: |
 
-  This document was produced for the purpose of reporting validation patterns of the BLT Model. 
+  This document was produced for the purpose of reporting validation patterns of the BLT Model. The graphs also were used for the presentation for the Wiegand EcoMod group on May 12th. 
       
 output: 
   pdf_document:
@@ -44,6 +44,7 @@ library("here")
 library("tidyverse")
 library("ggspatial")
 library("sp")
+library("sf")
 library("adehabitatHR")
 library("circular")
 library("nlrx")
@@ -67,8 +68,19 @@ suz_ylim_set = c(7480800, 7481600) # 7480990,
 
 # Plots
 theme_set(theme_bw())
-simulated_shapes <- c(1, 19, 1, 17, 1)
-simulated_colors <- c("magenta", "#1E8449", "grey", "#E74C3C", "grey")
+
+simulated_shapes <- c("foraging" = 1,
+                      "frugivory" = 19, 
+                      "resting" = 1, 
+                      "sleeping" = 17, 
+                      "travel" = 1)
+
+simulated_colors <- c("foraging" = "magenta",
+                      "frugivory" = "#1E8449", 
+                      "resting" = "grey", 
+                      "sleeping" = "#E74C3C", 
+                      "travel" = "grey")
+
 simulated_colors_noforage <- c("grey", "#1E8449", "grey", "#E74C3C", "grey")
 
 empirical_shapes <- c(1, 19, 1, 1, 1, 1, 1, 1, 1, 17, 1, 1)
@@ -76,13 +88,23 @@ empirical_colors <- c("magenta", "#1E8449", "grey", "grey", "grey", "grey", "gre
                                 "grey", "grey", "#E74C3C", "grey", "grey")
 
 
+# Functions
+hist_f <- function(x = x, main = main, xlab = xlab) {
+  hist(x, 
+       # xlab = "Daily Path Length (m)",
+       xlab = xlab,
+                           breaks=seq(0,12000,by=200),
+                           ylim = c(0,6),
+                           col = "grey",
+                           main = main)
+  }
+
 # Knitr
 knitr::opts_chunk$set(echo = TRUE,
                       fig.align='center')
 ```
 
-```{r Load shapefiles, results="hide", warning=F, echo=F, message=F}
-library("sf")
+```{r Load shapefiles, include=F, results="hide", warning=F, echo=F, message=F}
 gua.polyg <- sf::st_read(here("Data", "shapefiles", "Fragment polygon.shp"))
 # sf::st_collection_extract(gua.polyg, type = "POLYG")
 # # sf::st_filter(gua.polyg)
@@ -107,9 +129,9 @@ gua.sf <- ggplot2::ggplot() +
 ```
 
 
-### Guareí empirical 
+## Guareí empirical
 
-#### All data (28 days) and July only (6 days)
+#### All data (28 days) and July only (6 days) ####
 
 ```{r, echo=F, warnings = F, message=F}
 dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Guarei_Felipe_EMZ1.csv", dec = ".", stringsAsFactors = TRUE)
@@ -157,10 +179,10 @@ gua.plot
 
 \pagebreak
 
-### Guareí simulated
+## Guareí simulated
 
 ```{r}
-# load RDS file with results from nlrx runs and unnest turtle variable
+# load RDS file with results from nlrx runs and unnest turtle variables
 filename <- here("Model_development", "Model-cleaning", "runtime", "tempRDS.Rdata")
 nl <- readRDS(filename)
 results_unnest <- unnest_simoutput(nl)
@@ -182,187 +204,173 @@ results_unnest$behavior %>% unique()
 #### Prepare simulation data
 ```{r}
 results_unnest <- results_unnest %>% 
-  rename(x = x, y = y)
+  rename(x = x_UTM, y = y_UTM)
+```
+
+```{r}
+gua.sf <- ggplot2::ggplot() +
+  geom_sf(data = gua.polyg,
+          color = "black",
+          fill = "#A9DFBF") +
+  coord_sf(
+    datum = sf::st_crs(our_crs),
+    xlim = gua_xlim_set,    
+    ylim = gua_ylim_set) +  
+  theme_bw() +
+  annotation_scale(location = "bl", width_hint = .35) +
+  annotation_north_arrow(location = "bl", which_north = "true",
+                         pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
+                         style = north_arrow_fancy_orienteering)
 ```
 
 
 #### One random run (10 days) (=go button)
 ```{r }
-gua.plot.general <- gua.sf +
-  geom_path(data = results_unnest,
-            aes(x = x, y = y), 
-            size = 0.15) +
-  geom_point(data = results_unnest,
-             aes(x = x, y = y, group = behavior,
-                 color = behavior,
-                 shape = behavior
-                 ), size = 1.4) +
-  scale_color_manual(values = simulated_colors) +
-  scale_shape_manual(values = simulated_shapes) +
-  ggtitle("Guareí - simulated (1 run, 10 days - All resources)")
-gua.plot.general
-```
-
-#### One random run (1 random day) (= next_day button) all steps
-
-```{r}
 # Select random run by selecting random seed (run of x days = seed)
 aux_run <- results_unnest$`random-seed` %>%
   na.exclude() %>%
   sample(size = 1)
 
-# Select random run by selecting random seed (run of x days = seed)
-aux_day <- results_unnest$`day` %>%
-  na.exclude() %>%
-  sample(size = 1)
+results_unnest_turtles <- results_unnest %>%
+  dplyr::filter(agent=="turtles") %>%               # by agent
+  dplyr::filter(`random-seed` == aux_run)       # by random run (~= number of the agent = who)
 
-# # patches
-# results_unnest_patches <- results_unnest %>%
-#   dplyr::filter(agent=="patches") %>%
-#   # dplyr::filter(`random-seed` == aux) %>%
-#   dplyr::filter( `timestep` %in% seq(8, 108, by=10)) # `[step]` instead of timestep does not work
+# Check if is only one run (seed):
+results_unnest_turtles$`random-seed` %>% unique()
 
-
-
-# # # Create facet plot with different dfs (patches and turtles)
-# # library(ggplot2)
-# # ggplot() +
-# #   facet_wrap(~`[step]`, ncol=6, nrow = 2) +
-# #   coord_equal() +
-# #   geom_tile(data=results_unnest_patches, aes(x=pxcor, y=pycor, fill=factor(pcolor))) +
-# #   geom_point(data=results_unnest_turtles, aes(x = xcor, y = ycor, 
-# #                                               group = breed, color = breed,
-# #                                               size = breed, shape = breed), 
-# #              size = 1) +
-# #   scale_fill_manual(breaks=c("49", "68"),
-# #                     values = c("49" = "#F6F9BF", "68" = "#BFF8B7")) +
-# #   
-# #   scale_color_manual(breaks=c("seeds", "feeding-trees", 
-# #                               "sleeping-trees", "monkeys"
-# #                               # "resting-trees", "seeds"
-# #                               ), 
-# #                      values = c("seeds" = "grey", "feeding-trees" = "green",
-# #                                 "sleeping-trees" = "magenta", "monkeys" = "black"
-# #                                 # "seeds" = "red"
-# #                                 )) + 
-# #   
-# #   scale_size_manual(breaks=c("seeds", "feeding-trees", 
-# #                               "sleeping-trees", "monkeys"
-# #                               ),
-# #                      values = c("seeds" = 0.3, "feeding-trees" = 1,
-# #                                 "sleeping-trees" = 1, "monkeys" = 1.5)) +
-# #   
-# #   scale_shape_manual(breaks=c("seeds", "feeding-trees", 
-# #                               "sleeping-trees", "monkeys"
-# #                               ),
-# #                     values = c("seeds" = 1, "feeding-trees" = 1,
-# #                                "sleeping-trees" = 1, "monkeys" = 8)) +
-# #   
-# #   guides(fill=guide_legend(title="Patch color")) +
-# #   theme_minimal() +
-# #   ggtitle("Output maps of each 10th simulation tick")
-# 
-# 
-# # Create animated plot (GIF)
-# require(gganimate)
-# p1 <- ggplot() +
-#   
-#   geom_tile(data=results_unnest_patches, 
-#             aes(x=pxcor, y=pycor, fill=factor(pcolor))) +
-#   scale_fill_manual(breaks=c("49", "68"),
-#                     values = c("49" = "#F6F9BF", "68" = "#BFF8B7")) +
-#   
-#   geom_point(data=results_unnest_seeds, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 0.5, color = "black", shape = 4) +
-#   
-#   geom_point(data=results_unnest_sleep, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 1.5, color = "#E3A9F7", shape = 15) +
-#   
-#   geom_point(data=results_unnest_trees, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 1, color = "black", shape = 23, fill = "#1FCD2B") +
-#   
-#   geom_point(data=results_unnest_monkeys, 
-#              aes(x = xcor, y = ycor, group = breed), 
-#              size = 4, color = "red", shape = 10) +
-#   
-#   guides(fill=guide_legend(title="Patch color")) +
-#   transition_time(`[step]`) +
-#   coord_equal() +
-#   labs(title = 'Step: {frame_time}') +
-#   theme_minimal() +
-#   ggtitle("Output maps of each 10th simulation tick")
-# 
-# # Animate the plot and use 1 frame for each step of the model simulations
-# library(gapminder)
-# library(gganimate)
-# library(gifski)
-# 
-# 
-# animate(p1,
-#         width=400, height=400,
-#         renderer = gifski_renderer())
-# anim_save("setup-for-workflow-simple_multiple-layers.gif")
-# 
-# animate(p1, nframes = length(unique(results_unnest_patches$`[step]`)),
-#         width=400, height=400, fps=4,
-#         duration = 5, renderer = gifski_renderer())
-# anim_save("setup-for-workflow-simple_multiple-layers-by10.gif")
-# 
-# 
-# ## Method 2: nl_to_points()
-# results_points_x <- nl_to_points(nl, coords = "px")
-# results_points_y <- nl_to_points(nl, coords = "py")
-# 
-# 
-# 
-# # Other
-# nl
-# eval_simoutput(nl)
+# Plot
+gua.plot.general <- gua.sf +
+  geom_path(data = results_unnest_turtles,
+            aes(x = x, y = y),
+            size = 0.15) +
+  geom_point(data = results_unnest_turtles,
+             aes(x = x, y = y
+                 , group = behavior,
+                 color = behavior,
+                 shape = behavior
+                 ),
+             size = 1.4) +
+  scale_color_manual(values = simulated_colors) +
+  scale_shape_manual(values = simulated_shapes) +
+  ggtitle("Guareí - simulated (1 run, 10 days - All resources)")
+gua.plot.general
 
 ```
 
-#### One random run (1 random day) (= next_day button) each 10 steps
-```{r}
+#### One day of one random run (1 random seed) (= next_day button) all steps and each 10 steps
 
-# turtles (each 10 steps)
-results_unnest_turtles <- results_unnest %>%
+```{r}
+# To keep the original object without modifications:
+results_unnest_turtles <- results_unnest
+
+# Select random run by selecting random seed (run of x days = seed)
+aux_run <- results_unnest$`random-seed` %>%
+  na.exclude() %>%
+  sample(size = 1)
+
+# Select random day after selecting the same random seed as above
+aux <- results_unnest %>% 
+  filter(`random-seed` == aux_run) %>% 
+    dplyr::select(day)
+aux_day <- aux$day %>%
+  na.exclude() %>%
+  sample(size =  1)
+
+
+# All steps
+results_unnest_turtles_allsteps <- results_unnest_turtles %>%
   dplyr::filter(agent=="turtles") %>%               # by agent
   dplyr::filter(`random-seed` == aux_run) %>%       # by random run (~= number of the agent = who)
-  dplyr::filter(`day` == aux_day) %>%                # by random day
-  dplyr::filter(`timestep` %in% seq(8, 108, by=10)) # each 10 steps
+  dplyr::filter(`day` == aux_day)                   # by random day
+  # dplyr::filter(`timestep` %in% seq(8, 108, by=10)) # each 10 steps
 
-ggplot() +
-  facet_wrap(~timestep) + # , ncol=6, nrow = 2
-  coord_equal() +
-  geom_point(data=results_unnest_turtles,
-             aes(x = x, y = y, group = breed),
-             size = 4
-             # , color = "red", shape = 10
-             ) +
-
-  guides(fill=guide_legend(title="Patch color")) +
-  theme_minimal() +
-  ggtitle("Output maps of each 10th simulation tick (one run)")
+gp1 <- gua.sf +
+  # facet_wrap(~timestep) + # , ncol=6, nrow = 2
+  # coord_equal() +
+  geom_path(data = results_unnest_turtles_allsteps,
+            aes(x = x, y = y), 
+            size = 0.15) +
+  geom_point(data = results_unnest_turtles_allsteps,
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior
+                 ), size = 2.2) +
+  scale_color_manual(values = simulated_colors) +
+  scale_shape_manual(values = simulated_shapes) + 
+  ggtitle("Output map of all simulation ticks (one day)")
+gp1
 
 # ggsave(filename = "setup-for-workflow-simple_multiple-layers.png",
        # dpi = 300, width = 30, height = 20, units = "cm")
 
-```
 
+
+# Each 10 steps
+
+results_unnest_turtles_by10 <- results_unnest %>%
+  dplyr::filter(agent=="turtles") %>%               # by agent
+  dplyr::filter(`random-seed` == aux_run) %>%       # by random run (~= number of the agent = who)
+  dplyr::filter(`day` == aux_day) %>%               # by random day
+  dplyr::filter(`timestep` %in% 
+                  seq(8, 108, by=10) |              # each 10 steps AND
+                  row_number(`timestep`)==n())      # last observation
+
+gp2 <- gua.sf +
+  # facet_wrap(~timestep) + # , ncol=6, nrow = 2
+  # coord_equal() +
+  geom_path(
+    data = results_unnest_turtles_allsteps,
+            aes(x = x, y = y), # , group = behavior, color = behavior
+            size = 0.15) +
+   geom_point(
+     data = results_unnest_turtles_by10,
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior
+                 ),
+             size = 2.2) +
+  scale_color_manual(values = simulated_colors) +
+  scale_shape_manual(values = simulated_shapes) +
+  ggtitle("Output map of each 10th and last simulation tick (one day)")
+gp2
+
+# ggsave(filename = "setup-for-workflow-simple_multiple-layers.png",
+       # dpi = 300, width = 30, height = 20, units = "cm")
+```
 
 
 #### Various runs (last steps only)
 
 ```{r}
+# turtles (only last stap)
+results_unnest_laststeps <- results_unnest %>%
+  dplyr::filter(agent=="turtles") %>%            # by agent
+  dplyr::group_by(`random-seed`, day) %>%        # by random seed and days
+  dplyr::slice(tail(row_number(), 1))           # 10 for last 10 steps
 
-# # turtles (only last stap)
-# results_unnest_turtles <- results_unnest %>%
-#   dplyr::filter(agent=="turtles") %>%            # by agent
-#   dplyr::group_by(day) %>% 
-#   dplyr::slice(tail(row_number(), 1))           # 10 for last 10 steps
+gp3 <- gua.sf +
+  facet_wrap(~`random-seed`) + # , ncol=6, nrow = 2
+  # coord_equal() +
+  geom_path(
+    data = results_unnest,
+            aes(x = x, y = y), # , group = behavior, color = behavior
+            size = 0.15) +
+   geom_point(
+     data = results_unnest_laststeps,
+             aes(x = x, y = y, group = behavior,
+                 color = behavior,
+                 shape = behavior
+                 ),
+             size = 2.2) +
+  scale_color_manual(values = simulated_colors) +
+  scale_shape_manual(values = simulated_shapes) +
+  ggtitle("Output map with last simulation tick (All days) for each random-seed")
+gp3
+
+# ggsave(filename = "setup-for-workflow-simple_multiple-layers.png",
+       # dpi = 300, width = 30, height = 20, units = "cm")
+
+
 ```
 
 
@@ -373,6 +381,88 @@ ggplot() +
 ## Validation Patterns
 
 We are not checking seed dispersal patterns now, just movement and ranging patterns.
+
+Load data of all other groups that are being used for validation
+```{r}
+## using original datasets from each person
+dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_Guarei_FelipeBufalo_EMZ1.csv",
+                          dec = ".", stringsAsFactors = TRUE)
+dat.sma.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_SMa_YnesDropboxEMZ6_outofsight.csv"), 
+                          dec = ".", stringsAsFactors = TRUE)
+dat.suz.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_Suzano_Anne_EMZ4.csv"), 
+                          dec = ".", stringsAsFactors = TRUE)
+dat.taq.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_PEMDTaquara_Anne_EMZ4.csv"), 
+                          dec = ".", stringsAsFactors = TRUE)
+
+## Change POSIXct collum to date type with lubridate package and define id (animal id)
+# Obs: there's already a column called "id" in each dataset, we are just making it more readable.
+
+dat.gua.orig <- dat.gua.orig %>%
+  rename(datetime = POSIXct) %>% 
+  mutate(datetime = lubridate::ymd_hms(datetime))
+dat.gua <- dat.gua.orig %>% 
+  mutate(id = "Guareí") %>% 
+  dplyr::select("x", "y", "datetime", "id", "behavior")
+
+dat.sma.orig <- dat.sma.orig %>%
+  rename(datetime = POSIXct) %>% 
+  mutate(datetime = lubridate::ymd_hms(datetime))
+dat.sma <- dat.sma.orig %>% 
+  mutate(id = "Santa Maria") %>% 
+  dplyr::select("x", "y", "datetime", "id", "behavior")
+
+dat.suz.orig <- dat.suz.orig %>%
+  rename(datetime = POSIXct) %>% 
+  mutate(datetime = lubridate::ymd_hms(datetime))
+dat.suz <- dat.suz.orig %>% 
+  mutate(id = "Suzano") %>% 
+  # rename(x = X,
+  #        y = Y) %>% 
+  dplyr::select("x", "y", "datetime", "id", "behavior")
+
+dat.taq.orig <- dat.taq.orig %>%
+  rename(datetime = POSIXct) %>% 
+  mutate(datetime = lubridate::ymd_hms(datetime))
+dat.taq <- dat.taq.orig %>% 
+  mutate(id = "Taquara") %>% 
+  dplyr::select("x", "y", "datetime", "id", "behavior")
+
+
+## Lets bind all the empirical data together ------------------
+dat.all <- rbind(
+  dat.gua,
+  dat.sma,
+  dat.taq,
+  dat.suz
+) %>%
+  mutate(behavior = recode(behavior, "for" = "foraging")) %>% 
+  mutate(month = lubridate::month(datetime, label = T, abbr = T, locale="English_United States")) %>% 
+  mutate(year = lubridate::year(datetime)) %>% 
+  mutate(mm_yyyy = paste0(month, "/", year)) %>% 
+  select(-c("month", "year"))
+
+# str(dat.all)
+
+## And then include the simulation data
+dat.all <- dat.all %>% 
+  rename(timestep = datetime)
+
+dat.all$timestep <- as.character(dat.all$timestep) 
+
+sim_gua <- results_unnest %>% 
+  mutate(id = paste0("Guareí_", `random-seed`)) %>% 
+  select("x", "y", "timestep", "id", "behavior") %>% 
+  mutate(mm_yyyy = "All_months")
+
+dat.all <- rbind(
+  dat.all, 
+  sim_gua
+)
+
+dat.all <- dat.all %>% 
+  mutate(datetime = as_factor(timestep))
+
+```
 
 
 ### Dayly Path Lenght (DPL)
@@ -426,17 +516,6 @@ sd_dist_sim <- sd(dpl_sim)
 # paste("Simulated (July, 20 days) DPL sd after burn-in run of 10 days", round(sd_dist_sim_lastdays, 2))
 ```
 
-```{r, include=FALSE}
-hist_f <- function(x = x, main = main, xlab = xlab) {
-  hist(x, 
-       # xlab = "Daily Path Length (m)",
-       xlab = xlab,
-                           breaks=seq(500,12000,by=200),
-                           ylim = c(0,6),
-                           col = "grey",
-                           main = main)
-  }
-```
 
 ```{r, echo=F}
 par(xpd=TRUE)
@@ -450,13 +529,13 @@ hist <- hist_f(x=dpl_gua_jul,
      xlab = ""
      )
 abline(v=avg_dist_jul, col="red", lty=2)
-text(x=min(hist$breaks), y=max(hist$counts)
+text(x=avg_dist_jul, y=max(hist$counts)
    , sprintf("sd = %7.2f", sd_dist_jul)
    , adj = c(0, 0))
 text(x=avg_dist_jul, y=max(hist$counts)
    , sprintf("mean = %7.2f", avg_dist_jul)
    , col = "red"
-   , adj = c(0, -0.8))
+   , adj = c(0, -1.2))
 
 
 hist <- hist_f(x=dpl_gua,
@@ -464,27 +543,27 @@ hist <- hist_f(x=dpl_gua,
              xlab=""
      )
 abline(v=avg_dist, col="red", lty=2)
-text(x=min(hist$breaks), y=max(hist$counts)
+text(x=avg_dist, y=max(hist$counts)
    , sprintf("sd = %7.2f", sd_dist)
    , adj = c(0, 0))
 text(x=avg_dist, y=max(hist$counts)
    , sprintf("mean = %7.2f", avg_dist)
    , col = "red"
-   , adj = c(0, -0.8))
+   , adj = c(0, -1.2))
 
 
 hist <- hist_f(x=dpl_sim,
-             main="Simulated (July, 30 days)",
+             main="Simulated (All resources, 10 days)",
              xlab = "Daily Path Length (m)"
      )
 abline(v=avg_dist_sim, col="red", lty=2)
-text(x=min(hist$breaks), y=max(hist$counts)
+text(x=avg_dist_sim, y=max(hist$counts)
    , sprintf("sd = %7.2f", sd_dist_sim)
    , adj = c(0, 0))
 text(x=avg_dist_sim, y=max(hist$counts)
    , sprintf("mean = %7.2f", avg_dist_sim)
    , col = "red"
-   , adj = c(0, -0.8))
+   , adj = c(0, -1.2))
 
 
 ```
@@ -495,11 +574,154 @@ text(x=avg_dist_sim, y=max(hist$counts)
 Still to be done
 Comparison between methods: https://doi.org/10.1111/2041-210X.13786
 
+# Creat SpatialDataFrame
+```{r, warnigs=F, message=F}
+# setwd("D:/Data/Documentos/github/BLT-Movement-Patterns/Ranging-Patterns")
+
+pts_gua <- SpatialPointsDataFrame(dat.gua[ , c('x','y')], 
+                              data.frame(dat.gua[ , c('id')]),
+                              proj4string = CRS("+proj=utm +zone=22K +south +datum=WGS84 +unit=m +no_defs"))
+
+# # Does not work because contains NA:
+# pts_sma <- SpatialPointsDataFrame(dat.sma[ , c('x','y')], 
+#                               data.frame(dat.sma[ , c('id')]),
+#                               proj4string = CRS("+proj=utm +zone=22K +south +datum=WGS84 +unit=m +no_defs"))
+
+pts_taq <- SpatialPointsDataFrame(dat.taq[ , c('x','y')], 
+                              data.frame(dat.taq[ , c('id')]),
+                              proj4string = CRS("+proj=utm +zone=22K +south +datum=WGS84 +unit=m +no_defs"))
+
+pts_suz <- SpatialPointsDataFrame(dat.suz[ , c('x','y')], 
+                              data.frame(dat.suz[ , c('id')]),
+                              proj4string = CRS("+proj=utm +zone=22K +south +datum=WGS84 +unit=m +no_defs"))
+
+pts_sim_gua <- SpatialPointsDataFrame(sim_gua[ , c('x','y')], 
+                              data.frame(sim_gua[ , c('id')]),
+                              proj4string = CRS("+proj=utm +zone=22K +south +datum=WGS84 +unit=m +no_defs"))
+
+
+plot(pts_gua)
+plot(pts_taq)
+plot(pts_suz)
+plot(pts_sim_gua)
+```
+
+Calculate KernelUD
+```{r}
+t_gua <- kernelUD(pts_gua[ , 1], h = "href", kern = 'bivnorm', grid = 400, same4all = T)
+t_suz <- kernelUD(pts_suz[ , 1], h = "href", kern = 'bivnorm', grid = 400, same4all = T)
+t_taq <- kernelUD(pts_taq[ , 1], h = "href", kern = 'bivnorm', grid = 400, same4all = T)
+t_sim_gua <- kernelUD(pts_sim_gua[ , 1], h = "href", kern = 'bivnorm', grid = 400, same4all = T)
+
+
+# image(t_gua)
+
+ka_gua <- kernel.area(t_gua, percent = seq(10, 95, by = 5), unin = "m", unout = "ha")
+ka_suz <- kernel.area(t_suz, percent = seq(10, 95, by = 5), unin = "m", unout = "ha")
+ka_taq <- kernel.area(t_taq, percent = seq(10, 95, by = 5), unin = "m", unout = "ha")
+ka_sim_gua <- kernel.area(t_sim_gua, percent = seq(10, 95, by = 5), unin = "m", unout = "ha")
+
+# par(mfrow=c(2,2))
+plot(ka_taq)
+plot(ka_suz)
+plot(ka_gua)
+plot(ka_sim_gua)
+
+
+hr1 <- as.data.frame(ka_sim_gua)
+hr1 <- hr1 %>% mutate(HR_level = row.names(hr1))
+
+hr1_gua <- hr1 %>% pivot_longer(c(1:5), names_to = "ID", values_to = "HR_value")
+# hr1_gua %>% group_by(ID, as_factor(HR_level)) %>% 
+#   summarise()
+hr1_gua %>% group_by(HR_level) %>% 
+  summarise(meanHR = mean(HR_value),
+            sdHR = sd(HR_value))
+
+plot(hr1_gua)
+
+```
+
+### 95% Kernel (home range)
+
+```{r}
+k95_gua <- getverticeshr(t_gua, percent = 95, unin = "m", unout = "ha")
+as.data.frame(k95_gua)
+plot(k95_gua, col = rainbow(7, alpha = 0.5))
+plot(pts_gua) #, pch=16, col = dat.gua$id, cex=0.1, add=T)
+
+
+k95_suz <- getverticeshr(t_suz, percent = 95, unin = "m", unout = "ha")
+as.data.frame(k95_suz)
+plot(k95_suz, col = rainbow(7, alpha = 0.5))
+plot(pts_suz) #, pch=16, col = dat.gua$id, cex=0.1, add=T)
+
+k95_taq <- getverticeshr(t_taq, percent = 95, unin = "m", unout = "ha")
+as.data.frame(k95_taq)
+plot(k95_taq, col = rainbow(7, alpha = 0.5))
+plot(pts_taq) #, pch=16, col = dat.gua$id, cex=0.1, add=T)
+
+k95_sim_gua <- getverticeshr(t_sim_gua, percent = 95, unin = "m", unout = "ha")
+as.data.frame(k95_sim_gua)
+plot(k95_sim_gua, col = rainbow(7, alpha = 0.5))
+# plot(k95_sim_gua[[1]][[1]], col = rainbow(7, alpha = 0.5))
+plot(pts_sim_gua) #, pch=16, col = dat.gua$id, cex=0.1, add=T)
+
+str(k95_sim_gua)
+k95_sim_gua_sf <- st_as_sf(k95_sim_gua)
+
+plot(k95_sim_gua_sf[k95_sim_gua_sf == "Guareí_-1062115611", ])
+k95_sim_gua_sf$geometry #[[1]]
+
+str(k95_sim_gua_sf)
+
+```
+
+### 50% Kernel (core area)
+```{r}
+k50 <- getverticeshr(t, percent = 50, unin = "m", unout = "ha")
+as.data.frame(k50)
+```
+
+## Now, for the plot
+
+```{r}
+plot(k50, col = rainbow(7, alpha = 0.5))
+plot(pts, pch=16, col = loc.t$id, cex=0.1, add=T)
+```
+
+### Saving the shape file for further use
+
+```{r}
+#datadir <- "directory\\k50.gpkg"
+#rgdal::writeOGR(k50,datadir, layer = "k50.gpkg", driver = "GPKG")
+```
+
+
 \pagebreak
+
+### Activity budget
+
 
 ### Turning Angles and Step Lenghts
 ```{r, include=FALSE}
-dat.gua.orig.jul$id <- "Guareí Empirical"
+dat.gua.orig.all <- dat.gua.orig
+dat.gua.orig.all$id <- "Guareí Empirical"
+dat.gua.orig.all$id <- as.factor(dat.gua.orig.all$id)
+dat.gua.orig.all$dayfct <- as.factor(paste("Day ", dat.gua.orig.all$day))
+
+dat.gua.orig.all_ltraj <- adehabitatLT::as.ltraj(xy = dat.gua.orig.all[, c("x", "y")], 
+                                       id = dat.gua.orig.all$id,
+                                       burst = dat.gua.orig.all$dayfct,
+                                       proj4string = CRS(our_crs),
+                                       typeII = FALSE,
+                                       infolocs = dat.gua.orig.all[ , c("behavior", "dayfct")]
+                                       )
+# Type I (time not recorded) -> OK. Infolocs -> OK
+dat.gua.orig.all_ltraj_df <- ld(dat.gua.orig.all_ltraj) # Transform to df
+
+
+dat.gua.orig.jul$id <- "Guareí Empirical (July only, 6d)"
 dat.gua.orig.jul$id <- as.factor(dat.gua.orig.jul$id)
 dat.gua.orig.jul$dayfct <- as.factor(paste("Day ", dat.gua.orig.jul$day))
 
@@ -514,107 +736,93 @@ dat.gua.orig.jul_ltraj <- adehabitatLT::as.ltraj(xy = dat.gua.orig.jul[, c("x", 
 dat.gua.orig.jul_ltraj_df <- ld(dat.gua.orig.jul_ltraj) # Transform to df
 
 
-loc_tam$id <-  "Guareí Simulated" 
-loc_tam$id <- as.factor(loc_tam$id)
-loc_tam$dayfct <- as.factor(paste("Day ", loc_tam$day))
+results_unnest$id <-  "Guareí Simulated" 
+results_unnest$id <- as.factor(results_unnest$id)
+results_unnest$dayfct <- as.factor(paste("Day ", results_unnest$day))
 
-loc_tam_ltraj <- adehabitatLT::as.ltraj(xy = loc_tam[, c("x", "y")], 
-                                       id = loc_tam$id,
-                                       burst = loc_tam$dayfct,
+results_unnest_ltraj <- adehabitatLT::as.ltraj(xy = results_unnest[, c("x", "y")], 
+                                       id = results_unnest$id,
+                                       burst = results_unnest$dayfct,
                                        proj4string = CRS(our_crs),
                                        typeII = FALSE,
-                                       infolocs = loc_tam[ , c(1:3, 6, 8:10)]
+                                       infolocs = results_unnest[ , c(1:3, 6, 8:10)]
                                        )
 # Type I (time not recorded) -> OK. Infolocs -> OK
-loc_tam_ltraj_df <- ld(loc_tam_ltraj) # Transform to df
-
-loc_tam_lastdays$id <-  "Guareí Simulated after burn-in run" 
-loc_tam_lastdays$id <- as.factor(loc_tam_lastdays$id)
-loc_tam_lastdays$dayfct <- as.factor(paste("Day ", loc_tam_lastdays$day))
-
-loc_tam_lastdays_ltraj <- adehabitatLT::as.ltraj(xy = loc_tam_lastdays[, c("x", "y")], 
-                                       id = loc_tam_lastdays$id,
-                                       burst = loc_tam_lastdays$dayfct,
-                                       proj4string = CRS(our_crs),
-                                       typeII = FALSE,
-                                       infolocs = loc_tam_lastdays[ , c(1:3, 6, 8:10)]
-                                       )
-# Type I (time not recorded) -> OK. Infolocs -> OK
-loc_tam_lastdays_ltraj_df <- ld(loc_tam_lastdays_ltraj) # Transform to df
+results_unnest_ltraj_df <- ld(results_unnest_ltraj) # Transform to df
 
 ```
 
-```{r Mean step lenght and turning angles, warning=FALSE, echo=F}
+```{r Mean step lenght and turning angles, warning=FALSE, echo=F, include=F}
 # mean rel angle (degrees)
-paste("Empirical (July, 6 d) Mean Relative Angle (degrees) = ", 
-      dat.gua.orig.jul_ltraj_df$rel.angle %>%
-        mean(na.rm = T) %>% round(2))
-
-paste("Simulated (July, 30 d) Mean Relative Angle (degrees)", 
-      loc_tam_ltraj_df$rel.angle %>%
-        mean(na.rm = T )%>% round(2))
-      
-paste("Simulated (July, 20 d, after burn-in run of 10 days) Mean Relative Angle (degrees)", 
-      loc_tam_lastdays_ltraj_df$rel.angle %>%
-        mean(na.rm = T) %>% round(2))
+# paste("Empirical (July, 6 d) Mean Relative Angle (degrees) = ", 
+#       dat.gua.orig.jul_ltraj_df$rel.angle %>%
+#         mean(na.rm = T) %>% round(2))
+# 
+# paste("Simulated (July, 30 d) Mean Relative Angle (degrees)", 
+#       loc_tam_ltraj_df$rel.angle %>%
+#         mean(na.rm = T )%>% round(2))
+#       
+# paste("Simulated (July, 20 d, after burn-in run of 10 days) Mean Relative Angle (degrees)", 
+#       loc_tam_lastdays_ltraj_df$rel.angle %>%
+#         mean(na.rm = T) %>% round(2))
 
 # mean rel angle (radians)
-dat.gua.orig.jul_ltraj_df$rel.angle.rad <- dat.gua.orig.jul_ltraj_df$rel.angle * (180 / pi)
-loc_tam_ltraj_df$rel.angle.rad <- loc_tam_ltraj_df$rel.angle * (180 / pi)
-loc_tam_lastdays_ltraj_df$rel.angle.rad <- loc_tam_lastdays_ltraj_df$rel.angle * (180 / pi)
-
-dat.gua.orig.jul_ltraj_df_ra_mean <- dat.gua.orig.jul_ltraj_df$rel.angle.rad %>%  mean(na.rm = TRUE)
-loc_tam_ltraj_df_ra_mean <- loc_tam_ltraj_df$rel.angle.rad %>% mean(na.rm = TRUE)
-loc_tam_lastdays_ltraj_df_ra_mean <- loc_tam_lastdays_ltraj_df$rel.angle.rad %>% mean(na.rm = TRUE)
-
-paste("Mean Relative Angle (degrees) :", dat.gua.orig.jul_ltraj_df_ra_mean)
-paste("Mean Relative Angle (degrees) :", loc_tam_ltraj_df_ra_mean)
-paste("Mean Relative Angle (degrees) :", loc_tam_lastdays_ltraj_df_ra_mean)
-
-
-# mean step lenght
-paste("Mean Step lenght (meters) :", dat.gua.orig.jul_ltraj_df$dist %>% mean(na.rm = T))
-paste("Mean Step lenght (meters) :", loc_tam_ltraj_df$dist %>% mean(na.rm = T))
-paste("Mean Step lenght (meters) :", loc_tam_lastdays_ltraj_df$dist %>% mean(na.rm = T))
+# dat.gua.orig.jul_ltraj_df$rel.angle.rad <- dat.gua.orig.jul_ltraj_df$rel.angle * (180 / pi)
+# loc_tam_ltraj_df$rel.angle.rad <- loc_tam_ltraj_df$rel.angle * (180 / pi)
+# loc_tam_lastdays_ltraj_df$rel.angle.rad <- loc_tam_lastdays_ltraj_df$rel.angle * (180 / pi)
+# 
+# dat.gua.orig.jul_ltraj_df_ra_mean <- dat.gua.orig.jul_ltraj_df$rel.angle.rad %>%  mean(na.rm = TRUE)
+# loc_tam_ltraj_df_ra_mean <- loc_tam_ltraj_df$rel.angle.rad %>% mean(na.rm = TRUE)
+# loc_tam_lastdays_ltraj_df_ra_mean <- loc_tam_lastdays_ltraj_df$rel.angle.rad %>% mean(na.rm = TRUE)
+# 
+# paste("Mean Relative Angle (degrees) :", dat.gua.orig.jul_ltraj_df_ra_mean)
+# paste("Mean Relative Angle (degrees) :", loc_tam_ltraj_df_ra_mean)
+# paste("Mean Relative Angle (degrees) :", loc_tam_lastdays_ltraj_df_ra_mean)
+# 
+# 
+# # mean step lenght
+# paste("Mean Step lenght (meters) :", dat.gua.orig.jul_ltraj_df$dist %>% mean(na.rm = T))
+# paste("Mean Step lenght (meters) :", loc_tam_ltraj_df$dist %>% mean(na.rm = T))
+# paste("Mean Step lenght (meters) :", loc_tam_lastdays_ltraj_df$dist %>% mean(na.rm = T))
 ```
 
 ```{r Plot Step lenght + turnig angles, echo=F, warning=FALSE}
 # Plot Step lengh
 par(mfrow=c(1,3))
-graphics::hist(dat.gua.orig.jul_ltraj_df$dist, 
-               # breaks=10, 
+graphics::hist(dat.gua.orig.all_ltraj_df$dist, 
+               breaks=50,
                xlim = c(0, 400), ylim = c(0, 1000),
-               xlab = "Step length (m)", main = "\nEmpirical (July, 6 d)") %>%
+               xlab = "Step length (m)", main = "\nEmpirical (All days)") %>%
+  abline(v = mean(dat.gua.orig.all_ltraj_df$dist, na.rm = TRUE), col = "red", lwd = 3)
+  text(200, 400, paste("mean = ", round(mean(dat.gua.orig.all_ltraj_df$dist, na.rm = TRUE), 2), 
+                      " m"), cex = 1.4)
+  
+graphics::hist(dat.gua.orig.jul_ltraj_df$dist, 
+               breaks=50,
+               xlim = c(0, 400), ylim = c(0, 1000),
+               xlab = "Step length (m)", main = "\nEmpirical (July, 6 d)")  %>%
   abline(v = mean(dat.gua.orig.jul_ltraj_df$dist, na.rm = TRUE), col = "red", lwd = 3)
   text(200, 400, paste("mean = ", round(mean(dat.gua.orig.jul_ltraj_df$dist, na.rm = TRUE), 2), 
                       " m"), cex = 1.4)
   
-graphics::hist(loc_tam_ltraj_df$dist, 
-               # breaks=10, 
+graphics::hist(results_unnest_ltraj_df$dist, 
+               breaks=50,
                xlim = c(0, 400), ylim = c(0, 1000),
-               xlab = "Step length (m)", main = "\nSimulated (July, 30 d)")  %>%
-  abline(v = mean(loc_tam_ltraj_df$dist, na.rm = TRUE), col = "red", lwd = 3)
-  text(200, 400, paste("mean = ", round(mean(loc_tam_ltraj_df$dist, na.rm = TRUE), 2), 
-                      " m"), cex = 1.4)
-  
-graphics::hist(loc_tam_lastdays_ltraj_df$dist, 
-               # breaks=10, 
-               xlim = c(0, 400), ylim = c(0, 1000),
-               xlab = "Step length (m)", main = "\nSimulated (July, 20 d, \nafter burn-in run of 10 days)")  %>%
-  abline(v = mean(loc_tam_lastdays_ltraj_df$dist, na.rm = TRUE), col = "red", lwd = 3)
-  text(200, 400, paste("mean = ", round(mean(loc_tam_lastdays_ltraj_df$dist, na.rm = TRUE), 2), 
+               xlab = "Step length (m)", main = "\nSimulated (All resources, 10 d)")  %>%
+  abline(v = mean(results_unnest_ltraj_df$dist, na.rm = TRUE), col = "red", lwd = 3)
+  text(200, 400, paste("mean = ", round(mean(results_unnest_ltraj_df$dist, na.rm = TRUE), 2), 
                       " m"), cex = 1.4)
 
 
 # Plot Turning angles
 par(mfrow=c(1,3))
 
-circular::rose.diag(dat.gua.orig.jul_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees",
-                    tol = 0, main = "\nEmpirical (July, 6 d)", cex = 1.2, shrink = 1.2, ticks = F)
-circular::rose.diag(loc_tam_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees", tol = 0,                      main = "\nSimulated (July, 30 d)", 
+circular::rose.diag(dat.gua.orig.all_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees",
+                    tol = 0, main = "\nEmpirical (All days)", cex = 1.2, shrink = 1.2, ticks = F)
+circular::rose.diag(dat.gua.orig.jul_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees", tol = 0,                      main = "\nSimulated (July, 6 d)", 
                     cex = 1.2, shrink = 1.2, ticks = F)
-circular::rose.diag(loc_tam_lastdays_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees",
-                    tol = 0, main = "\nSimulated (July, 20 d, \nafter burn-in run of 10 days)",
+circular::rose.diag(results_unnest_ltraj_df$rel.angle, bins=30, prop=2.5, units = "degrees",
+                    tol = 0, main = "\nSimulated (All resources, 10 d)",
                     cex = 1.2, shrink = 1.2, ticks = F)
 
 ```
@@ -628,72 +836,4 @@ circular::rose.diag(loc_tam_lastdays_ltraj_df$rel.angle, bins=30, prop=2.5, unit
 
 \pagebreak
 
-## Foraging in empirical data and simulated runs
-```{r}
-gua.plot <- gua.sf +
-  geom_path(data = dat.gua.orig.jul,
-            aes(x = x, y = y, group = day_month), 
-            size = 0.15) +
-  geom_point(data = dat.gua.orig.jul,
-             aes(x = x, y = y, group = behavior,
-                 color = behavior,
-                 shape = behavior), 
-             size = 2.7) +
-  ggtitle("Empirical (July only, 6 days)") +
-  scale_shape_manual(values = c(1, 19, 1, 1, 1, 1, 17, 1, 1)) +
-  scale_color_manual(values = c("grey", "#1E8449", "grey", "magenta", "grey", "grey", "#E74C3C", "grey", "grey"))
-  
-gua.plot
-
-
-dat.gua.orig <- dat.gua.orig %>% 
-  mutate(day = lubridate::day(datetime)) %>% 
-  mutate(month = lubridate::month(datetime)) %>% 
-  mutate(day_month = paste0(dat.gua.orig$day, "-", dat.gua.orig$month))
-
-gua.plot <- gua.sf +
-  geom_path(data = dat.gua.orig,
-            aes(x = x, y = y, group = day_month), 
-            size = 0.15) +
-  geom_point(data = dat.gua.orig,
-             aes(x = x, y = y, group = behavior,
-                 color = behavior,
-                 shape = behavior), 
-             size = 2.7) +
-  ggtitle("Empirical (all data, 28 days)") +
-  scale_shape_manual(values = c(1, 19, 1, 1, 1, 1, 1, 1, 1, 17, 1, 1)) +
-  scale_color_manual(values = c("grey", "#1E8449", "grey", "magenta", "grey", "grey", "grey", "grey", "grey", "#E74C3C", "grey", "grey"))
-  
-gua.plot
-
-
-gua.plot <- gua.sf +
-  geom_path(data = loc_tam %>% filter(day <= 6),
-            aes(x = x, y = y, group = day), 
-            size = 0.15) +
-  geom_point(data = loc_tam %>% filter(day <= 6),
-             aes(x = x, y = y, group = behavior,
-                 color = behavior,
-                 shape = behavior)) +
-  ggtitle("Simulated (first 6 days - Resources from July)") +
-  scale_shape_manual(values = simulated_shapes) +
-  scale_color_manual(values = simulated_colors)
-
-gua.plot
-
-gua.plot <- gua.sf +
-  geom_path(data = loc_tam %>% filter(day > 10 & day < 17),
-            aes(x = x, y = y, group = day), 
-            size = 0.15) +
-  geom_point(data = loc_tam %>% filter(day > 10 & day < 17),
-             aes(x = x, y = y, group = behavior,
-                 color = behavior,
-                 shape = behavior)) +
-  ggtitle("Simulated (6 days after burn in of 10 days - Resources from July)") +
-  scale_shape_manual(values = simulated_shapes) +
-  scale_color_manual(values = simulated_colors)
-  
-gua.plot
-
-```
-
+## F
