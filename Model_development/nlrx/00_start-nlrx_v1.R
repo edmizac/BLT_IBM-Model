@@ -34,7 +34,8 @@ library("tidyverse")
 
 
 # Step 1: Create nl object
-netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+## netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+netlogopath <- file.path("/opt/netlogo_622")
 modelpath <- here("Model_development", "Model-cleaning", "BLT_model_v1.nlogo")
 # modelpath <- here("C:/Program Files/NetLogo 6.2.2", "app/models", "BLT_model_v1.nlogo")
 
@@ -59,7 +60,7 @@ report_model_parameters(nl)
 #### Simple design experiment ( = one go button, no varibles) ####
 
 # Step 2: Attach an experiment
-expname = "v1-model-simple"
+expname = "v1-model-speed"
 # no_days = 10
 
 nl@experiment <- experiment(expname = expname,
@@ -101,7 +102,7 @@ nl@experiment <- experiment(expname = expname,
                               # "visual" = list(min=0, max = 3, step = 1)
                               
                               # movement
-                              # "travel_speed_val" = list(min=0, max =1, step = 2),
+                              "travel_speed_val" = list(values=seq(0.3, 1, by = 0.1))
                               # "foraging_speed_val" = list(min= 0, max = 1, step = 2)
                               # "duration" = list(min=0, max = 10, step = 2),
                               
@@ -117,7 +118,7 @@ nl@experiment <- experiment(expname = expname,
                               ### "true" for output related stuff
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
-                              # "USER" = "\"Eduardo\"",
+                              "USER" = "\"Ronald\"",
                               # "print-step?" = "false",
                               # 'export-png'= "false",
                               # "show-energy?" = "false",
@@ -165,8 +166,7 @@ nl@experiment <- experiment(expname = expname,
 
 
 # Step 3: Attach a simulation design.
-nl@simdesign <- simdesign_simple(nl,
-                                 nseeds = 5)
+nl@simdesign <- simdesign_distinct(nl, nseeds = 10)
 
 # Step 4: Run simulations
 # Evaluate nl object:
@@ -198,7 +198,7 @@ tictoc::tic()
 progressr::handlers("progress")
 results <- progressr::with_progress(
   run_nl_all(nl,
-             split = 1
+             split = 4
              )
 )
 tictoc::toc()
