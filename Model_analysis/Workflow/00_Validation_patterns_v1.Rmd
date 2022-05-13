@@ -183,7 +183,7 @@ gua.plot
 
 ```{r}
 # load RDS file with results from nlrx runs and unnest turtle variables
-filename <- here("Model_development", "Model-cleaning", "runtime", "tempRDS.Rdata")
+filename <- here("Model_development", "Model-cleaning", "runtime", "v1_output_2022-05-11d", "tempRDS.Rdata")
 nl <- readRDS(filename)
 results_unnest <- unnest_simoutput(nl)
 
@@ -205,22 +205,6 @@ results_unnest$behavior %>% unique()
 ```{r}
 results_unnest <- results_unnest %>% 
   rename(x = x_UTM, y = y_UTM)
-```
-
-```{r}
-gua.sf <- ggplot2::ggplot() +
-  geom_sf(data = gua.polyg,
-          color = "black",
-          fill = "#A9DFBF") +
-  coord_sf(
-    datum = sf::st_crs(our_crs),
-    xlim = gua_xlim_set,    
-    ylim = gua_ylim_set) +  
-  theme_bw() +
-  annotation_scale(location = "bl", width_hint = .35) +
-  annotation_north_arrow(location = "bl", which_north = "true",
-                         pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
-                         style = north_arrow_fancy_orienteering)
 ```
 
 
@@ -339,14 +323,21 @@ gp2
 ```
 
 
-#### Various runs (last steps only)
+#### Various runs (showing sleeping sites)
 
 ```{r}
-# turtles (only last stap)
+# turtles (only last step)
 results_unnest_laststeps <- results_unnest %>%
   dplyr::filter(agent=="turtles") %>%            # by agent
   dplyr::group_by(`random-seed`, day) %>%        # by random seed and days
   dplyr::slice(tail(row_number(), 1))           # 10 for last 10 steps
+
+# last step + frugivory points
+results_unnest_gp3 <- results_unnest %>%
+  dplyr::filter(agent=="turtles") %>%            # by agent
+  dplyr::group_by(`random-seed`, day) %>%        # by random seed and days
+  dplyr::filter(behavior == "frugivory") %>%     # frugivory records
+  dplyr::bind_rows(results_unnest_laststeps)
 
 gp3 <- gua.sf +
   facet_wrap(~`random-seed`) + # , ncol=6, nrow = 2
@@ -356,19 +347,19 @@ gp3 <- gua.sf +
             aes(x = x, y = y), # , group = behavior, color = behavior
             size = 0.15) +
    geom_point(
-     data = results_unnest_laststeps,
+     data = results_unnest_gp3,
              aes(x = x, y = y, group = behavior,
                  color = behavior,
                  shape = behavior
                  ),
-             size = 2.2) +
+             size = 1.8) +
   scale_color_manual(values = simulated_colors) +
   scale_shape_manual(values = simulated_shapes) +
-  ggtitle("Output map with last simulation tick (All days) for each random-seed")
+  ggtitle("Output map of 10 d runs for each random-seed")
 gp3
 
-# ggsave(filename = "setup-for-workflow-simple_multiple-layers.png",
-       # dpi = 300, width = 30, height = 20, units = "cm")
+ggsave(filename = here("Model_development", "Model-cleaning", "runtime", "v1_output_2022-05-11d", "Output-map-of-10d-runs-for-each-random-seed.png"),
+       dpi = 300, width = 30, height = 20, units = "cm")
 
 
 ```
@@ -387,7 +378,11 @@ Load data of all other groups that are being used for validation
 ## using original datasets from each person
 dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_Guarei_FelipeBufalo_EMZ1.csv",
                           dec = ".", stringsAsFactors = TRUE)
-dat.sma.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_SMa_YnesDropboxEMZ6_outofsight.csv"), 
+# Last version of Santa Maria:
+# dat.sma.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Sma_EMZ6_outofsight.csv"), 
+#                           dec = ".", stringsAsFactors = TRUE)
+# interpolated data (DPL function can't take NAs):
+dat.sma.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Sma_EMZ5.csv"), 
                           dec = ".", stringsAsFactors = TRUE)
 dat.suz.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_Suzano_Anne_EMZ4.csv"), 
                           dec = ".", stringsAsFactors = TRUE)
@@ -397,62 +392,73 @@ dat.taq.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/
 ## Change POSIXct collum to date type with lubridate package and define id (animal id)
 # Obs: there's already a column called "id" in each dataset, we are just making it more readable.
 
-dat.gua.orig <- dat.gua.orig %>%
+dat.gua <- dat.gua.orig %>%
   rename(datetime = POSIXct) %>% 
   mutate(datetime = lubridate::ymd_hms(datetime))
-dat.gua <- dat.gua.orig %>% 
+dat.gua <- dat.gua %>% 
   mutate(id = "Guareí") %>% 
   dplyr::select("x", "y", "datetime", "id", "behavior")
 
-dat.sma.orig <- dat.sma.orig %>%
+dat.sma <- dat.sma.orig %>%
   rename(datetime = POSIXct) %>% 
   mutate(datetime = lubridate::ymd_hms(datetime))
-dat.sma <- dat.sma.orig %>% 
+dat.sma <- dat.sma %>% 
   mutate(id = "Santa Maria") %>% 
   dplyr::select("x", "y", "datetime", "id", "behavior")
 
-dat.suz.orig <- dat.suz.orig %>%
+dat.suz <- dat.suz.orig %>%
   rename(datetime = POSIXct) %>% 
   mutate(datetime = lubridate::ymd_hms(datetime))
-dat.suz <- dat.suz.orig %>% 
+dat.suz <- dat.suz %>% 
   mutate(id = "Suzano") %>% 
   # rename(x = X,
   #        y = Y) %>% 
   dplyr::select("x", "y", "datetime", "id", "behavior")
 
-dat.taq.orig <- dat.taq.orig %>%
+dat.taq <- dat.taq.orig %>%
   rename(datetime = POSIXct) %>% 
   mutate(datetime = lubridate::ymd_hms(datetime))
-dat.taq <- dat.taq.orig %>% 
+dat.taq <- dat.taq %>% 
   mutate(id = "Taquara") %>% 
   dplyr::select("x", "y", "datetime", "id", "behavior")
+```
 
-
-## Lets bind all the empirical data together ------------------
+Lets bind all the empirical data together
+```{r}
 dat.all <- rbind(
   dat.gua,
   dat.sma,
   dat.taq,
   dat.suz
 ) %>%
-  mutate(behavior = recode(behavior, "for" = "foraging")) %>% 
-  mutate(month = lubridate::month(datetime, label = T, abbr = T, locale="English_United States")) %>% 
+  mutate(behavior = recode(behavior, 
+                           "for" = "foraging",
+                           "feed_fruits" = "frugivory")) %>% 
+  mutate(day = lubridate::day(datetime)) %>% 
+  mutate(month = lubridate::month(datetime, label = T, abbr = T, 
+                                  locale="English_United States")) %>% 
   mutate(year = lubridate::year(datetime)) %>% 
   mutate(mm_yyyy = paste0(month, "/", year)) %>% 
-  select(-c("month", "year"))
+  mutate(dd_mm_yyyy = paste0(day, "/", month, "/", year)) %>% 
+  dplyr::select(-c("day", "year"))
 
 # str(dat.all)
 
 ## And then include the simulation data
-dat.all <- dat.all %>% 
-  rename(timestep = datetime)
+# dat.all <- dat.all %>% 
+#   rename(timestep = datetime)
 
-dat.all$timestep <- as.character(dat.all$timestep) 
+dat.all$datetime <- as.character(dat.all$datetime) 
 
 sim_gua <- results_unnest %>% 
-  mutate(id = paste0("Guareí_", `random-seed`)) %>% 
-  select("x", "y", "timestep", "id", "behavior") %>% 
-  mutate(mm_yyyy = "All_months")
+  rename(datetime = timestep) %>% # make timestep = datetime
+  mutate(datetime = paste0("Sim_day", day)) %>% 
+  mutate(id = paste0("Guareí_", `random-seed`)) %>%
+  # mutate(id = "Simulated") %>% 
+  dplyr::select("x", "y", "datetime", "id", "behavior") %>% 
+  mutate(mm_yyyy = "All_months") %>% # because the simulation was carried using trees of every month
+  mutate(dd_mm_yyyy = paste0(datetime, "/", mm_yyyy)) %>%  # because the simulation was carried using trees of every month
+  mutate(month = "All months")
 
 dat.all <- rbind(
   dat.all, 
@@ -460,8 +466,18 @@ dat.all <- rbind(
 )
 
 dat.all <- dat.all %>% 
-  mutate(datetime = as_factor(timestep))
+  mutate(datetime = as_factor(datetime))
 
+# dat.all$id %>% unique()
+
+# Alter group order:
+# dat.all <- dat.all %>% 
+#    mutate(id = factor(id, levels = c(
+#                            "Suzano", "Santa Maria", "Taquara",
+#                            "Guareí", "Simulated")
+#                            ))
+                           
+# dat.all$id %>% unique()
 ```
 
 
@@ -493,8 +509,8 @@ sd_dist_jul <- sd(dpl_gua_jul)
 # paste("Empirical (July, 6 days) DPL sd", round(sd_dist, 2))
 
 dat.gua.all <- dat.gua.orig %>% 
-  rename(day_num = day) %>% 
-  rename(day = burst)
+  rename(day = date) # %>% 
+  # rename(day = burst)
 dpl_gua <- dpl(df = dat.gua.all)
 
 avg_dist <- mean(dpl_gua)
@@ -566,6 +582,71 @@ text(x=avg_dist_sim, y=max(hist$counts)
    , adj = c(0, -1.2))
 
 
+```
+With ggplot:
+```{r}
+df <- dat.all
+
+dpl <- function(df) {
+  # options(stringsAsFactors=TRUE)
+  dist_list <- data.frame(Group = "", DPL = -1, Day = "", Month = "")
+  dist <- numeric()
+  for (group in unique(df$id)) {
+    df3 <- df[df$id == group, ]
+    for (df4 in split(df3, df3$dd_mm_yyyy)) {
+      dist <- 0
+      for (i in 2:nrow(df4)) {
+        dist <- dist + sqrt((df4$x[i] - df4$x[i - 1]) ^ 2 +
+                              (df4$y[i] - df4$y[i - 1]) ^ 2)
+      }
+      dist_list <- rbind.data.frame(dist_list, 
+                                    c(group, dist, df4$dd_mm_yyyy[1], as.character(df4$month[1])),
+                         stringsAsFactors = TRUE)
+    }
+  }
+  dist_list <- dist_list[-1, ]
+  dist_list <- as.data.frame(dist_list)
+  # colnames(dist_list) <- c("Group", "DPL", "Day", "Time_frame", "Month")
+  dist_list$DPL <- as.numeric(dist_list$DPL)
+  dist_list <- dist_list %>% mutate_if(is.character, as.factor)
+  return(dist_list)
+}
+
+
+dpl_all <- dpl(df = df)
+
+# Reorder groups
+dpl_all <- dpl_all %>%
+  mutate(Group = factor(Group, levels = c(
+                           "Suzano", "Santa Maria", "Taquara",
+                           "Guareí", "Simulated")
+                           ))
+# str(dpl_all)
+```
+
+
+Plot DPL (All areas)
+```{r}
+dpl_all %>% 
+  ggplot(aes(x = Group, y = DPL, color = Group)) +
+  geom_boxplot() +
+  guides(fill=FALSE) +
+  geom_jitter(width = 0.15) +
+  ylab("DPL (m)")  #+
+  # annotate("text", x=2, y=5000, label= paste0("Mean ± sd = ", round(avg_dist, 2), " ± ", round(sd_dist, 2)))
+  # ggtitle()
+```
+
+By Month
+```{r}
+dpl_all %>% 
+  ggplot(aes(x = Group, y = DPL, color = Month)) +
+  geom_boxplot() +
+  guides(fill=FALSE) +
+  ylab("DPL (m)") 
+# +
+#   geom_jitter(width = 0.15)
+  # ggtitle()
 ```
 
 \pagebreak
@@ -701,6 +782,100 @@ plot(pts, pch=16, col = loc.t$id, cex=0.1, add=T)
 \pagebreak
 
 ### Activity budget
+
+Summarize activity budget
+```{r}
+dat.all <- dat.all %>% 
+  mutate(Group = id)
+
+dat.summary <- dat.all %>% 
+  group_by(Group) %>%
+  mutate(n_total = n()) %>% 
+  group_by(Group, behavior) %>% 
+  mutate(n_obs = n()) %>% 
+  mutate(activity_budget = (n_obs/n_total)*100 ) %>% 
+  dplyr::select(c(Group, behavior, activity_budget)) %>% 
+  unique() %>% 
+  ungroup()
+
+# Reorder groups
+dat.summary <- dat.summary %>%
+  mutate(Group = factor(Group, levels = c(
+                           "Suzano", "Santa Maria", "Taquara",
+                           "Guareí", "Simulated")
+                           ))
+# str(dat.summary)
+```
+
+Plot activity budget ALL behaviors
+```{r}
+dat.summary %>% 
+  ggplot(aes(x = Group, y = activity_budget, fill = behavior)) +
+  geom_bar(stat = "identity")
+
+dat.summary %>% 
+  ggplot(aes(x = Group, y = activity_budget, fill = behavior)) +
+  geom_bar(stat = "identity", position = "dodge")
+```
+
+```{r}
+## Plot activity budget main 4 behaviors
+act_bug_4 <- dat.summary %>%
+  dplyr::filter(behavior %in% c("resting", "travel", "foraging", "frugivory")) %>% 
+  droplevels() 
+
+p1 <- act_bug_4 %>% 
+  ggplot(aes(x = Group, y = activity_budget, fill = behavior)) +
+  geom_bar(stat = "identity", position = "fill") +
+  ggtitle("Activity budget of 4 behaviors") +
+  ylab("Proportion (%)") +
+  xlab("")
+p1
+
+## Plot activity budget main 4 behaviors + others
+act_bug_5 <- dat.all %>% 
+  mutate(behavior = recode(behavior,
+                           "agonistic" = "others",
+                           "feed_gum" = "others",
+                           # "" = "others",
+                           "long_call" = "others",
+                           "outofsight" = "others",
+                           "rubbing" = "others",
+                           "sleeping" = "others",
+                           "intergroup_encounter" = "others",
+                           "soc_int" = "others",
+                           "idle" = "others"
+  )) %>%
+  group_by(Group) %>%
+  mutate(n_total = n()) %>% 
+  group_by(Group, behavior) %>% 
+  mutate(n_obs = n()) %>% 
+  mutate(activity_budget = (n_obs/n_total)*100 ) %>% 
+  dplyr::select(c(Group, behavior, activity_budget)) %>% 
+  unique() %>% 
+  ungroup() %>% 
+  filter(behavior != "")  %>%
+  droplevels()
+
+
+# Reorder groups
+act_bug_5 <- act_bug_5 %>%
+  mutate(Group = factor(Group, levels = c(
+                           "Suzano", "Santa Maria", "Taquara",
+                           "Guareí", "Simulated")
+                           ))
+
+act_bug_5$Group %>% levels()
+act_bug_5$behavior %>% levels()
+
+p2 <- act_bug_5 %>% 
+  ggplot(aes(x = Group, y = activity_budget, fill = behavior)) +
+  geom_bar(stat = "identity", position = "fill") +
+  ggtitle("Activity budget of 4 behaviors + 'others'") +
+  ylab("Proportion (%)") +
+  xlab("")
+p2
+```
 
 
 ### Turning Angles and Step Lenghts
