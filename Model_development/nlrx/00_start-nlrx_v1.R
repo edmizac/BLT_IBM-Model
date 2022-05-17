@@ -204,16 +204,22 @@ results <- progressr::with_progress(
 tictoc::toc()
 
 
-# Step 5: Attach results to nl and run analysis
-# In order to run the analyze_nl function, the simulation output has to be attached to the nl object first. The simdesign class within the nl object provides a slot for attaching output results (simoutput). An output results tibble can be attached to this slot by using the simdesign setter function setsim(nl, "simoutput"). After attaching the simulation results, these can also be written to the defined outpath of the experiment object.
-# Attach results to nl object:
+## Step 5:
+#' Attach results to nl and run analysis In order to run the
+#' analyze_nl function, the simulation output has to be attached to the
+#' nl object first. The simdesign class within the nl object provides a
+#' slot for attaching output results (simoutput). An output results
+#' tibble can be attached to this slot by using the simdesign setter
+#' function setsim(nl, "simoutput"). After attaching the simulation
+#' results, these can also be written to the defined outpath of the
+#' experiment object.  Attach results to nl object:
 setsim(nl, "simoutput") <- results
 
 nl@experiment@metrics.turtles
 nl@experiment@metrics.patches
 nl@experiment@variables
 
-# Save RDS to avoid losing it by R abortion:
+#' Save RDS to avoid losing it by R abortion:
 filename <- here("Model_development", "Model-cleaning", "runtime", "tempRDS.Rdata")
 saveRDS(nl, file = filename) ; rm(results)
 nl <- readRDS(filename)
@@ -221,7 +227,7 @@ nl <- readRDS(filename)
 rm(results)
 gc()
 
-# Go to file 00_Validation_patterns_v1
+#' Go to file 00_Validation_patterns_v1
 
 
 
@@ -230,7 +236,7 @@ gc()
 
 #### Full fact experiment design ####
 
-# Step 2: Attach an experiment
+#' Step 2: Attach an experiment
 expname = "v1-model-fullfact"
 
 nl@experiment <- experiment(expname = expname,
