@@ -134,7 +134,7 @@ gua.sf <- ggplot2::ggplot() +
 #### All data (28 days) and July only (6 days) ####
 
 ```{r, echo=F, warnings = F, message=F}
-dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Guarei_Felipe_EMZ1.csv", dec = ".", stringsAsFactors = TRUE)
+dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Previous_2022-05-19d/ltraj_df_Data_Guarei_Felipe_EMZ1.csv", dec = ".", stringsAsFactors = TRUE)
 dat.gua.orig <- dat.gua.orig %>%
   rename(datetime = POSIXct) %>%
   mutate(datetime = lubridate::ymd_hms(datetime))
@@ -396,17 +396,17 @@ We are not checking seed dispersal patterns now, just movement and ranging patte
 Load data of all other groups that are being used for validation
 ```{r}
 ## using original datasets from each person
-dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_Guarei_FelipeBufalo_EMZ1.csv",
+dat.gua.orig <- read.csv2("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Previous_2022-05-19d/Data_Guarei_FelipeBufalo_EMZ1.csv",
                           dec = ".", stringsAsFactors = TRUE)
 # Last version of Santa Maria:
 # dat.sma.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Sma_EMZ6_outofsight.csv"), 
 #                           dec = ".", stringsAsFactors = TRUE)
 # interpolated data (DPL function can't take NAs):
-dat.sma.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/ltraj_df_Data_Sma_EMZ5.csv"), 
+dat.sma.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Previous_2022-05-19d/ltraj_df_Data_Sma_EMZ5.csv"), 
                           dec = ".", stringsAsFactors = TRUE)
-dat.suz.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_Suzano_Anne_EMZ4.csv"), 
+dat.suz.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Previous_2022-05-19d/Data_Suzano_Anne_EMZ4.csv"), 
                           dec = ".", stringsAsFactors = TRUE)
-dat.taq.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Data_PEMDTaquara_Anne_EMZ4.csv"), 
+dat.taq.orig <- read.csv2(here("D:/Data/Documentos/github/BLT-Movement-Patterns/asltraj/Previous_2022-05-19d/Data_PEMDTaquara_Anne_EMZ4.csv"), 
                           dec = ".", stringsAsFactors = TRUE)
 
 ## Change POSIXct collum to date type with lubridate package and define id (animal id)
@@ -685,6 +685,19 @@ dpl_all %>%
 #                        "DPL-speedval.png"),
 #        dpi = 300, width = 30, height = 20, units = "cm")
 
+dpl_all_summary <- dpl_all %>% 
+  dplyr::group_by(Group, TravelSpeed) %>% 
+  summarise(mean = mean(DPL), sd = sd(DPL), n = n())
+
+dpl_all_summary
+
+a <- flextable(dpl_all_summary)
+path_output <- here("Model_analysis", "Workflow", "Run_travelspeedvar",
+                       "DPL_comparisons.html")
+save_as_html(
+  a,
+  path = path_output)
+
 ```
 
 By Month
@@ -701,6 +714,13 @@ dpl_all %>%
 # ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
 #                        "DPL-speedval-by-month.png"),
 #        dpi = 300, width = 30, height = 20, units = "cm")
+
+dpl_all_summary_month <- dpl_all %>% 
+  dplyr::group_by(Group, Month, TravelSpeed) %>% 
+  summarise(mean = mean(DPL), sd = sd(DPL), n = n())
+
+dpl_all_summary_month
+
 
 ```
 
@@ -980,6 +1000,21 @@ hr_values %>%
 #        dpi = 300, width = 30, height = 20, units = "cm")
 
 
+hr_values_summary <- hr_values %>% 
+  dplyr::group_by(Group, TravelSpeed) %>% 
+  summarise(mean_95 = mean(KDE_95), sd_95 = sd(KDE_95), 
+            mean_50 = mean(KDE_50), sd_50 = sd(KDE_50), 
+            n = n())
+
+a <- flextable(hr_values_summary)
+# path_img <- "D:/Data/Documentos/github/BLT_IBM-Model/Model_analysis/Workflow/Run_travelspeedvar/HomeRange_comparisons.html"
+path_output <- here("Model_analysis", "Workflow", "Run_travelspeedvar",
+                       "HomeRange_comparisons.html")
+# path_img <- tempfile(fileext = ".html")
+save_as_html(
+  a,
+  path = path_output)
+
 # KDE 50
 hr_values %>% 
   # group_by(Group, Seed, TravelSpeed) %>% 
@@ -1072,6 +1107,10 @@ p1 <- act_bug_4 %>%
 
 p1
 
+# ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
+#                        "ActivityBudget_4behaviors.png"),
+#        dpi = 300, width = 30, height = 20, units = "cm")
+
 ## Plot activity budget main 4 behaviors + others
 act_bug_5 <- dat.all %>% 
   mutate(behavior = recode(behavior,
@@ -1120,6 +1159,11 @@ p2 <- act_bug_5 %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 p2
+
+    
+# ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
+#                        "ActivityBudget_4behaviors-others.png"),
+#        dpi = 300, width = 30, height = 20, units = "cm")
 ```
 
 

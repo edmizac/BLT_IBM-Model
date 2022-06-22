@@ -634,7 +634,7 @@ end
 
 to-report on-feeding-tree?
 
-  ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
+  ifelse action = "travel" AND tree_target != -1 [
     ifelse distance tree_target < 0.8 [
       set tree_current tree_target
       set tree_target -1
@@ -721,9 +721,9 @@ to to-feeding-tree
 
   ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
     forage
-    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
+;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
   ][
-;    travel
+    ;    travel
     set action "travel"
     set behavior "travel"
 
@@ -983,6 +983,7 @@ end
 ;---------------------------------------------------------------------------------------------
 to forage
 
+  set color magenta
   set action "forage"
   set behavior "foraging"
 
@@ -997,12 +998,14 @@ to forage
 ;  if n > 60 [ lt random 30 ]
 
 ;; RANDOM movement while foraging 2 (much simpler):
-  rt (random 90) - 60
+  rt (random 180) - 90
 
   forward travel_speed
 ;  forward foraging_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-from-prey + energy-loss-foraging
+
+  set color gray
 
 end
 
@@ -1011,9 +1014,9 @@ to random-action
 
 set action-time 0
   ifelse random-float 1 < p-foraging-while-traveling [
-    ;forage
-    ;show "random-action foraging"
-    ;beep
+    forage
+    show "random-action foraging"
+    beep
   ][
     resting
   ]
@@ -1022,7 +1025,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-;  if action = "forage"   [ forage beep ]
+  if action = "forage"   [ forage beep ]
   if action = "resting" [ resting ]
 
 end
@@ -1265,7 +1268,7 @@ start-energy
 start-energy
 0
 170
-136.0
+74.0
 1
 1
 NIL
@@ -1374,7 +1377,7 @@ energy-from-fruits
 energy-from-fruits
 0
 15
-6.0
+10.0
 1
 1
 NIL
@@ -1598,7 +1601,7 @@ step_forget
 step_forget
 0
 1000
-109.0
+107.0
 1
 1
 NIL
@@ -1658,7 +1661,7 @@ travel_speed_val
 travel_speed_val
 0
 1
-0.9
+0.7
 0.1
 1
 NIL
@@ -1830,7 +1833,7 @@ SWITCH
 179
 all-slp-trees?
 all-slp-trees?
-0
+1
 1
 -1000
 
