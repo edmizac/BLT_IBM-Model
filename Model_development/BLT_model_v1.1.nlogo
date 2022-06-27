@@ -1004,7 +1004,7 @@ to forage
 
 ;; RANDOM movement while foraging 2 (much simpler):
   if random-angle? = TRUE [
-  rt (random 120) - 60
+  rt (random 90) - 45
   ]
 
   forward travel_speed
