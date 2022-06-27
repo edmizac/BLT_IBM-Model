@@ -70,7 +70,7 @@ globals [
   ;param values;
   gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
   travel_speed ; global speed for travel
-  foraging_speed ; global speed for foraging
+;  foraging_speed ; global speed for foraging
 ; foraging_time ; global for how long the tamarins should spend on foraging (3 timesteps)
   species_time ; how long the tamarin feeds on the tree species
   energy_species ; value of energy they get from feeding of each species
@@ -115,7 +115,7 @@ to setup
   set timestep 0
   set gut_transit_time gut_transit_time_val
   set travel_speed travel_speed_val
-  set foraging_speed foraging_speed_val
+;  set foraging_speed foraging_speed_val
   set species_time species_time_val
 
   reset-ticks
@@ -727,6 +727,11 @@ to to-feeding-tree
     set action "travel"
     set behavior "travel"
 
+    ;; RANDOM movement while traveling:
+    if random-angle? = TRUE [
+      rt (random 90) - 45
+    ]
+
     set behaviorsequence lput 3 behaviorsequence
 
     forward travel_speed
@@ -998,10 +1003,11 @@ to forage
 ;  if n > 60 [ lt random 30 ]
 
 ;; RANDOM movement while foraging 2 (much simpler):
-  rt (random 180) - 90
+  if random-angle? = TRUE [
+  rt (random 120) - 60
+  ]
 
   forward travel_speed
-;  forward foraging_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-from-prey + energy-loss-foraging
 
@@ -1656,10 +1662,10 @@ TEXTBOX
 1
 
 SLIDER
-956
-349
-1098
-382
+951
+406
+1093
+439
 travel_speed_val
 travel_speed_val
 0
@@ -1671,25 +1677,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-954
-386
-1100
-419
-foraging_speed_val
-foraging_speed_val
-0
-1
-0.5
-0.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-955
-538
-1103
-571
+953
+574
+1101
+607
 species_time_val
 species_time_val
 0
@@ -1701,10 +1692,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-965
-512
-1105
+963
 548
+1103
+584
 6. phenology related
 14
 0.0
@@ -1879,10 +1870,10 @@ print-step?
 -1000
 
 PLOT
-1115
-329
-1338
-523
+1140
+324
+1363
+518
 Memory
 tick
 count memory lists
@@ -1937,10 +1928,10 @@ NIL
 1
 
 SLIDER
-956
-450
-1101
-483
+951
+479
+1096
+512
 duration
 duration
 0
@@ -1992,7 +1983,7 @@ TEXTBOX
 407
 932
 427
-remember-trees-in-radii:
+exclude trees in radii from pot list:
 10
 0.0
 1
@@ -2062,10 +2053,10 @@ output-print?
 -1000
 
 SLIDER
-956
-419
-1100
-452
+951
+441
+1095
+474
 p-foraging-while-traveling
 p-foraging-while-traveling
 0
@@ -2077,10 +2068,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-966
-481
-1116
-503
+961
+511
+1111
+533
 max timesteps repeating same behavior
 9
 0.0
@@ -2182,6 +2173,27 @@ PENS
 "default" 1.0 0 -1184463 true "" "ask monkeys [ plot energy ]"
 "pen-1" 1.0 0 -16777216 true "" "plot energy_level_1"
 "pen-2" 1.0 0 -955883 true "" "plot energy_level_2"
+
+SWITCH
+954
+346
+1096
+379
+random-angle?
+random-angle?
+0
+1
+-1000
+
+TEXTBOX
+956
+379
+1106
+405
+add random variation in direction each step
+9
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
