@@ -25,21 +25,25 @@ seeds-own [ id-seed species mother-tree ]
 ; tamarins
 breed [monkeys monkey]
 monkeys-own [
-  energy        ; energy the tamarin has left
-;  status        ; what is the desire ===== DO WE REALLY NEED THIS? ==============
-  action        ; what was the last action
-  action-time   ; how long you do the same action again
-  behavior      ; as in activity budget data tables
-  steps-moved   ; number of steps taken
-  tree_target   ; memory
-  tree_current  ; old_tree
-  tree_pot_list ; list of all feeding trees in homerange for that tamarin
-  tree_ate_list ; list of trees the tamarins did eat
-  tree_mem_list ; list of timesteps since the tamarin feeded on that tree
-  tree_add_list ; helper list to increase the mem list
-  seed_ate_list ; list of the seeds they fed on
-  seed_mem_list ; list of timesteps since the tamarin ate the seed
-  seed_add_list ; helper list to increase the mem list by 1 each time step
+  energy          ; energy the tamarin has left
+;  status         ; what is the desire ===== DO WE REALLY NEED THIS? ==============
+  action          ; what was the last action
+  action-time     ; how long you do the same action again
+  behavior        ; as in activity budget data tables
+  steps-moved     ; number of steps taken
+  travel_mode     ; if it is short or long distance travel
+  tree_target     ; target tree (short distance)
+  ld_tree_target  ; long distance target tree
+  tree_target_species ; species of the target tree independent of travel mode
+  travelmodelist  ; list to make travel mode histogram
+  tree_current    ; old_tree
+  tree_pot_list   ; list of all feeding trees in homerange for that tamarin
+  tree_ate_list   ; list of trees the tamarins did eat
+  tree_mem_list   ; list of timesteps since the tamarin feeded on that tree
+  tree_add_list   ; helper list to increase the mem list
+  seed_ate_list   ; list of the seeds they fed on
+  seed_mem_list   ; list of timesteps since the tamarin ate the seed
+  seed_add_list   ; helper list to increase the mem list by 1 each time step
 ;  x_UTM
 ;  y_UTM
 
@@ -282,7 +286,9 @@ to setup-monkeys
     set x_UTM (item 0 gis:envelope-of self)
     set y_UTM (item 2 gis:envelope-of self)
 
+    set travel_mode "short_distance"
     set tree_target -1
+    set ld_tree_target -1
 
     set steps-moved 0
     set action-time 0
@@ -298,6 +304,7 @@ to setup-monkeys
     set seed_ate_list []
     set seed_mem_list []
     set seed_add_list []
+    set travelmodelist []
 
     ; fill the potential feeding tree list
     let let_pot_list []
@@ -468,7 +475,9 @@ to step ; FOR DEBUG PURPOSES ONLY
   if print-step? = TRUE [
     ask monkeys [
       type "---- STEP ---- " print timestep
+      type " ---- MODE: " print travel_mode
       type "tree_target: " type tree_target type " "
+      type "ld_tree_target: " type ld_tree_target type " "
       type "tree_current: " type tree_current type " "
       type "behavior: " type behavior type " "
       type "action: " print action
@@ -581,10 +590,11 @@ to move-monkeys
 
     if timestep < simulation-time [ ; energy levels: energy_level_1 = 80 and energy_level_2 = 150
       ifelse energy < energy_level_1 [ ; energy < level 1
+        set travel_mode "short_distance"
         frugivory
       ][
 ;        ifelse (action = "feeding" or action = "travel") [   ;; v1.0 version
-        ifelse (action != "resting" ) [                       ;; FOR MAKING THEY FORAGE WHILE TRAVELLING
+        ifelse (action != "resting" ) [                       ;; v1.1 version (FOR MAKING THEY FORAGE WHILE TRAVELLING)
 ;          set tree_target -1
 ;          set tree_current -1
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
@@ -598,13 +608,25 @@ to move-monkeys
           ][ ; energy_level_1 < energy < energy_level_2
             frugivory
           ] ;; energy > level 2 ==> other activities
-        ][ ; action = "feeding" or action = "travel"
+        ][ ; action = "feeding" or action = "travel" OR action != "resting"
+
+
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
-            change-bonus
+            set ld_tree_target -1 ; has to be set to 0 otherwise tamarins will come back in the next ld travel cycle
+            set travel_mode "long_distance"
+            frugivory
           ][
             set action-time action-time + 1
             last-action-again
           ]
+
+;          ifelse random (2 * duration) < action-time [ ; action time for other than feeding
+;            change-bonus
+;          ][
+;            set action-time action-time + 1
+;            last-action-again
+
+;          ]
         ]
       ] ;; energy > level 1
       forget_trees
@@ -618,35 +640,78 @@ end
 ; the whole loop for frugivory
 ;--------------------------------------------------------------------------------
 to frugivory
-  ifelse on-feeding-tree? [
-    ifelse random (2 * species_time) > action-time [
-      feeding
+
+  if travel_mode = "short_distance" [   ;; short distance frugivory
+    set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
+    ifelse on-feeding-tree? [
+      ifelse random (2 * species_time) > action-time [
+        feeding
+      ][
+        set tree_current -1
+        to-feeding-tree
+      ]
     ][
-      set tree_current -1
-      to-feeding-tree ;; THIS WAS NOT INCLUDED IN THE FLOWCHART
+      to-feeding-tree
     ]
-  ][
-    to-feeding-tree
   ]
+
+  if travel_mode = "long_distance" [    ;; long distance frugivory
+    set travelmodelist lput 2 travelmodelist ; to the travel mode histogram
+    ifelse on-feeding-tree? [
+      ifelse random (2 * species_time) > action-time [
+        feeding
+      ][
+        set tree_current -1
+        to-feeding-tree
+      ]
+    ][
+      to-feeding-tree
+    ]
+  ]
+
 end
+
 
 ;----------------------------------------
 
 to-report on-feeding-tree?
 
-  ifelse action = "travel" AND tree_target != -1 [
-    ifelse distance tree_target < 0.8 [
-      set tree_current tree_target
-      set tree_target -1
-      report true
+  if travel_mode = "short_distance" [   ;; short distance frugivory
+    ifelse action = "travel" AND tree_target != -1 [
+      ifelse distance tree_target < 0.8 [
+        set tree_current tree_target
+        set tree_target -1
+        report true
+      ][
+        report false
+      ]
     ][
-      report false
+      ifelse action = "feeding" [
+        report true
+      ][
+        report false
+      ]
     ]
-  ][
-    ifelse action = "feeding" [
-      report true
+  ]
+
+
+  if travel_mode = "long_distance" [    ;; long distance frugivory
+
+    ifelse action = "travel" AND ld_tree_target != -1 [
+      ifelse distance ld_tree_target < 0.8 [
+        set tree_current ld_tree_target
+        set ld_tree_target -1
+        set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
+        report true
+      ][
+        report false
+      ]
     ][
-      report false
+      ifelse action = "feeding" [
+        report true
+      ][
+        report false
+      ]
     ]
   ]
 end
@@ -712,43 +777,82 @@ end
 
 to to-feeding-tree
 
-  set action-time 0
-  if tree_target = -1 [
-    search-feeding-tree
-  ]
-
-  set heading towards tree_target
-
-  ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
-    forage
-;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
-  ][
-    ;    travel
-    set action "travel"
-    set behavior "travel"
-
-    ;; RANDOM movement while traveling:
-    if random-angle? = TRUE [
-      rt (random 90) - 45
+  if travel_mode = "short_distance" [
+    set action-time 0
+    if tree_target = -1 [
+      search-feeding-tree
     ]
 
-    set behaviorsequence lput 3 behaviorsequence
+    set heading towards tree_target
 
-    forward travel_speed
-    set steps-moved steps-moved + 1
-    set energy energy + energy-loss-traveling
+    ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
+      forage
+      ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
+    ][
+      ;    travel
+      set action "travel"
+      set behavior "travel"
+
+      ;; RANDOM movement while traveling:
+      if random-angle? = TRUE [
+        rt (random 90) - 45
+      ]
+    ]
   ]
+
+
+  if travel_mode = "long_distance" [
+    set action-time 0
+    if ld_tree_target = -1 [
+      search-feeding-tree
+    ]
+
+    set heading towards ld_tree_target
+
+    ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
+      forage
+      ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
+    ][
+      ;    travel
+      set action "travel"
+      set behavior "travel"
+
+      ;; RANDOM movement while traveling:
+      if random-angle? = TRUE [
+        rt (random 90) - 45
+      ]
+    ]
+  ]
+
+
+  ; ========================================= ; this procedure independs of travel mode
+  set behaviorsequence lput 3 behaviorsequence
+
+  forward travel_speed
+  set steps-moved steps-moved + 1
+  set energy energy + energy-loss-traveling
+
 end
 
 ;----------------------------------------
 
 to search-feeding-tree
 
-;  set action "travel"
-  let let_pot_list tree_pot_list
-  set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
+  if travel_mode = "short_distance" [
+    let let_pot_list tree_pot_list
+    set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
 
-  let tree_target_species [ species ] of tree_target
+    set tree_target_species [ species ] of tree_target
+  ]
+
+  if travel_mode = "long_distance" [
+    let let_pot_list tree_pot_list
+    set ld_tree_target one-of feeding-trees with [member? who let_pot_list] ;; RANDOM TREE
+
+    set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
+
+    set tree_target_species [ species ] of ld_tree_target
+  ]
 
 ;; TREE ENERGY VARIABLE
    if tree_target_species = "annona" [
@@ -1240,6 +1344,34 @@ to-report freq_map [ list_ ]
 end
 ;;; --------------------------------- ;;;
 ;;; --------------------------------- ;;;
+
+
+to-report travelmode
+;  let travelmodelist []
+  ask monkeys [
+;    let ldt list []
+;    let sdt list []
+
+    ifelse travel_mode = "short_distance" [
+    set travelmodelist lput 1 travelmodelist
+    ][
+    set travelmodelist lput 2 travelmodelist
+    ]
+]
+
+  report travelmodelist
+end
+
+
+
+to test-long-distance
+ask monkeys [
+    set energy 110
+    set travel_mode "long_distance"
+  ]
+
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 10
@@ -1386,7 +1518,7 @@ energy-from-fruits
 energy-from-fruits
 0
 15
-5.0
+10.0
 1
 1
 NIL
@@ -1610,7 +1742,7 @@ step_forget
 step_forget
 0
 1000
-102.0
+104.0
 1
 1
 NIL
@@ -1685,7 +1817,7 @@ species_time_val
 species_time_val
 0
 100
-3.0
+2.0
 1
 1
 NIL
@@ -1870,10 +2002,10 @@ print-step?
 -1000
 
 PLOT
-1140
-324
-1363
-518
+1134
+444
+1357
+638
 Memory
 tick
 count memory lists
@@ -2194,6 +2326,41 @@ add random variation in direction each step
 9
 0.0
 1
+
+BUTTON
+449
+104
+582
+138
+NIL
+test-long-distance
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+1144
+282
+1344
+432
+Travel mode frequency
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 @#$#@#$#@
 ## WHAT IS IT?
