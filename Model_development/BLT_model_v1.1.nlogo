@@ -481,12 +481,17 @@ to step ; FOR DEBUG PURPOSES ONLY
       type "tree_current: " type tree_current type " "
       type "behavior: " type behavior type " "
       type "action: " print action
-      type "tree_pot_list: " print length tree_pot_list print tree_pot_list
-      type "tree_ate_list: " print length tree_ate_list print tree_ate_list
-      type "tree_mem_list: " print length tree_mem_list print tree_mem_list
+;      type "tree_pot_list: " print length tree_pot_list print tree_pot_list
+;      type "tree_ate_list: " print length tree_ate_list print tree_ate_list
+;      type "tree_mem_list: " print length tree_mem_list print tree_mem_list
       ;    type "tree_add_list " print length tree_add_list print tree_add_list
       type "action-time: " print action-time
       type "energy: " print energy
+;      ifelse travel_mode = "short_distance" [
+;        ; print distance tree_target
+;      ][
+;        print distance ld_tree_target
+;      ]
     ]
   ]
 
@@ -578,10 +583,11 @@ to move-monkeys
   ;; BLT ROUTINE
 
     if timestep = 1
-        [ morning-defecation ]              ;; MORNING-DEFECATION PROCEDURE
+        [ set tree_current -1
+          morning-defecation ]              ;; MORNING-DEFECATION PROCEDURE
 
     if timestep >= simulation-time [
-      ; set action "travel"
+      if timestep = simulation-time [ set tree_target -1 ] ; force monkey select a sleeping site
       sleeping
       if output-print? = TRUE [
         output-day-stats
@@ -591,15 +597,20 @@ to move-monkeys
     if timestep < simulation-time [ ; energy levels: energy_level_1 = 80 and energy_level_2 = 150
       ifelse energy < energy_level_1 [ ; energy < level 1
         set travel_mode "short_distance"
+        if ld_tree_target = tree_target [
+          set tree_target -1 ; remove tree_target when coming from "long_distance"
+        ]
         frugivory
       ][
 ;        ifelse (action = "feeding" or action = "travel") [   ;; v1.0 version
-        ifelse (action != "resting" ) [                       ;; v1.1 version (FOR MAKING THEY FORAGE WHILE TRAVELLING)
+        ifelse (travel_mode = "short_distance" ) [                       ;; v1.1 version (FOR MAKING THEY FORAGE WHILE TRAVELLING)
 ;          set tree_target -1
 ;          set tree_current -1
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
-            set tree_target -1
-            set tree_current -1
+            ; set tree_target -1
+            if tree_current = -1 [
+             set travel_mode "long_distance"
+            ]
             ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
               resting
             ][
@@ -608,12 +619,12 @@ to move-monkeys
           ][ ; energy_level_1 < energy < energy_level_2
             frugivory
           ] ;; energy > level 2 ==> other activities
-        ][ ; action = "feeding" or action = "travel" OR action != "resting"
+        ][ ; travel_mode = "long_distance"
 
 
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
-            set ld_tree_target -1 ; has to be set to 0 otherwise tamarins will come back in the next ld travel cycle
-            set travel_mode "long_distance"
+            ; set ld_tree_target -1 ; has to be set to 0 otherwise tamarins will come back in the next ld travel cycle
+            ; set travel_mode "long_distance"
             frugivory
           ][
             set action-time action-time + 1
@@ -640,6 +651,8 @@ end
 ; the whole loop for frugivory
 ;--------------------------------------------------------------------------------
 to frugivory
+
+  print "frugivory"
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
@@ -719,6 +732,7 @@ end
 ;----------------------------------------
 
 to feeding
+  print "feeding"
   set action "feeding"
   set behavior "frugivory"
 
@@ -778,8 +792,8 @@ end
 to to-feeding-tree
 
   if travel_mode = "short_distance" [
-    set action-time 0
     if tree_target = -1 [
+      set action-time 0
       search-feeding-tree
     ]
 
@@ -843,6 +857,7 @@ to search-feeding-tree
     set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
 
     set tree_target_species [ species ] of tree_target
+    print tree_target
   ]
 
   if travel_mode = "long_distance" [
@@ -852,6 +867,7 @@ to search-feeding-tree
     set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
 
     set tree_target_species [ species ] of ld_tree_target
+    print ld_tree_target
   ]
 
 ;; TREE ENERGY VARIABLE
@@ -972,9 +988,11 @@ end
 ; Resting commands
 ;---------------------------------------------------------------------------------------------
 to resting
-
+  print "resting"
   set action "resting"
   set behavior "resting"
+
+  set tree_current -1
 
   set behaviorsequence lput 4 behaviorsequence
 
@@ -1091,7 +1109,7 @@ end
 ; Commands for other activities
 ;---------------------------------------------------------------------------------------------
 to forage
-
+  print "forage"
   set color magenta
   set action "forage"
   set behavior "foraging"
@@ -1122,17 +1140,19 @@ end
 ;-------------------------------------------------------------
 to random-action
 
-;  set action-time 0
-;  ifelse random-float 1 < p-foraging-while-traveling [
-;;    set color black
-;;    ask patch-here [ set pcolor orange ]
-;    forage
+  print "random-action"
+
+  set action-time 0
+  ifelse random-float 1 > p-foraging-while-traveling [
+;    set color black
+;    ask patch-here [ set pcolor orange ]
+    frugivory
 ;    show "random-action foraging"
 ;    beep
 ;;    set color grey
-;  ][
-;    resting
-;  ]
+  ][
+    resting
+  ]
 end
 
 ;-------------------------------------------------------------
@@ -1140,12 +1160,14 @@ to last-action-again
 
   if action = "forage"   [ forage ]
   if action = "resting" [ resting ]
+  if action = "travel" [ frugivory ]
 
 end
 
 ;-------------------------------------------------------------
 to change-bonus
 
+  print "change-bonus"
   set action-time 0
 
   let choice random 2
@@ -1366,12 +1388,11 @@ end
 
 to test-long-distance
 ask monkeys [
-    set energy 110
+    set energy 120
     set travel_mode "long_distance"
   ]
 
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 10
@@ -1409,7 +1430,7 @@ start-energy
 start-energy
 energy_level_1
 170
-97.0
+104.0
 1
 1
 NIL
@@ -1531,7 +1552,7 @@ BUTTON
 173
 STEP
 step
-NIL
+T
 1
 T
 OBSERVER
@@ -1777,7 +1798,7 @@ gut_transit_time_val
 gut_transit_time_val
 0
 100
-15.0
+14.0
 1
 1
 NIL
@@ -2171,7 +2192,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "Others"
-1
+0
 
 SWITCH
 1219
@@ -2750,7 +2771,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
