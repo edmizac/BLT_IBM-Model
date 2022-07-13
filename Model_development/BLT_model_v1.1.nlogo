@@ -1,10 +1,8 @@
 ; ==== Black lion tamarin model ============
 ; Eduardo Zanette & Ronald Bialozyt
-; ------ -------- ------- -------- -------- ------
-; Code by Mayara and Ronald:
-; feeding trees available according to phenology
-; all variables set by chooser/slider
-; empirical or simulated resting and sleeping trees
+; Two travel modes: long-distance (target selected when energy > lvl 2 and travels to this direction up to when energy < lvl 1) and short-distance (when energy < lvl 1)
+; Random angle at each step (random-angle? switch)
+; Phenology values (specific energy and species-time values on and off by switcher phenology-on? Stil need to add phenology cycles though)
 ; ------------------------------------------------
 
 extensions [ gis palette] ; using the GIS extension of NetLogo
@@ -331,37 +329,42 @@ end
 ; LEGEND
 to create-legend
 
-   create-legend-trees 1 [ ; tamarin
-      set size 1.5
-;;      set shape "banana"
-      set color black
-      setxy min-pxcor + 1 max-pycor - 1
-    ]
-   create-legend-trees 1 [ ; feeding
-      set size 1
-      set shape "tree"
-      set color green
-      setxy min-pxcor + 1 max-pycor - 3
-    ]
-    create-legend-trees 1 [ ; resting
-      set size 1
-      set shape "tree"
-      set color 77
-      setxy min-pxcor + 1 max-pycor - 5
-    ]
-    create-legend-trees 1 [ ; sleeping
-      set size 1
-      set shape "tree"
-      set color magenta
-      setxy min-pxcor + 1 max-pycor - 7
-    ]
-    create-legend-trees 1 [ ; seeds
-      set size 0.5
-      set shape "circle"
-      set color black
-      setxy min-pxcor + 1 max-pycor - 9
-    ]
-
+  create-legend-trees 1 [ ; tamarin
+    set size 1.5
+    ;;      set shape "banana"
+    set color black
+    setxy min-pxcor + 1 max-pycor - 1
+  ]
+  create-legend-trees 1 [ ; feeding
+    set size 1
+    set shape "tree"
+    set color green
+    setxy min-pxcor + 1 max-pycor - 3
+  ]
+  create-legend-trees 1 [ ; sleeping
+    set size 1
+    set shape "tree"
+    set color magenta
+    setxy min-pxcor + 1 max-pycor - 5
+  ]
+  create-legend-trees 1 [ ; seeds
+    set size 0.5
+    set shape "circle"
+    set color black
+    setxy min-pxcor + 1 max-pycor - 7
+  ]
+  create-legend-trees 1 [ ; short distance target tree
+    set size 1
+    set shape "tree"
+    set color red
+    setxy min-pxcor + 2 min-pycor + 1
+  ]
+  create-legend-trees 1 [ ; long distance target tree
+    set size 1
+    set shape "tree"
+    set color blue
+    setxy min-pxcor + 2 min-pycor + 3
+  ]
 
 end
 
@@ -418,10 +421,6 @@ end
 to go
 
   if all? monkeys [action = "sleeping"] [
-;    ask monkeys [
-;      type timestep type " - Energy: " type energy type " "
-;      type tree_target  type " " show action
-;      ]
     set day day + 1
     set timestep 0
     ask monkeys [ set action "travel" ]
@@ -603,7 +602,7 @@ to move-monkeys
         frugivory
       ][
 ;        ifelse (action = "feeding" or action = "travel") [   ;; v1.0 version
-        ifelse (travel_mode = "short_distance" ) [                       ;; v1.1 version (FOR MAKING THEY FORAGE WHILE TRAVELLING)
+        ifelse (travel_mode = "short_distance" ) [                       ;; v1.1 version (long and short-distance travel)
 ;          set tree_target -1
 ;          set tree_current -1
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
@@ -624,20 +623,12 @@ to move-monkeys
 
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
             ; set ld_tree_target -1 ; has to be set to 0 otherwise tamarins will come back in the next ld travel cycle
-            ; set travel_mode "long_distance"
             frugivory
           ][
             set action-time action-time + 1
             last-action-again
           ]
 
-;          ifelse random (2 * duration) < action-time [ ; action time for other than feeding
-;            change-bonus
-;          ][
-;            set action-time action-time + 1
-;            last-action-again
-
-;          ]
         ]
       ] ;; energy > level 1
       forget_trees
@@ -652,7 +643,7 @@ end
 ;--------------------------------------------------------------------------------
 to frugivory
 
-  print "frugivory"
+;  print "frugivory"  ; debugging
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
@@ -732,7 +723,7 @@ end
 ;----------------------------------------
 
 to feeding
-  print "feeding"
+;  print "feeding"    ; debugging
   set action "feeding"
   set behavior "frugivory"
 
@@ -839,7 +830,8 @@ to to-feeding-tree
   ]
 
 
-  ; ========================================= ; this procedure independs of travel mode
+  ; ========================================= ;
+  ;; this procedure independs of travel mode:
   set behaviorsequence lput 3 behaviorsequence
 
   forward travel_speed
@@ -852,22 +844,26 @@ end
 
 to search-feeding-tree
 
+
+  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
+
   if travel_mode = "short_distance" [
     let let_pot_list tree_pot_list
-    set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
 
+    set tree_target min-one-of feeding-trees with [member? who let_pot_list] [distance myself] ;; CLOSEST TREE
+    ask tree_target [ set color red ]    ; make close tree target red
     set tree_target_species [ species ] of tree_target
-    print tree_target
+;    print tree_target   ; debugging
   ]
 
   if travel_mode = "long_distance" [
     let let_pot_list tree_pot_list
     set ld_tree_target one-of feeding-trees with [member? who let_pot_list] ;; RANDOM TREE
-
     set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
+    ask tree_target [ set color blue ]    ; make long distance target blue
 
     set tree_target_species [ species ] of ld_tree_target
-    print ld_tree_target
+;    print ld_tree_target    ; debugging
   ]
 
 ;; TREE ENERGY VARIABLE
@@ -988,7 +984,7 @@ end
 ; Resting commands
 ;---------------------------------------------------------------------------------------------
 to resting
-  print "resting"
+;  print "resting"   ; debugging
   set action "resting"
   set behavior "resting"
 
@@ -1041,7 +1037,14 @@ to sleeping
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
     ]
   ]
+
   if action != "sleeping" [
+
+    ;; RANDOM movement while traveling:
+    if random-angle? = TRUE [
+      rt (random 90) - 45
+    ]
+
     forward travel_speed
     set steps-moved steps-moved + 1
     set energy energy + energy-loss-traveling
@@ -1109,7 +1112,7 @@ end
 ; Commands for other activities
 ;---------------------------------------------------------------------------------------------
 to forage
-  print "forage"
+;  print "forage"   ; debugging
   set color magenta
   set action "forage"
   set behavior "foraging"
@@ -1140,7 +1143,7 @@ end
 ;-------------------------------------------------------------
 to random-action
 
-  print "random-action"
+;  print "random-action"    ; debugging
 
   set action-time 0
   ifelse random-float 1 > p-foraging-while-traveling [
@@ -1158,6 +1161,8 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
+;  print "last-action-again"   ; debugging
+
   if action = "forage"   [ forage ]
   if action = "resting" [ resting ]
   if action = "travel" [ frugivory ]
@@ -1167,7 +1172,7 @@ end
 ;-------------------------------------------------------------
 to change-bonus
 
-  print "change-bonus"
+;  print "change-bonus"   ; debugging
   set action-time 0
 
   let choice random 2
@@ -1338,13 +1343,6 @@ end
 ;end
 
 
-;to-report simulation-time-end
-;  ifelse day > no_days ;AND all? monkeys [ behavior = "sleeping" ]
-;  [   report TRUE   ]
-;  [   report FALSE  ]
-;end
-
-
 ;;; --------------------------------- ;;;
 ;;; REPORTERS FOR THE ACTIVITY BUDGET ;;;
 to-report freq [ i_ list_ ]
@@ -1364,15 +1362,12 @@ to-report freq_map [ list_ ]
   ; report an xy pair for each unique value / proportion
   report ( map [ [ x y ] -> list x ( y / len ) ] uniques counts )
 end
-;;; --------------------------------- ;;;
-;;; --------------------------------- ;;;
 
-
+;;; --------------------------------- ;;;
+;;;  REPORT FOR TRAVEL MODE HISTOGRAM ;;;
 to-report travelmode
 ;  let travelmodelist []
   ask monkeys [
-;    let ldt list []
-;    let sdt list []
 
     ifelse travel_mode = "short_distance" [
     set travelmodelist lput 1 travelmodelist
@@ -1385,13 +1380,13 @@ to-report travelmode
 end
 
 
-
+;;; ---------------------------------------------------------- ;;;
+;;; MAKING TAMARINS ENTER THE LONG DISTANCE MODE FOR DEBUGGING ;;;
 to test-long-distance
-ask monkeys [
+  ask monkeys [
     set energy 120
     set travel_mode "long_distance"
   ]
-
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -1539,7 +1534,7 @@ energy-from-fruits
 energy-from-fruits
 0
 15
-10.0
+7.0
 1
 1
 NIL
@@ -1552,7 +1547,7 @@ BUTTON
 173
 STEP
 step
-T
+NIL
 1
 T
 OBSERVER
@@ -1798,7 +1793,7 @@ gut_transit_time_val
 gut_transit_time_val
 0
 100
-14.0
+13.0
 1
 1
 NIL
@@ -2115,7 +2110,7 @@ visual
 visual
 0
 10
-2.0
+0.0
 1
 1
 NIL
@@ -2192,7 +2187,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "Others"
-0
+1
 
 SWITCH
 1219
@@ -2382,6 +2377,17 @@ false
 "" ""
 PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
+
+SWITCH
+964
+623
+1102
+656
+phenology-on?
+phenology-on?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2771,7 +2777,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

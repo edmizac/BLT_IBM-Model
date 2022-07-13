@@ -161,7 +161,7 @@ to setup-gis
   ; transform
 end
 
-to visit
+to make-monkey-visit
 ;  ask turtles [
 ;    let chosen random (length feature-list)
 ;    let my-feature (item chosen feature-list)
@@ -209,6 +209,24 @@ to visit
 
 end
 
+
+to make-trees-change-position
+
+  ask feeding-trees [
+    let chosen random (length feature-list)
+    let my-feature (item chosen feature-list)
+;
+    ; translate the centroid of the chosen feature from
+    ; GIS space to NetLogo patch space, then move there
+    ;
+    let new-location gis:location-of (gis:random-point-inside my-feature)
+;    print new-location
+    let new-x (item 0 new-location)
+    let new-y (item 1 new-location)
+    setxy new-x new-y
+  ]
+
+end
 
 ; TREES INPUT
 to setup-trees
@@ -2045,12 +2063,29 @@ output-print?
 -1000
 
 BUTTON
-570
-37
-633
-70
+560
+36
+694
+69
 NIL
-visit
+make-monkey-visit
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+557
+74
+704
+107
+NIL
+make-trees-change-position
 NIL
 1
 T
