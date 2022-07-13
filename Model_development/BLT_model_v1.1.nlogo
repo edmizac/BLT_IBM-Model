@@ -486,6 +486,11 @@ to step ; FOR DEBUG PURPOSES ONLY
       ;    type "tree_add_list " print length tree_add_list print tree_add_list
       type "action-time: " print action-time
       type "energy: " print energy
+      type "x: " print x_UTM
+      type "y: " print y_UTM
+      if tree_target != -1 [
+        type "distance: " print distance tree_target
+      ]
 ;      ifelse travel_mode = "short_distance" [
 ;        ; print distance tree_target
 ;      ][
@@ -593,7 +598,10 @@ to move-monkeys
       ]
     ]
 
+
     if timestep < simulation-time [ ; energy levels: energy_level_1 = 80 and energy_level_2 = 150
+      enhance_memory_list
+
       ifelse energy < energy_level_1 [ ; energy < level 1
         set travel_mode "short_distance"
         if ld_tree_target = tree_target [
@@ -681,10 +689,11 @@ end
 to-report on-feeding-tree?
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
-    ifelse action = "travel" AND tree_target != -1 [
+    ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
       ifelse distance tree_target < 0.8 [
         set tree_current tree_target
         set tree_target -1
+        print "banana"
         report true
       ][
         report false
@@ -721,6 +730,11 @@ to-report on-feeding-tree?
 end
 
 ;----------------------------------------
+
+to-report take [n xs]   ; based on https://stackoverflow.com/questions/32119932/how-to-select-first-n-items-of-list-in-netlogo
+  report sublist xs 0 min list n (length xs)
+end
+
 
 to feeding
 ;  print "feeding"    ; debugging
@@ -778,6 +792,26 @@ to remove_trees_surrounding
     set tree_add_list lput 1 tree_add_list
   ]
 end
+
+to enhance_memory_list
+    ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primate are in small fragments
+  let n_trees ( count feeding-trees / 2 ); don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list
+  if ( length tree_pot_list <= 10 ) [
+    let tree_bucket sublist tree_ate_list 0 n_trees
+;    print tree_bucket
+
+    ; enhance potential list
+    ( foreach tree_bucket [ x -> set tree_pot_list lput x tree_pot_list ] )
+
+    ; reduce mem_list and add_list
+    set tree_mem_list sublist tree_mem_list ( n_trees + 1 ) ( length tree_mem_list)
+    set tree_add_list sublist tree_add_list ( n_trees + 1 ) ( length tree_add_list)
+    set tree_ate_list sublist tree_ate_list ( n_trees + 1 ) ( length tree_ate_list)
+  ]
+
+end
+
+
 ;-----------------------------------------
 
 to to-feeding-tree
@@ -799,7 +833,7 @@ to to-feeding-tree
       set behavior "travel"
 
       ;; RANDOM movement while traveling:
-      if random-angle? = TRUE [
+      if random-angle? = TRUE AND distance tree_target > 1.5 [
         rt (random 90) - 45
       ]
     ]
@@ -823,7 +857,7 @@ to to-feeding-tree
       set behavior "travel"
 
       ;; RANDOM movement while traveling:
-      if random-angle? = TRUE [
+      if random-angle? = TRUE AND distance ld_tree_target > 1.5 [
         rt (random 90) - 45
       ]
     ]
@@ -1041,7 +1075,7 @@ to sleeping
   if action != "sleeping" [
 
     ;; RANDOM movement while traveling:
-    if random-angle? = TRUE [
+    if random-angle? = TRUE  AND distance tree_target > 1.5 [
       rt (random 90) - 45
     ]
 
@@ -1425,7 +1459,7 @@ start-energy
 start-energy
 energy_level_1
 170
-104.0
+107.0
 1
 1
 NIL
@@ -1519,7 +1553,7 @@ simulation-time
 simulation-time
 0
 170
-109.0
+117.0
 1
 1
 NIL
@@ -1534,7 +1568,7 @@ energy-from-fruits
 energy-from-fruits
 0
 15
-7.0
+10.0
 1
 1
 NIL
@@ -1658,7 +1692,7 @@ energy-loss-foraging
 energy-loss-foraging
 -10
 0
--2.8
+-1.7
 0.1
 1
 NIL
@@ -1708,10 +1742,10 @@ Tamarin
 1
 
 INPUTBOX
-62
-532
-469
-618
+9
+641
+416
+727
 runtime
 ./runtime/
 1
@@ -1726,7 +1760,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
-3
+1
 
 CHOOSER
 891
@@ -1758,7 +1792,7 @@ step_forget
 step_forget
 0
 1000
-104.0
+109.0
 1
 1
 NIL
@@ -2037,6 +2071,7 @@ PENS
 "pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ plot length tree_ate_list ]"
 "pen-3" 1.0 0 -14439633 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) ]"
+"pen-4" 1.0 0 -16777216 true "" "let n_trees ( count feeding-trees / 2 )\nplot n_trees"
 
 TEXTBOX
 857
@@ -2084,7 +2119,7 @@ duration
 duration
 0
 20
-4.0
+1.0
 1
 1
 NIL
@@ -2110,7 +2145,7 @@ visual
 visual
 0
 10
-0.0
+1.0
 1
 1
 NIL
@@ -2388,6 +2423,74 @@ phenology-on?
 1
 1
 -1000
+
+BUTTON
+10
+535
+129
+568
+NIL
+ride one-of monkeys
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+136
+537
+265
+570
+NIL
+reset-perspective
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+269
+537
+432
+570
+NIL
+inspect one-of monkeys
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+9
+578
+271
+611
+NIL
+ask monkeys [ show length tree_pot_list ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
