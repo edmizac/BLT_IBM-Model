@@ -486,8 +486,8 @@ to step ; FOR DEBUG PURPOSES ONLY
       ;    type "tree_add_list " print length tree_add_list print tree_add_list
       type "action-time: " print action-time
       type "energy: " print energy
-      type "x: " print x_UTM
-      type "y: " print y_UTM
+;      type "x: " print x_UTM
+;      type "y: " print y_UTM
       if tree_target != -1 [
         type "distance: " print distance tree_target
       ]
@@ -578,6 +578,12 @@ to move-monkeys
 
   ask monkeys
   [
+    ifelse show-energy? [
+      set label round energy
+      set label-color black
+    ]
+    [ set label "" ]
+
     if patch-ahead pcolor = yellow + 4 [ right 180 forward 0.5 ] ; no use of the matrix
     if energy < 1 [ die ]
 
@@ -606,15 +612,13 @@ to move-monkeys
         set travel_mode "short_distance"
         if ld_tree_target = tree_target [
           set tree_target -1 ; remove tree_target when coming from "long_distance"
+          set ld_tree_target -1  ; if this is not here it will make the tamarin lose the target very close to the tree when coming from long distance bc of the condition ld_tree_target = tree_target (Ronald debugged on the 14th of July 2022)
         ]
         frugivory
       ][
-;        ifelse (action = "feeding" or action = "travel") [   ;; v1.0 version
+;        ifelse (action = "feeding" or action = "travel") [              ;; v1.0 version
         ifelse (travel_mode = "short_distance" ) [                       ;; v1.1 version (long and short-distance travel)
-;          set tree_target -1
-;          set tree_current -1
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
-            ; set tree_target -1
             if tree_current = -1 [
              set travel_mode "long_distance"
             ]
@@ -630,7 +634,7 @@ to move-monkeys
 
 
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
-            ; set ld_tree_target -1 ; has to be set to 0 otherwise tamarins will come back in the next ld travel cycle
+            ; set ld_tree_target -1  ;; commented out by Ronnald on 14th of July ;; has to be set to -1 otherwise tamarins will come back in the next ld travel cycle
             frugivory
           ][
             set action-time action-time + 1
@@ -660,9 +664,11 @@ to frugivory
         feeding
       ][
         set tree_current -1
+;        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
+;      print "New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -690,15 +696,17 @@ to-report on-feeding-tree?
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
+;      print distance tree_target ; for debugging
       ifelse distance tree_target < 0.8 [
         set tree_current tree_target
         set tree_target -1
-        print "banana"
+;        print "on-feeding-tree? TRUE" ; for debugging
         report true
       ][
         report false
       ]
     ][
+;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
         report true
       ][
@@ -710,7 +718,7 @@ to-report on-feeding-tree?
 
   if travel_mode = "long_distance" [    ;; long distance frugivory
 
-    ifelse action = "travel" AND ld_tree_target != -1 [
+    ifelse action = "travel" OR action = "foraging" AND ld_tree_target != -1 [
       ifelse distance ld_tree_target < 0.8 [
         set tree_current ld_tree_target
         set ld_tree_target -1
@@ -730,11 +738,6 @@ to-report on-feeding-tree?
 end
 
 ;----------------------------------------
-
-to-report take [n xs]   ; based on https://stackoverflow.com/questions/32119932/how-to-select-first-n-items-of-list-in-netlogo
-  report sublist xs 0 min list n (length xs)
-end
-
 
 to feeding
 ;  print "feeding"    ; debugging
@@ -777,12 +780,13 @@ end
 
 ;-----------------------------------------
 to remove_trees_surrounding
-  ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (25m ?)
+  ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (1 patch = 25m)
   ;; set tree_pot_list remove-item ( position [who] of
   ;; let trees_remove [ who ] of feeding-trees in-radius 2
   ;;  let trees_remove filter [ s -> member? s [ who ] of feeding-trees in-radius visual ] tree_pot_list
   let trees_remove filter [ s -> member? s [ who ] of feeding-trees with [ distance myself < visual] ] tree_pot_list
   let l length trees_remove
+;  print l ; for debugging
   while [ l > 0 ]
   [
     set l l - 1
@@ -794,19 +798,20 @@ to remove_trees_surrounding
 end
 
 to enhance_memory_list
-    ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primate are in small fragments
-  let n_trees ( count feeding-trees / 2 ); don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list
-  if ( length tree_pot_list <= 10 ) [
-    let tree_bucket sublist tree_ate_list 0 n_trees
+    ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
+    ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
+  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ); don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
+  if ( length tree_pot_list <= n_trees ) [
+    let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
 ;    print tree_bucket
 
     ; enhance potential list
     ( foreach tree_bucket [ x -> set tree_pot_list lput x tree_pot_list ] )
 
     ; reduce mem_list and add_list
-    set tree_mem_list sublist tree_mem_list ( n_trees + 1 ) ( length tree_mem_list)
-    set tree_add_list sublist tree_add_list ( n_trees + 1 ) ( length tree_add_list)
-    set tree_ate_list sublist tree_ate_list ( n_trees + 1 ) ( length tree_ate_list)
+    set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
+    set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
+    set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
   ]
 
 end
@@ -900,62 +905,65 @@ to search-feeding-tree
 ;    print ld_tree_target    ; debugging
   ]
 
-;; TREE ENERGY VARIABLE
-   if tree_target_species = "annona" [
-    set species_time 3
-    set energy_species 5
-  ]
-  if tree_target_species = "celtis" [
-    set species_time 3
-    set energy_species 2
-  ]
-  if tree_target_species = "cissus" [
-    set species_time 3
-    set energy_species 4
-  ]
-  if tree_target_species = "cordia" [
-    set species_time 3
-    set energy_species 4
-  ]
-   if tree_target_species = "diospyrus" [
-    set species_time 3
-    set energy_species 3
-  ]
-  if tree_target_species = "ficus" [
-    set species_time 3
-    set energy_species 2
-  ]
-  if tree_target_species = "pereskia" [
-    set species_time 3
-    set energy_species 5
-  ]
-  if tree_target_species = "rhipsalis" [
-    set species_time 3
-    set energy_species 1
-  ]
-  if tree_target_species = "syagrus" [
-    set species_time 3
-    set energy_species 3
-  ]
- if tree_target_species = "rhamnidium" [
-    set species_time 3
-    set energy_species 4
-  ]
-  if tree_target_species = "unknown" [
-    set species_time 3
-    set energy_species 1
-  ]
-  if tree_target_species = "claussenii" [
-    set species_time 3
-    set energy_species 1
-  ]
-  if tree_target_species = "eugenia" [
-    set species_time 3
-    set energy_species 3
-  ]
-  if tree_target_species = "sp_five" [
-    set species_time 3
-    set energy_species 2
+
+  if phenology-on? [
+    ;; TREE ENERGY VARIABLE DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION
+    if tree_target_species = "annona" [
+      set species_time 1
+;      set energy_species 5
+    ]
+    if tree_target_species = "celtis" [
+      set species_time 4
+      set energy_species 2
+    ]
+    if tree_target_species = "cissus" [
+      set species_time 1
+      set energy_species 4
+    ]
+    if tree_target_species = "cordia" [
+      set species_time 4
+      set energy_species 4
+    ]
+    if tree_target_species = "diospyrus" [
+      set species_time 1
+      set energy_species 3
+    ]
+    if tree_target_species = "ficus" [
+      set species_time 4
+      set energy_species 2
+    ]
+    if tree_target_species = "pereskia" [
+      set species_time 2
+      set energy_species 5
+    ]
+    if tree_target_species = "rhipsalis" [
+      set species_time 2
+      set energy_species 1
+    ]
+    if tree_target_species = "syagrus" [
+      set species_time 2
+      set energy_species 3
+    ]
+    if tree_target_species = "rhamnidium" [
+      set species_time 1
+      set energy_species 4
+    ]
+    if tree_target_species = "unknown" [  ; I don't know to which trees in Felipe dataset this one referes to so I didn't change the values
+      set species_time 3
+      set energy_species 1
+    ]
+    if tree_target_species = "claussenii" [  ; This one either
+      set species_time 3
+      set energy_species 1
+    ]
+    if tree_target_species = "eugenia" [
+      set species_time 3
+      set energy_species 3
+    ]
+    if tree_target_species = "sp_five" [     ; This one either
+      set species_time 3
+      set energy_species 2
+    ]
   ]
 end
 
@@ -1692,7 +1700,7 @@ energy-loss-foraging
 energy-loss-foraging
 -10
 0
--1.7
+-2.2
 0.1
 1
 NIL
@@ -1792,7 +1800,7 @@ step_forget
 step_forget
 0
 1000
-109.0
+1000.0
 1
 1
 NIL
@@ -1819,10 +1827,10 @@ TEXTBOX
 1
 
 SLIDER
-777
-499
-928
-532
+772
+561
+923
+594
 gut_transit_time_val
 gut_transit_time_val
 0
@@ -1859,10 +1867,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-953
-574
-1101
-607
+954
+601
+1102
+634
 species_time_val
 species_time_val
 0
@@ -1914,20 +1922,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-789
-479
-916
-515
+784
+541
+911
+577
 5. dispersal related
 14
 0.0
 1
 
 SLIDER
-778
-538
-927
-571
+773
+600
+922
+633
 n_seeds_hatched
 n_seeds_hatched
 0
@@ -2069,9 +2077,9 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "ask monkeys [ plot length tree_pot_list ]"
 "pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
-"pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ plot length tree_ate_list ]"
-"pen-3" 1.0 0 -14439633 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) ]"
-"pen-4" 1.0 0 -16777216 true "" "let n_trees ( count feeding-trees / 2 )\nplot n_trees"
+"pen-2" 1.0 0 -955883 true "" ";ask monkeys [ plot length tree_ate_list ]"
+"pen-3" 1.0 0 -13840069 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) + 2 ]"
+"pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / proportion_trees_to_revisit )\nplot n_trees"
 
 TEXTBOX
 857
@@ -2145,7 +2153,7 @@ visual
 visual
 0
 10
-1.0
+2.0
 1
 1
 NIL
@@ -2379,10 +2387,10 @@ add random variation in direction each step
 1
 
 BUTTON
-449
-104
-582
-138
+277
+579
+410
+613
 NIL
 test-long-distance
 NIL
@@ -2414,13 +2422,13 @@ PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 SWITCH
-964
-623
-1102
-656
+959
+567
+1097
+600
 phenology-on?
 phenology-on?
-1
+0
 1
 -1000
 
@@ -2491,6 +2499,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+772
+464
+974
+497
+prop_trees_to_reset_memory
+prop_trees_to_reset_memory
+1
+8
+8.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
