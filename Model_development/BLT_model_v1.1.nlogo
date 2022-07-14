@@ -1561,7 +1561,7 @@ simulation-time
 simulation-time
 0
 170
-117.0
+108.0
 1
 1
 NIL
@@ -1800,7 +1800,7 @@ step_forget
 step_forget
 0
 1000
-1000.0
+69.0
 1
 1
 NIL
@@ -2079,7 +2079,7 @@ PENS
 "pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
 "pen-2" 1.0 0 -955883 true "" ";ask monkeys [ plot length tree_ate_list ]"
 "pen-3" 1.0 0 -13840069 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) + 2 ]"
-"pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / proportion_trees_to_revisit )\nplot n_trees"
+"pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory )\nplot n_trees"
 
 TEXTBOX
 857
@@ -2501,10 +2501,10 @@ NIL
 1
 
 SLIDER
-772
-464
-974
-497
+770
+465
+934
+499
 prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 1
