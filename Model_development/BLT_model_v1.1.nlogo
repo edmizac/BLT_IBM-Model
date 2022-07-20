@@ -119,7 +119,7 @@ to setup
   set gut_transit_time gut_transit_time_val
   set travel_speed travel_speed_val
 ;  set foraging_speed foraging_speed_val
-  set species_time species_time_val
+;  set species_time species_time_val
 
   reset-ticks
 end
@@ -841,7 +841,7 @@ to to-feeding-tree
 
       ;; RANDOM movement while traveling:
       if random-angle? = TRUE AND distance tree_target > 1.5 [
-        rt (random 90) - 45
+        rt ( random max-random-angle ) - ( max-random-angle / 2 )
       ]
     ]
   ]
@@ -865,7 +865,7 @@ to to-feeding-tree
 
       ;; RANDOM movement while traveling:
       if random-angle? = TRUE AND distance ld_tree_target > 1.5 [
-        rt (random 90) - 45
+        rt ( random max-random-angle ) - ( max-random-angle / 2 )
       ]
     ]
   ]
@@ -910,62 +910,62 @@ to search-feeding-tree
 
 
   if phenology-on? [
-    ;; TREE ENERGY VARIABLE DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION
+    ;; TREE ENERGY VARIABLE WAS DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION
     if tree_target_species = "annona" [
       set species_time 1
-      set energy_species 5
+;      set energy_species 5
     ]
     if tree_target_species = "celtis" [
       set species_time 4
-      set energy_species 2
+;      set energy_species 2
     ]
     if tree_target_species = "cissus" [
       set species_time 1
-      set energy_species 4
+;      set energy_species 4
     ]
     if tree_target_species = "cordia" [
       set species_time 4
-      set energy_species 4
+;      set energy_species 4
     ]
     if tree_target_species = "diospyrus" [
       set species_time 1
-      set energy_species 3
+;      set energy_species 3
     ]
     if tree_target_species = "ficus" [
       set species_time 4
-      set energy_species 2
+;      set energy_species 2
     ]
     if tree_target_species = "pereskia" [
       set species_time 2
-      set energy_species 5
+;      set energy_species 5
     ]
     if tree_target_species = "rhipsalis" [
       set species_time 2
-      set energy_species 1
+;      set energy_species 1
     ]
     if tree_target_species = "syagrus" [
       set species_time 2
-      set energy_species 3
+;      set energy_species 3
     ]
     if tree_target_species = "rhamnidium" [
       set species_time 1
-      set energy_species 4
+;      set energy_species 4
     ]
     if tree_target_species = "unknown" [  ; I don't know to which trees in Felipe dataset this one referes to so I didn't change the values
       set species_time 3
-      set energy_species 1
+;      set energy_species 1
     ]
     if tree_target_species = "claussenii" [  ; This one either
       set species_time 3
-      set energy_species 1
+;      set energy_species 1
     ]
     if tree_target_species = "eugenia" [
       set species_time 3
-      set energy_species 3
+;      set energy_species 3
     ]
     if tree_target_species = "sp_five" [     ; This one either
       set species_time 3
-      set energy_species 2
+;      set energy_species 2
     ]
   ]
 end
@@ -1088,7 +1088,7 @@ to sleeping
 
     ;; RANDOM movement while traveling:
     if random-angle? = TRUE  AND distance tree_target > 1.5 [
-      rt (random 90) - 45
+      rt ( random max-random-angle ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
     ]
 
     forward travel_speed
@@ -1142,7 +1142,7 @@ to forage
 
 ;; RANDOM movement while foraging 2 (much simpler):
   if random-angle? = TRUE [
-  rt (random 90) - 45
+  rt ( random max-random-angle ) - ( max-random-angle / 2 )
   ]
 
 ;; movement is already done by the 'to-feeding-tree' procedure, so it has to be commented out from here
@@ -1773,7 +1773,7 @@ step_forget
 step_forget
 0
 1000
-10.0
+184.0
 1
 1
 NIL
@@ -1825,10 +1825,10 @@ TEXTBOX
 1
 
 SLIDER
-951
-406
-1093
-439
+955
+447
+1097
+480
 travel_speed_val
 travel_speed_val
 0
@@ -1839,26 +1839,11 @@ travel_speed_val
 NIL
 HORIZONTAL
 
-SLIDER
-954
-601
-1102
-634
-species_time_val
-species_time_val
-0
-100
-2.0
-1
-1
-NIL
-HORIZONTAL
-
 TEXTBOX
-963
-548
-1103
-584
+967
+591
+1107
+627
 6. phenology related
 14
 0.0
@@ -1888,7 +1873,7 @@ energy_level_2
 energy_level_2
 energy_level_1
 1000
-117.0
+146.0
 1
 1
 NIL
@@ -2028,7 +2013,7 @@ SWITCH
 134
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -2092,10 +2077,10 @@ NIL
 1
 
 SLIDER
-951
-479
-1096
-512
+956
+521
+1101
+554
 duration
 duration
 0
@@ -2126,7 +2111,7 @@ visual
 visual
 0
 10
-1.0
+2.0
 1
 1
 NIL
@@ -2217,10 +2202,10 @@ output-print?
 -1000
 
 SLIDER
-951
-441
-1095
-474
+956
+483
+1100
+516
 p-foraging-while-traveling
 p-foraging-while-traveling
 0
@@ -2232,10 +2217,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-961
-511
-1111
-533
+966
+553
+1116
+575
 max timesteps repeating same behavior
 9
 0.0
@@ -2354,7 +2339,7 @@ TEXTBOX
 379
 1106
 405
-add random variation in direction each step
+add random variation in direction each step. If so:
 9
 0.0
 1
@@ -2395,10 +2380,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 SWITCH
-959
-567
-1097
-600
+963
+610
+1101
+643
 phenology-on?
 phenology-on?
 0
@@ -2494,6 +2479,31 @@ TEXTBOX
 921
 518
 don't choose 1
+9
+0.0
+1
+
+SLIDER
+955
+403
+1096
+436
+max-random-angle
+max-random-angle
+0
+180
+90.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+962
+644
+1112
+666
+energy and time spent feeding for each tree species
 9
 0.0
 1
