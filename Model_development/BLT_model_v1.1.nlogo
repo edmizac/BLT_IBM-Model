@@ -29,6 +29,7 @@ monkeys-own [
   action-time     ; how long you do the same action again
   behavior        ; as in activity budget data tables
   steps-moved     ; number of steps taken
+  dist-traveled   ; distance traveled this time step
   travel_mode     ; if it is short or long distance travel
   tree_target     ; target tree (short distance)
   ld_tree_target  ; long distance target tree
@@ -96,7 +97,7 @@ to setup
   clear-all
 
   if USER = "Ronald"
-  [ set local-path "/media/rbialozyt/H/Projektideen/FAPESP_Project_Eduardo/BLT_IBM-Model/" ]
+  [ set local-path "/home/rbialozyt/BLT_IBM-Model/" ]
   if USER = "Eduardo"
   [ set local-path "D:/Data/Documentos/github/BLT_IBM-Model" ]
   if USER = "Others"
@@ -578,6 +579,7 @@ to move-monkeys
 
   ask monkeys
   [
+    set dist-traveled 0
     ifelse show-energy? [
       set label round energy
       set label-color black
@@ -874,6 +876,7 @@ to to-feeding-tree
   set behaviorsequence lput 3 behaviorsequence
 
   forward travel_speed
+  set dist-traveled travel_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-loss-traveling
 
@@ -910,7 +913,7 @@ to search-feeding-tree
     ;; TREE ENERGY VARIABLE DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION
     if tree_target_species = "annona" [
       set species_time 1
-;      set energy_species 5
+      set energy_species 5
     ]
     if tree_target_species = "celtis" [
       set species_time 4
@@ -969,6 +972,7 @@ end
 
 to travel
 ;  forward travel_speed
+;  set dist-traveled travel_speed
 ;  set behavior "travel"
 ;  set steps-moved steps-moved + 1
 ;  set energy energy + energy-loss-traveling
@@ -1059,7 +1063,7 @@ to sleeping
   ifelse tree_target = -1 [
 
     if sleeping-trees-scenario = "empirical" [ search-sleeping-defined ]  ; when using field trees ; WITH THIS IT DOES NOT           ;; EMPIRICAL
-    if sleeping-trees-scenario = "simulated" [ search-sleeping-tree ]     ; when simulating trees  ; ONLY WORKS WITH THIS PROCEDURE ;; SIMULATED
+;    if sleeping-trees-scenario = "simulated" [ search-sleeping-tree ]     ; when simulating trees  ; ONLY WORKS WITH THIS PROCEDURE ;; SIMULATED (procedure droped on July 20th 2022)
   ][
 
     set heading towards tree_target
@@ -1088,6 +1092,7 @@ to sleeping
     ]
 
     forward travel_speed
+    set dist-traveled travel_speed
     set steps-moved steps-moved + 1
     set energy energy + energy-loss-traveling
     set action "travel"
@@ -1116,40 +1121,6 @@ to search-sleeping-defined
 
 end
 
-;----- activate when simulating sleeping trees --------------
-to search-sleeping-tree
-
-; THIS CODE IS WHAT BASICALLY MAKES TAMARINS MOVE OUT OF WHERE THEY ARE AND GO TO OTHER PART OF THE HOME RANGE
-  let n random 100
-  ifelse n <= 15 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 1 ] [forward 1 ]]
-  [ ifelse n <= 30 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 2 ] [ forward 2 ]]
-    [ ifelse n <= 50 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 3.5 ][ forward 3.5 ]]
-      [ ifelse n <= 70 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 4 ][ forward 4 ]]
-        [ ifelse n <= 85 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 6 ][ forward 6 ]]
-          [ if n <= 100 [ ifelse [pcolor] of patch-here = yellow + 4 [ right 180 forward 8 ][ forward 8 ]]
-          ]
-        ]
-      ]
-    ]
-  ]
-
-  ;forward travel_speed
-  set steps-moved steps-moved + 1
-  set energy energy + energy-loss-traveling
-  hatch-sleeping-trees 1 [
-        set size 1
-        set shape "tree"
-        set color magenta
-        set label ""
-        setxy xcor ycor
-        set species "sleeptree"
-        set id-tree who
-  ]
-  ;set tree_target sleeping-trees-here ;; sleeping-trees-here does not exist anywhere else
-  set action "sleeping"
-  set behavior "sleeping"
-end
-
 ;---------------------------------------------------------------------------------------------
 ; Commands for other activities
 ;---------------------------------------------------------------------------------------------
@@ -1174,8 +1145,10 @@ to forage
   rt (random 90) - 45
   ]
 
-  forward travel_speed
-  set steps-moved steps-moved + 1
+;; movement is already done by the 'to-feeding-tree' procedure, so it has to be commented out from here
+;  forward travel_speed
+;  set dist-traveled travel_speed
+;  set steps-moved steps-moved + 1
   set energy energy + energy-from-prey + energy-loss-foraging
 
   set color gray
@@ -1656,7 +1629,7 @@ INPUTBOX
 761
 82
 no_days
-6.0
+10.0
 1
 0
 Number
@@ -1768,7 +1741,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
-1
+3
 
 CHOOSER
 891
@@ -1800,7 +1773,7 @@ step_forget
 step_forget
 0
 1000
-69.0
+10.0
 1
 1
 NIL
@@ -2153,7 +2126,7 @@ visual
 visual
 0
 10
-2.0
+1.0
 1
 1
 NIL
@@ -2504,16 +2477,26 @@ SLIDER
 770
 465
 934
-499
+498
 prop_trees_to_reset_memory
 prop_trees_to_reset_memory
-1
+2
 8
-8.0
+3.0
 1
 1
 NIL
 HORIZONTAL
+
+TEXTBOX
+771
+500
+921
+518
+don't choose 1
+9
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2907,6 +2890,139 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Sensitivity-Analysis" repetitions="10" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="10000"/>
+    <metric>[ x_UTM ] of monkeys</metric>
+    <metric>[ y_UTM ] of monkeys</metric>
+    <metric>[ energy ] of monkeys</metric>
+    <metric>[ behavior ] of monkeys</metric>
+    <enumeratedValueSet variable="feeding-trees-scenario">
+      <value value="&quot;trees_jul&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="output-files?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="step_forget">
+      <value value="10"/>
+      <value value="30"/>
+      <value value="50"/>
+      <value value="100"/>
+      <value value="150"/>
+      <value value="200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="print-step?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="runtime">
+      <value value="&quot;./runtime/&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
+    <enumeratedValueSet variable="path-color-by-day?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="duration">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="feeding-trees?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-from-fruits">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="species_time_val">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="travel_speed_val">
+      <value value="0.7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="resting-trees?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="visual">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy_level_2">
+      <value value="117"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="random-angle?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="start-energy">
+      <value value="107"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n_seeds_hatched">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-loss-resting">
+      <value value="-1.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-path?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="sleeping-trees?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="phenology-on?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-from-prey">
+      <value value="1.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-energy?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="simulation-time">
+      <value value="108"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="export-png">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="sleeping-trees-scenario">
+      <value value="&quot;empirical&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="no_days">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="USER">
+      <value value="&quot;Eduardo&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-loss-foraging">
+      <value value="-2.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy_level_1">
+      <value value="97"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-loss-traveling">
+      <value value="-1.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="all-slp-trees?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="output-print?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop_trees_to_reset_memory">
+      <value value="2"/>
+      <value value="3"/>
+      <value value="5"/>
+      <value value="7"/>
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="display-hatched-trees?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="empirical-trees-choice">
+      <value value="&quot;closest&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
