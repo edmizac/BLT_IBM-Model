@@ -30,6 +30,8 @@ monkeys-own [
   behavior        ; as in activity budget data tables
   steps-moved     ; number of steps taken
   dist-traveled   ; distance traveled this time step
+  DPL             ; daily path length
+  DPL_d           ; list with values of DPL for the DPL plot
   travel_mode     ; if it is short or long distance travel
   tree_target     ; target tree (short distance)
   ld_tree_target  ; long distance target tree
@@ -119,7 +121,7 @@ to setup
   set gut_transit_time gut_transit_time_val
   set travel_speed travel_speed_val
 ;  set foraging_speed foraging_speed_val
-;  set species_time species_time_val
+  set species_time species_time_val
 
   reset-ticks
 end
@@ -304,6 +306,8 @@ to setup-monkeys
     set seed_mem_list []
     set seed_add_list []
     set travelmodelist []
+
+    set DPL_d []
 
     ; fill the potential feeding tree list
     let let_pot_list []
@@ -491,7 +495,9 @@ to step ; FOR DEBUG PURPOSES ONLY
 ;      type "y: " print y_UTM
       if tree_target != -1 [
         type "distance: " print distance tree_target
+        type "target_species: " print tree_target_species
       ]
+      type "DPL_d: " print DPL_d
 ;      ifelse travel_mode = "short_distance" [
 ;        ; print distance tree_target
 ;      ][
@@ -580,22 +586,29 @@ to move-monkeys
   ask monkeys
   [
     set dist-traveled 0
+
     ifelse show-energy? [
       set label round energy
       set label-color black
     ]
     [ set label "" ]
 
-    if patch-ahead pcolor = yellow + 4 [ right 180 forward 0.5 ] ; no use of the matrix
+    if patch-ahead pcolor = yellow + 4 [ right 180 forward ( travel_speed / 3 ) ] ; no use of the matrix
     if energy < 1 [ die ]
 
     set x_UTM (item 0 gis:envelope-of self)
     set y_UTM (item 2 gis:envelope-of self)
 
+;    ;; procedure not working for some reason (to plot average path length)
+;    if action = "sleeping" [
+;      set DPL_d lput DPL DPL_d
+;    ]
+
   ;; BLT ROUTINE
 
     if timestep = 1
         [ set tree_current -1
+          set DPL 0 ; set daily path length to 0 every day
           morning-defecation ]              ;; MORNING-DEFECATION PROCEDURE
 
     if timestep >= simulation-time [
@@ -647,6 +660,9 @@ to move-monkeys
       ] ;; energy > level 1
       forget_trees
       defecation
+
+      set DPL DPL + dist-traveled
+
     ] ; end of daily routine
 ] ; end ask monkeys
 end
@@ -662,7 +678,8 @@ to frugivory
   if travel_mode = "short_distance" [   ;; short distance frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
-      ifelse random (2 * species_time) > action-time [
+;      ifelse random (2 * species_time ) > action-time [
+      ifelse random (2 * [species_time] of tree_current) > action-time [
         feeding
       ][
         set tree_current -1
@@ -915,39 +932,39 @@ to search-feeding-tree
       set species_time 1
 ;      set energy_species 5
     ]
-    if tree_target_species = "celtis" [
+    if tree_target_species = "Celtis iguanaea" [
       set species_time 4
 ;      set energy_species 2
     ]
-    if tree_target_species = "cissus" [
+    if tree_target_species = "Cissus sulcicaulis" [
       set species_time 1
 ;      set energy_species 4
     ]
-    if tree_target_species = "cordia" [
+    if tree_target_species = "cordia" [ ; check if this species occurs in the input of trees
       set species_time 4
 ;      set energy_species 4
     ]
-    if tree_target_species = "diospyrus" [
+    if tree_target_species = "Dyospiros inconstans" [
       set species_time 1
 ;      set energy_species 3
     ]
-    if tree_target_species = "ficus" [
+    if tree_target_species = "ficus" [ ; check if this species occurs in the input of trees
       set species_time 4
 ;      set energy_species 2
     ]
-    if tree_target_species = "pereskia" [
+    if tree_target_species = "Pereskia aculeata" [
       set species_time 2
 ;      set energy_species 5
     ]
-    if tree_target_species = "rhipsalis" [
+    if tree_target_species = "Rhipsalis cereuscula" [
       set species_time 2
 ;      set energy_species 1
     ]
-    if tree_target_species = "syagrus" [
+    if tree_target_species = "Syagrus romanzoffiana" [
       set species_time 2
 ;      set energy_species 3
     ]
-    if tree_target_species = "rhamnidium" [
+    if tree_target_species = "rhamnidium" [ ; check if this species occurs in the input of trees
       set species_time 1
 ;      set energy_species 4
     ]
@@ -959,7 +976,7 @@ to search-feeding-tree
       set species_time 3
 ;      set energy_species 1
     ]
-    if tree_target_species = "eugenia" [
+    if tree_target_species = "Eugenia sp" [
       set species_time 3
 ;      set energy_species 3
     ]
@@ -990,7 +1007,7 @@ to defecation
       set seed_ate_list remove-item 0 seed_ate_list
       set seed_add_list remove-item 0 seed_add_list
       set seed_mem_list remove gut_transit_time seed_mem_list
-      hatch-seeds 1 [ ; change to hatch more seeds! <<<
+      hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
         setxy xcor ycor
         set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
         set species [species] of feeding-trees with [ who = loc_who ]
@@ -1440,7 +1457,7 @@ start-energy
 start-energy
 energy_level_1
 170
-107.0
+124.0
 1
 1
 NIL
@@ -1673,7 +1690,7 @@ energy-loss-foraging
 energy-loss-foraging
 -10
 0
--2.2
+-1.7
 0.1
 1
 NIL
@@ -1688,7 +1705,7 @@ energy-loss-resting
 energy-loss-resting
 -10
 0
--1.9
+-1.8
 0.1
 1
 NIL
@@ -1773,7 +1790,7 @@ step_forget
 step_forget
 0
 1000
-184.0
+99.0
 1
 1
 NIL
@@ -1858,7 +1875,7 @@ energy_level_1
 energy_level_1
 0
 200
-97.0
+99.0
 1
 1
 NIL
@@ -1873,7 +1890,7 @@ energy_level_2
 energy_level_2
 energy_level_1
 1000
-146.0
+143.0
 1
 1
 NIL
@@ -1898,7 +1915,7 @@ n_seeds_hatched
 n_seeds_hatched
 0
 100
-0.0
+7.0
 1
 1
 NIL
@@ -2013,7 +2030,7 @@ SWITCH
 134
 print-step?
 print-step?
-1
+0
 1
 -1000
 
@@ -2191,10 +2208,10 @@ USER
 1
 
 SWITCH
-1219
-128
-1347
-161
+1217
+122
+1335
+155
 output-print?
 output-print?
 1
@@ -2227,10 +2244,10 @@ max timesteps repeating same behavior
 1
 
 PLOT
-1389
-218
-1589
-368
+1362
+376
+1535
+500
 action-time
 NIL
 NIL
@@ -2304,10 +2321,10 @@ resting
 1
 
 PLOT
-1389
-373
-1589
-523
+1362
+505
+1542
+631
 energy
 NIL
 NIL
@@ -2345,10 +2362,10 @@ add random variation in direction each step. If so:
 1
 
 BUTTON
-277
-579
-410
-613
+278
+574
+411
+608
 NIL
 test-long-distance
 NIL
@@ -2386,7 +2403,7 @@ SWITCH
 643
 phenology-on?
 phenology-on?
-0
+1
 1
 -1000
 
@@ -2442,10 +2459,10 @@ NIL
 1
 
 BUTTON
-9
-578
-271
-611
+10
+573
+272
+606
 NIL
 ask monkeys [ show length tree_pot_list ]
 NIL
@@ -2507,6 +2524,91 @@ energy and time spent feeding for each tree species
 9
 0.0
 1
+
+SLIDER
+954
+672
+1126
+705
+species_time_val
+species_time_val
+0
+10
+2.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+497
+577
+697
+727
+species_time
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot species_time"
+
+BUTTON
+10
+607
+144
+641
+check tree species
+ask one-of feeding-trees [ let specieslist [species] of feeding-trees set specieslist remove-duplicates specieslist print specieslist] 
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+1357
+206
+1602
+365
+DPL (m)
+NIL
+NIL
+0.0
+0.0
+0.0
+5000.0
+true
+false
+"" ""
+PENS
+"default" 1.0 2 -16777216 true ";if [behavior] of monkeys = \"sleeping\" [ plot-pen-down ]\nask monkeys [ if behavior = \"sleeping\" [ plot-pen-down ] ]" ";ask monkeys [ plot DPL * patch-size-m ]"
+"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-size-m ] ]"
+"pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
+
+SLIDER
+485
+367
+523
+517
+patch-size-m
+patch-size-m
+0
+100
+19.80162
+1
+1
+m
+VERTICAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2904,132 +3006,43 @@ NetLogo 6.2.2
   <experiment name="Sensitivity-Analysis" repetitions="10" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="10000"/>
+    <timeLimit steps="2000"/>
     <metric>[ x_UTM ] of monkeys</metric>
     <metric>[ y_UTM ] of monkeys</metric>
+    <metric>[ dist-traveled ] of monkeys</metric>
+    <metric>[ travel_mode ] of monkeys</metric>
     <metric>[ energy ] of monkeys</metric>
     <metric>[ behavior ] of monkeys</metric>
-    <enumeratedValueSet variable="feeding-trees-scenario">
-      <value value="&quot;trees_jul&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="output-files?">
-      <value value="false"/>
-    </enumeratedValueSet>
+    <metric>[ x_UTM ] of seeds</metric>
+    <metric>[ y_UTM ] of seeds</metric>
+    <metric>[ mother_tree ] of seeds</metric>
     <enumeratedValueSet variable="step_forget">
-      <value value="10"/>
+      <value value="0"/>
+      <value value="5"/>
+      <value value="15"/>
       <value value="30"/>
       <value value="50"/>
       <value value="100"/>
       <value value="150"/>
       <value value="200"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="print-step?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="runtime">
-      <value value="&quot;./runtime/&quot;"/>
-    </enumeratedValueSet>
     <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
-    <enumeratedValueSet variable="path-color-by-day?">
-      <value value="false"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="duration">
       <value value="1"/>
       <value value="2"/>
       <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="feeding-trees?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="energy-from-fruits">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="species_time_val">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="travel_speed_val">
-      <value value="0.7"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="resting-trees?">
-      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="visual">
       <value value="1"/>
       <value value="2"/>
       <value value="3"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="energy_level_2">
-      <value value="117"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="random-angle?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="start-energy">
-      <value value="107"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n_seeds_hatched">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="energy-loss-resting">
-      <value value="-1.9"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-path?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="sleeping-trees?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="phenology-on?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="energy-from-prey">
-      <value value="1.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="show-energy?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="simulation-time">
-      <value value="108"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="export-png">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="sleeping-trees-scenario">
-      <value value="&quot;empirical&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="no_days">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="USER">
-      <value value="&quot;Eduardo&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="energy-loss-foraging">
-      <value value="-2.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="energy_level_1">
-      <value value="97"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="energy-loss-traveling">
-      <value value="-1.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="all-slp-trees?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="output-print?">
-      <value value="false"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="prop_trees_to_reset_memory">
       <value value="2"/>
       <value value="3"/>
+      <value value="4"/>
       <value value="5"/>
-      <value value="7"/>
       <value value="8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="display-hatched-trees?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="empirical-trees-choice">
-      <value value="&quot;closest&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
