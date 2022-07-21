@@ -56,7 +56,7 @@ globals [
 
   timestep ; step counter during one day
   day  ; present day in the simulation
-  scale ; to fit the data to the simulation area
+  ;scale ; to fit the data to the simulation area
   meanxcoord ; translating the geo coordinates to world coordinates
   meanycoord ; translating the geo coordinates to world coordinates
   ;step_forget ; amount of timesteps until the tamarin forgets to be in that tree
@@ -121,7 +121,7 @@ to setup
   set gut_transit_time gut_transit_time_val
   set travel_speed travel_speed_val
 ;  set foraging_speed foraging_speed_val
-  set species_time species_time_val
+;  set species_time species_time_val
 
   reset-ticks
 end
@@ -135,7 +135,7 @@ end
 to setup-gis
 
   ; Based on: https://s3.amazonaws.com/complexityexplorer/ABMwithNetLogo/Field+Guide+to+NetLogo+v14-netlogoExtension-index_02.pdf
-  set scale 32 ; scale-size. Is this being used?
+  set scale 28.28803 ; scale-size. Calculated based on speed_val = 1.0 (dist between UTM coordinates)
   resize-world -25 25 -25 25 ; same thing as selecting 25 x 25 in the interface
   set-patch-size 10
 
@@ -491,13 +491,14 @@ to step ; FOR DEBUG PURPOSES ONLY
       ;    type "tree_add_list " print length tree_add_list print tree_add_list
       type "action-time: " print action-time
       type "energy: " print energy
-;      type "x: " print x_UTM
-;      type "y: " print y_UTM
+      type "x: " print x_UTM
+      type "y: " print y_UTM
       if tree_target != -1 [
         type "distance: " print distance tree_target
         type "target_species: " print tree_target_species
       ]
       type "DPL_d: " print DPL_d
+      type "DPL (m): " print DPL
 ;      ifelse travel_mode = "short_distance" [
 ;        ; print distance tree_target
 ;      ][
@@ -1790,7 +1791,7 @@ step_forget
 step_forget
 0
 1000
-50.0
+0.0
 1
 1
 NIL
@@ -1850,7 +1851,7 @@ travel_speed_val
 travel_speed_val
 0
 1
-0.7
+0.8
 0.1
 1
 NIL
@@ -1915,7 +1916,7 @@ n_seeds_hatched
 n_seeds_hatched
 0
 100
-1.0
+7.0
 1
 1
 NIL
@@ -1932,9 +1933,9 @@ empirical-trees-choice
 0
 
 MONITOR
-792
+791
 57
-849
+848
 102
 day
 day
@@ -2102,16 +2103,16 @@ duration
 duration
 0
 20
-3.0
+1.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-793
+792
 102
-851
+850
 147
 Energy
 [ round energy ] of monkeys
@@ -2128,7 +2129,7 @@ visual
 visual
 0
 10
-3.0
+1.0
 1
 1
 NIL
@@ -2205,7 +2206,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "Others"
-0
+1
 
 SWITCH
 1217
@@ -2227,7 +2228,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.4
+0.3
 0.05
 1
 NIL
@@ -2387,7 +2388,7 @@ Travel mode frequency
 NIL
 NIL
 0.0
-10.0
+4.0
 0.0
 10.0
 true
@@ -2525,21 +2526,6 @@ energy and time spent feeding for each tree species
 0.0
 1
 
-SLIDER
-954
-672
-1126
-705
-species_time_val
-species_time_val
-0
-10
-2.0
-1
-1
-NIL
-HORIZONTAL
-
 PLOT
 497
 577
@@ -2556,7 +2542,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot species_time"
+"default" 1.0 0 -16777216 true "" "ask monkeys [ ifelse tree_current != -1 [ plot [ species_time ] of tree_current ] [ plot 0 ] ]"
 
 BUTTON
 10
@@ -2592,23 +2578,19 @@ false
 "" ""
 PENS
 "default" 1.0 2 -16777216 true ";if [behavior] of monkeys = \"sleeping\" [ plot-pen-down ]\nask monkeys [ if behavior = \"sleeping\" [ plot-pen-down ] ]" ";ask monkeys [ plot DPL * patch-size-m ]"
-"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-size-m ] ]"
+"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * scale ] ]"
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
-SLIDER
-485
-367
-518
-517
-patch-size-m
-patch-size-m
+INPUTBOX
+711
+82
+771
+142
+scale
+28.28803
+1
 0
-100
-19.80162
-1
-1
-m
-VERTICAL
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2998,7 +2980,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -3015,7 +2997,7 @@ NetLogo 6.2.0
     <metric>[ behavior ] of monkeys</metric>
     <metric>[ x_UTM ] of seeds</metric>
     <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother-tree ] of seeds</metric>
+    <metric>[ mother_tree ] of seeds</metric>
     <enumeratedValueSet variable="step_forget">
       <value value="0"/>
       <value value="5"/>
