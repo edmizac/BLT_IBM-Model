@@ -32,6 +32,7 @@ library("ggplot2")
 
 ncores <- parallel::detectCores()
 nseeds <- 2
+with_phenology <- "true"
 
 # vignette: https://docs.ropensci.org/nlrx/articles/sensitivity.html
 
@@ -176,7 +177,7 @@ nl@experiment <- experiment(expname = expname,
                               # "foraging_speed_val" = 0.7,
                               
                               ## phenology
-                              "phenology-on?" = "false" # does not work as variable
+                              "phenology-on?" = with_phenology # does not work as variable
                               
                               ### others
                               # "simulation-time" = 108
@@ -241,11 +242,15 @@ print(nl)
 print("================== save nl! ==========================")
 # save(nl, file = paste0(nl@experiment@outpath, "/"
 #      , "nl_object_2022-07-20_phenology-off.RData"))
-saveRDS(nl, file.path(nl@experiment@outpath, "morris_2022-07-20_phenology-off.rds"))
+saveRDS(nl, file.path(nl@experiment@outpath, "morris_2022-07-20_phenology-"
+                    , if(with_phenology) {"on"} else {"off"}
+                    , ".rds"))
 print("================ save unnest =========================")
 results_unnest <- unnest_simoutput(nl)
 save(results_unnest,file = paste0(nl@experiment@outpath, "/"
-                                , "results_unnest_2022-07-20_phenology-off.RData"))
+                                , "results_unnest_2022-07-20_phenology-"
+                                , if(with_phenology) {"on"} else {"off"}
+                                , ".RData"))
 
 morris <- analyze_nl(nl)
 #### Model parameters ####
