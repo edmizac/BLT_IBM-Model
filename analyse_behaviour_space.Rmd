@@ -1,0 +1,128 @@
+---
+title: "BLT-behaviour_space"
+author: "Ronald Bialozyt"
+date: "18 7 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library("data.table")
+library("dplyr")
+library("ggplot2")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r behaviour_space, eval=FALSE}
+behaviour_space <- read.csv(paste0("Model_analysis/Sensitivity-analysis/"
+                                , "BLT_model_v1p1_behaviour_space-"
+                                , "Sensitivity-Analysis-table.csv")
+                            , header = T, sep = ",", quote = "\"", skip = 6)
+names(behaviour_space) <- c("run_nr", "step_forget", "p_foraging", "duration"
+                          , "visual", "trees_reset", "step", "x_utm", "y_utm"
+                          , "dist_traveled", "travel_mode", "energy", "behaviour")
+behaviour_space$x_utm <- as.numeric(stringr::str_sub(behaviour_space$x_utm, 2, -2))
+behaviour_space$y_utm <- as.numeric(stringr::str_sub(behaviour_space$y_utm, 2, -2))
+behaviour_space$dist_traveled <- 
+               as.numeric(stringr::str_sub(behaviour_space$dist_traveled, 2, -2))
+behaviour_space$travel_mode <- stringr::str_sub(behaviour_space$travel_mode, 2, -2)
+behaviour_space$energy <- as.numeric(stringr::str_sub(behaviour_space$energy, 2, -2))
+behaviour_space$behaviour <- stringr::str_sub(behaviour_space$behaviour, 2, -2)
+dt_bs <- data.table::as.data.table(behaviour_space) 
+rm(behaviour_space)
+runs <- nrow(dt_bs[ unique(run_nr) ])
+```
+
+There are `r runs` runs using the combination of the values of 
+`r names(dt_bs)[2:6]`.
+
+```{r bs_table}
+val_step_forget <- unique(dt_bs$step_forget)
+val_p_foraging  <- unique(dt_bs$p_foraging)
+val_duration    <- unique(dt_bs$duration)
+val_visual      <- unique(dt_bs$visual)
+val_trees_reset <- unique(dt_bs$trees_reset)
+val_step_forget <- unique(dt_bs$step_forget)
+
+tt <- cbind("step_forget", paste(val_step_forget, collapse = ", "))
+tt <- rbind(tt, cbind("p_foraging", paste(val_p_foraging, collapse = ", ")))
+tt <- rbind(tt, cbind("duration",   paste(val_duration, collapse = ", ")))
+tt <- rbind(tt, cbind("visual",     paste(val_visual, collapse = ", ")))
+tt <- rbind(tt, cbind("step_forget", paste(val_step_forget, collapse = ", ")))
+tt <- as.data.frame(tt)
+names(tt) <- c("Parameter", "Values")
+print(xtable::xtable(tt, caption = paste("The parameters altered in the behavior"
+                                       , "space runs and their corresponding values."))
+                     , caption.placement = "top"
+                     , tabular.environment = "booktabs")
+```
+```{r bs_step_forget, fig.cap="Boxplot according to 'step_forget'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ 
+    p_foraging == 0.6
+    & duration == 2
+    & visual == 2
+    & trees_reset == 5
+    , sum(dist_traveled) , by = .(step_forget, run_nr)]
+tt |> group_by(step_forget) |> rename(distance = V1) |> 
+ggplot2::ggplot( aes(x = step_forget, y = distance, group = step_forget)) + geom_boxplot()
+
+```
+
+```{r p_foraging, fig.cap="Boxplot according to 'p_foraging'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ step_forget == 100
+             #    p_foraging == 0.6
+             & duration == 2
+             & visual == 2
+             & trees_reset == 5
+             , sum(dist_traveled) , by = .(p_foraging, run_nr)]
+tt <- tt %>% group_by(p_foraging) %>% rename(distance = V1)
+ggplot2::ggplot(tt, aes(x = p_foraging, y = distance, group = p_foraging)) + geom_boxplot()
+
+```
+
+```{r bs_duration, fig.cap="Boxplot according to 'duration'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ step_forget == 100
+    & p_foraging == 0.6
+#    & duration == 2
+    & visual == 2
+    & trees_reset == 5
+    , sum(dist_traveled) , by = .(duration, run_nr)]
+tt %>% group_by(duration) %>% rename(distance = V1) %>% 
+ggplot2::ggplot( aes(x = duration, y = distance, group = duration)) + geom_boxplot()
+
+```
+
+```{r bs_visual, fig.cap="Boxplot according to 'visual'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ step_forget == 100
+    & p_foraging == 0.6
+    & duration == 2
+#    & visual == 2
+    & trees_reset == 5
+    , sum(dist_traveled) , by = .(visual, run_nr)]
+tt %>% group_by(visual) %>% rename(distance = V1) %>% 
+ggplot2::ggplot( aes(x = visual, y = distance, group = visual)) + geom_boxplot()
+
+```
+
+```{r bs_trees_reset, fig.cap="Boxplot according to 'trees_reset'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ step_forget == 100
+    & p_foraging == 0.6
+    & duration == 2
+    & visual == 2
+#    & trees_reset == 5
+    , sum(dist_traveled) , by = .(trees_reset, run_nr)]
+tt %>% group_by(trees_reset) %>% rename(distance = V1) %>% 
+ggplot2::ggplot( aes(x = trees_reset, y = distance, group = trees_reset)) + geom_boxplot()
+
+```
+
