@@ -820,7 +820,7 @@ end
 to enhance_memory_list
     ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
     ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
-  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ); don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
+  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
   if ( length tree_pot_list <= n_trees ) [
     let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
 ;    print tree_bucket
@@ -1791,7 +1791,7 @@ step_forget
 step_forget
 0
 1000
-0.0
+503.0
 1
 1
 NIL
@@ -2129,7 +2129,7 @@ visual
 visual
 0
 10
-1.0
+4.0
 1
 1
 NIL
@@ -2206,7 +2206,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "Others"
-1
+0
 
 SWITCH
 1217
@@ -2980,7 +2980,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
