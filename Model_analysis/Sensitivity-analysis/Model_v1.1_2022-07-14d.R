@@ -12,6 +12,16 @@ Sys.time()
 # (plotting, memory limit, decimal digits)
 # 
 
+# Java memory:
+if(Sys.getenv("JAVA_HOME") == "") {
+    if(Sys.info()[["sysname"]] == "Linux") {
+        Sys.setenv(JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64")
+        unixtools::set.tempdir(".")
+    } else {
+        Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
+    }
+}
+
 ## Packages -------------------------
 library("here")
 library("nlrx")
@@ -20,25 +30,39 @@ library("dplyr")
 library("ggplot2")
 ## Packages -------------------------
 
+ncores <- parallel::detectCores()
+nseeds <- 2
 
 # vignette: https://docs.ropensci.org/nlrx/articles/sensitivity.html
 
 # Step 1: Create nl object
-netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-# Ronald:
-# netlogopath <- file.path("/opt/netlogo_622")
-# modelpath <- here("C:/Program Files/NetLogo 6.2.2", "app/models", "BLT_model_v1.nlogo")
+## netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+if(Sys.info()[["nodename"]] == "simul02") {
+    netlogopath <- file.path("/home/rbialozyt/Software/NetLogo 6.2.0")
+    modelpath <- "/home/rbialozyt/BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo"
+}
+if(Sys.info()[["nodename"]] == "PC146") {
+    netlogopath <- file.path("/opt/netlogo_620")
+    modelpath <- paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
+                      , "BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo")
+}
+## netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+## modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
 # C:\Program Files\NetLogo 6.2.2\app\models
 file.info(modelpath)
 
-outpath <- here("Model_analysis", "Sensitivity-analysis")
+if(Sys.info()[["nodename"]] == "simul02") {
+    outpath <- ("/home/rbialozyt/BLT_IBM-Model/Model_analysis/Sensitivity-analysis")
+}
+if(Sys.info()[["nodename"]] == "PC146") {
+    outpath <-  paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
+                      , "BLT_IBM-Model/Model_analysis/Sensitivity-analysis")
+}    
 
-
-nl <- nl(nlversion = "6.2.2",
+nl <- nl(nlversion = "6.2.0",
          nlpath = netlogopath,
          modelpath = modelpath,
-         jvmmem = 8192)
+         jvmmem = 1024)
 
 report_model_parameters(nl)
 
@@ -63,7 +87,10 @@ nl@experiment <- experiment(expname = expname,
                             # reporters:
                             metrics = c("timestep", "day"), # e.g. "count sheep" or "count patches with [pcolor = green]"
                             metrics.turtles = list("monkeys" = c("x_UTM", "y_UTM",
-                                                                 "energy", "behavior")
+                                                                 # "xcor", "ycor",
+                                                                 "energy", "behavior",
+                                                                 "dist-traveled",
+                                                                 "travel_mode ")
                                                    
                                                    # , "steps-moved"
                                                    
@@ -82,15 +109,15 @@ nl@experiment <- experiment(expname = expname,
                               # "energy-loss-resting" = list(min=-10, max = 0, step = 2),
                               
                               # memory
-                              "step_forget" = list(min=0, max = 150, step = 10, qfun="qunif"),
-                              "visual" = list(min=0, max = 3, step = 1, qfun="qunif"),
+                              "step_forget" = list(min=1, max = 100, step = 10, qfun="qunif"),
+                              "visual" = list(min=1, max = 3, step = 1, qfun="qunif"),
                               "prop_trees_to_reset_memory" = list(min = 1, max = 8, step = 1, qfun="qunif"),
                               
                               # movement
-                              "travel_speed_val" = list(min = 0.3, max = 1, step = 0.1, qfun="qunif"),
-                              "p-foraging-while-traveling" = list(min = 0.05, max = 0.5, step = 0.05, qfun="qunif")
+                              # "travel_speed_val" = list(min = 0.3, max = 1, step = 0.1, qfun="qunif"),
+                              "p-foraging-while-traveling" = list(min = 0.1, max = 0.6, step = 0.1, qfun="qunif"), 
                               # "foraging_speed_val" = list(min= 0, max = 1, step = 2)
-                              # "duration" = list(min=0, max = 10, step = 2),
+                              "duration" = list(min=1, max = 6, step = 2, qfun="qunif")
                               
                               # phenology
                               
@@ -108,7 +135,7 @@ nl@experiment <- experiment(expname = expname,
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
                               # "USER" = "\"Ronald\"",
-                              "USER" = "\"Eduardo\"",
+                              # "USER" = "\"Eduardo\"",
                               # "print-step?" = "false",
                               # 'export-png'= "false",
                               # "show-energy?" = "false",
@@ -118,7 +145,7 @@ nl@experiment <- experiment(expname = expname,
                               # "path-color-by-day?" = "false",
                               
                               ### resource scenario
-                              "no_days" = 10, # DON'T TRY no_days = 1
+                              # "no_days" = 10, # DON'T TRY no_days = 1
                               # 'feeding-trees-scenario' = "\"trees_all\"",
                               # 'feeding-trees?' = "true",
                               # 'sleeping-trees?' = "true",
@@ -149,7 +176,7 @@ nl@experiment <- experiment(expname = expname,
                               # "foraging_speed_val" = 0.7,
                               
                               ## phenology
-                              "phenology-on?" = "true" # does not work as variable
+                              "phenology-on?" = "false" # does not work as variable
                               
                               ### others
                               # "simulation-time" = 108
@@ -164,15 +191,15 @@ nl@experiment <- experiment(expname = expname,
 # library("morris")
 nl@simdesign <- simdesign_morris(nl = nl,
                                  morristype = "oat",
-                                 morrislevels = 10, # sets the number of different values for each parameter (sampling density)
-                                 morrisr = 100, # sets the number of repeated samplings (sampling size)
+                                 morrislevels = 8, # sets the number of different values for each parameter (sampling density)
+                                 morrisr = 20, # sets the number of repeated samplings (sampling size)
                                  morrisgridjump = 5, # sets the number of levels that are increased/decreased for computing the elementary effects. . Morris recommendation is to set this value to levels / 2.
-                                 nseeds = 5)
+                                 nseeds = 2)
 
 
 # More information on the Morris specific parameters can be found in the description of the morris function in the sensitivity package (?morris).
-?morris
-
+# ?morris
+model_parameter <- report_model_parameters(nl)
 
 # Step 4: Run simulations
 # Evaluate nl object:
@@ -185,26 +212,42 @@ print(nl)
 library(future)
 library(tictoc)
 
-plan(multisession)
+# plan(multisession)
+## plan(list(sequential, multiseprocess))
+## plan(list(sequential, multisession))
+plan(list(sequential, multicore))
+# split_param <- min(nrow(nl@simdesign@siminput), ((ncores - 2)/nseeds))
 tictoc::tic()
 progressr::handlers("progress")
-results <- progressr::with_progress(
-  run_nl_all(nl,
-             split = 3)
-)
+results %<-% progressr::with_progress(
+                            run_nl_all(nl = nl
+                                     , split = 2)
+                            )
 tictoc::toc()
+print("================ Finished! =========================")
 
+# Step 5: Attach results to nl and run analysis In order to run the
+# analyze_nl function, the simulation output has to be attached to the
+# nl object first. The simdesign class within the nl object provides a
+# slot for attaching output results (simoutput). An output results
+# tibble can be attached to this slot by using the simdesign setter
+# function setsim(nl, "simoutput"). After attaching the simulation
+# results, these can also be written to the defined outpath of the
+# experiment object.  Attach results to nl object:
+setsim(nl, "simoutput") <- results
 
+print(nl)
 
+print("================== save nl! ==========================")
+# save(nl, file = paste0(nl@experiment@outpath, "/"
+#      , "nl_object_2022-07-20_phenology-off.RData"))
+saveRDS(nl, file.path(nl@experiment@outpath, "morris_2022-07-20_phenology-off.rds"))
+print("================ save unnest =========================")
+results_unnest <- unnest_simoutput(nl)
+save(results_unnest,file = paste0(nl@experiment@outpath, "/"
+                                , "results_unnest_2022-07-20_phenology-off.RData"))
 
-
-
-
-
-
-
-
-
+morris <- analyze_nl(nl)
 #### Model parameters ####
 # > report_model_parameters(nl)
 # $`start-energy`
