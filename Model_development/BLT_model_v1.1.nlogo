@@ -1482,42 +1482,32 @@ NIL
 1
 
 TEXTBOX
-47
-54
-197
-72
+44
+45
+194
+63
 Feeding tree
-12
+10
 0.0
 1
 
 TEXTBOX
-48
-78
-198
-96
-Resting tree
-12
-0.0
-1
-
-TEXTBOX
-47
-106
-197
-124
+43
+64
+193
+82
 Sleeping tree
-12
+10
 0.0
 1
 
 TEXTBOX
-48
-132
-198
-150
+41
+84
+191
+102
 Defecated seeds
-12
+10
 0.0
 1
 
@@ -1567,7 +1557,7 @@ energy-from-fruits
 energy-from-fruits
 0
 15
-10.0
+15.0
 1
 1
 NIL
@@ -1731,12 +1721,12 @@ OUTPUT
 11
 
 TEXTBOX
-51
-30
-201
-48
+47
+25
+197
+43
 Tamarin
-12
+10
 0.0
 1
 
@@ -1791,7 +1781,7 @@ step_forget
 step_forget
 0
 1000
-0.0
+68.0
 1
 1
 NIL
@@ -2025,10 +2015,10 @@ NIL
 1
 
 SWITCH
-605
-101
-707
-134
+534
+104
+636
+137
 print-step?
 print-step?
 0
@@ -2582,7 +2572,7 @@ PENS
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
 INPUTBOX
-711
+691
 82
 771
 142
@@ -2591,6 +2581,36 @@ scale
 1
 0
 Number
+
+TEXTBOX
+52
+484
+202
+502
+Long distance target
+10
+0.0
+1
+
+TEXTBOX
+51
+504
+201
+522
+Short distance target
+10
+0.0
+1
+
+TEXTBOX
+569
+125
+719
+143
+(for debugging)
+9
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
