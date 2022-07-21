@@ -1790,7 +1790,7 @@ step_forget
 step_forget
 0
 1000
-99.0
+50.0
 1
 1
 NIL
@@ -1915,7 +1915,7 @@ n_seeds_hatched
 n_seeds_hatched
 0
 100
-7.0
+1.0
 1
 1
 NIL
@@ -2102,7 +2102,7 @@ duration
 duration
 0
 20
-1.0
+3.0
 1
 1
 NIL
@@ -2128,7 +2128,7 @@ visual
 visual
 0
 10
-2.0
+3.0
 1
 1
 NIL
@@ -2205,7 +2205,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "Others"
-1
+0
 
 SWITCH
 1217
@@ -2227,7 +2227,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.3
+0.4
 0.05
 1
 NIL
@@ -2403,7 +2403,7 @@ SWITCH
 643
 phenology-on?
 phenology-on?
-1
+0
 1
 -1000
 
@@ -2484,7 +2484,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-3.0
+2.0
 1
 1
 NIL
@@ -2598,7 +2598,7 @@ PENS
 SLIDER
 485
 367
-523
+518
 517
 patch-size-m
 patch-size-m
@@ -2998,7 +2998,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -3015,7 +3015,7 @@ NetLogo 6.2.2
     <metric>[ behavior ] of monkeys</metric>
     <metric>[ x_UTM ] of seeds</metric>
     <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother_tree ] of seeds</metric>
+    <metric>[ mother-tree ] of seeds</metric>
     <enumeratedValueSet variable="step_forget">
       <value value="0"/>
       <value value="5"/>
