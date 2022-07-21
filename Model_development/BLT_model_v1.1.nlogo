@@ -820,7 +820,7 @@ end
 to enhance_memory_list
     ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
     ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
-  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ); don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
+  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
   if ( length tree_pot_list <= n_trees ) [
     let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
 ;    print tree_bucket
@@ -2119,7 +2119,7 @@ visual
 visual
 0
 10
-1.0
+4.0
 1
 1
 NIL
@@ -2196,7 +2196,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "Others"
-1
+0
 
 SWITCH
 1217
@@ -3000,7 +3000,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -3021,9 +3021,12 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="step_forget">
       <value value="0"/>
       <value value="5"/>
-      <value value="10"/>
+      <value value="15"/>
       <value value="30"/>
       <value value="50"/>
+      <value value="100"/>
+      <value value="150"/>
+      <value value="200"/>
     </enumeratedValueSet>
     <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
     <enumeratedValueSet variable="duration">
@@ -3041,176 +3044,7 @@ NetLogo 6.2.2
       <value value="3"/>
       <value value="4"/>
       <value value="5"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Sensitivity-Analysis-Part1" repetitions="10" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="2000"/>
-    <metric>[ x_UTM ] of monkeys</metric>
-    <metric>[ y_UTM ] of monkeys</metric>
-    <metric>[ dist-traveled ] of monkeys</metric>
-    <metric>[ travel_mode ] of monkeys</metric>
-    <metric>[ energy ] of monkeys</metric>
-    <metric>[ behavior ] of monkeys</metric>
-    <metric>[ x_UTM ] of seeds</metric>
-    <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother_tree ] of seeds</metric>
-    <enumeratedValueSet variable="step_forget">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
-    <enumeratedValueSet variable="duration">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="visual">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="prop_trees_to_reset_memory">
-      <value value="2"/>
-      <value value="3"/>
-      <value value="4"/>
-      <value value="5"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Sensitivity-Analysis-Part2" repetitions="10" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="2000"/>
-    <metric>[ x_UTM ] of monkeys</metric>
-    <metric>[ y_UTM ] of monkeys</metric>
-    <metric>[ dist-traveled ] of monkeys</metric>
-    <metric>[ travel_mode ] of monkeys</metric>
-    <metric>[ energy ] of monkeys</metric>
-    <metric>[ behavior ] of monkeys</metric>
-    <metric>[ x_UTM ] of seeds</metric>
-    <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother_tree ] of seeds</metric>
-    <enumeratedValueSet variable="step_forget">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
-    <enumeratedValueSet variable="duration">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="visual">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="prop_trees_to_reset_memory">
-      <value value="2"/>
-      <value value="3"/>
-      <value value="4"/>
-      <value value="5"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Sensitivity-Analysis-Part3" repetitions="10" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="2000"/>
-    <metric>[ x_UTM ] of monkeys</metric>
-    <metric>[ y_UTM ] of monkeys</metric>
-    <metric>[ dist-traveled ] of monkeys</metric>
-    <metric>[ travel_mode ] of monkeys</metric>
-    <metric>[ energy ] of monkeys</metric>
-    <metric>[ behavior ] of monkeys</metric>
-    <metric>[ x_UTM ] of seeds</metric>
-    <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother_tree ] of seeds</metric>
-    <enumeratedValueSet variable="step_forget">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
-    <enumeratedValueSet variable="duration">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="visual">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="prop_trees_to_reset_memory">
-      <value value="2"/>
-      <value value="3"/>
-      <value value="4"/>
-      <value value="5"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Sensitivity-Analysis-Part4" repetitions="10" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="2000"/>
-    <metric>[ x_UTM ] of monkeys</metric>
-    <metric>[ y_UTM ] of monkeys</metric>
-    <metric>[ dist-traveled ] of monkeys</metric>
-    <metric>[ travel_mode ] of monkeys</metric>
-    <metric>[ energy ] of monkeys</metric>
-    <metric>[ behavior ] of monkeys</metric>
-    <metric>[ x_UTM ] of seeds</metric>
-    <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother_tree ] of seeds</metric>
-    <enumeratedValueSet variable="step_forget">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
-    <enumeratedValueSet variable="duration">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="visual">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="prop_trees_to_reset_memory">
-      <value value="2"/>
-      <value value="3"/>
-      <value value="4"/>
-      <value value="5"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Sensitivity-Analysis-Part5" repetitions="10" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="2000"/>
-    <metric>[ x_UTM ] of monkeys</metric>
-    <metric>[ y_UTM ] of monkeys</metric>
-    <metric>[ dist-traveled ] of monkeys</metric>
-    <metric>[ travel_mode ] of monkeys</metric>
-    <metric>[ energy ] of monkeys</metric>
-    <metric>[ behavior ] of monkeys</metric>
-    <metric>[ x_UTM ] of seeds</metric>
-    <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother_tree ] of seeds</metric>
-    <enumeratedValueSet variable="step_forget">
-      <value value="50"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
-    <enumeratedValueSet variable="duration">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="visual">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="prop_trees_to_reset_memory">
-      <value value="2"/>
-      <value value="3"/>
-      <value value="4"/>
-      <value value="5"/>
+      <value value="8"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
