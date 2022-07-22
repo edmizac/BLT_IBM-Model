@@ -32,7 +32,7 @@ library("ggplot2")
 
 ncores <- parallel::detectCores()
 nseeds <- 2
-with_phenology <- "true"
+with_phenology <- "false"
 
 # vignette: https://docs.ropensci.org/nlrx/articles/sensitivity.html
 
@@ -112,7 +112,7 @@ nl@experiment <- experiment(expname = expname,
                               # memory
                               "step_forget" = list(min=1, max = 100, step = 10, qfun="qunif"),
                               "visual" = list(min=1, max = 3, step = 1, qfun="qunif"),
-                              "prop_trees_to_reset_memory" = list(min = 1, max = 8, step = 1, qfun="qunif"),
+                              "prop_trees_to_reset_memory" = list(min = 2, max = 5, step = 1, qfun="qunif"), ## > 1
                               
                               # movement
                               # "travel_speed_val" = list(min = 0.3, max = 1, step = 0.1, qfun="qunif"),
@@ -135,7 +135,7 @@ nl@experiment <- experiment(expname = expname,
                               ### "true" for output related stuff
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
-                              # "USER" = "\"Ronald\"",
+                              "USER" = "\"Ronald\"",
                               # "USER" = "\"Eduardo\"",
                               # "print-step?" = "false",
                               # 'export-png'= "false",
@@ -147,13 +147,12 @@ nl@experiment <- experiment(expname = expname,
                               
                               ### resource scenario
                               # "no_days" = 10, # DON'T TRY no_days = 1
-                              # 'feeding-trees-scenario' = "\"trees_all\"",
+                              'feeding-trees-scenario' = "\"trees_jul\"",
                               # 'feeding-trees?' = "true",
                               # 'sleeping-trees?' = "true",
                               # 'resting-trees?' = "false",
                               # 'sleeping-trees-scenario' = "\"empirical\"",
                               # 'empirical-trees-choice' = "\"closest\"",
-                              # 'species_time_val' = 6,
                               
                               ### memory
                               # 'duration' = 3,
@@ -161,26 +160,25 @@ nl@experiment <- experiment(expname = expname,
                               # "step_forget" = 130,
                               
                               ### energy
-                              # 'start-energy' = 70,
-                              # "energy_level_1" = 80,
-                              # "energy_level_2" = 150,
-                              # "energy-from-seeds" = 4,# ?
-                              # "energy-from-prey" = 4,
-                              # "energy-loss-traveling" = -1.6,
-                              # "energy-loss-foraging" = -2,
-                              # "energy-loss-resting" = -1.9,
-                              # "gut_transit_time_val" = 15,
-                              # "n_seeds_hatched" = 1,
+                              'start-energy' = 124,
+                              "energy_level_1" = 99,
+                              "energy_level_2" = 143,
+                              "energy-from-fruits" = 10,# ?
+                              "energy-from-prey" = 1.8,
+                              "energy-loss-traveling" = -1.8,
+                              "energy-loss-foraging" = -1.7,
+                              "energy-loss-resting" = -1.8,
+                              "gut_transit_time_val" = 13,
+                              "n_seeds_hatched" = 1,
                               
                               ### movement
-                              # "travel_speed_val" = 0.7,
-                              # "foraging_speed_val" = 0.7,
+                               "travel_speed_val" = 0.7,
                               
                               ## phenology
-                              "phenology-on?" = with_phenology # does not work as variable
+                              "phenology-on?" = with_phenology, # does not work as variable
                               
                               ### others
-                              # "simulation-time" = 108
+                              "simulation-time" = 108
                               
                             )
 )
@@ -226,6 +224,24 @@ results %<-% progressr::with_progress(
                             )
 tictoc::toc()
 print("================ Finished! =========================")
+results$USER <- NULL
+results$'feeding-trees-scenario' <- NULL
+results$'start-energy' <- NULL
+results$energy_level_1  <- NULL
+results$energy_level_2 <- NULL
+results$'energy-from-fruits' <- NULL
+results$'energy-from-prey' <- NULL
+results$'energy-loss-traveling' <- NULL
+results$'energy-loss-foraging' <- NULL
+results$'energy-loss-resting' <- NULL
+results$gut_transit_time_val <- NULL
+results$n_seeds_hatched <- NULL
+
+### movement
+results$travel_speed_val <- NULL
+
+### others
+results$'simulation-time' <- NULL 
 
 # Step 5: Attach results to nl and run analysis In order to run the
 # analyze_nl function, the simulation output has to be attached to the
@@ -242,15 +258,16 @@ print(nl)
 print("================== save nl! ==========================")
 # save(nl, file = paste0(nl@experiment@outpath, "/"
 #      , "nl_object_2022-07-20_phenology-off.RData"))
-saveRDS(nl, file.path(nl@experiment@outpath, "morris_2022-07-20_phenology-"
-                    , if(with_phenology) {"on"} else {"off"}
-                    , ".rds"))
-print("================ save unnest =========================")
-results_unnest <- unnest_simoutput(nl)
-save(results_unnest,file = paste0(nl@experiment@outpath, "/"
-                                , "results_unnest_2022-07-20_phenology-"
-                                , if(with_phenology) {"on"} else {"off"}
-                                , ".RData"))
+saveRDS(nl, file.path(paste0(nl@experiment@outpath, "/"
+                           , "morris_2022-07-20_phenology-"
+                           , if(with_phenology) {"on"} else {"off"}
+                           , ".rds")))
+#print("================ save unnest =========================")
+#results_unnest <- unnest_simoutput(nl)
+#save(results_unnest,file = paste0(nl@experiment@outpath, "/"
+#                                , "results_unnest_2022-07-20_phenology-"
+#                                , if(with_phenology) {"on"} else {"off"}
+#                                , ".RData"))
 
 morris <- analyze_nl(nl)
 #### Model parameters ####

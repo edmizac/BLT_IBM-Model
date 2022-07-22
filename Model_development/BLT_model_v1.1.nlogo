@@ -56,7 +56,7 @@ globals [
 
   timestep ; step counter during one day
   day  ; present day in the simulation
-  scale ; to fit the data to the simulation area
+  ;scale ; to fit the data to the simulation area
   meanxcoord ; translating the geo coordinates to world coordinates
   meanycoord ; translating the geo coordinates to world coordinates
   ;step_forget ; amount of timesteps until the tamarin forgets to be in that tree
@@ -121,7 +121,7 @@ to setup
   set gut_transit_time gut_transit_time_val
   set travel_speed travel_speed_val
 ;  set foraging_speed foraging_speed_val
-  set species_time species_time_val
+;  set species_time species_time_val
 
   reset-ticks
 end
@@ -135,7 +135,7 @@ end
 to setup-gis
 
   ; Based on: https://s3.amazonaws.com/complexityexplorer/ABMwithNetLogo/Field+Guide+to+NetLogo+v14-netlogoExtension-index_02.pdf
-  set scale 32 ; scale-size. Is this being used?
+  set scale 28.28803 ; scale-size. Calculated based on speed_val = 1.0 (dist between UTM coordinates)
   resize-world -25 25 -25 25 ; same thing as selecting 25 x 25 in the interface
   set-patch-size 10
 
@@ -491,13 +491,14 @@ to step ; FOR DEBUG PURPOSES ONLY
       ;    type "tree_add_list " print length tree_add_list print tree_add_list
       type "action-time: " print action-time
       type "energy: " print energy
-;      type "x: " print x_UTM
-;      type "y: " print y_UTM
+      type "x: " print x_UTM
+      type "y: " print y_UTM
       if tree_target != -1 [
         type "distance: " print distance tree_target
         type "target_species: " print tree_target_species
       ]
       type "DPL_d: " print DPL_d
+      type "DPL (m): " print DPL
 ;      ifelse travel_mode = "short_distance" [
 ;        ; print distance tree_target
 ;      ][
@@ -712,20 +713,28 @@ end
 ;----------------------------------------
 
 to-report on-feeding-tree?
+  ; print "on-feeding-tree?"
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
-;      print distance tree_target ; for debugging
+    ;  print distance tree_target ; for debugging
       ifelse distance tree_target < 0.8 [
         set tree_current tree_target
         set tree_target -1
-;        print "on-feeding-tree? TRUE" ; for debugging
+        ifelse phenology-on?
+        [ set species_time [ species_time ] of tree_current ]
+        [ set species_time 2 ] ;; is the most common value over all species
+  ;      print "on-feeding-tree? TRUE" ; for debugging
+  ;      type "tree_current: " print tree_current
+  ;      type "tree_target: " print tree_target
         report true
       ][
+  ;      print "on-feeding-tree? FALSE" ; for debugging
+  ;      print tree_target
         report false
       ]
     ][
-;      print "Action != travel OR tree_target = -1" ; for debugging
+  ;    print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
         report true
       ][
@@ -778,6 +787,8 @@ to feeding
     ; remove_trees_surrounding
   ]
 
+  if tree_current = -1 [ print "========== tree_current = -1 ============" ]
+
   ifelse( member? [who] of tree_current tree_ate_list) [
     set tree_mem_list replace-item (length tree_mem_list - 1) tree_mem_list 0
     set tree_add_list replace-item (length tree_add_list - 1) tree_add_list 1
@@ -819,7 +830,7 @@ end
 to enhance_memory_list
     ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
     ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
-  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
+  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
   if ( length tree_pot_list <= n_trees ) [
     let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
 ;    print tree_bucket
@@ -1455,7 +1466,7 @@ SLIDER
 240
 start-energy
 start-energy
-energy_level_1
+30
 170
 124.0
 1
@@ -1646,7 +1657,7 @@ INPUTBOX
 761
 82
 no_days
-10.0
+1000.0
 1
 0
 Number
@@ -1790,7 +1801,7 @@ step_forget
 step_forget
 0
 1000
-50.0
+100.0
 1
 1
 NIL
@@ -1850,7 +1861,7 @@ travel_speed_val
 travel_speed_val
 0
 1
-0.7
+0.8
 0.1
 1
 NIL
@@ -1888,7 +1899,7 @@ SLIDER
 566
 energy_level_2
 energy_level_2
-energy_level_1
+1
 1000
 143.0
 1
@@ -1915,7 +1926,7 @@ n_seeds_hatched
 n_seeds_hatched
 0
 100
-1.0
+7.0
 1
 1
 NIL
@@ -1932,9 +1943,9 @@ empirical-trees-choice
 0
 
 MONITOR
-792
+791
 57
-849
+848
 102
 day
 day
@@ -2109,9 +2120,9 @@ NIL
 HORIZONTAL
 
 MONITOR
-793
+792
 102
-851
+850
 147
 Energy
 [ round energy ] of monkeys
@@ -2227,7 +2238,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.4
+0.15
 0.05
 1
 NIL
@@ -2387,7 +2398,7 @@ Travel mode frequency
 NIL
 NIL
 0.0
-10.0
+4.0
 0.0
 10.0
 true
@@ -2525,21 +2536,6 @@ energy and time spent feeding for each tree species
 0.0
 1
 
-SLIDER
-954
-672
-1126
-705
-species_time_val
-species_time_val
-0
-10
-2.0
-1
-1
-NIL
-HORIZONTAL
-
 PLOT
 497
 577
@@ -2551,7 +2547,7 @@ NIL
 0.0
 10.0
 0.0
-5.0
+10.0
 true
 false
 "" ""
@@ -2592,23 +2588,19 @@ false
 "" ""
 PENS
 "default" 1.0 2 -16777216 true ";if [behavior] of monkeys = \"sleeping\" [ plot-pen-down ]\nask monkeys [ if behavior = \"sleeping\" [ plot-pen-down ] ]" ";ask monkeys [ plot DPL * patch-size-m ]"
-"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-size-m ] ]"
+"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * scale ] ]"
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
-SLIDER
-485
-367
-518
-517
-patch-size-m
-patch-size-m
+INPUTBOX
+711
+82
+771
+142
+scale
+28.28803
+1
 0
-100
-19.80162
-1
-1
-m
-VERTICAL
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -3007,26 +2999,12 @@ NetLogo 6.2.0
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="2000"/>
-    <metric>[ x_UTM ] of monkeys</metric>
-    <metric>[ y_UTM ] of monkeys</metric>
-    <metric>[ dist-traveled ] of monkeys</metric>
-    <metric>[ travel_mode ] of monkeys</metric>
-    <metric>[ energy ] of monkeys</metric>
     <metric>[ behavior ] of monkeys</metric>
-    <metric>[ x_UTM ] of seeds</metric>
-    <metric>[ y_UTM ] of seeds</metric>
-    <metric>[ mother-tree ] of seeds</metric>
     <enumeratedValueSet variable="step_forget">
-      <value value="0"/>
-      <value value="5"/>
-      <value value="15"/>
-      <value value="30"/>
-      <value value="50"/>
       <value value="100"/>
       <value value="150"/>
       <value value="200"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="p-foraging-while-traveling" first="0.3" step="0.1" last="1"/>
     <enumeratedValueSet variable="duration">
       <value value="1"/>
       <value value="2"/>
