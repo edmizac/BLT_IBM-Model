@@ -4,12 +4,19 @@
 .Ruserdata
 .png
 
+
+# rmd related:
+.log
+.tex
+
 .cpg
 .qpj
 .shx
 .dbf
 .prj
 .shp
+
+
 
 # Folders:
 /Data
