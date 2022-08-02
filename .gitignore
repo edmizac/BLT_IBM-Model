@@ -13,6 +13,14 @@
 
 # Folders:
 /Data
+/Model_development/Model-cleaning/runtime
+
+# Specific files in specific folders:
+/Model_analysis/Sensitivity-analysis/**.csv
+/Model_analysis/Sensitivity-analysis/temp/
+
+
+
 
 # Temporary files
 **/runtime
@@ -20,6 +28,6 @@ runtime/
 **.tmp.**
 /locations_*
 
-Model_development/Model-cleaning/runtime
-Model_development/Model-cleaning/runtime
-Model_development/Model-cleaning/runtime
+
+
+
