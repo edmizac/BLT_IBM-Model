@@ -9,6 +9,7 @@
 .log
 .tex
 
+# GIS related:
 .cpg
 .qpj
 .shx
@@ -16,7 +17,8 @@
 .prj
 .shp
 
-
+# drawio related
+.bkp
 
 # Folders:
 /Data
