@@ -723,7 +723,7 @@ to-report on-feeding-tree?
         set tree_target -1
         ifelse phenology-on?
         [ set species_time [ species_time ] of tree_current ]
-        [ set species_time 2 ] ;; is the most common value over all species
+        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
   ;      print "on-feeding-tree? TRUE" ; for debugging
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
@@ -1192,7 +1192,7 @@ to random-action
   ifelse random-float 1 > p-foraging-while-traveling [
 ;    set color black
 ;    ask patch-here [ set pcolor orange ]
-    frugivory
+    frugivory ;; because travel, forage and frugivory are within the same loop
 ;    show "random-action foraging"
 ;    beep
 ;;    set color grey
@@ -2404,7 +2404,7 @@ SWITCH
 643
 phenology-on?
 phenology-on?
-0
+1
 1
 -1000
 
@@ -2527,10 +2527,10 @@ energy and time spent feeding for each tree species
 1
 
 PLOT
+1537
+377
+1705
 497
-577
-697
-727
 species_time
 NIL
 NIL
