@@ -1177,7 +1177,7 @@ to forage
 ;  forward travel_speed
 ;  set dist-traveled travel_speed
 ;  set steps-moved steps-moved + 1
-  set energy energy + energy-from-prey + energy-loss-foraging
+  set energy energy + energy-from-prey + energy-loss-foraging + energy-loss-traveling
 
   set color gray
 
@@ -1492,40 +1492,30 @@ NIL
 1
 
 TEXTBOX
-47
-54
-197
-72
+44
+44
+194
+62
 Feeding tree
 12
 0.0
 1
 
 TEXTBOX
-48
-78
-198
-96
-Resting tree
-12
-0.0
-1
-
-TEXTBOX
-47
-106
-197
-124
+44
+63
+194
+81
 Sleeping tree
 12
 0.0
 1
 
 TEXTBOX
-48
-132
-198
-150
+45
+83
+195
+101
 Defecated seeds
 12
 0.0
@@ -1657,7 +1647,7 @@ INPUTBOX
 761
 82
 no_days
-1000.0
+10.0
 1
 0
 Number
@@ -1741,10 +1731,10 @@ OUTPUT
 11
 
 TEXTBOX
-51
-30
-201
-48
+46
+25
+196
+43
 Tamarin
 12
 0.0
@@ -1861,7 +1851,7 @@ travel_speed_val
 travel_speed_val
 0
 1
-0.8
+0.7
 0.1
 1
 NIL
@@ -2216,7 +2206,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "Others"
-0
+1
 
 SWITCH
 1217
@@ -2601,6 +2591,26 @@ scale
 1
 0
 Number
+
+TEXTBOX
+53
+483
+220
+503
+Long distance target
+11
+0.0
+1
+
+TEXTBOX
+53
+503
+220
+523
+Short distance target
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2990,7 +3000,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

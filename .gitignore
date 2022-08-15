@@ -6,8 +6,8 @@
 
 
 # rmd related:
-.log
-.tex
+*.log
+*.tex
 
 # GIS related:
 .cpg

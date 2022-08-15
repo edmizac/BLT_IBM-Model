@@ -1,5 +1,5 @@
 ---
-title: "Model v1.1 Sensitivity analysis - Morris screening: Home Range from metrics"
+title: "Model v1.1 Sensitivity analysis - Morris screening: Home Range from nlrx metrics"
 author: "Eduardo Zanette"
 date: "02/08/2022"
 output:
@@ -56,7 +56,9 @@ outputmetrics <- list(
 
 
 ```{r, warning=FALSE, message=FALSE}
-nl_off <- readRDS("morris_2022-07-20_phenology-off.RDS")
+nl_off <- readRDS(here("Model_analysis", "Sensitivity-analysis", "temp",
+                       "morris_2022-07-20_phenology-off.RDS"))
+
 nl_off@experiment@metrics
 nl_off@experiment@metrics.turtles
 
@@ -74,7 +76,9 @@ morris_off <- analyze_nl(nl_off, metrics = getexp("metrics.turtles"))
 morris_off$phenology <- "phenology off"
 rm(nl_off)  
 
-nl_on <- readRDS("morris_2022-07-20_phenology-on.RDS")
+nl_on <- readRDS(here("Model_analysis", "Sensitivity-analysis", "temp",
+                       "morris_2022-07-20_phenology-on.RDS"))
+
 morris_on <- analyze_nl(nl_on)
 morris_on$phenology <- "phenology on"
 rm(nl_on)  
