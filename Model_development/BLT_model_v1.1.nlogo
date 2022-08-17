@@ -1120,6 +1120,7 @@ to sleeping
     set heading towards tree_target
     if distance tree_target < travel_speed * 0.8 [
 
+      move-to tree_target
       set x_UTM [ x_UTM ] of tree_target
       set y_UTM [ y_UTM ] of tree_target
       set xcor [ xcor] of tree_target
