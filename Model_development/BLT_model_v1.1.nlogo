@@ -50,6 +50,10 @@ monkeys-own [
 
 ]
 
+patches-own [
+  habitat
+]
+
 ;; GLOBALS ;;
 globals [
   behaviorsequence
@@ -135,18 +139,22 @@ end
 to setup-gis
 
   ; Based on: https://s3.amazonaws.com/complexityexplorer/ABMwithNetLogo/Field+Guide+to+NetLogo+v14-netlogoExtension-index_02.pdf
-  set scale 28.28803 ; scale-size. Calculated based on speed_val = 1.0 (dist between UTM coordinates)
-  resize-world -25 25 -25 25 ; same thing as selecting 25 x 25 in the interface
+  set scale 28.28803 ; scale-size. Calculated based on speed_val = 1.0 (dist between UTM coordinates) ; I don't think this is working
+  resize-world -25 25 -25 25 ; same thing as selecting 25 x 25 in the world interface
   set-patch-size 10
 
   gis:load-coordinate-system word ( local-path) "/Data/Shapefiles/Guarei-poligono.prj"
   set guarei-dataset gis:load-dataset word ( local-path) "/Data/Shapefiles/Guarei-poligono.shp"
+
 
   gis:set-drawing-color gray + 3
   let pen-width 1
   gis:draw guarei-dataset pen-width
   gis:set-drawing-color lime + 3
   gis:fill guarei-dataset 2
+
+  ask patches [set habitat "matrix" ]
+  ask patches gis:intersecting guarei-dataset [ set habitat "forest" ]
 
   set shape-type gis:shape-type-of guarei-dataset
   set property-names gis:property-names guarei-dataset
@@ -680,7 +688,6 @@ to frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
       ifelse random (2 * species_time ) > action-time [
-;      ifelse random (2 * [species_time] of tree_current) > action-time [ ;; evry time used independent of phenology-on?
         feeding
       ][
         set tree_current -1
@@ -719,7 +726,14 @@ to-report on-feeding-tree?
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
     ;  print distance tree_target ; for debugging
       ifelse distance tree_target < 0.8 [
+
         set tree_current tree_target
+
+;        set x_UTM [ x_UTM ] of tree_current
+;        set y_UTM [ y_UTM ] of tree_current
+;        set xcor [ xcor] of tree_current
+;        set ycor [ ycor ] of tree_current
+
         set tree_target -1
         ifelse phenology-on?
         [ set species_time [ species_time ] of tree_current ]
@@ -728,6 +742,7 @@ to-report on-feeding-tree?
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
         report true
+
       ][
   ;      print "on-feeding-tree? FALSE" ; for debugging
   ;      print tree_target
@@ -748,7 +763,14 @@ to-report on-feeding-tree?
 
     ifelse action = "travel" OR action = "foraging" AND ld_tree_target != -1 [
       ifelse distance ld_tree_target < 0.8 [
+
         set tree_current ld_tree_target
+
+;        set x_UTM [ x_UTM ] of tree_current
+;        set y_UTM [ y_UTM ] of tree_current
+;        set xcor [ xcor] of tree_current
+;        set ycor [ ycor ] of tree_current
+
         set ld_tree_target -1
         set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
         report true
@@ -857,6 +879,7 @@ to to-feeding-tree
       search-feeding-tree
     ]
 
+;    if xcor
     set heading towards tree_target
 
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
@@ -1096,6 +1119,12 @@ to sleeping
 
     set heading towards tree_target
     if distance tree_target < travel_speed * 0.8 [
+
+      set x_UTM [ x_UTM ] of tree_target
+      set y_UTM [ y_UTM ] of tree_target
+      set xcor [ xcor] of tree_target
+      set ycor [ ycor ] of tree_target
+
       set tree_current tree_target
       set tree_target -1
       set action "sleeping"
@@ -1215,16 +1244,16 @@ end
 ;-------------------------------------------------------------
 to change-bonus
 
-;  print "change-bonus"   ; debugging
-  set action-time 0
-
-  let choice random 2
-  if choice = 0 [
-    random-action
-  ]
-  if choice = 1 [
-    last-action-again
-  ]
+;;  print "change-bonus"   ; debugging
+;  set action-time 0
+;
+;  let choice random 2
+;  if choice = 0 [
+;    random-action
+;  ]
+;  if choice = 1 [
+;    last-action-again
+;  ]
 end
 
 
@@ -1851,7 +1880,7 @@ travel_speed_val
 travel_speed_val
 0
 1
-0.7
+0.8
 0.1
 1
 NIL
@@ -2129,7 +2158,7 @@ visual
 visual
 0
 10
-3.0
+1.0
 1
 1
 NIL

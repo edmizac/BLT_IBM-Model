@@ -35,9 +35,9 @@ nlrx script available in "Model_v1.1_FullFact_large.R" and "Model_v1.1_FullFact_
 2. Without the feeding bout parametrization, agents usually hit higher levels of energy. This might be the reason why DPL is lightly higher in these runs.
 3. But runs with parameterized feeding bout ("on") varied more in output (home range and daily path length)
 4. Parameters (inputs) that showed consistent trend on variables (outputs): 
-  + step forget on HR & DPL (direct but weak relationship)
-  + p foraging on DPL (inverse strong relationship)
-  + duration on DPL (inverse strong relationship)
+  + step forget on HR & DPL (inverse relationship)
+  + p foraging on DPL (inverse relationship)
+  + duration on DPL (inverse relationship)
 5. Simulated home ranges have a mean of 20 hectares. I still haven't checked monthly empirical home range sizes of Guareí, but the size for all the fours months is ~50 ha.
 
 \pagebreak
@@ -83,7 +83,7 @@ suz_ylim_set = c(7480800, 7481600) # 7480990,
 
 
 # Plots
-theme_set(theme_bw(base_size = 10))
+theme_set(theme_bw(base_size = 15))
 ```
 
 # Data
@@ -289,8 +289,10 @@ DPL_means_df <- db %>%
 db %>%
   ggplot(aes(x=DPL, fill = feedingbout)) +
   geom_density(alpha=0.4) +
-  xlab("DPL (m)") +
-  ggtitle("Effect of feeding bout on DPL") +
+  # xlab("DPL (m)") +
+  xlab("Deslocamento diário (m)") +
+  # ggtitle("Effect of feeding bout on DPL") +
+  ggtitle("Efeito do 'feedingbout' no deslocamento diário") +
   geom_vline(data=DPL_means_df, aes(xintercept = meanDPL, 
                                    color = feedingbout))
 
@@ -303,7 +305,8 @@ db %>%
   ggplot(aes(x=KDE95, fill = feedingbout)) +
   geom_density(alpha=0.4) +
   xlab("Home range size (ha) - KDE 95%") +
-  ggtitle("Effect of feeding bout on Home range") +
+  # ggtitle("Effect of feeding bout on Home range") +
+  ggtitle("Efeito do 'feedingbout' na área de vida (KDE 95%)") +
   geom_vline(data=HR_means_df, aes(xintercept = meanHR, 
                                    color = feedingbout))
 
@@ -346,9 +349,11 @@ db %>%
 # DPL
 p1 <- db %>% 
   ggplot(aes(x=step_forget, y=DPL, fill = feedingbout)) +
-  ylab("DPL (m)") +
+  ylab("Deslocamento diário (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of step_forget on DPL")
+  # ggtitle("Effect of step_forget on DPL") +
+  ggtitle("Efeito do 'step_forget' no deslocamento diário") +
+  theme(legend.position="none")
   # facet_wrap(~feedingbout)
 
 
@@ -357,11 +362,14 @@ p2 <- db %>%
   ggplot(aes(x=step_forget, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of step_forget on home range (KDE 95%)")
+  # ggtitle("Effect of step_forget on home range (KDE 95%)") +
+  ggtitle("Efeito de 'step_forget' na área de vida (KDE 95%)") +
+  theme(legend.position="none")
 
+p1; p2
 
-gridExtra::grid.arrange(arrangeGrob(p1, p2,
-                                    ncol = 2, nrow = 1))
+# gridExtra::grid.arrange(arrangeGrob(p1, p2,
+                                    # ncol = 2, nrow = 1))
 
 ```
 \pagebreak
@@ -371,9 +379,11 @@ gridExtra::grid.arrange(arrangeGrob(p1, p2,
 # DPL
 p3 <- db %>% 
   ggplot(aes(x=visual, y=DPL, fill = feedingbout)) +
-  ylab("DPL (m)") +
+  ylab("Deslocamento diário (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of visual on DPL")
+  # ggtitle("Effect of visual on DPL")
+  ggtitle("Efeito do 'visual' no deslocamento diário")+
+  theme(legend.position="none")
   # facet_wrap(~feedingbout)
 
 
@@ -382,10 +392,13 @@ p4 <- db %>%
   ggplot(aes(x=visual, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of visual on Home range (KDE 95%)")
+  # ggtitle("Effect of visual on Home range (KDE 95%)")
+  ggtitle("Efeito do 'visual' na área de vida (KDE 95%)") +
+  theme(legend.position="none")
 
-gridExtra::grid.arrange(arrangeGrob(p3, p4,
-                                    ncol = 2, nrow = 1))
+p3; p4
+# gridExtra::grid.arrange(arrangeGrob(p3, p4,
+                                    # ncol = 2, nrow = 1))
 ```
 \pagebreak
 
@@ -394,9 +407,11 @@ gridExtra::grid.arrange(arrangeGrob(p3, p4,
 # DPL
 p5 <- db %>% 
   ggplot(aes(x=p_foraging, y=DPL, fill = feedingbout)) +
-  ylab("DPL (m)") +
+  ylab("Deslocamento diário (m)") +
+  xlab("prob. forrageio") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of p_foraging on DPL")
+  ggtitle("Efeito da 'prob. forrageio' no deslocamento diário")+
+  theme(legend.position="none")
   # facet_wrap(~feedingbout)
 
 
@@ -405,11 +420,16 @@ p6 <- db %>%
   ggplot(aes(x=p_foraging, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of p_foraging on Home range (KDE 95%)")
+  xlab("prob. forrageio") +
+  # ggtitle("Effect of p_foraging on Home range (KDE 95%)") +
+  ggtitle("Efeito da 'prob. forrageio' na área de vida (KDE 95%)") +
+  theme(legend.position="none")
+
+p5; p6
 
 
-gridExtra::grid.arrange(arrangeGrob(p5, p6,
-                                    ncol = 2, nrow = 1))
+# gridExtra::grid.arrange(arrangeGrob(p5, p6,
+                                    # ncol = 2, nrow = 1))
 ```
 \pagebreak
 
