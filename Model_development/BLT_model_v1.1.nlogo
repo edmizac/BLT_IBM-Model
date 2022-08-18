@@ -453,6 +453,14 @@ to go
     write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day() AND step()
   ]
 
+   ; export the landscape as a .png if neccessary  (= Milles et al 2020)
+  if export-png = TRUE [
+   let file-id random -1
+   let world-name (word runtime no_days "_" "e-" start-energy "_" file-id "timestep" ticks "_world.png") ; date-and-time
+   export-view world-name
+;   export-interface world-name
+  ]
+
   if not any? monkeys [ stop ]
 
 ;  if simulation-time-end = TRUE [
@@ -1808,7 +1816,7 @@ SWITCH
 227
 export-png
 export-png
-1
+0
 1
 -1000
 
@@ -2192,7 +2200,7 @@ SWITCH
 229
 display-hatched-trees?
 display-hatched-trees?
-1
+0
 1
 -1000
 

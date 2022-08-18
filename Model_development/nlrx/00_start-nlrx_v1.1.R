@@ -284,9 +284,6 @@ nl@experiment@variables
 #' Save RDS to avoid losing it by R abortion:
 filename <- here("Model_development", "Model-cleaning", "runtime", "v1.1_simple_tempRDS.Rdata")
 saveRDS(nl, file = filename) ; rm(results)
-
-# Read RDS
-filename <- here("Model_development", "Model-cleaning", "runtime", "v1.1_simple_tempRDS.Rdata")
 nl <- readRDS(filename)
 
 gc()
@@ -418,23 +415,25 @@ p1 <-
 
 p1
 
-# ggsave(filename = here("Model_development", "v1.1_simple_run.png"),
-#        dpi = 300, width = 30, height = 20, units = "cm")
+ggsave(filename = here("Model_development", "v1.1_simple_run.png"),
+       dpi = 300, width = 30, height = 20, units = "cm")
 
 
 
 #### Create animated plot (GIF) ####
+
+# I gave up and did it by exporting the view through NetLogo. Check these to make a gif with ggplot2 and gganimate
+# https://stackoverflow.com/questions/60022521/using-gganimate-with-geom-point-and-geom-line
+# https://stackoverflow.com/questions/57193825/unable-to-animate-both-geom-line-and-geom-point-with-gganimate
+# https://stackoverflow.com/questions/58271332/gganimate-plot-where-points-stay-and-line-fades
+# https://ugoproto.github.io/ugo_r_doc/pdf/gganimate.pdf
+
 # Make plot
-
-results_unnest <- results_unnest %>%
-  dplyr::filter(day == 1) %>% 
-  group_by(`[step]`)
-
 p1 <- gua.sf +
-  # geom_path(data = results_unnest,
-  #           aes(x = x, y = y, color = "grey"),
-  #           size = 0.15) +
-  # transition_time(`[step]`) +
+  transition_time(`[step]`) +
+  geom_path(data = results_unnest,
+            aes(x = x, y = y, color = "grey"),
+            size = 0.15) +
   geom_point(data = results_unnest,
              aes(x = x, y = y
                  , group = behavior,
@@ -448,19 +447,12 @@ p1 <- gua.sf +
   scale_fill_manual(values = simulated_colors) +
   scale_shape_manual(values = simulated_shapes) +
   scale_size_manual(values = simulated_sizes + 3) +
-  theme_set(theme_bw(base_size = 20))
+  theme_set(theme_bw(base_size = 20)) +
   # theme_minimal() +
-  # ggtitle("Output maps of each day\n(108 + x timesteps)")
+  ggtitle("Output maps of each day\n(108 + x timesteps)")
   # guides(color = guide_legend(override.aes = list(size = 5
   #                                                 # ,shape = simulated_shapes
   #                                                 ))) +
-  
-p1 <- p1 +
-  # transition_states(`[step]`) + 
-  transition_time(`[step]`) +
-  # transition_reveal(`[step]`) +
-  labs(title = 'Step: {frame_time}') #+
-  # enter_fade()
   
 
 # Animate the plots
@@ -479,14 +471,10 @@ ndays <- max(results_unnest$day)
 # anim_save(here("Model_development", "v1.1_simple_run.gif"))
 
 
-animate(p1, 
-        nframes = n,
-        width=800, height=800, 
-        # fps= n/5,
-        # duration = 30,
-        renderer = gifski_renderer())
+animate(p1, nframes = n,
+        width=800, height=800, fps=1.2,
+        duration = ndays, renderer = gifski_renderer())
 anim_save(here("Model_development", "v1.1_simple_run_perday.gif"))
-
 
 
 
