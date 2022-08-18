@@ -453,12 +453,17 @@ to go
     write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day() AND step()
   ]
 
-   ; export the landscape as a .png if neccessary  (= Milles et al 2020)
+  ; create a gif (adapted from Milles et al 2020)
   if export-png = TRUE [
-   let file-id random -1
-   let world-name (word runtime no_days "_" "e-" start-energy "_" file-id "timestep" ticks "_world.png") ; date-and-time
-   export-view world-name
-;   export-interface world-name
+    let file-id random -1
+    let world-name (word runtime no_days "_" "e-" start-energy "_" file-id "timestep" ticks "_world.png") ; date-and-time
+    export-view world-name
+    ask monkeys [
+      if behavior = "sleeping" [
+        set world-name (word runtime no_days "_" "e-" start-energy "_" file-id "_interface.png") ; date-and-time
+        export-interface world-name
+      ]
+    ]
   ]
 
   if not any? monkeys [ stop ]
@@ -1816,7 +1821,7 @@ SWITCH
 227
 export-png
 export-png
-0
+1
 1
 -1000
 
