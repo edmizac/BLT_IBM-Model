@@ -348,7 +348,8 @@ p1 <- db %>%
   ggplot(aes(x=step_forget, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of step_forget on DPL")
+  ggtitle("Effect of step_forget on DPL") +
+  theme(legend.position = "bottom")
   # facet_wrap(~feedingbout)
 
 
@@ -357,7 +358,8 @@ p2 <- db %>%
   ggplot(aes(x=step_forget, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of step_forget on home range (KDE 95%)")
+  ggtitle("Effect of step_forget on home range (KDE 95%)") +
+  theme(legend.position = "bottom")
 
 
 gridExtra::grid.arrange(arrangeGrob(p1, p2,
@@ -373,7 +375,9 @@ p3 <- db %>%
   ggplot(aes(x=visual, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of visual on DPL")
+  ggtitle("Effect of visual on DPL") +
+  theme(legend.position = "bottom")
+
   # facet_wrap(~feedingbout)
 
 
@@ -382,7 +386,9 @@ p4 <- db %>%
   ggplot(aes(x=visual, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of visual on Home range (KDE 95%)")
+  ggtitle("Effect of visual on Home range (KDE 95%)") +
+  theme(legend.position = "bottom")
+
 
 gridExtra::grid.arrange(arrangeGrob(p3, p4,
                                     ncol = 2, nrow = 1))
@@ -396,7 +402,9 @@ p5 <- db %>%
   ggplot(aes(x=p_foraging, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of p_foraging on DPL")
+  ggtitle("Effect of p_foraging on DPL\n") +
+  theme(legend.position = "bottom")
+
   # facet_wrap(~feedingbout)
 
 
@@ -405,7 +413,9 @@ p6 <- db %>%
   ggplot(aes(x=p_foraging, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of p_foraging on Home range (KDE 95%)")
+  ggtitle("Effect of p_foraging on\nhome range (KDE 95%)") +
+  theme(legend.position = "bottom")
+
 
 
 gridExtra::grid.arrange(arrangeGrob(p5, p6,
@@ -420,7 +430,9 @@ p7 <- db %>%
   ggplot(aes(x=duration, y=DPL, fill = feedingbout)) +
   geom_boxplot(width = 0.4) +
   ylab("DPL (m)") +
-  ggtitle("Effect of duration on DPL")
+  ggtitle("Effect of duration on DPL\n") +
+  theme(legend.position = "bottom")
+
   # facet_wrap(~feedingbout)
 
 
@@ -429,7 +441,9 @@ p8 <- db %>%
   ggplot(aes(x=duration, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of duration on home range (KDE 95%)")
+  ggtitle("Effect of duration on\nhome range (KDE 95%)") +
+  theme(legend.position = "bottom")
+
 
 gridExtra::grid.arrange(arrangeGrob(p7, p8,
                                     ncol = 2, nrow = 1))
@@ -477,17 +491,18 @@ db_ss <- db %>%
 p1 <- db_ss %>%
   ggplot(aes(x=step_forget, y=DPL, fill = feedingbout)) +
   # ylab("DPL (m)") +
-  geom_boxplot(width = 0.4)
+  geom_boxplot(width = 0.4) +
+  theme(legend.position = "none")
 
 # Home range
 p2 <- db_ss %>% 
   ggplot(aes(x=step_forget, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
-  geom_boxplot() #+
+  geom_boxplot()  +
+  theme(legend.position = "none")#+
   # ggtitle("Home range (KDE 95%) by step_forget (data subset)")
 
-# p1
-# p2
+# p1; p2
 
 ```
 
@@ -504,13 +519,15 @@ db_ss <- db %>%
 p3 <- db_ss %>%
   ggplot(aes(x=visual, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
-  geom_boxplot(width = 0.4)
+  geom_boxplot(width = 0.4) +
+  theme(legend.position = "bottom")
 
 # Home range
 p4 <- db_ss %>% 
   ggplot(aes(x=visual, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
-  geom_boxplot() #+
+  geom_boxplot() +
+  theme(legend.position = "bottom") #+
   # ggtitle("Home range (KDE 95%) by visual (data subset)")
 
 ```
@@ -528,14 +545,16 @@ db_ss <- db %>%
 p5 <- db_ss %>%
   ggplot(aes(x=p_foraging, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
-  geom_boxplot(width = 0.4)
+  geom_boxplot(width = 0.4) +
+  theme(legend.position = "none")
 
 
 # Home range
 p6 <- db_ss %>% 
   ggplot(aes(x=p_foraging, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
-  geom_boxplot() #+
+  geom_boxplot() +
+  theme(legend.position = "none")#+
   # ggtitle("Home range (KDE 95%) by p_foraging (data subset)")
 
 ```
@@ -553,13 +572,15 @@ db_ss <- db %>%
 p7 <- db_ss %>%
   ggplot(aes(x=duration, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
-  geom_boxplot(width = 0.4)
+  geom_boxplot(width = 0.4) +
+  theme(legend.position = "bottom")
 
 # Home range
 p8 <- db_ss %>% 
   ggplot(aes(x=duration, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
-  geom_boxplot() #+
+  geom_boxplot() +
+  theme(legend.position = "bottom") #+
   # ggtitle("Home range (KDE 95%) by duration (data subset)")
 ```
 

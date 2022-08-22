@@ -277,8 +277,9 @@ to setup-monkeys
     set behaviorsequence []
 ;    set behaviorsequence lput "" behaviorsequence
 
-;;    set shape "banana"
-    set color black
+    ;;    set shape "banana"
+;    set shape "mlp-2"
+;    set color black
     set size 1.5
 
     if sleeping-trees-scenario = "empirical" AND sleeping-trees? = FALSE [
@@ -1222,7 +1223,7 @@ to forage
 ;  set steps-moved steps-moved + 1
   set energy energy + energy-from-prey + energy-loss-foraging + energy-loss-traveling
 
-  set color gray
+  set color grey
 
 end
 
@@ -2893,6 +2894,43 @@ line half
 true
 0
 Line -7500403 true 150 0 150 150
+
+mlp-1
+true
+0
+Circle -7500403 true true 120 90 90
+Circle -7500403 true true 120 15 60
+Polygon -7500403 true true 195 180 195 270 180 285 210 270 210 150 195 165
+Polygon -7500403 true true 135 105 105 135 90 135 90 150 105 150 135 120
+Polygon -7500403 true true 135 30 150 0 150 30 135 30
+Rectangle -7500403 true true 105 45 120 60
+Polygon -7500403 true true 150 165 135 180 165 180 150 165
+Polygon -7500403 true true 165 165 135 195 150 195 180 195 195 180 180 165
+Polygon -7500403 true true 120 30 105 45 90 45 90 60 105 75
+Polygon -7500403 true true 105 75 135 75 135 75 105 60
+Polygon -7500403 true true 90 45 135 30 120 45
+Polygon -7500403 true true 105 180 120 180 135 165 135 150 120 150 120 165 105 180
+Polygon -7500403 true true 120 75 135 90 150 90 150 60 150 45
+
+mlp-2
+false
+14
+Polygon -16777216 true true 90 90 75 165 90 195 105 210 135 210 150 225 165 210 195 210 210 195 225 165 210 75
+Circle -16777216 true true 86 71 127
+Circle -16777216 true true 150 60 60
+Circle -16777216 true true 90 60 60
+Circle -7500403 false false 89 74 122
+Circle -7500403 true false 105 90 60
+Circle -7500403 true false 135 90 60
+Circle -7500403 true false 116 116 67
+Polygon -7500403 true false 165 135 165 135 165 150 150 135
+Polygon -16777216 true true 150 150 165 135 165 150 150 150
+Polygon -16777216 true true 135 135 135 150 150 150 135 135
+Circle -16777216 true true 120 105 30
+Circle -16777216 true true 150 105 30
+Line -16777216 true 135 165 165 165
+Line -6459832 false 165 120 150 120
+Line -6459832 false 135 120 150 120
 
 pentagon
 false
