@@ -18,8 +18,14 @@
 # remotes::install_github("ropensci/nlrx")
 
 # Java memory:
+#Local:
 if(Sys.getenv("JAVA_HOME") == "") {
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
+}
+
+#LEEC:
+if(Sys.getenv("JAVA_HOME") == "") {
+  Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_341")
 }
 
 ## ---------------------------
@@ -34,6 +40,7 @@ library("progressr")
 ## netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
 netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
 modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+
 # modelpath <- here("C:/Program Files/NetLogo 6.2.2", "app/models", "BLT_model_v1.nlogo")
 # C:\Program Files\NetLogo 6.2.2\app\models
 
@@ -87,7 +94,7 @@ nl@experiment <- experiment(expname = expname,
                             metrics.patches = c("pxcor", "pycor", "habitat"),
                             variables = list(),
                             constants = list(
-                              "USER" = "\"Eduardo\"",
+                              "USER" = "\"LEEC\"",
                               "no_days" = 10 # DON'T TRY no_days = 1
                               # 'feeding-trees-scenario' = "\"trees_all\"",
                               )
@@ -96,7 +103,7 @@ nl@experiment <- experiment(expname = expname,
 
 # Step 3: Attach a simulation design.
 # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
-nl@simdesign <- simdesign_simple(nl, nseeds = 17)
+nl@simdesign <- simdesign_simple(nl, nseeds = 1)
 
 # Step 4: Run simulations
 # Evaluate nl object:
@@ -144,6 +151,8 @@ tictoc::toc()
 #' results, these can also be written to the defined outpath of the
 #' experiment object.  Attach results to nl object:
 setsim(nl, "simoutput") <- results
+
+# resuts_unnest <- unnest_simoutput(nl)
 
 nl@experiment@metrics.turtles
 nl@experiment@metrics.patches

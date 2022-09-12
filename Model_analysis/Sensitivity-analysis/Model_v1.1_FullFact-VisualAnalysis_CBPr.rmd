@@ -350,9 +350,10 @@ db %>%
 p1 <- db %>% 
   ggplot(aes(x=step_forget, y=DPL, fill = feedingbout)) +
   ylab("Deslocamento diário (m)") +
+  xlab("step_revisit") +
   geom_boxplot(width = 0.4) +
   # ggtitle("Effect of step_forget on DPL") +
-  ggtitle("Efeito do 'step_forget' no deslocamento diário") +
+  ggtitle("Efeito do 'step_revisit' no deslocamento diário") +
   theme(legend.position="none")
   # facet_wrap(~feedingbout)
 
@@ -363,7 +364,8 @@ p2 <- db %>%
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
   # ggtitle("Effect of step_forget on home range (KDE 95%)") +
-  ggtitle("Efeito de 'step_forget' na área de vida (KDE 95%)") +
+  ggtitle("Efeito de 'step_revisit' na área de vida (KDE 95%)") +
+  xlab("step_revisit") +
   theme(legend.position="none")
 
 p1; p2

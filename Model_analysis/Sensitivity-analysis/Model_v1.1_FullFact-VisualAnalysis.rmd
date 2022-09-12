@@ -10,7 +10,7 @@ abstract: |
   This document was produced for reporting the sensitivity analysis (Full factorial design) of the BLT Model with the nlrx package. The main aim was to see if we could drop an implementation (which we called 'phenology' so far, but it is now called 'feeding bout' for sake of clarity). We also aimed at testing the effect of each of the four parameters below. For this, we ran the model with the same parameters with phenology "on" and "off". We used the Guareí environment with resources from July.
     
   * Parameters related to memory:
-  1. "step_forget" = list(min=1, max = 100, step = 10, qfun="qunif")
+  1. "step_revisit" = list(min=1, max = 100, step = 10, qfun="qunif")
   2. "visual" = list(min=1, max = 3, step = 1, qfun="qunif")
                               
   * Parameters related to movement:
@@ -35,7 +35,7 @@ nlrx script available in "Model_v1.1_FullFact_large.R" and "Model_v1.1_FullFact_
 2. Without the feeding bout parametrization, agents usually hit higher levels of energy. This might be the reason why DPL is lightly higher in these runs.
 3. But runs with parameterized feeding bout ("on") varied more in output (home range and daily path length)
 4. Parameters (inputs) that showed consistent trend on variables (outputs): 
-  + step forget on HR & DPL (direct but weak relationship)
+  + step revisit on HR & DPL (direct but weak relationship)
   + p foraging on DPL (inverse strong relationship)
   + duration on DPL (inverse strong relationship)
 5. Simulated home ranges have a mean of 20 hectares. I still haven't checked monthly empirical home range sizes of Guareí, but the size for all the fours months is ~50 ha.
@@ -147,7 +147,7 @@ val_duration    <- sort(unique(db$duration))
 val_visual      <- sort(unique(db$visual))
 val_random_seed <- sort(unique(db$random_seed))
 
-ptable <- cbind("step_forget", paste(sprintf("%4.2f", val_step_forget)
+ptable <- cbind("step_revisit", paste(sprintf("%4.2f", val_step_forget)
                                , collapse = ", "))
 ptable <- rbind(ptable, cbind("p_foraging", paste(sprintf("%4.2f", val_p_foraging)
                                         , collapse = ", ")))
@@ -303,7 +303,7 @@ db %>%
   ggplot(aes(x=KDE95, fill = feedingbout)) +
   geom_density(alpha=0.4) +
   xlab("Home range size (ha) - KDE 95%") +
-  ggtitle("Effect of feeding bout on Home range") +
+  ggtitle("Effect of feeding bout on home range size") +
   geom_vline(data=HR_means_df, aes(xintercept = meanHR, 
                                    color = feedingbout))
 
@@ -334,8 +334,8 @@ db %>%
 ```
 
 
-### Effect of step_forget
-```{r effect of step_forget}
+### Effect of step_revisit
+```{r effect of step_revisit}
 # db %>% 
 #   group_by(feedingbout, step_forget, random_seed) %>% 
 #   dplyr::summarise(nruns = n())
@@ -348,7 +348,8 @@ p1 <- db %>%
   ggplot(aes(x=step_forget, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of step_forget on DPL") +
+  ggtitle("Effect of step_revisit on DPL") +
+  xlab("step_revisit") +
   theme(legend.position = "bottom")
   # facet_wrap(~feedingbout)
 
@@ -358,7 +359,7 @@ p2 <- db %>%
   ggplot(aes(x=step_forget, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of step_forget on home range (KDE 95%)") +
+  ggtitle("Effect of step_revisit on\nhome range size (KDE 95%)") +
   theme(legend.position = "bottom")
 
 
@@ -375,8 +376,9 @@ p3 <- db %>%
   ggplot(aes(x=visual, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of visual on DPL") +
+  ggtitle("Effect of visual on DPL (m)\n") +
   theme(legend.position = "bottom")
+  # theme(legend.position = "none")
 
   # facet_wrap(~feedingbout)
 
@@ -386,9 +388,10 @@ p4 <- db %>%
   ggplot(aes(x=visual, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of visual on Home range (KDE 95%)") +
+  ggtitle("Effect of visual on\nhome range (KDE 95%)") +
   theme(legend.position = "bottom")
 
+# p3; p4
 
 gridExtra::grid.arrange(arrangeGrob(p3, p4,
                                     ncol = 2, nrow = 1))
@@ -402,7 +405,7 @@ p5 <- db %>%
   ggplot(aes(x=p_foraging, y=DPL, fill = feedingbout)) +
   ylab("DPL (m)") +
   geom_boxplot(width = 0.4) +
-  ggtitle("Effect of p_foraging on DPL\n") +
+  ggtitle("Effect of p_foraging on DPL (m)\n") +
   theme(legend.position = "bottom")
 
   # facet_wrap(~feedingbout)
@@ -413,7 +416,7 @@ p6 <- db %>%
   ggplot(aes(x=p_foraging, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot() +
-  ggtitle("Effect of p_foraging on\nhome range (KDE 95%)") +
+  ggtitle("Effect of p_foraging on\nhome range size (KDE 95%)") +
   theme(legend.position = "bottom")
 
 
@@ -430,7 +433,7 @@ p7 <- db %>%
   ggplot(aes(x=duration, y=DPL, fill = feedingbout)) +
   geom_boxplot(width = 0.4) +
   ylab("DPL (m)") +
-  ggtitle("Effect of duration on DPL\n") +
+  ggtitle("Effect of duration on DPL (m)\n") +
   theme(legend.position = "bottom")
 
   # facet_wrap(~feedingbout)
@@ -472,14 +475,14 @@ Another thing to notice: energy usually goes to 0 when the agents are in the sam
 
 # Further analysis (subset)
 
-Up to know I have plotted all the simulations in relation to one unique variable. Now, we will plot runs while keeping the other variables constant
+Up to now I have plotted all the simulations in relation to one unique variable. Now, we will plot runs while keeping the other variables constant
 
 ```{r Configure plots}
 theme_set(theme_bw(base_size = 5))
 ```
 
 
-### Step forget with data subset
+### Step revisit with data subset
 ```{r step_forget}
 # Subset
 db_ss <- db %>%  
@@ -492,6 +495,7 @@ p1 <- db_ss %>%
   ggplot(aes(x=step_forget, y=DPL, fill = feedingbout)) +
   # ylab("DPL (m)") +
   geom_boxplot(width = 0.4) +
+  xlab("step_revisit") +
   theme(legend.position = "none")
 
 # Home range
@@ -499,8 +503,9 @@ p2 <- db_ss %>%
   ggplot(aes(x=step_forget, y=KDE95, color = feedingbout)) +
   # facet_wrap(~feedingbout) +
   geom_boxplot()  +
+  xlab("step_revisit") +
   theme(legend.position = "none")#+
-  # ggtitle("Home range (KDE 95%) by step_forget (data subset)")
+  # ggtitle("Home range (KDE 95%) by step_revisit (data subset)")
 
 # p1; p2
 

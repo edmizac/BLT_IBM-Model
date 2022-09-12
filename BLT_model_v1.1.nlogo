@@ -106,8 +106,6 @@ to setup
   [ set local-path "/home/rbialozyt/BLT_IBM-Model/" ]
   if USER = "Eduardo"
   [ set local-path "D:/Data/Documentos/github/BLT_IBM-Model" ]
-  if USER = "LEEC"
-  [set local-path "D:/EDUARDO_LAP"]
   if USER = "Others"
   [ set local-path "~/" ]
 
@@ -2253,8 +2251,8 @@ CHOOSER
 81
 USER
 USER
-"Ronald" "Eduardo" "LEEC" "Others"
-2
+"Ronald" "Eduardo" "Others"
+1
 
 SWITCH
 1217

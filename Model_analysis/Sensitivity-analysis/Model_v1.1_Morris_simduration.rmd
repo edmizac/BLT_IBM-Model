@@ -59,6 +59,9 @@ morris_off <- analyze_nl(nl_off)
 morris_off$phenology <- "phenology off"
 rm(nl_off)  
 
+df <- nlrx::unnest_simoutput(nl_off)
+# nl_off@simdesign@simoutput <- nlrx::
+
 nl_on <- readRDS(here("Model_analysis", "Sensitivity-analysis",
                        "temp","morris_2022-07-20_phenology-on.RDS"))
 morris_on <- analyze_nl(nl_on)
