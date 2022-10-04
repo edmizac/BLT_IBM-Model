@@ -3,7 +3,7 @@
 
 extensions [gis]
 
-globals [ bb-gis bb-gis-shp forest_size]
+globals [scale bb-gis bb-gis-shp]
 
 turtles-own [
   in-fragment?
@@ -21,7 +21,6 @@ to setup
   ca
   setup-patches
   setup-gis
-  calc_patch_ha
   setup-agents
   check-agent-in-fragment ;check if the agent is inside the fragment .shp
   ;go
@@ -32,15 +31,37 @@ to setup-patches
 end
 
 to setup-gis
-  set-patch-size 4
+;  set-patch-size 2
 
+
+; GUAREÍ SQUARED PATCH
   if study-area = "Guareí" [
-    ; load .prj and .asc (raster 10 x 10 m)
+   ; load .prj and .asc (raster 10 x 10 m)
     gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
     set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
+    ; make each raster cell = patch in NetLogo
+    let width floor (gis:width-of bb-gis)
+    let height floor (gis:height-of bb-gis)
+    resize-world (-1 * width ) width (-1 * height ) height
+
+    gis:set-world-envelope gis:envelope-of bb-gis
+    gis:apply-raster bb-gis habitat
+
+    ; import the poligon (.shp) to determine forest and matrix patches
     set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
+    gis:set-drawing-color black
+    gis:draw bb-gis-shp 1
+
+    ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
+    ask patches gis:intersecting bb-gis-shp [
+      set pcolor lime + 3
+      set habitat "forest"
+    ]
+    ask patches with [habitat != "forest"] [
+      set pcolor yellow + 4
+      set habitat "matrix"
+    ]
   ]
 
 
@@ -49,65 +70,119 @@ to setup-gis
     gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
     set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
+    ; make each raster cell = patch in NetLogo
+    let width floor (gis:width-of bb-gis)
+    let height floor (gis:height-of bb-gis)
+    resize-world (-1 * width) width (-1 * height) height
+
+    gis:set-world-envelope gis:envelope-of bb-gis
+    gis:apply-raster bb-gis habitat
+
+    ; import the poligon (.shp) to determine forest and matrix patches
     set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
+    gis:set-drawing-color black
+    gis:draw bb-gis-shp 1
+
+    ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
+    ask patches gis:intersecting bb-gis-shp [
+      set pcolor lime + 3
+      set habitat "forest"
+    ]
+    ask patches with [habitat != "forest"] [
+      set pcolor yellow + 4
+      set habitat "matrix"
+    ]
   ]
 
 
+
   if study-area = "Taquara" [ ;; TAQUARA IS NOT WORKING
-    set-patch-size floor (0.8 * patch-size) ; Taquara large raster is too big for the world
+;    set-patch-size 1 ; Taquara is too big
 
     ; load .prj and .asc (raster 10 x 10 m)
     gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
     set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
+    ; make each raster cell = patch in NetLogo
+    let width floor (gis:width-of bb-gis)
+    let height floor (gis:height-of bb-gis)
+    resize-world (-1 * width) width (-1 * height) height
+
+    gis:set-world-envelope gis:envelope-of bb-gis
+    gis:apply-raster bb-gis habitat
+
+
+    ; import the poligon (.shp) to determine forest and matrix patches
     set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
+    gis:set-drawing-color black
+    gis:draw bb-gis-shp 1
+
+    ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
+    ask patches gis:intersecting bb-gis-shp [
+      set pcolor lime + 3
+      set habitat "forest"
+    ]
+    ask patches with [habitat != "forest"] [
+      set pcolor yellow + 4
+      set habitat "matrix"
+    ]
   ]
 
 
+;; SANTA MARIA ENTIRE PATCH
+;  if study-area = "Santa Maria" [
+;    ; load .prj and .asc (raster 10 x 10 m)
+;    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+;    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+;
+;    ; make each raster cell = patch in NetLogo
+;    let width floor (gis:width-of bb-gis)
+;    let height floor (gis:height-of bb-gis)
+;    resize-world (-1 * width) width (-1 * height) height
+;
+;    gis:set-world-envelope gis:envelope-of bb-gis
+;    gis:apply-raster bb-gis habitat
+;
+;    ; import the poligon (.shp) to determine forest and matrix patches
+;    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria.shp" ; fragment/study area polygon
+;
+;    ask patches [
+;      ifelse habitat = 1 [
+;        set pcolor lime + 3
+;      ][
+;        set pcolor yellow + 4
+;      ]
+;    ]
+;  ]
+
   ;; SANTA MARIA PATCH RECORTADO:
   if study-area = "Santa Maria" [
-    set-patch-size floor (0.8 * patch-size) ; Santa Maria large raster results in a large world
-
     ; load .prj and .asc (raster 10 x 10 m)
     gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
     set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
+    ; make each raster cell = patch in NetLogo
+    let width floor (gis:width-of bb-gis)
+    let height floor (gis:height-of bb-gis)
+    resize-world (-1 * width) width (-1 * height) height
+
+    gis:set-world-envelope gis:envelope-of bb-gis
+    gis:apply-raster bb-gis habitat
+
+    ; import the poligon (.shp) to determine forest and matrix patches
     set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
-  ]
+    gis:set-drawing-color black
+    gis:draw bb-gis-shp 1
 
-  ;; SANTA MARIA ENTIRE PATCH
-  ;  if study-area = "Santa Maria" [
-  ;    ; load .prj and .asc (raster 10 x 10 m)
-  ;    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
-  ;    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
-
-  ;    ; import the poligon (.shp) to determine forest and matrix patches
-  ;    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria.shp" ; fragment/study area polygon
-  ;    ]
-
-
-  ; make each raster cell = patch in NetLogo
-  let width floor (gis:width-of bb-gis / 2)
-  let height floor (gis:height-of bb-gis / 2)
-  resize-world (-1 * width ) width (-1 * height ) height
-
-  gis:set-world-envelope gis:envelope-of bb-gis
-  gis:apply-raster bb-gis habitat
-
-  gis:set-drawing-color black
-  gis:draw bb-gis-shp 1
-
-  ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
-  ask patches gis:intersecting bb-gis-shp [
-    set pcolor lime + 3
-    set habitat "forest"
-  ]
-  ask patches with [habitat != "forest"] [
-    set pcolor yellow + 4
-    set habitat "matrix"
+    ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
+    ask patches gis:intersecting bb-gis-shp [
+      set pcolor lime + 3
+      set habitat "forest"
+    ]
+    ask patches with [habitat != "forest"] [
+      set pcolor yellow + 4
+      set habitat "matrix"
+    ]
   ]
 
 end
@@ -116,8 +191,8 @@ to setup-agents
   crt n_agents
   ask turtles [
 ;    setxy random-ycor random-xcor
-    let width ( floor gis:width-of bb-gis / 2 )
-    let height ( floor gis:height-of bb-gis / 2 )
+    let width ( floor gis:width-of bb-gis )
+    let height ( floor gis:height-of bb-gis )
     setxy random (width) random (height)
     set size 1
     set x_UTM (item 0 gis:envelope-of self)
@@ -210,20 +285,15 @@ to test_scale3
   ]
 
 end
-
-to calc_patch_ha
-  ; calculate area in patches
-  set forest_size count patches with [habitat = "forest"]
-end
 @#$#@#$#@
 GRAPHICS-WINDOW
-216
+211
 10
-868
-535
+865
+537
 -1
 -1
-4.0
+2.0
 1
 10
 1
@@ -233,10 +303,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-161
+161
+-129
+129
 0
 0
 1
@@ -244,10 +314,10 @@ ticks
 30.0
 
 BUTTON
-148
-21
-211
-54
+104
+20
+167
+53
 NIL
 setup\n
 NIL
@@ -261,20 +331,20 @@ NIL
 1
 
 CHOOSER
-4
-15
-142
-60
+33
+78
+171
+123
 study-area
 study-area
 "Guareí" "Suzano" "Taquara" "Santa Maria"
 0
 
 BUTTON
-3
-142
-203
-176
+7
+172
+207
+206
 random agent intersects .shp?
 ask one-of turtles [ print gis:intersects? bb-gis-shp patch-here ]
 NIL
@@ -288,10 +358,10 @@ NIL
 1
 
 BUTTON
-32
-108
-182
-142
+35
+129
+185
+163
 NIL
 inspect one-of turtles
 NIL
@@ -305,10 +375,10 @@ NIL
 1
 
 BUTTON
-3
-176
-202
-211
+9
+213
+208
+248
 all agents intersects .shp?
 ask turtles [ print gis:intersects? bb-gis-shp patch-here ]
 NIL
@@ -322,35 +392,35 @@ NIL
 1
 
 SLIDER
-21
-64
-193
-97
+17
+315
+189
+348
 n_agents
 n_agents
 1
 100
-1.0
+5.0
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-39
-346
-169
-400
+5
+269
+172
+307
 Testing if each patch is 10 x 10 m:
 15
 0.0
 1
 
 BUTTON
-50
-392
-139
-426
+55
+351
+144
+385
 NIL
 test_scale
 NIL
@@ -364,10 +434,10 @@ NIL
 1
 
 BUTTON
-49
-431
-145
-465
+52
+404
+148
+438
 NIL
 test_scale2
 NIL
@@ -381,12 +451,12 @@ NIL
 1
 
 BUTTON
-51
-470
-146
-503
+31
+437
+175
+471
 NIL
-test_scale3
+follow one-of turtles
 NIL
 1
 T
@@ -397,25 +467,21 @@ NIL
 NIL
 1
 
-MONITOR
-27
-276
-162
-321
-forest size in hectares
-forest_size / 100
-3
+BUTTON
+50
+490
+145
+523
+NIL
+test_scale3
+NIL
 1
-11
-
-TEXTBOX
-23
-257
-173
-291
-Check forest patch size:
-14
-0.0
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
 @#$#@#$#@
