@@ -1508,10 +1508,10 @@ ticks
 30.0
 
 SLIDER
-560
-207
-732
-240
+564
+312
+736
+345
 start-energy
 start-energy
 30
@@ -1570,10 +1570,10 @@ Defecated seeds
 1
 
 SWITCH
-1001
-236
-1119
-269
+1615
+66
+1733
+99
 show-energy?
 show-energy?
 0
@@ -1581,10 +1581,10 @@ show-energy?
 -1000
 
 SWITCH
-1001
-278
-1121
-311
+1615
+108
+1735
+141
 show-path?
 show-path?
 0
@@ -1592,10 +1592,10 @@ show-path?
 -1000
 
 SLIDER
-560
-241
-732
-274
+570
+207
+742
+240
 simulation-time
 simulation-time
 0
@@ -1607,10 +1607,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-308
-739
-341
+564
+348
+736
+381
 energy-from-fruits
 energy-from-fruits
 0
@@ -1622,10 +1622,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-533
-140
-600
-173
+535
+244
+602
+277
 STEP
 step
 NIL
@@ -1701,10 +1701,10 @@ no_days
 Number
 
 SLIDER
-567
-346
-739
-379
+564
+386
+736
+419
 energy-from-prey
 energy-from-prey
 0
@@ -1716,10 +1716,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-383
-740
-416
+564
+423
+737
+456
 energy-loss-traveling
 energy-loss-traveling
 -10
@@ -1731,10 +1731,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-421
-740
-454
+564
+460
+737
+493
 energy-loss-foraging
 energy-loss-foraging
 -10
@@ -1746,10 +1746,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-457
-740
-490
+564
+497
+737
+530
 energy-loss-resting
 energy-loss-resting
 -10
@@ -1761,10 +1761,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-773
-13
-849
-58
+605
+156
+681
+201
 timestep
 timestep
 17
@@ -1772,10 +1772,10 @@ timestep
 11
 
 OUTPUT
-759
-199
-983
-312
+428
+607
+652
+720
 11
 
 TEXTBOX
@@ -1800,30 +1800,30 @@ runtime
 String
 
 CHOOSER
-1042
-34
-1192
-79
+800
+126
+950
+171
 feeding-trees-scenario
 feeding-trees-scenario
 "trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
 3
 
 CHOOSER
-891
-55
-1037
-100
+974
+56
+1120
+101
 sleeping-trees-scenario
 sleeping-trees-scenario
 "empirical" "simulated"
 0
 
 SWITCH
-1000
-194
-1120
-227
+1614
+24
+1734
+57
 export-png
 export-png
 1
@@ -1831,10 +1831,10 @@ export-png
 -1000
 
 SLIDER
-770
-373
-932
-406
+766
+338
+928
+371
 step_forget
 step_forget
 0
@@ -1846,30 +1846,30 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-585
-283
-721
-319
+589
+292
+725
+328
 2. energy related
 14
 0.0
 1
 
 TEXTBOX
-784
-325
-921
-359
+780
+290
+917
+324
 3. memory related
 14
 0.0
 1
 
 SLIDER
-772
-561
-923
-594
+768
+526
+919
+559
 gut_transit_time_val
 gut_transit_time_val
 0
@@ -1881,20 +1881,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-951
-326
-1108
-360
+943
+290
+1100
+324
 4. movement related
 14
 0.0
 1
 
 SLIDER
-955
-447
-1097
-480
+947
+412
+1089
+445
 travel_speed_val
 travel_speed_val
 0
@@ -1906,20 +1906,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-967
+959
+555
+1099
 591
-1107
-627
 6. phenology related
 14
 0.0
 1
 
 SLIDER
-586
-498
-722
-531
+583
+538
+719
+571
 energy_level_1
 energy_level_1
 0
@@ -1931,10 +1931,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-586
-533
-722
-566
+583
+573
+719
+606
 energy_level_2
 energy_level_2
 1
@@ -1946,20 +1946,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-784
-541
-911
-577
+780
+506
+907
+542
 5. dispersal related
 14
 0.0
 1
 
 SLIDER
-773
-600
-922
-633
+769
+565
+918
+598
 n_seeds_hatched
 n_seeds_hatched
 0
@@ -1971,9 +1971,9 @@ NIL
 HORIZONTAL
 
 CHOOSER
-891
+974
 100
-1037
+1120
 145
 empirical-trees-choice
 empirical-trees-choice
@@ -1981,10 +1981,10 @@ empirical-trees-choice
 0
 
 MONITOR
-791
-57
-848
-102
+543
+156
+600
+201
 day
 day
 17
@@ -1992,10 +1992,10 @@ day
 11
 
 SWITCH
-1048
-111
-1167
-144
+807
+203
+926
+236
 sleeping-trees?
 sleeping-trees?
 0
@@ -2003,10 +2003,10 @@ sleeping-trees?
 -1000
 
 SWITCH
-1048
-143
-1167
-176
+807
+235
+926
+268
 resting-trees?
 resting-trees?
 1
@@ -2014,10 +2014,10 @@ resting-trees?
 -1000
 
 SWITCH
-1048
-79
-1167
-112
+807
+172
+926
+205
 feeding-trees?
 feeding-trees?
 0
@@ -2025,20 +2025,20 @@ feeding-trees?
 -1000
 
 TEXTBOX
-855
-14
-1032
-48
+792
+17
+955
+52
 1. Resources scenario
 14
 0.0
 1
 
 SWITCH
-902
-146
-1028
-179
+984
+168
+1110
+201
 all-slp-trees?
 all-slp-trees?
 1
@@ -2046,20 +2046,20 @@ all-slp-trees?
 -1000
 
 TEXTBOX
-806
-154
-911
-182
+994
+145
+1099
+173
 make all trees from study period available:
 9
 0.0
 1
 
 BUTTON
-693
-141
-769
-174
+695
+245
+771
+278
 108 steps
 repeat 108 [ step ]
 NIL
@@ -2106,30 +2106,30 @@ PENS
 "pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory )\nplot n_trees"
 
 TEXTBOX
-857
-37
-1054
-65
-1.2 Choose sleeping site scenario
+963
+38
+1160
+66
+1.3 Choose sleeping site scenario
 11
 0.0
 1
 
 TEXTBOX
-1017
-16
-1228
-44
-1.1 Choose resource trees scenario
+792
+110
+971
+139
+1.2 Choose resource trees scenario
 11
 0.0
 1
 
 BUTTON
-608
-140
-685
-173
+610
+244
+687
+277
 50 steps
 repeat 50 [ step ]
 NIL
@@ -2143,10 +2143,10 @@ NIL
 1
 
 SLIDER
-956
-521
-1101
-554
+948
+485
+1093
+518
 duration
 duration
 0
@@ -2158,10 +2158,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-792
-102
-850
-147
+687
+155
+745
+200
 Energy
 [ round energy ] of monkeys
 3
@@ -2169,10 +2169,10 @@ Energy
 11
 
 SLIDER
-770
-422
-934
-455
+766
+387
+930
+420
 visual
 visual
 0
@@ -2184,30 +2184,30 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-763
-348
-930
-373
+759
+314
+926
+339
 How many timesteps BLTs take to forget a tree:
 10
 0.0
 1
 
 TEXTBOX
-765
-407
-932
-427
+762
+373
+929
+393
 exclude trees in radii from pot list:
 10
 0.0
 1
 
 SWITCH
-1127
-196
-1289
-229
+1616
+149
+1778
+182
 display-hatched-trees?
 display-hatched-trees?
 1
@@ -2215,10 +2215,10 @@ display-hatched-trees?
 -1000
 
 SWITCH
-1127
-237
-1292
-270
+1616
+190
+1781
+223
 path-color-by-day?
 path-color-by-day?
 0
@@ -2226,20 +2226,20 @@ path-color-by-day?
 -1000
 
 TEXTBOX
-1224
-14
-1374
-32
+1174
+18
+1324
+40
 Output related
-14
-0.0
+16
+15.0
 1
 
 SWITCH
-1216
-87
-1334
-120
+1169
+94
+1287
+127
 output-files?
 output-files?
 1
@@ -2247,20 +2247,20 @@ output-files?
 -1000
 
 CHOOSER
-1205
-36
-1343
-81
+1169
+43
+1297
+89
 USER
 USER
 "Ronald" "Eduardo" "LEEC" "Others"
-2
+1
 
 SWITCH
-1217
-122
-1335
-155
+1170
+128
+1288
+161
 output-print?
 output-print?
 1
@@ -2268,10 +2268,10 @@ output-print?
 -1000
 
 SLIDER
-956
-483
-1100
-516
+948
+447
+1092
+480
 p-foraging-while-traveling
 p-foraging-while-traveling
 0
@@ -2283,10 +2283,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-966
-553
-1116
-575
+958
+517
+1108
+539
 max timesteps repeating same behavior
 9
 0.0
@@ -2390,10 +2390,10 @@ PENS
 "pen-2" 1.0 0 -955883 true "" "plot energy_level_2"
 
 SWITCH
-954
-346
-1096
-379
+946
+310
+1088
+343
 random-angle?
 random-angle?
 0
@@ -2401,10 +2401,10 @@ random-angle?
 -1000
 
 TEXTBOX
-956
-379
-1106
-405
+948
+344
+1098
+370
 add random variation in direction each step. If so:
 9
 0.0
@@ -2446,10 +2446,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 SWITCH
-963
-610
-1101
-643
+955
+574
+1093
+607
 phenology-on?
 phenology-on?
 1
@@ -2525,10 +2525,10 @@ NIL
 1
 
 SLIDER
-770
-465
-934
-498
+766
+430
+930
+463
 prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
@@ -2540,20 +2540,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-771
-500
-921
-518
+767
+465
+917
+483
 don't choose 1
 9
 0.0
 1
 
 SLIDER
-955
-403
-1096
-436
+947
+367
+1088
+400
 max-random-angle
 max-random-angle
 0
@@ -2565,10 +2565,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-962
-644
-1112
-666
+954
+608
+1104
+630
 energy and time spent feeding for each tree species
 9
 0.0
@@ -2659,6 +2659,26 @@ Short distance target
 11
 0.0
 1
+
+TEXTBOX
+796
+39
+963
+59
+1.1 choose fragment
+11
+0.0
+1
+
+CHOOSER
+798
+57
+937
+103
+fragment
+fragment
+"Guareí" "Santa Maria" "Taquara" "Suzano"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
