@@ -68,6 +68,8 @@ globals [
 
   ;; INPUT ;;
   ;gis;
+  bb-gis      ; raster (.asc) file for defining patch size (10 x 10 m)
+  bb-gis-shp  ; shapefile for drawing the fragment and defining habitat/non-habitat patches
   guarei-dataset
   shape-type
   property-names
@@ -139,29 +141,86 @@ end
 
 ; GIS
 to setup-gis
+  set-patch-size 3
 
-  ; Based on: https://s3.amazonaws.com/complexityexplorer/ABMwithNetLogo/Field+Guide+to+NetLogo+v14-netlogoExtension-index_02.pdf
-  set scale 28.28803 ; scale-size. Calculated based on speed_val = 1.0 (dist between UTM coordinates) ; I don't think this is working
-  resize-world -25 25 -25 25 ; same thing as selecting 25 x 25 in the world interface
-  set-patch-size 10
+  if study-area = "Guareí" [
+    ; load .prj and .asc (raster 10 x 10 m)
+    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
 
-  gis:load-coordinate-system word ( local-path) "/Data/Shapefiles/Guarei-poligono.prj"
-  set guarei-dataset gis:load-dataset word ( local-path) "/Data/Shapefiles/Guarei-poligono.shp"
+    ; load the poligon (.shp) to determine forest and matrix patches
+    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
+  ]
 
 
-  gis:set-drawing-color gray + 3
-  let pen-width 1
-  gis:draw guarei-dataset pen-width
-  gis:set-drawing-color lime + 3
-  gis:fill guarei-dataset 2
+  if study-area = "Suzano" [
+    ; load .prj and .asc (raster 10 x 10 m)
+    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
-  ask patches [set habitat "matrix" ]
-  ask patches gis:intersecting guarei-dataset [ set habitat "forest" ]
+    ; load the poligon (.shp) to determine forest and matrix patches
+    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
+  ]
 
-  set shape-type gis:shape-type-of guarei-dataset
-  set property-names gis:property-names guarei-dataset
-  set feature-list gis:feature-list-of guarei-dataset
-  set vertex-lists gis:vertex-lists-of item 0 feature-list
+
+  if study-area = "Taquara" [ ;; TAQUARA IS NOT WORKING
+    set-patch-size floor (0.8 * patch-size) ; Taquara large raster is too big for the world
+
+    ; load .prj and .asc (raster 10 x 10 m)
+    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+
+    ; load the poligon (.shp) to determine forest and matrix patches
+    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
+  ]
+
+
+  if study-area = "Santa Maria" [
+    set-patch-size floor (0.8 * patch-size) ; Santa Maria large raster results in a large world
+
+    ; load .prj and .asc (raster 10 x 10 m)
+    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+
+    ; load the poligon (.shp) to determine forest and matrix patches
+    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
+  ]
+
+
+  ; make each raster cell = patch in NetLogo
+  let width floor (gis:width-of bb-gis / 2)
+  let height floor (gis:height-of bb-gis / 2)
+  resize-world (-1 * width ) width (-1 * height ) height
+
+  gis:set-world-envelope gis:envelope-of bb-gis
+  gis:apply-raster bb-gis habitat
+
+  gis:set-drawing-color black
+  gis:draw bb-gis-shp 1
+
+  ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
+  ask patches gis:intersecting bb-gis-shp [
+    set pcolor lime + 3
+    set habitat "forest"
+  ]
+  ask patches with [habitat != "forest"] [
+    set pcolor yellow + 4
+    set habitat "matrix"
+  ]
+
+;  gis:set-drawing-color gray + 3
+;  let pen-width 1
+;  gis:draw guarei-dataset pen-width
+;  gis:set-drawing-color lime + 3
+;  gis:fill guarei-dataset 2
+;
+;  ask patches [set habitat "matrix" ]
+;  ask patches gis:intersecting guarei-dataset [ set habitat "forest" ]
+;
+;  set shape-type gis:shape-type-of guarei-dataset
+;  set property-names gis:property-names guarei-dataset
+;  set feature-list gis:feature-list-of guarei-dataset
+;  set vertex-lists gis:vertex-lists-of item 0 feature-list
 
 ;;;;;;;;; BLT Model v1 code:  ;;;;;;;;;;;
 ;  set scale 32 ; scale-size. Is this being used?
@@ -1483,11 +1542,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-528
-529
+503
+407
 -1
 -1
-10.0
+3.0
 1
 10
 1
@@ -1497,10 +1556,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--25
-25
--25
-25
+-80
+80
+-64
+64
 0
 0
 1
@@ -1523,10 +1582,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-533
+603
 12
-607
-54
+675
+48
 SETUP
 setup
 NIL
@@ -1592,10 +1651,10 @@ show-path?
 -1000
 
 SLIDER
-570
-207
-742
-240
+564
+90
+736
+123
 simulation-time
 simulation-time
 0
@@ -1622,10 +1681,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-535
-244
-602
-277
+563
+188
+630
+221
 STEP
 step
 NIL
@@ -1639,10 +1698,10 @@ NIL
 0
 
 BUTTON
-533
-59
-607
-92
+604
+48
+674
+82
 go
 go
 T
@@ -1656,9 +1715,9 @@ NIL
 1
 
 BUTTON
-612
+676
 49
-695
+759
 82
 Next Day
 next_day
@@ -1673,9 +1732,9 @@ NIL
 1
 
 BUTTON
-612
+676
 12
-696
+760
 47
 Run Days
 run_days
@@ -1690,9 +1749,9 @@ NIL
 1
 
 INPUTBOX
-699
+539
 12
-761
+601
 82
 no_days
 5.0
@@ -1761,10 +1820,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-605
-156
-681
-201
+614
+133
+690
+178
 timestep
 timestep
 17
@@ -1981,10 +2040,10 @@ empirical-trees-choice
 0
 
 MONITOR
-543
-156
-600
-201
+552
+133
+609
+178
 day
 day
 17
@@ -2056,10 +2115,10 @@ make all trees from study period available:
 1
 
 BUTTON
-695
-245
-771
-278
+653
+225
+729
+258
 108 steps
 repeat 108 [ step ]
 NIL
@@ -2073,10 +2132,10 @@ NIL
 1
 
 SWITCH
-605
-101
-707
-134
+543
+225
+648
+259
 print-step?
 print-step?
 0
@@ -2126,10 +2185,10 @@ TEXTBOX
 1
 
 BUTTON
-610
-244
-687
-277
+650
+187
+727
+220
 50 steps
 repeat 50 [ step ]
 NIL
@@ -2158,10 +2217,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-687
-155
-745
-200
+696
+132
+754
+177
 Energy
 [ round energy ] of monkeys
 3
@@ -2226,20 +2285,20 @@ path-color-by-day?
 -1000
 
 TEXTBOX
-1174
-18
-1324
-40
+1167
+13
+1317
+35
 Output related
 16
 15.0
 1
 
 SWITCH
-1169
-94
-1287
-127
+1163
+88
+1281
+121
 output-files?
 output-files?
 1
@@ -2247,20 +2306,20 @@ output-files?
 -1000
 
 CHOOSER
-1169
-43
-1297
-89
+1163
+37
+1291
+83
 USER
 USER
 "Ronald" "Eduardo" "LEEC" "Others"
 1
 
 SWITCH
-1170
-128
-1288
-161
+1164
+123
+1282
+156
 output-print?
 output-print?
 1
@@ -2629,17 +2688,6 @@ PENS
 "pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * scale ] ]"
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
-INPUTBOX
-711
-82
-771
-142
-scale
-28.28803
-1
-0
-Number
-
 TEXTBOX
 53
 483
@@ -2675,8 +2723,8 @@ CHOOSER
 57
 937
 103
-fragment
-fragment
+study-area
+study-area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
 0
 
