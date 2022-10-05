@@ -22,7 +22,8 @@
 .bkp
 
 # Folders:
-/Data
+/Data/*
+!*/Tree-points-unique.R
 /Model_development/Model-cleaning/runtime
 
 # Specific files in specific folders:
