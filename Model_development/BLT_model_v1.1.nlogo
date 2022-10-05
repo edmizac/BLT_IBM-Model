@@ -10,17 +10,21 @@ extensions [ gis palette] ; using the GIS extension of NetLogo
 ;; BREEDS ;;
 ; trees
 turtles-own [ x_UTM y_UTM ]
+
 breed [feeding-trees feeding-tree]
 feeding-trees-own [ species id-tree ] ; feeding trees have species and id code
+
 breed [sleeping-trees sleeping-tree]
 sleeping-trees-own [ species id-tree ]
+
 breed [resting-trees resting-tree]
 resting-trees-own [ species id-tree ]
+
 breed [legend-trees legend-tree] ; to set up a legend with the color of trees
-; seeds
+
 breed [seeds seed]
 seeds-own [ id-seed species mother-tree ]
-; tamarins
+
 breed [monkeys monkey]
 monkeys-own [
   energy          ; energy the tamarin has left
@@ -50,12 +54,16 @@ monkeys-own [
 
 ]
 
+breed [blobs blob]
+blobs-own [patch_before]
+
 patches-own [
   habitat
 ]
 
 ;; GLOBALS ;;
 globals [
+  patch-scale
   behaviorsequence
 
   timestep ; step counter during one day
@@ -116,6 +124,7 @@ to setup
 
   setup-patches
   setup-gis
+  get-patch-scale
   setup-trees
   setup-monkeys
 
@@ -143,7 +152,7 @@ end
 to setup-gis
   set-patch-size 3
 
-  if study-area = "Guareí" [
+  if study_area = "Guareí" [
     ; load .prj and .asc (raster 10 x 10 m)
     gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
     set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
@@ -153,7 +162,7 @@ to setup-gis
   ]
 
 
-  if study-area = "Suzano" [
+  if study_area = "Suzano" [
     ; load .prj and .asc (raster 10 x 10 m)
     gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
     set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
@@ -163,7 +172,7 @@ to setup-gis
   ]
 
 
-  if study-area = "Taquara" [ ;; TAQUARA IS NOT WORKING
+  if study_area = "Taquara" [ ;;
     set-patch-size floor (0.8 * patch-size) ; Taquara large raster is too big for the world
 
     ; load .prj and .asc (raster 10 x 10 m)
@@ -175,8 +184,8 @@ to setup-gis
   ]
 
 
-  if study-area = "Santa Maria" [
-    set-patch-size floor (0.8 * patch-size) ; Santa Maria large raster results in a large world
+  if study_area = "Santa Maria" [
+    set-patch-size floor (1 * patch-size) ; Santa Maria large raster results in a large world
 
     ; load .prj and .asc (raster 10 x 10 m)
     gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
@@ -208,15 +217,8 @@ to setup-gis
     set habitat "matrix"
   ]
 
-;  gis:set-drawing-color gray + 3
-;  let pen-width 1
-;  gis:draw guarei-dataset pen-width
-;  gis:set-drawing-color lime + 3
-;  gis:fill guarei-dataset 2
-;
-;  ask patches [set habitat "matrix" ]
-;  ask patches gis:intersecting guarei-dataset [ set habitat "forest" ]
-;
+
+;;;;;;;;; BLT Model v1.1 code (only the end):  ;;;;;;;;;;;
 ;  set shape-type gis:shape-type-of guarei-dataset
 ;  set property-names gis:property-names guarei-dataset
 ;  set feature-list gis:feature-list-of guarei-dataset
@@ -242,85 +244,117 @@ to setup-gis
 
 end
 
+to get-patch-scale
+  create-blobs 1
+
+  ask one-of blobs [
+    move-to patch 0 0
+
+    set x_UTM (item 0 gis:envelope-of self)
+    set y_UTM (item 0 gis:envelope-of self)
+    set patch_before patch-here
+
+    move-to patch 1 0
+
+    let x_UTM2 (item 0 gis:envelope-of self)
+    let y_UTM2 (item 0 gis:envelope-of self)
+
+    set patch-scale ( x_UTM2 - x_UTM )
+    die
+  ]
+end
+
 ; TREES INPUT
 to setup-trees
 
 ;; SLEEPING TREES ONLY (ALL MONTHS)
-  let id-tree-slp 0
 
-  if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
-    set sleep-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
+;  let id-tree-slp 0
+;  if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
+;    set sleep-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
+;
+;    let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
+;    foreach gis:feature-list-of sleep-gis [ vector-feature ->
+;      let location-slp gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
+;      set id-tree-slp gis:property-value vector-feature "point"
+;
+;      create-sleeping-trees 1 [
+;        set size 1
+;        set shape "tree"
+;        set color magenta
+;        setxy item 0 location-slp item 1 location-slp
+;        set id-tree-slp gis:property-value vector-feature "point"
+;        set x_UTM (item 0 gis:envelope-of self)
+;        set y_UTM (item 2 gis:envelope-of self)
+;  ]]]
 
-    let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
-    foreach gis:feature-list-of sleep-gis [ vector-feature ->
-      let location-slp gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
-      set id-tree-slp gis:property-value vector-feature "point"
 
-      create-sleeping-trees 1 [
-        set size 1
-        set shape "tree"
-        set color magenta
-        setxy item 0 location-slp item 1 location-slp
-        set id-tree-slp gis:property-value vector-feature "point"
-        set x_UTM (item 0 gis:envelope-of self)
-        set y_UTM (item 2 gis:envelope-of self)
-  ]]]
+  ;;;;;;; load tree-file according to tree-scenario chooser (.SHP) ;;;;;;;
 
- ;; load tree-file according to tree-scenario chooser (.SHP)
+  ; Guareí
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_all.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_May.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jun" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_Jun.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_Jul.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Aug" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_Aug.shp" ]
+
+  ; Santa Maria
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_all.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Mar" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_Mar.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_Apr.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_May.shp" ]
+
+  ; Taquara
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_all.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jan" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Jan.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Feb.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Apr.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_May.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Jul.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Sep.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Dec.shp" ]
+
+  ; Suzano
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_all.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Feb.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Apr.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Sep.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Dec.shp" ]
+
+
   let number 0
   let xcoord 0
   let ycoord 0
-  let tree-species 0
   let tree-type 0 ; phenology types
-  let tree-id-tree 0
-
-  ;; ALL TREES (DEFINED BY feeding-trees-scenario CHOOSER AND ****ing-tree INTERRUPTOR
-
-  if ( feeding-trees-scenario = "trees_all" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_all.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_may" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_may.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jun" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_jun.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_jul" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_jul.shp" ]   ;
-  if ( feeding-trees-scenario = "trees_aug" )   [ set tree-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_aug.shp" ]   ;
 
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
     let location gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
     set tree-type gis:property-value vector-feature "behavior"
-    set tree-species gis:property-value vector-feature "species"
 
-    if ( feeding-trees? = TRUE AND tree-type = "feed_fruits" ) [
+    if ( feeding-trees? = TRUE AND tree-type = "Frugivory" ) [
       create-feeding-trees 1 [
-        set size 1
+        set size 3
         set shape "tree"
         set color green
         setxy item 0 location item 1 location
-        set species gis:property-value vector-feature "species"
-        set id-tree gis:property-value vector-feature "point"
+        set species gis:property-value vector-feature "sp"
+        set id-tree gis:property-value vector-feature "id"
+        if species != "" [ set species "NA" ]
+        if id-tree != "" [ set id-tree "NA" ]
         set x_UTM (item 0 gis:envelope-of self)
         set y_UTM (item 2 gis:envelope-of self)
     ]];
 
-    if ( resting-trees? = TRUE AND tree-type = "resting" ) [
-      create-resting-trees 1 [
-        set size 1
-        set shape "tree"
-        set color 77
-        setxy item 0 location item 1 location
-        set species gis:property-value vector-feature "species"
-        set id-tree gis:property-value vector-feature "point"
-        set x_UTM (item 0 gis:envelope-of self)
-        set y_UTM (item 2 gis:envelope-of self)
-    ]]
-    ;
 
-    if ( sleeping-trees? = TRUE AND all-slp-trees? = FALSE AND tree-type = "sleeping"  ) [
+    if ( sleeping-trees? = TRUE AND all-slp-trees? = FALSE AND tree-type = "Sleeping site"  ) [
       create-sleeping-trees 1 [
-        set size 1
+        set size 3
         set shape "tree"
         set color magenta
         setxy item 0 location item 1 location
-        set species gis:property-value vector-feature "species"
-        set id-tree gis:property-value vector-feature "point"
+        set species gis:property-value vector-feature "sp"
+        set id-tree gis:property-value vector-feature "id"
         set x_UTM (item 0 gis:envelope-of self)
         set y_UTM (item 2 gis:envelope-of self)
     ]] ;
@@ -336,7 +370,6 @@ to setup-monkeys
   ask monkeys [
 
     set behaviorsequence []
-;    set behaviorsequence lput "" behaviorsequence
 
     ;;    set shape "banana"
 ;    set shape "mlp-2"
@@ -392,8 +425,8 @@ to setup-monkeys
     ]
     [set label ""]
     ifelse show-path? [
-      set pen-mode "down"
-      set pen-size 0.2
+      set pen-mode "down" ; alternative: https://groups.google.com/g/netlogo-users/c/qEf4yS0AAeQ
+      set pen-size 1
       set color gray
 ;;      set Color blue
     ][ set pen-mode "up" ]
@@ -405,40 +438,40 @@ end
 to create-legend
 
   create-legend-trees 1 [ ; tamarin
-    set size 1.5
+    set size 4
     ;;      set shape "banana"
     set color black
-    setxy min-pxcor + 1 max-pycor - 1
+    setxy min-pxcor + 4 max-pycor - 5
   ]
   create-legend-trees 1 [ ; feeding
-    set size 1
+    set size 4
     set shape "tree"
     set color green
-    setxy min-pxcor + 1 max-pycor - 3
+    setxy min-pxcor + 4 max-pycor - 10
   ]
   create-legend-trees 1 [ ; sleeping
-    set size 1
+    set size 4
     set shape "tree"
     set color magenta
-    setxy min-pxcor + 1 max-pycor - 5
+    setxy min-pxcor + 4 max-pycor - 15
   ]
   create-legend-trees 1 [ ; seeds
-    set size 0.5
+    set size 3
     set shape "circle"
     set color black
-    setxy min-pxcor + 1 max-pycor - 7
+    setxy min-pxcor + 4 max-pycor - 20
   ]
   create-legend-trees 1 [ ; short distance target tree
-    set size 1
+    set size 4
     set shape "tree"
     set color red
-    setxy min-pxcor + 2 min-pycor + 1
+    setxy min-pxcor + 2 min-pycor + 5
   ]
   create-legend-trees 1 [ ; long distance target tree
-    set size 1
+    set size 4
     set shape "tree"
     set color blue
-    setxy min-pxcor + 2 min-pycor + 3
+    setxy min-pxcor + 2 min-pycor + 10
   ]
 
 end
@@ -615,9 +648,9 @@ to next_day
   output-type "===== Day: "
   output-type day
   output-print " ====="
-  output-type "*simulation-time* "
-  output-type simulation-time
-  output-print " ----"
+;  output-type "*simulation-time* "
+;  output-type ticks
+;  output-print " ----"
 
 
   ask monkeys [
@@ -801,7 +834,7 @@ to-report on-feeding-tree?
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
     ;  print distance tree_target ; for debugging
-      ifelse distance tree_target < 0.8 [
+      ifelse distance tree_target < 0.8 * travel_speed [
 
         set tree_current tree_target
 
@@ -959,7 +992,7 @@ to to-feeding-tree
     set heading towards tree_target
 
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
-      if tree_target != -1 AND distance tree_target > 0.8 [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+      if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
         forage
       ]
       ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
@@ -969,7 +1002,7 @@ to to-feeding-tree
       set behavior "travel"
 
       ;; RANDOM movement while traveling:
-      if random-angle? = TRUE AND distance tree_target > 1.5 [
+      if random-angle? = TRUE AND distance tree_target > 1.5 * travel_speed [
         rt ( random max-random-angle ) - ( max-random-angle / 2 )
       ]
     ]
@@ -1105,6 +1138,10 @@ to search-feeding-tree
       set species_time 3
 ;      set energy_species 2
     ]
+    if tree_target_species = "NA" [     ; This one either
+      set species_time 2
+      ;      set energy_species 2
+    ]
   ]
 end
 
@@ -1179,18 +1216,6 @@ to resting
   set steps-moved steps-moved + 1
   set energy energy + energy-loss-traveling
 
-  if display-hatched-trees? = TRUE [
-    hatch-resting-trees 1 [
-      set size 1
-      set shape "tree"
-      set color 77
-      set label ""
-      setxy xcor ycor
-      set species "rest"
-      set id-tree who
-    ]
-  ]
-
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -1226,6 +1251,11 @@ to sleeping
 ;      ]
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
+
+      output-type "*simulation-time* "
+      output-type ticks
+      output-print " ----"
+
     ]
   ]
 
@@ -1236,7 +1266,7 @@ to sleeping
       rt ( random max-random-angle ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
     ]
 
-    forward travel_speed
+    forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
     set dist-traveled travel_speed
     set steps-moved steps-moved + 1
     set energy energy + energy-loss-traveling
@@ -1248,7 +1278,8 @@ to sleeping
   ]
 
 ;  if simulation-time-end = TRUE [
-;    output-print "AHOY"
+;    ;    output-print "AHOY"
+;
 ;  ]
 
 end
@@ -1542,11 +1573,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-503
-407
+535
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -1556,10 +1587,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -1673,8 +1704,8 @@ SLIDER
 energy-from-fruits
 energy-from-fruits
 0
-15
-9.0
+30
+21.0
 1
 1
 NIL
@@ -1783,7 +1814,7 @@ energy-loss-traveling
 energy-loss-traveling
 -10
 0
--1.8
+-1.0
 0.1
 1
 NIL
@@ -1831,10 +1862,10 @@ timestep
 11
 
 OUTPUT
-428
-607
-652
-720
+957
+142
+1181
+255
 11
 
 TEXTBOX
@@ -1848,10 +1879,10 @@ Tamarin
 1
 
 INPUTBOX
-9
-641
-416
-727
+10
+580
+417
+666
 runtime
 ./runtime/
 1
@@ -1859,20 +1890,20 @@ runtime
 String
 
 CHOOSER
-800
-126
-950
-171
+977
+29
+1127
+74
 feeding-trees-scenario
 feeding-trees-scenario
-"trees_all" "trees_may" "trees_jun" "trees_jul" "trees_aug"
-3
+"All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
+1
 
 CHOOSER
-974
-56
-1120
-101
+1184
+32
+1330
+77
 sleeping-trees-scenario
 sleeping-trees-scenario
 "empirical" "simulated"
@@ -1898,7 +1929,7 @@ step_forget
 step_forget
 0
 1000
-99.0
+122.0
 1
 1
 NIL
@@ -1911,7 +1942,7 @@ TEXTBOX
 328
 2. energy related
 14
-0.0
+15.0
 1
 
 TEXTBOX
@@ -1921,7 +1952,7 @@ TEXTBOX
 324
 3. memory related
 14
-0.0
+15.0
 1
 
 SLIDER
@@ -1946,7 +1977,7 @@ TEXTBOX
 324
 4. movement related
 14
-0.0
+15.0
 1
 
 SLIDER
@@ -1957,8 +1988,8 @@ SLIDER
 travel_speed_val
 travel_speed_val
 0
-1
-0.8
+5
+3.2
 0.1
 1
 NIL
@@ -2030,14 +2061,14 @@ NIL
 HORIZONTAL
 
 CHOOSER
-974
-100
-1120
-145
+1184
+75
+1330
+120
 empirical-trees-choice
 empirical-trees-choice
 "closest" "random"
-0
+1
 
 MONITOR
 552
@@ -2051,10 +2082,10 @@ day
 11
 
 SWITCH
-807
-203
-926
-236
+813
+195
+932
+228
 sleeping-trees?
 sleeping-trees?
 0
@@ -2062,21 +2093,10 @@ sleeping-trees?
 -1000
 
 SWITCH
-807
-235
-926
-268
-resting-trees?
-resting-trees?
-1
-1
--1000
-
-SWITCH
-807
-172
-926
-205
+813
+163
+932
+196
 feeding-trees?
 feeding-trees?
 0
@@ -2084,20 +2104,20 @@ feeding-trees?
 -1000
 
 TEXTBOX
-792
-17
-955
-52
+796
+10
+959
+45
 1. Resources scenario
 14
-0.0
+15.0
 1
 
 SWITCH
-984
-168
-1110
-201
+1202
+147
+1328
+180
 all-slp-trees?
 all-slp-trees?
 1
@@ -2105,10 +2125,10 @@ all-slp-trees?
 -1000
 
 TEXTBOX
-994
-145
-1099
-173
+1209
+122
+1314
+150
 make all trees from study period available:
 9
 0.0
@@ -2135,7 +2155,7 @@ SWITCH
 543
 225
 648
-259
+258
 print-step?
 print-step?
 0
@@ -2165,21 +2185,21 @@ PENS
 "pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory )\nplot n_trees"
 
 TEXTBOX
-963
-38
-1160
-66
+1173
+13
+1370
+41
 1.3 Choose sleeping site scenario
 11
 0.0
 1
 
 TEXTBOX
-792
-110
-971
-139
-1.2 Choose resource trees scenario
+969
+13
+1148
+42
+1.3 Choose fruit trees scenario
 11
 0.0
 1
@@ -2264,20 +2284,9 @@ exclude trees in radii from pot list:
 
 SWITCH
 1616
-149
-1778
-182
-display-hatched-trees?
-display-hatched-trees?
-1
-1
--1000
-
-SWITCH
-1616
-190
+150
 1781
-223
+183
 path-color-by-day?
 path-color-by-day?
 0
@@ -2285,20 +2294,20 @@ path-color-by-day?
 -1000
 
 TEXTBOX
-1167
-13
-1317
-35
-Output related
+32
+423
+104
+446
+OUTPUT:
 16
 15.0
 1
 
 SWITCH
-1163
-88
-1281
-121
+0
+499
+118
+532
 output-files?
 output-files?
 1
@@ -2306,20 +2315,20 @@ output-files?
 -1000
 
 CHOOSER
-1163
-37
-1291
-83
+0
+448
+128
+493
 USER
 USER
 "Ronald" "Eduardo" "LEEC" "Others"
 1
 
 SWITCH
-1164
-123
-1282
-156
+2
+534
+120
+567
 output-print?
 output-print?
 1
@@ -2470,10 +2479,10 @@ add random variation in direction each step. If so:
 1
 
 BUTTON
-278
-574
-411
-608
+403
+485
+536
+519
 NIL
 test-long-distance
 NIL
@@ -2516,10 +2525,10 @@ phenology-on?
 -1000
 
 BUTTON
-10
-535
-129
-568
+135
+447
+254
+480
 NIL
 ride one-of monkeys
 NIL
@@ -2533,10 +2542,10 @@ NIL
 1
 
 BUTTON
-136
-537
-265
-570
+262
+448
+391
+481
 NIL
 reset-perspective
 NIL
@@ -2550,10 +2559,10 @@ NIL
 1
 
 BUTTON
-269
-537
-432
-570
+394
+448
+557
+481
 NIL
 inspect one-of monkeys
 NIL
@@ -2567,10 +2576,10 @@ NIL
 1
 
 BUTTON
-10
-573
-272
-606
+135
+484
+397
+517
 NIL
 ask monkeys [ show length tree_pot_list ]
 NIL
@@ -2652,10 +2661,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "ask monkeys [ ifelse tree_current != -1 [ plot [ species_time ] of tree_current ] [ plot 0 ] ]"
 
 BUTTON
-10
-607
-144
-641
+135
+518
+269
+552
 check tree species
 ask one-of feeding-trees [ let specieslist [species] of feeding-trees set specieslist remove-duplicates specieslist print specieslist] 
 NIL
@@ -2689,44 +2698,102 @@ PENS
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
 TEXTBOX
-53
-483
-220
-503
+34
+360
+201
+380
 Long distance target
 11
 0.0
 1
 
 TEXTBOX
-53
-503
-220
-523
+33
+382
+200
+402
 Short distance target
 11
 0.0
 1
 
 TEXTBOX
-796
-39
-963
-59
+800
+32
+967
+52
 1.1 choose fragment
 11
 0.0
 1
 
 CHOOSER
-798
-57
-937
-103
-study-area
-study-area
+802
+50
+941
+95
+study_area
+study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
+
+BUTTON
+272
+519
+442
+552
+NIL
+print count feeding-trees
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+240
+422
+478
+466
+MODEL VERIFICATION:
+18
+15.0
+1
+
+TEXTBOX
+975
+77
+1155
+134
+Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr, May\nTaquara = Jan, Feb, Apr, May, Jul, Dec\nSuzano = Feb, Apr, Sep, Dec\n
+10
+15.0
+1
+
+TEXTBOX
+802
+148
+934
+171
+1.2 Create tree resources
+11
+0.0
+1
+
+MONITOR
+826
+94
+911
+139
+patch size (m)
+patch-scale
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
