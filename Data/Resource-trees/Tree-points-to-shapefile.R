@@ -15,7 +15,7 @@ csvs_to_sf <- list.files(here("Data", "Resource-trees"), pattern = ".csv")
 
 
 # Convert csv files to .shp
-i <- 15
+i <- 16
 for (file in csvs_to_sf) {
   
   j <- csvs_to_sf[i]
