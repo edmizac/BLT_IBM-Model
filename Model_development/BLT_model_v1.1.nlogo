@@ -89,8 +89,6 @@ globals [
   ;param values;
   gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
   travel_speed ; global speed for travel
-;  foraging_speed ; global speed for foraging
-; foraging_time ; global for how long the tamarins should spend on foraging (3 timesteps)
   species_time ; how long the tamarin feeds on the tree species
   energy_species ; value of energy they get from feeding of each species
 
@@ -137,8 +135,6 @@ to setup
   set timestep 0
   set gut_transit_time gut_transit_time_val
   set travel_speed travel_speed_val
-;  set foraging_speed foraging_speed_val
-;  set species_time species_time_val
 
   reset-ticks
 end
@@ -275,7 +271,7 @@ to setup-trees
     if ( study_area = "Guareí")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_slp.shp" ]
     if ( study_area = "Santa Maria")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_slp.shp" ]
     if ( study_area = "Suzano")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_slp.shp" ]
-    if ( study_area = "Taquara")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/taq _trees_unique_slp.shp" ]
+    if ( study_area = "Taquara")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_slp.shp" ]
 
 
     let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
@@ -338,6 +334,7 @@ to setup-trees
 ;  ifelse file-exists? ( map [ i -> read-from-string direct_list ] ) [
 
 
+  ifelse tree-file != 0 [
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
     let location gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
@@ -370,9 +367,12 @@ to setup-trees
         set y_UTM (item 2 gis:envelope-of self)
     ]] ;
   ]
-;  ][
-;    print "choose another month!"
-;  ]
+
+
+
+  ][
+    print "NO TREES FOR THIS MONTH! CHOOSE ANOTHER MONTH!"
+  ]
 
 end
 
@@ -541,6 +541,8 @@ end
 ; Activities commands
 ;--------------------------------------------------------------------------------------------
 to go
+
+  if ticks > 10000 [stop]
 
   if all? monkeys [action = "sleeping"] [
     set day day + 1
@@ -744,12 +746,26 @@ to move-monkeys
           morning-defecation ]              ;; MORNING-DEFECATION PROCEDURE
 
     if timestep >= simulation-time [
-      if timestep = simulation-time [ set tree_target -1 ] ; force monkey select a sleeping site
+      if timestep = simulation-time[
+        set tree_target -1
+      ] ; force monkey select a sleeping site
       sleeping
       if output-print? = TRUE [
         output-day-stats
       ]
+
     ]
+
+
+    ; Trying to make monkeys go to sleep only if energy > energy_level 1:
+;    if timestep >= simulation-time AND energy > energy_level_1 [
+;      set tree_target -1
+;      sleeping
+;
+;      if output-print? = TRUE [
+;        output-day-stats
+;      ]
+;    ]
 
 
     if timestep < simulation-time [ ; energy levels: energy_level_1 = 80 and energy_level_2 = 150
@@ -814,11 +830,11 @@ to frugivory
         feeding
       ][
         set tree_current -1
-;        print "time over -- New feeding tree" ; for debugging
+        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-;      print "New feeding tree" ; for debugging
+      print "New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -860,14 +876,15 @@ to-report on-feeding-tree?
         set tree_target -1
         ifelse phenology-on?
         [ set species_time [ species_time ] of tree_current ]
-        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
-  ;      print "on-feeding-tree? TRUE" ; for debugging
+;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
+        [ set species_time 2 ]
+        print "on-feeding-tree? TRUE" ; for debugging
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
         report true
 
       ][
-  ;      print "on-feeding-tree? FALSE" ; for debugging
+        print "on-feeding-tree? FALSE" ; for debugging
   ;      print tree_target
         report false
       ]
@@ -885,7 +902,7 @@ to-report on-feeding-tree?
   if travel_mode = "long_distance" [    ;; long distance frugivory
 
     ifelse action = "travel" OR action = "foraging" AND ld_tree_target != -1 [
-      ifelse distance ld_tree_target < 0.8 [
+      ifelse distance ld_tree_target < 0.8 * travel_speed [
 
         set tree_current ld_tree_target
 
@@ -896,6 +913,10 @@ to-report on-feeding-tree?
 
         set ld_tree_target -1
         set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
+        ifelse phenology-on?
+        [ set species_time [ species_time ] of tree_current ]
+;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
+        [ set species_time 2 ]
         report true
       ][
         report false
@@ -1007,6 +1028,7 @@ end
 
 to to-feeding-tree
 
+  print "TO-FEEDING-TREE"
 
   if travel_mode = "short_distance" [
     if tree_target = -1 [
@@ -1019,6 +1041,9 @@ to to-feeding-tree
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
       if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
         forage
+        if distance tree_target > 0.8 * travel_speed [
+          travel
+        ]
       ]
       ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
     ][
@@ -1043,8 +1068,11 @@ to to-feeding-tree
     set heading towards ld_tree_target
 
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
-      if ld_tree_target != -1 AND distance ld_tree_target > 0.8 [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+      if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
         forage
+        if distance ld_tree_target > travel_speed * 0.8 [
+          travel
+        ]
       ]
       ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
     ][
@@ -1062,14 +1090,11 @@ to to-feeding-tree
 
   ; ========================================= ;
   ;; this procedure independs of travel mode:
+  travel
+
   set behaviorsequence lput 3 behaviorsequence
 
-  forward travel_speed
-  set dist-traveled travel_speed
-  set steps-moved steps-moved + 1
-  set energy energy + energy-loss-traveling
-
-  set color grey ; in case the tamarin foraged, it became magenta
+;  set color grey ; in case the tamarin foraged, it became magenta
 
   ; ========================================= ;
   ;; this procedure independs of travel mode:
@@ -1083,7 +1108,7 @@ end
 to search-feeding-tree
 
 
-  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
+;  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
   if travel_mode = "short_distance" [
     let let_pot_list tree_pot_list
@@ -1171,11 +1196,10 @@ to search-feeding-tree
 end
 
 to travel
-;  forward travel_speed
-;  set dist-traveled travel_speed
-;  set behavior "travel"
-;  set steps-moved steps-moved + 1
-;  set energy energy + energy-loss-traveling
+  forward travel_speed
+  set dist-traveled travel_speed
+  set steps-moved steps-moved + 1
+  set energy energy + energy-loss-traveling
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -1255,7 +1279,7 @@ to sleeping
   ][
 
     set heading towards tree_target
-    if distance tree_target < travel_speed * 0.8 [
+    if distance tree_target < 2 * travel_speed * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
 
       move-to tree_target
       set x_UTM [ x_UTM ] of tree_target
@@ -1295,6 +1319,7 @@ to sleeping
     set dist-traveled travel_speed
     set steps-moved steps-moved + 1
     set energy energy + energy-loss-traveling
+
     set action "travel"
     set behavior "travel"
 
@@ -1334,19 +1359,8 @@ to forage
   set behaviorsequence lput 2 behaviorsequence
 
 
-;; RANDOM movement while foraging 1:
-;  let n random 100
-;  if n <= 5 [ left random 180 ]
-;  if n > 5 AND n <= 20 [ right random 60 ]
-;  if n > 20 AND n <= 60 [ rt random 30 ]
-;  if n > 60 [ lt random 30 ]
 
-;; RANDOM movement while foraging 2 (much simpler):
-  if random-angle? = TRUE [
-  rt ( random max-random-angle ) - ( max-random-angle / 2 )
-  ]
-
-;; movement is already done by the 'to-feeding-tree' procedure, so it has to be commented out from here -< wrong, sometimes foraging procedure is called through other ways (e.g. random-action)
+;; movement (travel) is already called by the 'to-feeding-tree' and after the 'forage' procedure being called ('random-action' not anymore), so it has to be commented out from here
 ;  forward travel_speed
 ;  set dist-traveled travel_speed
 ;  set steps-moved steps-moved + 1
@@ -1357,10 +1371,10 @@ end
 ;-------------------------------------------------------------
 to random-action
 
-;  print "random-action"    ; debugging
+  print "random-action"    ; debugging
 
   set action-time 0
-  ifelse random-float 1 > p-foraging-while-traveling [
+  ifelse random-float 1 > 0.25 [
 ;    set color black
 ;    ask patch-here [ set pcolor orange ]
     frugivory ;; because travel, forage and frugivory are within the same loop
@@ -1375,16 +1389,20 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-;  print "last-action-again"   ; debugging
+  print "last-action-again"   ; debugging
 
-  if action = "forage"   [
+  if action = "forage" [
     forage
     ; the following lines were excluded from the foraging procedure to not conflict with the to-feeding-tree procedure (agents were doing two steps)
-    forward travel_speed
-    set dist-traveled travel_speed
-    set steps-moved steps-moved + 1
-    set energy energy + energy-loss-traveling
-    set color grey ; in case the tamarin has foraged, it became magenta
+
+    if travel_mode = "long_distance" AND distance ld_tree_target > travel_speed * 0.8 [
+      travel
+    ]
+
+    if travel_mode = "short_distance" AND distance tree_target > travel_speed * 0.8 [
+      travel
+;      set color grey ; in case the tamarin has foraged, it became magenta
+    ]
   ]
   if action = "resting" [ resting ]
   if action = "travel" [ frugivory ]
@@ -1598,11 +1616,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+627
+430
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -1612,10 +1630,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-101
+101
+-68
+68
 0
 0
 1
@@ -1904,10 +1922,10 @@ Tamarin
 1
 
 INPUTBOX
-10
-580
-417
-666
+4
+612
+411
+698
 runtime
 ./runtime/
 1
@@ -1922,7 +1940,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+3
 
 CHOOSER
 1184
@@ -2014,7 +2032,7 @@ travel_speed_val
 travel_speed_val
 0
 5
-2.5
+2.4
 0.1
 1
 NIL
@@ -2183,7 +2201,7 @@ SWITCH
 258
 print-step?
 print-step?
-1
+0
 1
 -1000
 
@@ -2281,7 +2299,7 @@ visual
 visual
 0
 20
-18.0
+2.0
 1
 1
 NIL
@@ -2314,7 +2332,7 @@ SWITCH
 183
 path-color-by-day?
 path-color-by-day?
-0
+1
 1
 -1000
 
@@ -2369,7 +2387,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.15
+0.1
 0.05
 1
 NIL
@@ -2380,7 +2398,7 @@ TEXTBOX
 517
 1108
 539
-max timesteps repeating same behavior
+max timesteps repeating same behavior (other than feeding)
 9
 0.0
 1
@@ -2595,7 +2613,7 @@ NIL
 T
 OBSERVER
 NIL
-NIL
+I
 NIL
 NIL
 1
@@ -2760,7 +2778,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+1
 
 BUTTON
 272
@@ -2819,6 +2837,23 @@ patch-scale
 17
 1
 11
+
+BUTTON
+136
+559
+284
+592
+count unvisited trees
+show count feeding-trees with [color = green]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
