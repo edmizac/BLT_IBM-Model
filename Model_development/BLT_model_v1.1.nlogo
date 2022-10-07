@@ -874,7 +874,7 @@ to-report on-feeding-tree?
 ;        set ycor [ ycor ] of tree_current
 
         set tree_target -1
-        ifelse phenology-on?
+        ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time 2 ]
@@ -913,7 +913,7 @@ to-report on-feeding-tree?
 
         set ld_tree_target -1
         set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
-        ifelse phenology-on?
+        ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time 2 ]
@@ -1130,7 +1130,7 @@ to search-feeding-tree
   ]
 
 
-  if phenology-on? [
+  if feedingbout-on? [
     ;; TREE ENERGY VARIABLE WAS DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION
     if tree_target_species = "annona" [
       set species_time 1
@@ -1616,8 +1616,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-627
-430
+459
+370
 -1
 -1
 3.0
@@ -1630,10 +1630,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--101
-101
--68
-68
+-73
+73
+-58
+58
 0
 0
 1
@@ -1940,7 +1940,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-3
+9
 
 CHOOSER
 1184
@@ -2032,7 +2032,7 @@ travel_speed_val
 travel_speed_val
 0
 5
-2.4
+0.9
 0.1
 1
 NIL
@@ -2043,7 +2043,7 @@ TEXTBOX
 555
 1099
 591
-6. phenology related
+6. feeding bout
 14
 0.0
 1
@@ -2559,10 +2559,10 @@ PENS
 SWITCH
 955
 574
-1093
+1102
 607
-phenology-on?
-phenology-on?
+feedingbout-on?
+feedingbout-on?
 1
 1
 -1000
@@ -2778,7 +2778,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-1
+3
 
 BUTTON
 272
