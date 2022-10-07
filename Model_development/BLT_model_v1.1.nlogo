@@ -5,7 +5,7 @@
 ; Phenology values (specific energy and species-time values on and off by switcher phenology-on? Stil need to add phenology cycles though)
 ; ------------------------------------------------
 
-extensions [ gis palette] ; using the GIS extension of NetLogo
+extensions [ gis palette pathdir] ; using the GIS extension of NetLogo
 
 ;; BREEDS ;;
 ; trees
@@ -267,26 +267,31 @@ end
 ; TREES INPUT
 to setup-trees
 
-;; SLEEPING TREES ONLY (ALL MONTHS)
 
-;  let id-tree-slp 0
-;  if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
-;    set sleep-file word ( local-path) "/Data/Trees-Guarei/Guarei_trees_unique_slp.shp" ;
-;
-;    let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
-;    foreach gis:feature-list-of sleep-gis [ vector-feature ->
-;      let location-slp gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
-;      set id-tree-slp gis:property-value vector-feature "point"
-;
-;      create-sleeping-trees 1 [
-;        set size 1
-;        set shape "tree"
-;        set color magenta
-;        setxy item 0 location-slp item 1 location-slp
-;        set id-tree-slp gis:property-value vector-feature "point"
-;        set x_UTM (item 0 gis:envelope-of self)
-;        set y_UTM (item 2 gis:envelope-of self)
-;  ]]]
+  ;; INPUT SLEEPING TREES OF ALL STUDY PERIOD INDEPENDENT OF MONTH:
+
+  let id-tree-slp 0
+  if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
+    if ( study_area = "Guareí")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_slp.shp" ]
+    if ( study_area = "Santa Maria")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_slp.shp" ]
+    if ( study_area = "Suzano")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_slp.shp" ]
+    if ( study_area = "Taquara")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/taq _trees_unique_slp.shp" ]
+
+
+    let sleep-gis gis:load-dataset sleep-file ; defined by tree-scenario chooser
+    foreach gis:feature-list-of sleep-gis [ vector-feature ->
+      let location-slp gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
+      set id-tree-slp gis:property-value vector-feature "behavior"
+
+      create-sleeping-trees 1 [
+        set size 3
+        set shape "tree"
+        set color magenta
+        setxy item 0 location-slp item 1 location-slp
+        set id-tree-slp gis:property-value vector-feature "id"
+        set x_UTM (item 0 gis:envelope-of self)
+        set y_UTM (item 2 gis:envelope-of self)
+  ]]]
 
 
   ;;;;;;; load tree-file according to tree-scenario chooser (.SHP) ;;;;;;;
@@ -327,6 +332,12 @@ to setup-trees
   let ycoord 0
   let tree-type 0 ; phenology types
 
+;  procedure to check if the file exists (not working):
+;  let direct_list sort pathdir:list word (local-path) "/Data/Resource-Trees/"
+;  let local-path "D:/Data/Documentos/github/BLT_IBM-Model" let direct_list sort pathdir:list word (local-path) "/Data/Resource-Trees/"     ( foreach [direct_list] [ i -> read-from-string ( item i direct_list) ] )
+;  ifelse file-exists? ( map [ i -> read-from-string direct_list ] ) [
+
+
   let trees-gis gis:load-dataset tree-file ; defined by tree-scenario chooser
   foreach gis:feature-list-of trees-gis [ vector-feature ->
     let location gis:location-of (first (first (gis:vertex-lists-of vector-feature)))
@@ -359,6 +370,9 @@ to setup-trees
         set y_UTM (item 2 gis:envelope-of self)
     ]] ;
   ]
+;  ][
+;    print "choose another month!"
+;  ]
 
 end
 
@@ -941,11 +955,22 @@ end
 
 ;-----------------------------------------
 to remove_trees_surrounding
-  ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (1 patch = 25m)
-  ;; set tree_pot_list remove-item ( position [who] of
-  ;; let trees_remove [ who ] of feeding-trees in-radius 2
-  ;;  let trees_remove filter [ s -> member? s [ who ] of feeding-trees in-radius visual ] tree_pot_list
+  ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (1 patch = 10 m)
   let trees_remove filter [ s -> member? s [ who ] of feeding-trees with [ distance myself < visual] ] tree_pot_list
+
+;  ;; testing agentset selected by visual:
+;  ; Option 1) (does not work properly)  (trees_remove is just the who number and require more code):
+;  let trees_remove_agents feeding-trees with [ distance myself < visual]
+;  type "+++++++TREES SURROUNDING: " print trees_remove_agents
+;  type "======= trees_remove: " print trees_remove
+;
+;  foreach trees_remove [ x -> ask patch-here [ ask neighbors [ set pcolor red] ] ]
+;
+;   Option 2) (does not work) asking the agentset:
+;  ask trees_remove_agents [
+;    ask patch-here [ set pcolor red]
+;  ]
+
   let l length trees_remove
 ;  print l ; for debugging
   while [ l > 0 ]
@@ -1573,7 +1598,7 @@ end
 GRAPHICS-WINDOW
 10
 10
-535
+536
 393
 -1
 -1
@@ -1705,7 +1730,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-21.0
+8.0
 1
 1
 NIL
@@ -1814,7 +1839,7 @@ energy-loss-traveling
 energy-loss-traveling
 -10
 0
--1.0
+-1.8
 0.1
 1
 NIL
@@ -1897,7 +1922,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+5
 
 CHOOSER
 1184
@@ -1989,7 +2014,7 @@ travel_speed_val
 travel_speed_val
 0
 5
-3.2
+2.5
 0.1
 1
 NIL
@@ -2120,7 +2145,7 @@ SWITCH
 180
 all-slp-trees?
 all-slp-trees?
-1
+0
 1
 -1000
 
@@ -2158,7 +2183,7 @@ SWITCH
 258
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -2255,8 +2280,8 @@ SLIDER
 visual
 visual
 0
-10
-1.0
+20
+18.0
 1
 1
 NIL
@@ -2693,8 +2718,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 2 -16777216 true ";if [behavior] of monkeys = \"sleeping\" [ plot-pen-down ]\nask monkeys [ if behavior = \"sleeping\" [ plot-pen-down ] ]" ";ask monkeys [ plot DPL * patch-size-m ]"
-"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * scale ] ]"
+"default" 1.0 2 -16777216 true ";if [behavior] of monkeys = \"sleeping\" [ plot-pen-down ]\nask monkeys [ if behavior = \"sleeping\" [ plot-pen-down ] ]" ";ask monkeys [ plot DPL * patch-scale ]"
+"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-scale ] ]"
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
 TEXTBOX
@@ -2787,7 +2812,7 @@ TEXTBOX
 MONITOR
 826
 94
-911
+912
 139
 patch size (m)
 patch-scale

@@ -15,11 +15,11 @@ csvs_to_sf <- list.files(here("Data", "Resource-trees"), pattern = ".csv")
 
 
 # Convert csv files to .shp
-i <- 16
+i <- 1
 for (file in csvs_to_sf) {
   
   j <- csvs_to_sf[i]
-  k <- paste0("Data/Resource-trees/", j)
+  k <- paste0(here("Data", "Resource-trees"), "/", j)
   
   csv <- readr::read_csv(k)
   
@@ -29,7 +29,7 @@ for (file in csvs_to_sf) {
   k <- stringr::str_remove(j, ".csv")
   
   st_write(shp,
-           paste0("Data/Resource-trees/", k, ".shp"),
+           paste0(k, ".shp"),
            driver = "ESRI Shapefile",
            delete_layer = TRUE)
   i <-  i + 1
