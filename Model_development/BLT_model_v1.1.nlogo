@@ -28,6 +28,12 @@ seeds-own [ id-seed species mother-tree ]
 breed [monkeys monkey]
 monkeys-own [
   energy          ; energy the tamarin has left
+  next-angle ; max-random-angle of the next step
+  next-patch
+  next-xcor ;new coordenate x to movement
+  next-ycor ;new coordenate y to movement
+  next-dist ; distance to tree target
+
 ;  status         ; what is the desire ===== DO WE REALLY NEED THIS? ==============
   action          ; what was the last action
   action-time     ; how long you do the same action again
@@ -59,6 +65,7 @@ blobs-own [patch_before]
 
 patches-own [
   habitat
+;  border?
 ]
 
 ;; GLOBALS ;;
@@ -85,6 +92,11 @@ globals [
   vertex-lists
   tree-file ; filename with the tree location and type
   sleep-file ; filename with the location of all sleeping sites
+
+  ;; patch sets:
+  forest_set
+  matrix_set
+  border_patches
 
   ;param values;
   gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
@@ -141,7 +153,7 @@ end
 
 ; PATCHES
 to setup-patches
-  ask patches [set pcolor yellow + 4]
+;  ask patches [set pcolor yellow + 4]
 end
 
 ; GIS
@@ -203,40 +215,29 @@ to setup-gis
   gis:set-drawing-color black
   gis:draw bb-gis-shp 1
 
-  ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
-  ask patches gis:intersecting bb-gis-shp [
+
+  ;; define habitat and border patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
+  set forest_set patches gis:intersecting bb-gis-shp
+  ask forest_set [
     set pcolor lime + 3
     set habitat "forest"
   ]
-  ask patches with [habitat != "forest"] [
+
+  set matrix_set patches with [habitat != "forest"]
+  ask matrix_set [
     set pcolor yellow + 4
     set habitat "matrix"
   ]
 
+  set border_patches patches with [ habitat = "forest" AND count neighbors with [habitat = "matrix"] >= 1]
+  ask border_patches [
+    ;    set pcolor red
+    ;    set border? TRUE
+    set habitat "border"
+  ]
 
-;;;;;;;;; BLT Model v1.1 code (only the end):  ;;;;;;;;;;;
-;  set shape-type gis:shape-type-of guarei-dataset
-;  set property-names gis:property-names guarei-dataset
-;  set feature-list gis:feature-list-of guarei-dataset
-;  set vertex-lists gis:vertex-lists-of item 0 feature-list
-
-;;;;;;;;; BLT Model v1 code:  ;;;;;;;;;;;
-;  set scale 32 ; scale-size. Is this being used?
-;  let mcp-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
-;  let trees-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
-;  let bb-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
-;  let all-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
-;
-;
-;  gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
-;  gis:set-drawing-color lime + 3
-;  gis:draw mcp-gis 2
-;  gis:set-drawing-color yellow
-;  ask patches gis:intersecting bb-gis [ set pcolor lime + 3 ]
-;  ask patches gis:intersecting trees-gis [set pcolor lime + 3 ]
-;  foreach gis:feature-list-of all-gis [ vector-feature ->
-;    gis:set-drawing-color scale-color lime (gis:property-value vector-feature "id") 500 1
-;    gis:fill vector-feature 2.0 ]
+;  testing if it has worked:
+;  ask one-of monkeys [ print any? patches with [ habitat = "" ] ]
 
 end
 
@@ -726,16 +727,21 @@ to move-monkeys
     ]
     [ set label "" ]
 
-    if patch-ahead pcolor = yellow + 4 [ right 180 forward ( travel_speed / 3 ) ] ; no use of the matrix
-    if energy < 1 [ die ]
 
     set x_UTM (item 0 gis:envelope-of self)
     set y_UTM (item 2 gis:envelope-of self)
 
-;    ;; procedure not working for some reason (to plot average path length)
-;    if action = "sleeping" [
-;      set DPL_d lput DPL DPL_d
-;    ]
+
+    ; Avoid matrix:
+    avoid-matrix
+;    tentativa2
+;    set next-angle random max-random-angle
+    ;    if patch-ahead pcolor = yellow + 4 [ right 180 forward ( travel_speed / 3 ) ] ; no use of the matrix
+
+
+    if energy < 1 [ die ]
+
+
 
   ;; BLT ROUTINE
 
@@ -815,6 +821,81 @@ to move-monkeys
 ] ; end ask monkeys
 end
 
+to avoid-matrix
+
+;  let matrix_ahead patch-set patches in-cone 2 max-random-angle
+;  let border_ahead patch-set patches in-cone 2 max-random-angle with [ habitat = "border" ]
+;
+;;  TENTATIVA 1
+;   let choice random 1
+;   ifelse choice = 0 [
+;     while [ [border?] of patch-right-and-ahead 30 2 = TRUE AND [habitat] of patch-ahead ( 2 * travel_speed ) = TRUE] [ rt 30]
+;   ][
+;     while [ [border?] of patch-left-and-ahead 30 2 = TRUE AND [habitat] of patch-ahead ( 2 * travel_speed ) = TRUE] [ rt 30]
+;   ]
+;
+;  if ( [habitat] of patch-right-and-ahead 30 2 = "border" AND [habitat] of patch-ahead ( 2 * travel_speed ) = "border" ) [ print "BANANA" ]
+;  if ( [habitat] of patch-left-and-ahead 30 2 = "border" AND [habitat] of patch-ahead ( 2 * travel_speed ) = "border" ) [ print "BANANA 2" ]
+;
+
+end
+
+to tentativa2
+
+  ;  TENTATIVA 2
+;  let patches_avoid patch-set ( patch-right-and-ahead 30 (2 * travel_speed_val ) ) ( patch-right-and-ahead 30 (1 * travel_speed_val ) )
+;  let patches_avoid patch-set patch-right-and-ahead 1 2 patch-right-and-ahead 2 3
+
+  ;;;; PATCHES ON THE RIGHT
+  let patch_right_ahead patch-right-and-ahead 30 (2 * travel_speed_val )
+  ask patch_right_ahead [ set pcolor red ]
+  let patch_right_ahead2 patch-right-and-ahead 30 (1 * travel_speed_val )
+  ask patch_right_ahead [ set pcolor red ]
+
+  ;;;;; PATCHES ON THE LEFT
+  let patch_left_ahead patch-left-and-ahead 30 (2 * travel_speed_val )
+  ask patch_left_ahead [ set pcolor yellow ]
+  let patch_left_ahead2 patch-left-and-ahead 30 (1 * travel_speed_val )
+  ask patch_left_ahead [ set pcolor yellow ]
+
+  ;;;;; PATCHES IN THE FRONT
+  let patch_ahead patch-ahead ( 4 * travel_speed_val )
+  if [habitat] of patch_ahead = "matrix" [ ask patch_ahead [ set pcolor cyan ] ]
+
+;  while [ [habitat] of patch_ahead = "matrix" OR [border?] of patch_ahead = TRUE AND [habitat] of patch_right_ahead = "matrix" ] [ lt 60 ]
+
+  let n 4
+
+  while [ n < 4 ] [ if ( [habitat] of patch_ahead = "matrix" OR [habitat] of patch_ahead = "border" AND [habitat] of patch_ahead = "matrix" OR [habitat] of patch_ahead = "border"
+    AND [habitat] of patch_right_ahead = "matrix" OR [habitat] of patch_ahead = "border" ) [  lt 30 set n ( n - 1 ) ] ]
+
+  let n2 4
+  while [ n2 < 4 ] [ if ( [habitat] of patch_ahead = "matrix" OR [habitat] of patch_ahead = "border" AND [habitat] of patch_ahead = "matrix" OR [habitat] of patch_ahead = "border"
+    AND [habitat] of patch_left_ahead = "matrix" OR [habitat] of patch_left_ahead = "border" ) [ rt 30 set n2 ( n2 - 1 ) ] ]
+end
+
+to avoid-patch-set
+
+  ; print count patches with  [ any? neighbors with [ habitat = "border"] ]
+
+;  if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
+    while [ [habitat] of patch-ahead (1 * travel_speed_val) != "forest" AND [habitat] of patch-ahead (2 * travel_speed_val) != "forest" ] [
+      ask patch-ahead (1 * travel_speed_val) [ set pcolor yellow ]
+      ask patch-ahead (2 * travel_speed_val) [ set pcolor cyan ]
+      ;    let direction one-of neighbors with [ habitat = "forest" ]
+      let direction one-of neighbors with [ habitat = "forest" ]
+      if direction = nobody [
+        set direction min-one-of patches with [habitat = "forest"] [distance myself]
+      ]
+      ;    face direction
+      ask direction [ set pcolor yellow ]
+      move-to direction
+    ]
+;  ]
+
+
+
+end
 
 ;--------------------------------------------------------------------------------
 ; the whole loop for frugivory
@@ -830,11 +911,11 @@ to frugivory
         feeding
       ][
         set tree_current -1
-        print "time over -- New feeding tree" ; for debugging
+;        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-      print "New feeding tree" ; for debugging
+;      print "New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -878,13 +959,13 @@ to-report on-feeding-tree?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time 2 ]
-        print "on-feeding-tree? TRUE" ; for debugging
+;        print "on-feeding-tree? TRUE" ; for debugging
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
         report true
 
       ][
-        print "on-feeding-tree? FALSE" ; for debugging
+;        print "on-feeding-tree? FALSE" ; for debugging
   ;      print tree_target
         report false
       ]
@@ -1028,7 +1109,7 @@ end
 
 to to-feeding-tree
 
-  print "TO-FEEDING-TREE"
+;  print "TO-FEEDING-TREE"
 
   if travel_mode = "short_distance" [
     if tree_target = -1 [
@@ -1053,7 +1134,8 @@ to to-feeding-tree
 
       ;; RANDOM movement while traveling:
       if random-angle? = TRUE AND distance tree_target > 1.5 * travel_speed [
-        rt ( random max-random-angle ) - ( max-random-angle / 2 )
+        set next-angle ( random max-random-angle / 2 ) - ( max-random-angle / 2 )
+        rt next-angle
       ]
     ]
   ]
@@ -1082,7 +1164,8 @@ to to-feeding-tree
 
       ;; RANDOM movement while traveling:
       if random-angle? = TRUE AND distance ld_tree_target > 1.5 [
-        rt ( random max-random-angle ) - ( max-random-angle / 2 )
+        set next-angle ( random max-random-angle / 2 ) - ( max-random-angle / 2 )
+        rt next-angle
       ]
     ]
   ]
@@ -1195,11 +1278,65 @@ to search-feeding-tree
   ]
 end
 
-to travel
+to travel ; procedure to move (except while foraging) and avoid getting out of the forest
+
+;  if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
+;  let forest_ahead patch-set patches in-cone (3 * travel_speed_val) (max-random-angle) with [ habitat = "forest"]
+;  let border_ahead patch-set patches in-cone (3 * travel_speed_val) (max-random-angle) with [ any? neighbors with [ habitat != "forest" ] ]
+;  let matrix_ahead patch-set patches in-cone (3 * travel_speed_val) (max-random-angle) with [ any? neighbors with [ habitat = "matrix" ] ]
+;  let border_ahead patch-set patches in-cone (3 * travel_speed_val) (max-random-angle) with [ any? neighbors with [ habitat = "border" ] ]
+
+  ; test if there are any patches in-cone meeting this criteria:
+  ;  if ( count patches with [ any? in-cone (3 * travel_speed_val) (max-random-angle) with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
+;  while [ count border_ahead > 0 ] [
+;    let p random 1
+;    ifelse p <= 0.5 [ rt 30 ] [ lt 30 ]
+;
+;
+;  ]
+
+
+  avoid-patch-set ; bump on the territory borders
+  if tree_target != -1 [ set heading towards tree_target ]
+
+  ; define next candidate patch
+;  set heading next-angle
+  set next-patch patch-ahead travel_speed
+  while [ [habitat] of next-patch != "forest" ] [
+    set next-angle ( random max-random-angle ) - ( max-random-angle )
+    set heading next-angle
+    set next-patch patch-ahead travel_speed
+  ]
+
+
+  ;; RANDOM movement while traveling:
+  if tree_target != -1 [
+    if random-angle? = TRUE AND distance tree_target > 1.5 [
+      let na ( random max-random-angle / 2 ) - ( max-random-angle / 2 )
+      rt na
+    ]
+  ]
+
+
+
+;  move-to next-patch
   forward travel_speed
   set dist-traveled travel_speed
   set steps-moved steps-moved + 1
   set energy energy + energy-loss-traveling
+
+; Original v1.1 code:
+;  forward travel_speed
+;  set dist-traveled travel_speed
+;  set steps-moved steps-moved + 1
+;  set energy energy + energy-loss-traveling
+
+;while [ [habitat] of patch-ahead (1 * travel_speed_val) != "forest" AND [habitat] of patch-ahead (2 * travel_speed_val) != "forest" ] [
+;      ;    let direction one-of neighbors with [ habitat = "forest" ]
+;      let direction one-of neighbors with [ habitat = "forest" ]
+;      ;    face direction
+;      ask direction [ set pcolor yellow ]
+
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -1312,7 +1449,7 @@ to sleeping
 
     ;; RANDOM movement while traveling:
     if random-angle? = TRUE  AND distance tree_target > 1.5 [
-      rt ( random max-random-angle ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
+      rt ( random max-random-angle / 3 ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
     ]
 
     forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
@@ -1371,7 +1508,7 @@ end
 ;-------------------------------------------------------------
 to random-action
 
-  print "random-action"    ; debugging
+;  print "random-action"    ; debugging
 
   set action-time 0
   ifelse random-float 1 > 0.25 [
@@ -1389,7 +1526,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-  print "last-action-again"   ; debugging
+;  print "last-action-again"   ; debugging
 
   if action = "forage" [
     forage
@@ -1566,6 +1703,21 @@ end
 ;  [   report FALSE  ]
 ;end
 
+to-report distancetarget0
+
+  let distancetarget 0
+
+    ask monkeys [
+    ifelse tree_target != -1  [
+      set distancetarget distance tree_target
+    ][
+      set distancetarget -1
+    ]
+  ]
+
+  report distancetarget
+
+end
 
 ;;; --------------------------------- ;;;
 ;;; REPORTERS FOR THE ACTIVITY BUDGET ;;;
@@ -1589,7 +1741,7 @@ end
 
 ;;; --------------------------------- ;;;
 ;;;  REPORT FOR TRAVEL MODE HISTOGRAM ;;;
-to-report travelmode
+to-report travelmode0
 ;  let travelmodelist []
   ask monkeys [
 
@@ -1616,7 +1768,7 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
+460
 370
 -1
 -1
@@ -1649,7 +1801,7 @@ start-energy
 start-energy
 30
 170
-124.0
+108.0
 1
 1
 NIL
@@ -1748,7 +1900,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-8.0
+10.0
 1
 1
 NIL
@@ -1887,7 +2039,7 @@ energy-loss-resting
 energy-loss-resting
 -10
 0
--1.8
+-1.7
 0.1
 1
 NIL
@@ -1940,7 +2092,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-9
+4
 
 CHOOSER
 1184
@@ -1972,7 +2124,7 @@ step_forget
 step_forget
 0
 1000
-122.0
+104.0
 1
 1
 NIL
@@ -2163,7 +2315,7 @@ SWITCH
 180
 all-slp-trees?
 all-slp-trees?
-0
+1
 1
 -1000
 
@@ -2201,7 +2353,7 @@ SWITCH
 258
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -2299,7 +2451,7 @@ visual
 visual
 0
 20
-2.0
+1.0
 1
 1
 NIL
@@ -2845,6 +2997,159 @@ BUTTON
 592
 count unvisited trees
 show count feeding-trees with [color = green]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+385
+342
+534
+375
+color patches in-cone
+ask one-of monkeys [ let matrix_ahead patch-set patches in-cone 3 max-random-angle print matrix_ahead ask matrix_ahead [ set pcolor green ]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+424
+148
+525
+181
+go to border
+ask patches with [pcolor = red] [set pcolor lime + 3]\n\nask one-of monkeys [ \n\nmove-to patch 12 8 face patch 12 0\n\n\n]\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+434
+187
+497
+220
+fd
+ask one-of monkeys [ fd travel_speed_val ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+422
+227
+516
+260
+test border
+ask one-of monkeys [ \nlet matrix_ahead patch-set patches in-cone 2 max-random-angle\n;let border_ahead patch-set patches in-cone 2 max-random-angle with [border?] = TRUE ]\n\n;ask border_ahead [ set pcolor red ]\n\n]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+428
+265
+545
+298
+avoid-matrix
+ask one-of monkeys [ avoid-matrix ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+353
+300
+546
+333
+make patch right-and-ahead red
+ask one-of monkeys [ \n\nlet patch_right_ahead patch-right-and-ahead 30 (2 * travel_speed_val )\nask patch_right_ahead [ set pcolor red ]\nlet patch_ahead patch-ahead ( 4 * travel_speed_val ) \nif [habitat] of patch_ahead = \"matrix\" [ ask patch_ahead [ set pcolor cyan ] ]\n\n\n]\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+428
+109
+521
+142
+tentativa 2
+ask one-of monkeys [ tentativa2 ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+509
+191
+572
+224
+rt 30
+ask one-of monkeys [ rt 30] 
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+163
+384
+282
+417
+avoid-patch-set
+ask one-of monkeys [ avoid-patch-set ]
 NIL
 1
 T
