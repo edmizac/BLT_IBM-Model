@@ -38,6 +38,7 @@ monkeys-own [
   DPL_d           ; list with values of DPL for the DPL plot
   travel_mode     ; if it is short or long distance travel
   tree_target     ; target tree (short distance)
+  tree_target_dist ; target tree distance
   ld_tree_target  ; long distance target tree
   tree_target_species ; species of the target tree independent of travel mode
   travelmodelist  ; list to make travel mode histogram
@@ -74,6 +75,12 @@ globals [
   ;step_forget ; amount of timesteps until the tamarin forgets to be in that tree
   midday ; the time of the middle of the day (important for resting)
 
+  ;; patch sets:
+  forest_set
+  matrix_set
+  border_patches
+
+
   ;; INPUT ;;
   ;gis;
   bb-gis      ; raster (.asc) file for defining patch size (10 x 10 m)
@@ -86,9 +93,10 @@ globals [
   tree-file ; filename with the tree location and type
   sleep-file ; filename with the location of all sleeping sites
 
+
   ;param values;
   gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
-  travel_speed ; global speed for travel
+;  travel_speed ; global speed for travel
   species_time ; how long the tamarin feeds on the tree species
   energy_species ; value of energy they get from feeding of each species
 
@@ -134,14 +142,14 @@ to setup
   set midday 58
   set timestep 0
   set gut_transit_time gut_transit_time_val
-  set travel_speed travel_speed_val
+;  set travel_speed travel_speed
 
   reset-ticks
 end
 
 ; PATCHES
 to setup-patches
-  ask patches [set pcolor yellow + 4]
+;  ask patches [set pcolor yellow + 4]
 end
 
 ; GIS
@@ -203,40 +211,29 @@ to setup-gis
   gis:set-drawing-color black
   gis:draw bb-gis-shp 1
 
-  ;; define habitat patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
-  ask patches gis:intersecting bb-gis-shp [
+  ;; define habitat and border patches based on .shp (ref: PatchSize.nlogo model in Agent-Based Modelling and Geographical Information Systems: A Practical Primer)
+  set forest_set patches gis:intersecting bb-gis-shp
+  ask forest_set [
     set pcolor lime + 3
     set habitat "forest"
   ]
-  ask patches with [habitat != "forest"] [
+
+  set matrix_set patches with [habitat != "forest"]
+  ask matrix_set [
     set pcolor yellow + 4
     set habitat "matrix"
   ]
 
+  set border_patches patches with [ habitat = "forest" AND count neighbors with [habitat = "matrix"] >= 1]
+  ask border_patches [
+    ;    set pcolor red
+    ;    set border? TRUE
+    set habitat "border"
+  ]
 
-;;;;;;;;; BLT Model v1.1 code (only the end):  ;;;;;;;;;;;
-;  set shape-type gis:shape-type-of guarei-dataset
-;  set property-names gis:property-names guarei-dataset
-;  set feature-list gis:feature-list-of guarei-dataset
-;  set vertex-lists gis:vertex-lists-of item 0 feature-list
+;  testing if it has worked:
+;  ask one-of monkeys [ print any? patches with [ habitat = "" ] ]
 
-;;;;;;;;; BLT Model v1 code:  ;;;;;;;;;;;
-;  set scale 32 ; scale-size. Is this being used?
-;  let mcp-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/poligono_matriz.shp" ; area containing fragment and matrix
-;  let trees-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/bbox_certo_buffer.shp" ; home range bounding box
-;  let bb-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/polig_fragmento.shp" ; fragment/study area polygon
-;  let all-gis gis:load-dataset word ( local-path) "/Data/Shapefiles/all_trees_shape.shp" ; points shape for the all the trees
-;
-;
-;  gis:set-world-envelope (gis:envelope-of bb-gis) ; or, for a predefined domain (Banos et al 2015): gis:set-transformation gis:envelope-of name_of_the_layer [min-pxcor max-pxcor min-pycor max-pycor]
-;  gis:set-drawing-color lime + 3
-;  gis:draw mcp-gis 2
-;  gis:set-drawing-color yellow
-;  ask patches gis:intersecting bb-gis [ set pcolor lime + 3 ]
-;  ask patches gis:intersecting trees-gis [set pcolor lime + 3 ]
-;  foreach gis:feature-list-of all-gis [ vector-feature ->
-;    gis:set-drawing-color scale-color lime (gis:property-value vector-feature "id") 500 1
-;    gis:fill vector-feature 2.0 ]
 
 end
 
@@ -445,6 +442,21 @@ to setup-monkeys
 ;;      set Color blue
     ][ set pen-mode "up" ]
   ] ; end ask monkeys
+
+  if empirical-velocities? = TRUE [
+    ;; Parameterizing BLT velocity with empirical data:
+    ;option 1 (= mean velocities, Zanette et al 2021 ATBC) (I believe this underestimates tamarin velocities as our model only uses travelling speed
+    ;  if study_area = "Guareí" [ set travel_speed ( 15.27 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
+    ;  if study_area = "Santa Maria" [ set travel_speed ( 18.4 / 10 ) ]
+    ;  if study_area = "Taquara" [ set travel_speed ( 23.24 / 10 ) ]
+    ;  if study_area = "Guareí" [ set travel_speed ( 8.93 / 10 )  ]
+
+    ;option 2 (= 3 steps before feeding on fruits, Zanette et al 2021 ATBC)
+    if study_area = "Guareí" [ set travel_speed ( 20 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
+    if study_area = "Santa Maria" [ set travel_speed ( 20.2 / 10 ) ]
+    if study_area = "Taquara" [ set travel_speed ( 33.4 / 10 ) ]
+    if study_area = "Guareí" [ set travel_speed ( 13.7 / 10 )  ]
+  ]
 
 end
 
@@ -726,16 +738,16 @@ to move-monkeys
     ]
     [ set label "" ]
 
-    if patch-ahead pcolor = yellow + 4 [ right 180 forward ( travel_speed / 3 ) ] ; no use of the matrix
+
     if energy < 1 [ die ]
 
     set x_UTM (item 0 gis:envelope-of self)
     set y_UTM (item 2 gis:envelope-of self)
 
-;    ;; procedure not working for some reason (to plot average path length)
-;    if action = "sleeping" [
-;      set DPL_d lput DPL DPL_d
-;    ]
+    ; Avoid matrix (for other implementations, check v1.1_matrix-avoidance branch):
+;    avoid-matrix
+
+
 
   ;; BLT ROUTINE
 
@@ -769,7 +781,11 @@ to move-monkeys
 
 
     if timestep < simulation-time [ ; energy levels: energy_level_1 = 80 and energy_level_2 = 150
+      ; modulate memory_list
       enhance_memory_list
+
+      ; keep track of distance to the target
+      if tree_target != -1 [ set tree_target_dist distance tree_target ]
 
       ifelse energy < energy_level_1 [ ; energy < level 1
         set travel_mode "short_distance"
@@ -816,6 +832,37 @@ to move-monkeys
 end
 
 
+
+;--------------------------------------------------------------------------------
+; matrix avoidance
+;--------------------------------------------------------------------------------
+to avoid-patch-set
+
+  ; test:
+  ; print count patches with  [ any? neighbors with [ habitat = "border"] ]
+
+  ;  if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
+  while [ [habitat] of patch-ahead (1 * travel_speed) != "forest" AND [habitat] of patch-ahead (2 * travel_speed) != "forest" ] [
+    ask patch-ahead (1 * travel_speed) [ set pcolor yellow ]
+    ask patch-ahead (2 * travel_speed) [ set pcolor cyan ]
+    ;    let direction one-of neighbors with [ habitat = "forest" ]
+    let direction one-of neighbors with [ habitat = "forest" ]
+    if direction = nobody [
+      set direction min-one-of patches with [habitat = "forest"] [distance myself]
+    ]
+
+    ask direction [ set pcolor yellow ]
+    pen-up
+    move-to direction ; "bounce"
+    pen-down
+  ]
+  ;  ]
+
+
+
+end
+
+
 ;--------------------------------------------------------------------------------
 ; the whole loop for frugivory
 ;--------------------------------------------------------------------------------
@@ -859,7 +906,7 @@ end
 ;----------------------------------------
 
 to-report on-feeding-tree?
-  ; print "on-feeding-tree?"
+   print "on-feeding-tree?"
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
@@ -868,19 +915,21 @@ to-report on-feeding-tree?
 
         set tree_current tree_target
 
-;        set x_UTM [ x_UTM ] of tree_current
-;        set y_UTM [ y_UTM ] of tree_current
-;        set xcor [ xcor] of tree_current
-;        set ycor [ ycor ] of tree_current
+        ; make UTM of tamarins match UTM of trees (like empirical data collection):
+        set x_UTM [ x_UTM ] of tree_current
+        set y_UTM [ y_UTM ] of tree_current
+        ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error
+        ;        set xcor [ xcor] of tree_current
+        ;        set ycor [ ycor ] of tree_current
 
         set tree_target -1
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time 2 ]
-        print "on-feeding-tree? TRUE" ; for debugging
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
+        print "on-feeding-tree? TRUE" ; for debugging
         report true
 
       ][
@@ -1007,7 +1056,7 @@ end
 to enhance_memory_list
     ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
     ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
-  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find the only available trees in the pot_list ;
+  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find other trees in the pot_list while avoiding returning to visited trees ;
   if ( length tree_pot_list <= n_trees ) [
     let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
 ;    print tree_bucket
@@ -1028,7 +1077,7 @@ end
 
 to to-feeding-tree
 
-  print "TO-FEEDING-TREE"
+;  print "TO-FEEDING-TREE"
 
   if travel_mode = "short_distance" [
     if tree_target = -1 [
@@ -1036,12 +1085,14 @@ to to-feeding-tree
       search-feeding-tree
     ]
 
+;    if on-feeding-tree? = FALSE [ set heading towards tree_target ] ; to avoid the same point (x,y) error
     set heading towards tree_target
 
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
       if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
         forage
-        if distance tree_target > 0.8 * travel_speed [
+;        if distance tree_target > 0.8 * travel_speed [
+        if distance tree_target > travel_speed [
           travel
         ]
       ]
@@ -1051,9 +1102,12 @@ to to-feeding-tree
       set action "travel"
       set behavior "travel"
 
+
       ;; RANDOM movement while traveling:
-      if random-angle? = TRUE AND distance tree_target > 1.5 * travel_speed [
-        rt ( random max-random-angle ) - ( max-random-angle / 2 )
+;      if tree_target != -1 [
+        if random-angle? = TRUE AND distance tree_target > 1.5 * travel_speed [
+          rt ( random max-random-angle ) - ( max-random-angle / 2 )
+;        ]
       ]
     ]
   ]
@@ -1065,7 +1119,10 @@ to to-feeding-tree
       search-feeding-tree
     ]
 
-    set heading towards ld_tree_target
+;    if tree_target != ld_tree_target [
+      set heading towards ld_tree_target
+;    ]
+
 
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
       if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
@@ -1196,10 +1253,13 @@ to search-feeding-tree
 end
 
 to travel
+
+  avoid-patch-set ; bump on the territory borders
+
   forward travel_speed
   set dist-traveled travel_speed
   set steps-moved steps-moved + 1
-  set energy energy + energy-loss-traveling
+  set energy energy + ( energy-loss-traveling * travel_speed )
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -1263,7 +1323,7 @@ to resting
   set behaviorsequence lput 4 behaviorsequence
 
   set steps-moved steps-moved + 1
-  set energy energy + energy-loss-traveling
+  set energy energy + energy-loss-resting
 
 end
 
@@ -1310,6 +1370,10 @@ to sleeping
 
   if action != "sleeping" [
 
+
+    avoid-patch-set
+
+
     ;; RANDOM movement while traveling:
     if random-angle? = TRUE  AND distance tree_target > 1.5 [
       rt ( random max-random-angle ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
@@ -1318,7 +1382,7 @@ to sleeping
     forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
     set dist-traveled travel_speed
     set steps-moved steps-moved + 1
-    set energy energy + energy-loss-traveling
+    set energy energy + ( energy-loss-traveling * travel_speed )
 
     set action "travel"
     set behavior "travel"
@@ -1616,8 +1680,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
-370
+500
+405
 -1
 -1
 3.0
@@ -1630,10 +1694,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-80
+80
+-64
+64
 0
 0
 1
@@ -1661,7 +1725,7 @@ BUTTON
 675
 48
 SETUP
-setup
+if any? monkeys [ stop-inspecting one-of monkeys ]\nsetup\ninspect one-of monkeys
 NIL
 1
 T
@@ -1857,7 +1921,7 @@ energy-loss-traveling
 energy-loss-traveling
 -10
 0
--1.8
+-1.0
 0.1
 1
 NIL
@@ -1940,7 +2004,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-9
+5
 
 CHOOSER
 1184
@@ -2024,12 +2088,12 @@ TEXTBOX
 1
 
 SLIDER
-947
-412
-1089
-445
-travel_speed_val
-travel_speed_val
+952
+437
+1094
+470
+travel_speed
+travel_speed
 0
 5
 0.9
@@ -2039,10 +2103,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-959
-555
-1099
-591
+953
+578
+1093
+614
 6. feeding bout
 14
 0.0
@@ -2163,7 +2227,7 @@ SWITCH
 180
 all-slp-trees?
 all-slp-trees?
-0
+1
 1
 -1000
 
@@ -2201,7 +2265,7 @@ SWITCH
 258
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -2265,10 +2329,10 @@ NIL
 1
 
 SLIDER
-948
-485
-1093
-518
+953
+515
+1098
+548
 duration
 duration
 0
@@ -2379,10 +2443,10 @@ output-print?
 -1000
 
 SLIDER
-948
-447
-1092
-480
+953
+477
+1097
+510
 p-foraging-while-traveling
 p-foraging-while-traveling
 0
@@ -2394,10 +2458,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-958
-517
-1108
-539
+963
+547
+1113
+569
 max timesteps repeating same behavior (other than feeding)
 9
 0.0
@@ -2557,10 +2621,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 SWITCH
-955
-574
-1102
-607
+950
+597
+1097
+630
 feedingbout-on?
 feedingbout-on?
 1
@@ -2644,7 +2708,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-3.0
+2.0
 1
 1
 NIL
@@ -2676,10 +2740,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-954
-608
-1104
+949
 630
+1099
+652
 energy and time spent feeding for each tree species
 9
 0.0
@@ -2778,7 +2842,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-3
+0
 
 BUTTON
 272
@@ -2820,8 +2884,8 @@ Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr, May\nTaquara = Jan, Feb, A
 TEXTBOX
 802
 148
-934
-171
+951
+172
 1.2 Create tree resources
 11
 0.0
@@ -2854,6 +2918,34 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+299
+560
+406
+594
+NIL
+clear-drawing
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SWITCH
+941
+407
+1107
+441
+empirical-velocities?
+empirical-velocities?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
