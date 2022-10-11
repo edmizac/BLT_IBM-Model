@@ -41,6 +41,10 @@ monkeys-own [
   tree_target_dist ; target tree distance
   ld_tree_target  ; long distance target tree
   tree_target_species ; species of the target tree independent of travel mode
+  patch_avoid_matrix ; patch to walk to when straight-line-to-target? = FALSE
+  front_patches   ; patches in-cone or in-radius
+  candidate_patches ; patches to go when avoiding the matrix
+  straight-line-to-target? ; if there is matrix in front of the tamarin in straight line
   travelmodelist  ; list to make travel mode histogram
   tree_current    ; old_tree
   tree_pot_list   ; list of all feeding trees in homerange for that tamarin
@@ -404,6 +408,8 @@ to setup-monkeys
     set travel_mode "short_distance"
     set tree_target -1
     set ld_tree_target -1
+    set patch_avoid_matrix patch-ahead travel_speed
+    set straight-line-to-target? TRUE ; this should be checked (travel procedure)
 
     set steps-moved 0
     set action-time 0
@@ -841,27 +847,82 @@ to avoid-patch-set
   ; test:
   ; print count patches with  [ any? neighbors with [ habitat = "border"] ]
 
-  ;  if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
-  while [ [habitat] of patch-ahead (1 * travel_speed) != "forest" AND [habitat] of patch-ahead (2 * travel_speed) != "forest" ] [
-    ask patch-ahead (1 * travel_speed) [ set pcolor yellow ]
-    ask patch-ahead (2 * travel_speed) [ set pcolor cyan ]
-    ;    let direction one-of neighbors with [ habitat = "forest" ]
-    let direction one-of neighbors with [ habitat = "forest" ]
-    if direction = nobody [
-      set direction min-one-of patches with [habitat = "forest"] [distance myself]
+  if tree_target != -1 [
+    let monkey_target tree_target
+    ;    if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
+    ;  while [ [habitat] of patch-ahead (2 * travel_speed) != "forest" AND [habitat] of patch-ahead (3 * travel_speed) != "forest" ] [
+    if ( [habitat] of patch-ahead (2 * travel_speed) = "matrix" AND [habitat] of patch-ahead (3 * travel_speed) = "matrix" ) [
+      ;      ask patch-ahead (2 * travel_speed) [ set pcolor yellow ]
+      ;      ask patch-ahead (3 * travel_speed) [ set pcolor cyan ]
+
+
+      ; define patch-set in front of tamarins:
+      set front_patches patches in-cone (5 * travel_speed) (max-random-angle) with [ habitat = "matrix" ] ; cone
+      ;set front_patches patches with [habitat = "forest"] in-radius 5 ; in radius
+
+      ;paint them
+      if ( any? front_patches with [habitat = "matrix"] ) [
+        ask patch-ahead (2 * travel_speed) [ set pcolor yellow ]
+        ask patch-ahead (3 * travel_speed) [ set pcolor cyan ]
+      ]
+
+      ;paint them magenta:
+      ask front_patches [ set pcolor magenta + 3 ]
+
+      ; avoid tamarins to completely enter the matrix
+      avoid-full-matrix
+
+      ; avoid tamarins to get too close of the border:
+      set candidate_patches patch-set patches with [habitat = "forest"] in-cone 5 max-random-angle
+      ;let candidate_patches patch-set patches with [habitat = "forest"] in-radius 5
+      avoid-some-matrix
+
+
+      ask candidate_patches [ set pcolor green ]
+      type "CANDIDATE PATCHES: " print candidate_patches
+      ;  type "distance of patches to monkey target: " ask candidate_patches [ print distance monkey_target ]
+
+      ;  set patch_avoid_matrix min-one-of candidate_patches [distance monkey_target]
+      set patch_avoid_matrix one-of ( ( (patches in-radius (3 * travel_speed) ) with [ habitat = "forest"] ) with-min [distance monkey_target] )        ; from https://stackoverflow.com/questions/70036380/netlogo-creating-variable-from-distance-to-specific-patch
+      type "MONKEY TARGET : " print monkey_target
+      type "patch_avoid_matrix :" print patch_avoid_matrix
+
+      if patch_avoid_matrix = nobody OR patch_avoid_matrix = 0 [
+        print "no patches"
+        set patch_avoid_matrix min-one-of patches with [ habitat = "forest" ] [distance myself]
+      ]
+      print distance monkey_target
+
+      ask patch_avoid_matrix [ set pcolor red ]
+      pen-up
+      ;    move-to direction ; "bounce"
+      pen-down
+
+      print "SETTING FALSE"
+      set straight-line-to-target? FALSE
     ]
 
-    ask direction [ set pcolor yellow ]
-    pen-up
-    move-to direction ; "bounce"
-    pen-down
-  ]
-  ;  ]
 
+  ]
 
 
 end
 
+
+to avoid-full-matrix
+
+  if ( all? front_patches [habitat = "matrix"] ) [
+    print "I'm in the middle of the sugarcane!"
+
+    ; then go to the closest patch with forest
+    set patch_avoid_matrix min-one-of patches with [ habitat = "forest" ] [distance myself]
+    move-to patch_avoid_matrix
+  ]
+end
+
+to avoid-some-matrix
+
+end
 
 ;--------------------------------------------------------------------------------
 ; the whole loop for frugivory
@@ -870,6 +931,9 @@ to frugivory
 
 ;  print "frugivory"  ; debugging
 
+  avoid-patch-set ; bump on the territory borders
+
+
   if travel_mode = "short_distance" [   ;; short distance frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
@@ -877,11 +941,11 @@ to frugivory
         feeding
       ][
         set tree_current -1
-        print "time over -- New feeding tree" ; for debugging
+;        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-      print "New feeding tree" ; for debugging
+;      print "New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -906,7 +970,7 @@ end
 ;----------------------------------------
 
 to-report on-feeding-tree?
-   print "on-feeding-tree?"
+;   print "on-feeding-tree?"
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
@@ -929,11 +993,11 @@ to-report on-feeding-tree?
         [ set species_time 2 ]
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
-        print "on-feeding-tree? TRUE" ; for debugging
+;        print "on-feeding-tree? TRUE" ; for debugging
         report true
 
       ][
-        print "on-feeding-tree? FALSE" ; for debugging
+;        print "on-feeding-tree? FALSE" ; for debugging
   ;      print tree_target
         report false
       ]
@@ -1165,7 +1229,7 @@ end
 to search-feeding-tree
 
 
-;  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
+  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
   if travel_mode = "short_distance" [
     let let_pot_list tree_pot_list
@@ -1254,12 +1318,25 @@ end
 
 to travel
 
-  avoid-patch-set ; bump on the territory borders
+;  avoid-patch-set ; bump on the territory borders
+;  print "TRAVEL"
+
+  if straight-line-to-target? = FALSE [
+    print "straight line false"
+    face patch_avoid_matrix
+    forward travel_speed
+    set dist-traveled travel_speed
+    set steps-moved steps-moved + 1
+    set energy energy + ( energy-loss-traveling * travel_speed )
+
+  ]
 
   forward travel_speed
   set dist-traveled travel_speed
   set steps-moved steps-moved + 1
   set energy energy + ( energy-loss-traveling * travel_speed )
+  set straight-line-to-target? TRUE
+
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -1435,7 +1512,7 @@ end
 ;-------------------------------------------------------------
 to random-action
 
-  print "random-action"    ; debugging
+;  print "random-action"    ; debugging
 
   set action-time 0
   ifelse random-float 1 > 0.25 [
@@ -1453,7 +1530,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-  print "last-action-again"   ; debugging
+;  print "last-action-again"   ; debugging
 
   if action = "forage" [
     forage
@@ -1680,8 +1757,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-500
-405
+459
+370
 -1
 -1
 3.0
@@ -1694,10 +1771,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-73
+73
+-58
+58
 0
 0
 1
@@ -1767,10 +1844,10 @@ Defecated seeds
 1
 
 SWITCH
-1615
-66
-1733
-99
+1382
+514
+1500
+547
 show-energy?
 show-energy?
 0
@@ -1778,10 +1855,10 @@ show-energy?
 -1000
 
 SWITCH
-1615
-108
-1735
-141
+1382
+557
+1502
+590
 show-path?
 show-path?
 0
@@ -1969,10 +2046,10 @@ timestep
 11
 
 OUTPUT
-957
-142
-1181
-255
+450
+615
+674
+728
 11
 
 TEXTBOX
@@ -2004,23 +2081,23 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+2
 
 CHOOSER
-1184
-32
-1330
-77
+984
+102
+1130
+147
 sleeping-trees-scenario
 sleeping-trees-scenario
 "empirical" "simulated"
 0
 
 SWITCH
-1614
-24
-1734
-57
+1382
+473
+1502
+506
 export-png
 export-png
 1
@@ -2168,10 +2245,10 @@ NIL
 HORIZONTAL
 
 CHOOSER
-1184
-75
-1330
-120
+984
+144
+1130
+189
 empirical-trees-choice
 empirical-trees-choice
 "closest" "random"
@@ -2221,10 +2298,10 @@ TEXTBOX
 1
 
 SWITCH
-1202
-147
-1328
-180
+1002
+217
+1128
+250
 all-slp-trees?
 all-slp-trees?
 1
@@ -2232,10 +2309,10 @@ all-slp-trees?
 -1000
 
 TEXTBOX
-1209
-122
-1314
-150
+1009
+192
+1114
+220
 make all trees from study period available:
 9
 0.0
@@ -2271,9 +2348,9 @@ print-step?
 
 PLOT
 1134
-444
+338
 1357
-638
+532
 Memory
 tick
 count memory lists
@@ -2292,11 +2369,11 @@ PENS
 "pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory )\nplot n_trees"
 
 TEXTBOX
-1173
-13
-1370
-41
-1.3 Choose sleeping site scenario
+973
+83
+1170
+111
+1.4 Choose sleeping site scenario
 11
 0.0
 1
@@ -2390,10 +2467,10 @@ exclude trees in radii from pot list:
 1
 
 SWITCH
-1616
-150
-1781
-183
+1383
+598
+1548
+631
 path-color-by-day?
 path-color-by-day?
 1
@@ -2468,10 +2545,10 @@ max timesteps repeating same behavior (other than feeding)
 1
 
 PLOT
-1362
-376
-1535
-500
+1360
+209
+1533
+333
 action-time
 NIL
 NIL
@@ -2486,10 +2563,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "ask monkeys [ plot action-time ]"
 
 PLOT
-1356
-10
-1600
-200
+1360
+14
+1604
+204
 Activity budget
 NIL
 Proportion (%)
@@ -2505,50 +2582,50 @@ PENS
 "pen-1" 1.0 0 -7500403 true "" "plot 0.5"
 
 TEXTBOX
-1409
-182
-1452
-202
+1414
+187
+1457
+207
 frugivory
 8
 0.0
 1
 
 TEXTBOX
-1450
-182
-1488
-203
+1454
+187
+1492
+208
 foraging
 8
 0.0
 1
 
 TEXTBOX
-1490
-182
-1517
-202
+1494
+187
+1521
+207
 travel
 8
 0.0
 1
 
 TEXTBOX
-1519
-181
-1552
-201
+1524
+185
+1557
+205
 resting
 8
 0.0
 1
 
 PLOT
-1362
-505
-1542
-631
+1148
+210
+1356
+333
 energy
 NIL
 NIL
@@ -2603,10 +2680,10 @@ NIL
 1
 
 PLOT
-1144
-282
-1344
-432
+1135
+538
+1335
+688
 Travel mode frequency
 NIL
 NIL
@@ -2750,10 +2827,10 @@ energy and time spent feeding for each tree species
 1
 
 PLOT
-1537
-377
-1705
-497
+1362
+338
+1535
+458
 species_time
 NIL
 NIL
@@ -2785,10 +2862,10 @@ NIL
 1
 
 PLOT
-1357
+1147
+69
+1356
 206
-1602
-365
 DPL (m)
 NIL
 NIL
@@ -2842,7 +2919,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+3
 
 BUTTON
 272
@@ -2872,10 +2949,10 @@ MODEL VERIFICATION:
 1
 
 TEXTBOX
-975
-77
-1155
-134
+1138
+15
+1318
+72
 Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr, May\nTaquara = Jan, Feb, Apr, May, Jul, Dec\nSuzano = Feb, Apr, Sep, Dec\n
 10
 15.0
@@ -2940,7 +3017,7 @@ SWITCH
 941
 407
 1107
-441
+440
 empirical-velocities?
 empirical-velocities?
 1
