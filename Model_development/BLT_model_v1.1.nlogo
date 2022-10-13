@@ -12,10 +12,10 @@ extensions [ gis palette pathdir] ; using the GIS extension of NetLogo
 turtles-own [ x_UTM y_UTM ]
 
 breed [feeding-trees feeding-tree]
-feeding-trees-own [ species id-tree ] ; feeding trees have species and id code
+feeding-trees-own [ species id-tree visited? ] ; feeding trees have species and id code
 
 breed [sleeping-trees sleeping-tree]
-sleeping-trees-own [ species id-tree ]
+sleeping-trees-own [ species id-tree visited? ]
 
 breed [resting-trees resting-tree]
 resting-trees-own [ species id-tree ]
@@ -31,13 +31,15 @@ monkeys-own [
 ;  status         ; what is the desire ===== DO WE REALLY NEED THIS? ==============
   action          ; what was the last action
   action-time     ; how long you do the same action again
+  going-sleeping? ; if timestep > 108 and tamarins are going to sl
   behavior        ; as in activity budget data tables
   steps-moved     ; number of steps taken
   dist-traveled   ; distance traveled this time step
   DPL             ; daily path length
   DPL_d           ; list with values of DPL for the DPL plot
   travel_mode     ; if it is short or long distance travel
-  tree_target     ; target tree (short distance)
+  tree_target     ; target tree (short distance, but = long distance in this travel mode)
+  tree_target_mem ; target tree memory for when tamarins are avoiding the matrix (avoid-matrix and avoid-patch-set)
   tree_target_dist ; target tree distance
   ld_tree_target  ; long distance target tree
   tree_target_species ; species of the target tree independent of travel mode
@@ -346,6 +348,7 @@ to setup-trees
         set size 3
         set shape "tree"
         set color green
+        set visited? FALSE
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "sp"
         set id-tree gis:property-value vector-feature "id"
@@ -361,6 +364,7 @@ to setup-trees
         set size 3
         set shape "tree"
         set color magenta
+        set visited? FALSE
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "sp"
         set id-tree gis:property-value vector-feature "id"
@@ -374,6 +378,23 @@ to setup-trees
   ][
     print "NO TREES FOR THIS MONTH! CHOOSE ANOTHER MONTH!"
   ]
+
+;  ;; DOES NOT SEEM TO BE NEEDED (LOOK AT BORDER TREES IN SUZANO)
+;;   do this for tamarins not to avoid approaching trees close to border (avoid-matrix)
+;  ask feeding-trees [
+;    ask patches in-radius travel_speed with [habitat = "matrix" ] [
+;      set habitat "border"
+;      set pcolor brown
+;    ]
+;  ]
+;
+;
+;  ask sleeping-trees [
+;   ask patches in-radius travel_speed with [habitat = "matrix" ] [
+;      set habitat "border"
+;      set pcolor brown
+;    ]
+;  ]
 
 end
 
@@ -415,6 +436,7 @@ to setup-monkeys
     set action-time 0
     set action "travel"
     set behavior ""
+    set going-sleeping? FALSE
     set energy start-energy
 
     ; create empty lists
@@ -760,12 +782,14 @@ to move-monkeys
     if timestep = 1
         [ set tree_current -1
           set DPL 0 ; set daily path length to 0 every day
-          remove_trees_surrounding ; to avoid feeding in the closes tree
+          set going-sleeping? FALSE
+          remove_trees_surrounding ; to avoid feeding in the closest tree
           morning-defecation ]              ;; MORNING-DEFECATION PROCEDURE
 
     if timestep >= simulation-time [
-      if timestep = simulation-time[
+      if timestep = simulation-time [
         set tree_target -1
+        set going-sleeping? TRUE
       ] ; force monkey select a sleeping site
       sleeping
       if output-print? = TRUE [
@@ -847,59 +871,47 @@ to avoid-patch-set
   ; test:
   ; print count patches with  [ any? neighbors with [ habitat = "border"] ]
 
+  ; make patch_avoid_matrix a new one every step if tamarins are close to it (it can be the same)
+  if patch_avoid_matrix = nobody OR patch_avoid_matrix = 0 OR distance patch_avoid_matrix < (2 * travel_speed ) [
+    set patch_avoid_matrix nobody
+  ]
+
+  ; make line straight TRUE (= initial setup)
+  set straight-line-to-target? TRUE
+
   if tree_target != -1 [
-    let monkey_target tree_target
+    set tree_target_mem tree_target
     ;    if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
     ;  while [ [habitat] of patch-ahead (2 * travel_speed) != "forest" AND [habitat] of patch-ahead (3 * travel_speed) != "forest" ] [
-    if ( [habitat] of patch-ahead (2 * travel_speed) = "matrix" AND [habitat] of patch-ahead (3 * travel_speed) = "matrix" ) [
-      ;      ask patch-ahead (2 * travel_speed) [ set pcolor yellow ]
-      ;      ask patch-ahead (3 * travel_speed) [ set pcolor cyan ]
+;    if ( [habitat] of patch-ahead (2 * travel_speed) = "matrix" AND [habitat] of patch-ahead (3 * travel_speed) = "matrix" ) [
 
 
-      ; define patch-set in front of tamarins:
-      set front_patches patches in-cone (5 * travel_speed) (max-random-angle) with [ habitat = "matrix" ] ; cone
+      ; define patch-set in front of tamarins (in Taquara 2 * 2.4 = 4.8 is their velocity when going to sleep, so add one more for reaching more than the maximum tamarins can move)
+      set front_patches patches in-cone (2 * travel_speed + 1) ( 60 ) ; with [ habitat = "matrix" ] ; cone
       ;set front_patches patches with [habitat = "forest"] in-radius 5 ; in radius
 
       ;paint them
       if ( any? front_patches with [habitat = "matrix"] ) [
-        ask patch-ahead (2 * travel_speed) [ set pcolor yellow ]
-        ask patch-ahead (3 * travel_speed) [ set pcolor cyan ]
-      ]
+      ask front_patches with [ habitat = "matrix" ] [ set pcolor yellow - 2]
+;        ask patch-ahead (2 * travel_speed) [ set pcolor yellow ]
+;        ask patch-ahead (3 * travel_speed) [ set pcolor cyan ]
 
-      ;paint them magenta:
-      ask front_patches [ set pcolor magenta + 3 ]
-
-      ; avoid tamarins to completely enter the matrix
-      avoid-full-matrix
-
-      ; avoid tamarins to get too close of the border:
-      set candidate_patches patch-set patches with [habitat = "forest"] in-cone 5 max-random-angle
-      ;let candidate_patches patch-set patches with [habitat = "forest"] in-radius 5
-      avoid-some-matrix
-
-
-      ask candidate_patches [ set pcolor green ]
-      type "CANDIDATE PATCHES: " print candidate_patches
-      ;  type "distance of patches to monkey target: " ask candidate_patches [ print distance monkey_target ]
-
-      ;  set patch_avoid_matrix min-one-of candidate_patches [distance monkey_target]
-      set patch_avoid_matrix one-of ( ( (patches in-radius (3 * travel_speed) ) with [ habitat = "forest"] ) with-min [distance monkey_target] )        ; from https://stackoverflow.com/questions/70036380/netlogo-creating-variable-from-distance-to-specific-patch
-      type "MONKEY TARGET : " print monkey_target
-      type "patch_avoid_matrix :" print patch_avoid_matrix
-
-      if patch_avoid_matrix = nobody OR patch_avoid_matrix = 0 [
-        print "no patches"
-        set patch_avoid_matrix min-one-of patches with [ habitat = "forest" ] [distance myself]
-      ]
-      print distance monkey_target
-
-      ask patch_avoid_matrix [ set pcolor red ]
-      pen-up
-      ;    move-to direction ; "bounce"
-      pen-down
-
+      ; set this for agents not to run the travel procedure and walk again
       print "SETTING FALSE"
       set straight-line-to-target? FALSE
+    ]
+
+      ;paint them magenta:
+;      ask front_patches with [habitat = "matrix" ] [ set pcolor magenta + 3 ]
+
+      ; make tamarins "come back" from the matrix
+    if ( all? patches in-radius 3 [habitat = "matrix"] ) [
+      avoid-full-matrix
+    ]
+
+      ; ; make tamarins avoid entering matrix
+    if ( any? front_patches with [habitat = "matrix"] ) [
+      avoid-some-matrix
     ]
 
 
@@ -911,17 +923,69 @@ end
 
 to avoid-full-matrix
 
-  if ( all? front_patches [habitat = "matrix"] ) [
-    print "I'm in the middle of the sugarcane!"
+  print "I'm in the middle of the sugarcane!"
+  ;    set color "red"
 
-    ; then go to the closest patch with forest
-    set patch_avoid_matrix min-one-of patches with [ habitat = "forest" ] [distance myself]
-    move-to patch_avoid_matrix
+  ; choose closest patch within radius that is not matrix
+  let patch-radius patches in-radius 3 ;( 2 * travel_speed )
+  set patch_avoid_matrix min-one-of patch-radius with [ habitat != "matrix" ] [distance myself]
+  ; if there's no patch in such radius, then choose the closest one that is not matrix independently of radius
+  if patch_avoid_matrix = nobody OR [habitat] of patch_avoid_matrix = "matrix" [
+    set patch_avoid_matrix min-one-of patches with [ habitat != "matrix" ] [distance myself]
   ]
+  ; go to the choosen patch of forest:
+  ;    move-to patch_avoid_matrix
+
+  ; set this for agents not to run the travel procedure and walk again
+  ;    print "SETTING FALSE"
+  ;    set straight-line-to-target? FALSE
+
 end
 
-to avoid-some-matrix
 
+to avoid-some-matrix
+;  if ( any? front_patches [habitat = "matrix"] ) [
+    print "there's some matrix in front of me!"
+    set color orange
+
+    let d tree_target_mem ; d is a local variable and tree_target_mem is a monkey variable; the patch_avoid_matrix can't be set because it is within the patch context and patche can't access monkey variables
+
+    set candidate_patches patch-set patches with [habitat != "matrix"] in-radius 5 ; or in-cone ( 2 * travel_speed ) 90
+                                                                                   ; if there are no candidate patches, go to the closest non-matrix patch regardless of distance to target
+    ifelse candidate_patches = nobody OR candidate_patches = 0 [
+
+      ;    set patch_avoid_matrix min-one-of patches with [ habitat != "matrix" ] [distance myself]
+      set patch_avoid_matrix one-of ( ( (candidate_patches ) with [ habitat != "matrix"] ) with-min [distance d] )
+
+    ][
+      ask candidate_patches [ set pcolor green ]
+      ;    type "CANDIDATE PATCHES: " print candidate_patches
+      ;    type "distance of patches to monkey target: " ask candidate_patches [ print distance d ]
+
+      ;  set patch_avoid_matrix min-one-of candidate_patches [distance monkey_target]
+      set patch_avoid_matrix one-of ( ( (candidate_patches ) with [ habitat != "matrix"] ) with-min [distance d] )        ; from https://stackoverflow.com/questions/70036380/netlogo-creating-variable-from-distance-to-specific-patch
+                                                                                                                          ;      type "MONKEY TARGET : " print tree_target_mem
+                                                                                                                          ;    type "patch_avoid_matrix :" print patch_avoid_matrix
+    ]
+
+    ; it might be the case that there's no patch_avoid_matrix. In this case, choose the closest non-matrix patch regardless of distance to target
+    if patch_avoid_matrix = nobody OR [habitat] of patch_avoid_matrix = "matrix" OR patch_avoid_matrix = 0 [
+      print "no patches"
+      set patch_avoid_matrix min-one-of patches with [ habitat = "forest" ] [distance myself]
+    ]
+    ;      print distance tree_target_mem
+
+    ask patch_avoid_matrix [ set pcolor red ]
+    type "patch_avoid_matrix :" print patch_avoid_matrix
+    ;      pen-up
+    ;  move-to patch_avoid_matrix
+    ;      pen-down
+
+    ; set this for agents not to run the travel procedure and walk again
+    ;  print "SETTING FALSE"
+    ;  set straight-line-to-target? FALSE
+    ;  set color grey
+;  ]
 end
 
 ;--------------------------------------------------------------------------------
@@ -986,6 +1050,7 @@ to-report on-feeding-tree?
         ;        set xcor [ xcor] of tree_current
         ;        set ycor [ ycor ] of tree_current
 
+        ask tree_target [ set visited? TRUE ]
         set tree_target -1
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
@@ -1150,7 +1215,9 @@ to to-feeding-tree
     ]
 
 ;    if on-feeding-tree? = FALSE [ set heading towards tree_target ] ; to avoid the same point (x,y) error
-    set heading towards tree_target
+    if straight-line-to-target? = TRUE [ ; otherwise it might enter the matrix
+      set heading towards tree_target
+    ]
 
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
       if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
@@ -1184,8 +1251,10 @@ to to-feeding-tree
     ]
 
 ;    if tree_target != ld_tree_target [
+    if straight-line-to-target? = TRUE [ ; otherwise it might enter the matrix
       set heading towards ld_tree_target
-;    ]
+    ]
+;  ]
 
 
     ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
@@ -1318,24 +1387,26 @@ end
 
 to travel
 
-;  avoid-patch-set ; bump on the territory borders
-;  print "TRAVEL"
+  ;  avoid-patch-set ; bump on the territory borders
+  print "TRAVEL"
 
-  if straight-line-to-target? = FALSE [
+  ifelse straight-line-to-target? = FALSE AND patch_avoid_matrix != nobody [
     print "straight line false"
     face patch_avoid_matrix
     forward travel_speed
     set dist-traveled travel_speed
     set steps-moved steps-moved + 1
     set energy energy + ( energy-loss-traveling * travel_speed )
-
+    print "travel 2"
+  ][
+    forward travel_speed
+    set dist-traveled travel_speed
+    set steps-moved steps-moved + 1
+    set energy energy + ( energy-loss-traveling * travel_speed )
+    set straight-line-to-target? TRUE
+    print "travel 3"
   ]
 
-  forward travel_speed
-  set dist-traveled travel_speed
-  set steps-moved steps-moved + 1
-  set energy energy + ( energy-loss-traveling * travel_speed )
-  set straight-line-to-target? TRUE
 
 end
 
@@ -1415,7 +1486,15 @@ to sleeping
 ;    if sleeping-trees-scenario = "simulated" [ search-sleeping-tree ]     ; when simulating trees  ; ONLY WORKS WITH THIS PROCEDURE ;; SIMULATED (procedure droped on July 20th 2022)
   ][
 
-    set heading towards tree_target
+;    avoid-patch-set
+;
+;    if straight-line-to-target? = TRUE [ ; otherwise it might enter the matrix
+;      set heading towards tree_target
+;    ]
+;
+;    set straight-line-to-target? TRUE
+
+
     if distance tree_target < 2 * travel_speed * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
 
       move-to tree_target
@@ -1447,22 +1526,39 @@ to sleeping
 
   if action != "sleeping" [
 
-
     avoid-patch-set
 
+    ifelse straight-line-to-target? = TRUE [ ; otherwise it might enter the matrix
+      set heading towards tree_target
 
     ;; RANDOM movement while traveling:
     if random-angle? = TRUE  AND distance tree_target > 1.5 [
       rt ( random max-random-angle ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
-    ]
+      ]
 
+    ;-------------------- = travel
     forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
-    set dist-traveled travel_speed
+    set dist-traveled ( 2 * travel_speed )
     set steps-moved steps-moved + 1
-    set energy energy + ( energy-loss-traveling * travel_speed )
-
+    set energy energy + ( energy-loss-traveling * ( 2 * travel_speed ) )
     set action "travel"
     set behavior "travel"
+    ;--------------------
+
+    ][
+      print "straight line false"
+      face patch_avoid_matrix
+      forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
+      set dist-traveled ( 2 * travel_speed )
+      set steps-moved steps-moved + 1
+      set energy energy + ( energy-loss-traveling * ( 2 * travel_speed ) )
+      set action "travel"
+      set behavior "travel"
+    ]
+
+
+
+
 
     set behaviorsequence lput 3 behaviorsequence
 
@@ -1889,7 +1985,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-8.0
+12.0
 1
 1
 NIL
@@ -1983,7 +2079,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-1.8
+4.0
 0.1
 1
 NIL
@@ -2081,7 +2177,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-2
+12
 
 CHOOSER
 984
@@ -2113,7 +2209,7 @@ step_forget
 step_forget
 0
 1000
-122.0
+163.0
 1
 1
 NIL
@@ -2173,7 +2269,7 @@ travel_speed
 travel_speed
 0
 5
-0.9
+3.34
 0.1
 1
 NIL
@@ -2252,7 +2348,7 @@ CHOOSER
 empirical-trees-choice
 empirical-trees-choice
 "closest" "random"
-1
+0
 
 MONITOR
 552
@@ -2440,7 +2536,7 @@ visual
 visual
 0
 20
-2.0
+1.0
 1
 1
 NIL
@@ -2985,7 +3081,7 @@ BUTTON
 284
 592
 count unvisited trees
-show count feeding-trees with [color = green]
+show count feeding-trees with [visited? = TRUE]
 NIL
 1
 T
@@ -3020,9 +3116,26 @@ SWITCH
 440
 empirical-velocities?
 empirical-velocities?
-1
+0
 1
 -1000
+
+BUTTON
+413
+562
+548
+595
+move-to farther slp tree
+ask one-of monkeys [\nlet choice max-one-of sleeping-trees [xcor]\nmove-to choice\n]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
