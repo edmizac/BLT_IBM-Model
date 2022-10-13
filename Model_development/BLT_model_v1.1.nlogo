@@ -352,8 +352,8 @@ to setup-trees
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "sp"
         set id-tree gis:property-value vector-feature "id"
-        if species != "" [ set species "NA" ]
-        if id-tree != "" [ set id-tree "NA" ]
+        if species = "" [ set species "NA" ]
+        if id-tree = "" [ set id-tree "NA" ]
         set x_UTM (item 0 gis:envelope-of self)
         set y_UTM (item 2 gis:envelope-of self)
     ]];
@@ -1853,8 +1853,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
-370
+627
+430
 -1
 -1
 3.0
@@ -1867,10 +1867,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-101
+101
+-68
+68
 0
 0
 1
@@ -2177,7 +2177,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-12
+4
 
 CHOOSER
 984
@@ -2269,7 +2269,7 @@ travel_speed
 travel_speed
 0
 5
-3.34
+2.02
 0.1
 1
 NIL
@@ -3015,7 +3015,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-3
+1
 
 BUTTON
 272
