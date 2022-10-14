@@ -1,0 +1,113 @@
+---
+title: "Model v1.1 Sensitivity analysis - Morris screening: Home Range from nlrx metrics"
+author: "Eduardo Zanette"
+date: "02/08/2022"
+output:
+  html_document:
+    latex_engine: xelatex
+abstract: |
+
+   
+fontsize: 12pt
+spacing: double
+toc: yes
+toc_depth: 3
+number_sections: yes
+
+---
+
+
+```{r setup, include=FALSE}
+# Knitr
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align='center')
+
+# Packages
+library("knitr")
+library("rmarkdown")
+library("flextable") ## having nice tables working also in LibreOffice
+library("officer")
+library("here")
+library("tidyverse")
+library("ggplot2")
+library("nlrx")
+library("amt")
+
+# Plots
+theme_set(theme_bw(base_size = 10))
+
+```
+
+# Morris sensitivity
+
+### Code
+```{r Define metrics}
+# Not sure how to make functions to be called by the analyze_nl() below
+homerange_fun <- function(df, x, y, t) {
+  amt::make_track(.x=x_UTM,
+                  .y=y_UTM,
+                  .t=timestep)
+}
+
+outputmetrics <- list(
+  homerange_fun
+)
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+nl_off <- readRDS(here("Model_analysis", "Sensitivity-analysis", "temp",
+                       "morris_2022-07-20_phenology-off.RDS"))
+
+nl_off@experiment@metrics
+nl_off@experiment@metrics.turtles
+
+# here it works:
+getexp(nl_off, "metrics")
+getexp(nl_off, "metrics.turtles")
+
+nl_off@experiment@metrics.turtles$monkeys
+
+# here it does not:
+morris_off <- analyze_nl(nl_off, metrics = getexp("metrics.turtles"))
+# morris_off <- analyze_nl(nl_off, metrics = c("x_UTM", "y_UTM", "energy", "behavior",
+#                                              "dist-traveled", "travel_mode "))
+
+morris_off$phenology <- "phenology off"
+rm(nl_off)  
+
+nl_on <- readRDS(here("Model_analysis", "Sensitivity-analysis", "temp",
+                       "morris_2022-07-20_phenology-on.RDS"))
+
+morris_on <- analyze_nl(nl_on)
+morris_on$phenology <- "phenology on"
+rm(nl_on)  
+
+morris <- dplyr::bind_rows(morris_on, morris_off)
+rm(morris_on); rm(morris_off)
+```
+
+\newpage
+
+### Plot
+```{r}
+morris %>% 
+  ggplot(aes(x=value, y=parameter, fill = index)) +
+  geom_boxplot(lwd= 0.1) +
+  geom_vline(xintercept = 0) +
+  facet_wrap(~phenology) +
+  ggtitle("Morris effects (all metrics)")
+```
+
+\newpage
+
+```{r, fig.width=10}
+morris %>% 
+  ggplot(aes(x=value, y=parameter, fill = index)) +
+  geom_boxplot(lwd= 0.1) +
+  geom_vline(xintercept = 0) +
+  facet_grid(metric ~ phenology) +
+  ggtitle("Morris effects (by metrics)")
+```
+
+
