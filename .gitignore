@@ -32,6 +32,7 @@
 /Model_analysis/Sensitivity-analysis/temp/
 /Model_analysis/Sensitivity-analysis/temp/**.rds
 /Model_analysis/Sensitivity-analysis/*.rds
+/Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/HR_values_FF_2022-08-06d.csv
 
 
 
