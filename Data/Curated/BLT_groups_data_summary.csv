@@ -1,0 +1,18 @@
+group;id_month;timesteps;ndays;mean_timesteps
+Guarei;Aug;867;8;108
+Guarei;Jul;853;8;107
+Guarei;Jun;657;6;110
+Guarei;May;447;4;112
+Santa Maria;Apr;451;4;113
+Santa Maria;Mar;699;6;116
+Santa Maria;May;108;1;108
+Suzano;Apr;214;2;107
+Suzano;Dec;726;6;121
+Suzano;Feb;208;2;104
+Suzano;Sep;347;3;116
+Taquara;Dec;161;1;161
+Taquara;Feb;146;1;146
+Taquara;Jan;709;5;142
+Taquara;Jul;265;2;132
+Taquara;May;138;1;138
+Taquara;Sep;100;1;100

@@ -8,52 +8,53 @@
 #
 #
 
-## Options -------------------------
-# (plotting, memory limit, decimal digits)
-# Packages from github:
-# install.packages('devtools')
-# devtools::install_github('thomasp85/gganimate')
-# remotes::install_github("ropensci/nlrx")
-
-# Java memory:
-if(Sys.getenv("JAVA_HOME") == "") {
-  Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
-}
-
 ## Packages -------------------------
-library(nlrx)
-library(here)
-library(progressr)
-library(ggplot2)
-# library(gganimate)
-
-
-# Step 1: Create nl object
-netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-
-modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-file.info(modelpath)
-
-outpath <- here("Model_development", "runtime")
-
-nl <- nl(nlversion = "6.2.2",
-         nlpath = netlogopath,
-         modelpath = modelpath,
-         jvmmem = 8192)
-
-report_model_parameters(nl)
-
-
-## Packages:
 library("nlrx")
 library("here")
 library("progressr")
 library("ggplot2")
 library("ggspatial")
 library("gganimate")
-## ---------------------------
 
+## ---------------------------
 ## Options (plotting, memory limit, decimal digits)
+
+# Config cores
+ncores <- parallel::detectCores()
+
+# Config seed number
+nseeds <- 2
+
+# Choose other options
+feedinbout <- "false"
+
+# Choose simulation month
+month <- "Jan"
+month <- "Feb"
+month <- "Mar"
+month <- "Apr"
+month <- "May"
+month <- "Jun"
+month <- "Jul"
+month <- "Aug"
+month <- "Sep"
+month <- "Oct"
+month <- "Nov"
+month <- "Dec"
+
+
+
+# Java memory:
+if(Sys.getenv("JAVA_HOME") == "") {
+  if(Sys.info()[["sysname"]] == "Linux") {
+    Sys.setenv(JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64")
+    unixtools::set.tempdir(".")
+  } else {
+    Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
+  }
+}
+
+
 theme_set(theme_bw())
 
 # GIS
@@ -126,48 +127,49 @@ empirical_colors <- c("magenta", "#1E8449", "grey", "grey", "grey", "grey", "gre
 # devtools::install_github('thomasp85/gganimate')
 # remotes::install_github("ropensci/nlrx")
 
-# Java memory:
-if(Sys.getenv("JAVA_HOME") == "") {
-  Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
-}
-
-
 
 # Step 1: Create nl object
-## netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+if(Sys.info()[["nodename"]] == "simul02") {
+  netlogopath <- file.path("/home/rbialozyt/Software/NetLogo 6.2.0")
+  modelpath <- "/home/rbialozyt/BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo"
+  outpath <- "/home/rbialozyt/BLT_IBM-Model/Model_analysis/Sensitivity-analysis"
+}
+if(Sys.info()[["nodename"]] == "PC146") {
+  netlogopath <- file.path("/opt/netlogo_620")
+  modelpath <- paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
+                      , "BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo")
+  outpath <-  paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
+                     , "BLT_IBM-Model/Model_analysis/Sensitivity-analysis")
+}
+if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  outpath <- here("Model_development", "runtime")
+}
 
-modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-# file.info(modelpath)
-outpath <- here("Model_development", "runtime")
-# modelpath <- here("C:/Program Files/NetLogo 6.2.2", "app/models", "BLT_model_v1.nlogo")
-# C:\Program Files\NetLogo 6.2.2\app\models
 
 nl <- nl(nlversion = "6.2.2",
          nlpath = netlogopath,
          modelpath = modelpath,
-         jvmmem = 1024)
+         jvmmem = 8192)
 
 report_model_parameters(nl)
-
 
 
 
 #### Simple design experiment ( = one go button, no varibles) ####
 
 # Step 2: Attach an experiment
-expname = "v1.1_simplerun"
+expname = "v1.1_Guarei-May_simplerun"
 # no_days = 10
 
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
-                            repetition = 1, # number of repetitions with the same seed
+                            repetition = 1, # number of repetitions with the same seed (use repetition = 1)
                             tickmetrics = "true", # "false" for metrics only in the end of the simulation
                             idsetup = "setup",
                             idgo = "go",
-                            # idfinal = "",
-                            # idrunnum = "nlrx_id",
-                            runtime = 1500, #(if = 0 or NA_integer_, define stopcond_)
+                            # runtime = 2000, #(if = 0 or NA_integer_, define stopcond_)
                             stopcond= "day > no_days", # reporter that returns TRUE
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
                             # reporters:
@@ -175,8 +177,9 @@ nl@experiment <- experiment(expname = expname,
                             metrics.turtles = list("monkeys" = c("x_UTM", "y_UTM",
                                                                  # "xcor", "ycor",
                                                                  "energy", "behavior",
-                                                                 "dist-traveled",
-                                                                 "travel_mode ")
+                                                                 "dist-traveled"#,
+                                                                 #"travel_mode "
+                                                                 )
                                                    
                                                    # , "steps-moved"
                                                    
@@ -212,6 +215,7 @@ nl@experiment <- experiment(expname = expname,
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
                               "USER" = "\"Eduardo\"",
+                              "empirical-velocities?" = "true",
                               # "print-step?" = "false",
                               # 'export-png'= "false",
                               # "show-energy?" = "false",
@@ -221,14 +225,13 @@ nl@experiment <- experiment(expname = expname,
                               # "path-color-by-day?" = "false",
                               
                               ### resource scenario
-                              "no_days" = 10 # DON'T TRY no_days = 1
-                              # 'feeding-trees-scenario' = "\"trees_all\"",
+                              "study_area" = "\"Guarei\"",
+                              'feeding-trees-scenario' = "\"May\"",
+                              "no_days" = 10, # DON'T TRY no_days = 1
                               # 'feeding-trees?' = "true",
                               # 'sleeping-trees?' = "true",
-                              # 'resting-trees?' = "false",
                               # 'sleeping-trees-scenario' = "\"empirical\"",
                               # 'empirical-trees-choice' = "\"closest\"",
-                              # 'species_time_val' = 6,
                               
                               ### memory
                               # 'duration' = 3,
@@ -260,7 +263,7 @@ nl@experiment <- experiment(expname = expname,
 
 # Step 3: Attach a simulation design.
 # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
-nl@simdesign <- simdesign_simple(nl, nseeds = 17)
+nl@simdesign <- simdesign_simple(nl, nseeds = 1)
 
 # Step 4: Run simulations
 # Evaluate nl object:

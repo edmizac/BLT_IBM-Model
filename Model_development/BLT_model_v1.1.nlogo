@@ -589,7 +589,7 @@ to go
     set timestep 0
     ask monkeys [ set action "travel" ]
     if day > no_days [
-      output-print "AHOY"
+      output-print "run-days click finished"
       stop
     ]
   ]
@@ -897,7 +897,7 @@ to avoid-patch-set
 ;        ask patch-ahead (3 * travel_speed) [ set pcolor cyan ]
 
       ; set this for agents not to run the travel procedure and walk again
-      print "SETTING FALSE"
+;      print "SETTING FALSE"
       set straight-line-to-target? FALSE
     ]
 
@@ -923,7 +923,7 @@ end
 
 to avoid-full-matrix
 
-  print "I'm in the middle of the sugarcane!"
+;  print "I'm in the middle of the sugarcane!"
   ;    set color "red"
 
   ; choose closest patch within radius that is not matrix
@@ -945,8 +945,8 @@ end
 
 to avoid-some-matrix
 ;  if ( any? front_patches [habitat = "matrix"] ) [
-    print "there's some matrix in front of me!"
-    set color orange
+;    print "there's some matrix in front of me!"
+;    set color orange
 
     let d tree_target_mem ; d is a local variable and tree_target_mem is a monkey variable; the patch_avoid_matrix can't be set because it is within the patch context and patche can't access monkey variables
 
@@ -970,7 +970,7 @@ to avoid-some-matrix
 
     ; it might be the case that there's no patch_avoid_matrix. In this case, choose the closest non-matrix patch regardless of distance to target
     if patch_avoid_matrix = nobody OR [habitat] of patch_avoid_matrix = "matrix" OR patch_avoid_matrix = 0 [
-      print "no patches"
+;      print "no patches"
       set patch_avoid_matrix min-one-of patches with [ habitat = "forest" ] [distance myself]
     ]
     ;      print distance tree_target_mem
@@ -1388,23 +1388,23 @@ end
 to travel
 
   ;  avoid-patch-set ; bump on the territory borders
-  print "TRAVEL"
+;  print "TRAVEL"
 
   ifelse straight-line-to-target? = FALSE AND patch_avoid_matrix != nobody [
-    print "straight line false"
+;    print "straight line false"
     face patch_avoid_matrix
     forward travel_speed
     set dist-traveled travel_speed
     set steps-moved steps-moved + 1
     set energy energy + ( energy-loss-traveling * travel_speed )
-    print "travel 2"
+;    print "travel 2"
   ][
     forward travel_speed
     set dist-traveled travel_speed
     set steps-moved steps-moved + 1
     set energy energy + ( energy-loss-traveling * travel_speed )
     set straight-line-to-target? TRUE
-    print "travel 3"
+;    print "travel 3"
   ]
 
 
@@ -1546,7 +1546,7 @@ to sleeping
     ;--------------------
 
     ][
-      print "straight line false"
+;      print "straight line false"
       face patch_avoid_matrix
       forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
       set dist-traveled ( 2 * travel_speed )

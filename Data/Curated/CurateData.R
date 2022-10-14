@@ -29,10 +29,11 @@ dat.gua <- dat.gua %>%
                 y = latitude_y_GAL,
                 behavior = behav,
                 id = tree,
-                species = sp) %>%
-  mutate(id_month = lubridate::month(POSIX.ct, label = TRUE, abbr = TRUE, 
+                species = sp,
+                POSIXct = POSIX.ct) %>%
+  mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
-  dplyr::select(c("id_nday", "x", "y", "id_month", "POSIX.ct", "behavior", "species", "id")) %>% 
+  dplyr::select(c("id_nday", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
   dplyr::rename(id_day = id_nday)
 
 # Write csv
@@ -126,3 +127,32 @@ dat.suz <- dat.suz %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSI
 # Write csv
 dat.suz %>% write.csv(here("Data", "Curated","Suzano.csv"),
                       row.names = FALSE)
+
+
+# Concatenate everything:
+dat.gua <- read.csv(here("Data", "Curated", "Guarei.csv"))
+dat.sma <- read.csv(here("Data", "Curated", "SantaMaria.csv"))
+dat.suz <- read.csv(here("Data", "Curated", "Suzano.csv"))
+dat.taq <- read.csv(here("Data", "Curated", "Taquara.csv"))
+
+# add id
+dat.gua <- dat.gua %>% 
+  mutate(group = "Guarei") %>% 
+  rename(id_day_all = id_day)
+dat.sma <- dat.sma %>% 
+  mutate(group = "Santa Maria") %>% 
+  mutate(id_day_all = as.character(id_day_all))
+dat.taq <- dat.taq %>% 
+  mutate(group = "Taquara") %>% 
+  mutate(id_day_all = as.character(id_day_all))
+dat.suz <- dat.suz %>% 
+  mutate(group = "Suzano") %>% 
+  mutate(id_day_all = as.character(id_day_all))
+
+
+df_list <- list(dat.gua, dat.sma, dat.taq, dat.suz)
+dat.all <- df_list %>% purrr::reduce(full_join)
+
+dat.all %>% write.csv(here("Data", "Curated","BLT_groups_data.csv"),
+                      row.names = FALSE)
+

@@ -1,4 +1,4 @@
-"id_day","x","y","id_month","POSIX.ct","behavior","species","id"
+"id_day","x","y","id_month","POSIXct","behavior","species","id"
 "may001",781969.802383584,7407899.62025156,"May",2019-05-16 07:25:00,"Sleeping site","NA","DG03"
 "may001",781962.506228928,7407894.68761312,"May",2019-05-16 07:30:00,"Locomotion","NA","NA"
 "may001",781925.38440224,7407924.74575223,"May",2019-05-16 07:35:00,"Frugivory","Celtis iguanaea","AG153"
