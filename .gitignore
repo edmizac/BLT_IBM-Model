@@ -22,7 +22,9 @@
 .bkp
 
 # Folders:
-/Data/*
+/Data/Shapefiles/*
+/Data/Trees-Guarei/*
+/Data/Resource-Tres/*
 !*/Tree-points-unique.R
 !*/Tree-points-to-shapefile.R
 /Model_development/Model-cleaning/runtime
