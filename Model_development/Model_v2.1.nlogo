@@ -163,8 +163,10 @@ to setup-gis ; (= v1.1 Model)
   gis:set-drawing-color black
   gis:draw bb-gis-shp 1
 
-  ; to use make-trees-change-position procedure ( = BLT_model_v1_UTM.nlogo
-  set guarei-dataset gis:load-dataset "D:/Data/Documentos/github/BLT_IBM-Model/Model_development/Model-cleaning/gis-extension/Guarei-poligono.shp"
+  ; to use make-trees-change-position procedure ( = BLT_model_v1_UTM.nlogo)
+;  set guarei-dataset gis:load-dataset "D:/Data/Documentos/github/BLT_IBM-Model/Model_development/Model-cleaning/gis-extension/Guarei-poligono.shp"
+  set guarei-dataset gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp"
+
   set shape-type gis:shape-type-of guarei-dataset
   set property-names gis:property-names guarei-dataset
   set feature-list gis:feature-list-of guarei-dataset
@@ -341,6 +343,7 @@ to make-trees-change-position
   ask feeding-trees [
     let chosen random (length feature-list)
     let my-feature (item chosen feature-list)
+;    let my-feature (item chosen guarei-dataset)
 ;
     ; translate the centroid of the chosen feature from
     ; GIS space to NetLogo patch space, then move there
