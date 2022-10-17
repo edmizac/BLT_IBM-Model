@@ -26,10 +26,10 @@ for (file in csvs_to_sf) {
   shp <- st_as_sf(csv, coords = c("x", "y"), 
            crs = our_crs)
   
-  k <- stringr::str_remove(j, ".csv")
+  j <- stringr::str_remove(k, ".csv")
   
   st_write(shp,
-           paste0(k, ".shp"),
+           paste0(j, ".shp"),
            driver = "ESRI Shapefile",
            delete_layer = TRUE)
   i <-  i + 1
