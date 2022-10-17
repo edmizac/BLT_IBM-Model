@@ -483,7 +483,7 @@ to setup-monkeys
     if study_area = "Guareí" [ set travel_speed ( 20 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
     if study_area = "Santa Maria" [ set travel_speed ( 20.2 / 10 ) ]
     if study_area = "Taquara" [ set travel_speed ( 33.4 / 10 ) ]
-    if study_area = "Guareí" [ set travel_speed ( 13.7 / 10 )  ]
+    if study_area = "Suzano" [ set travel_speed ( 13.7 / 10 )  ]
   ]
 
 end
@@ -1853,8 +1853,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-627
-430
+459
+370
 -1
 -1
 3.0
@@ -1867,10 +1867,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--101
-101
--68
-68
+-73
+73
+-58
+58
 0
 0
 1
@@ -2177,7 +2177,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-4
+9
 
 CHOOSER
 984
@@ -2269,7 +2269,7 @@ travel_speed
 travel_speed
 0
 5
-2.02
+3.34
 0.1
 1
 NIL
@@ -3015,7 +3015,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-1
+3
 
 BUTTON
 272
