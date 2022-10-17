@@ -311,17 +311,17 @@ to setup-trees
   ; Taquara
   if ( study_area = "Taquara" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_all.shp" ]
   if ( study_area = "Taquara" AND feeding-trees-scenario = "Jan" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Jan.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Feb.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Apr.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_May.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Jul.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Sep.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Dec.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Feb.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Apr.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_May.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Jul.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Sep.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Dec.shp" ]
 
   ; Suzano
   if ( study_area = "Suzano" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_all.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Feb.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Apr.shp" ]
+;  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Feb.shp" ]
+;  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Apr.shp" ]
   if ( study_area = "Suzano" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Sep.shp" ]
   if ( study_area = "Suzano" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Dec.shp" ]
 
@@ -350,7 +350,7 @@ to setup-trees
         set color green
         set visited? FALSE
         setxy item 0 location item 1 location
-        set species gis:property-value vector-feature "sp"
+        set species gis:property-value vector-feature "species"
         set id-tree gis:property-value vector-feature "id"
         if species = "" [ set species "NA" ]
         if id-tree = "" [ set id-tree "NA" ]
@@ -366,7 +366,7 @@ to setup-trees
         set color magenta
         set visited? FALSE
         setxy item 0 location item 1 location
-        set species gis:property-value vector-feature "sp"
+        set species gis:property-value vector-feature "species"
         set id-tree gis:property-value vector-feature "id"
         set x_UTM (item 0 gis:envelope-of self)
         set y_UTM (item 2 gis:envelope-of self)
@@ -3049,7 +3049,7 @@ TEXTBOX
 15
 1318
 72
-Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr, May\nTaquara = Jan, Feb, Apr, May, Jul, Dec\nSuzano = Feb, Apr, Sep, Dec\n
+Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr\nTaquara = Jan\nSuzano = Sep, Dec\n
 10
 15.0
 1

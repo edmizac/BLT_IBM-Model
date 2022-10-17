@@ -44,7 +44,7 @@ dat.gua %>% write.csv(here("Data", "Curated","Guarei.csv"),
 #### Santa Maria ####
 
 # Read data
-dat.sma <- read_excel(here("Data", "DataSet_SMa_FB_2022_08_d17.xlsx"))
+dat.sma <- read_excel(here("Data", "DataSet_SMa_FB_2022_08_d18.xlsx"))
 dat.sma <- dat.sma %>% 
   dplyr::mutate(group_behav = recode(group_behav,"SS" = "Sleeping site"))
 
@@ -64,7 +64,10 @@ dat.sma <- dat.sma %>%
                                      locale = Sys.setlocale("LC_TIME", "English")))
 
 dat.sma <- dat.sma %>% 
-  dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id"))
+  dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
+  dplyr::filter(id_month != "May") # less than two days # timeframes (check BLT-Movement-Patterns repository) can be ignored because the field trip timeframes are not taking two months (e.g. 31/03 and 01/04)
+
+dat.sma %>% dplyr::filter(is.na(x)) 
 
 # Write csv
 dat.sma %>% write.csv(here("Data", "Curated","SantaMaria.csv"),
@@ -86,6 +89,7 @@ dat.taq <- dat.taq %>%
 dat.taq <- dat.taq %>% 
   dplyr::rename(x = longitude_x_GAL,
                 y = latitude_y_GAL,
+                id_month = id_nmonth,
                 behavior = `group behav`,
                 species = sp) %>%
   mutate(POSIXct = lubridate::ymd_hms(POSIX.ct)) %>% 
@@ -93,7 +97,16 @@ dat.taq <- dat.taq %>%
                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
   mutate(id = as.factor(id))
 
-dat.taq <- dat.taq %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id"))
+# Recode timeframes (Jan 27-31 + Feb 03rd in the same timeframe "January") (ver "BLT_groups_data_summary.csv")
+dat.taq$id_month <- dat.taq$id_month %>% as.factor
+dat.taq <- dat.taq %>% 
+  dplyr::mutate(id_month = recode(id_month, "Feb" = "Jan"))
+dat.taq$id_month <- dat.taq$id_month %>% droplevels()
+
+# dat.taq$id_month %>% levels()
+
+dat.taq <- dat.taq %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
+  dplyr::filter(id_month == "Jan") # only month with more than 2 days of data 
 
 
 # Write csv
@@ -122,14 +135,19 @@ dat.suz <- dat.suz %>%
                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
   mutate(id = as.factor(id))
 
-dat.suz <- dat.suz %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id"))
+choosen_mo <- c("Dec", "Sep")
+dat.suz <- dat.suz %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
+  dplyr::filter(id_month %in% choosen_mo)
+dat.suz$id_month <- dat.suz$id_month %>% droplevels()
+
+# dat.suz$id_month %>% levels()
 
 # Write csv
 dat.suz %>% write.csv(here("Data", "Curated","Suzano.csv"),
                       row.names = FALSE)
 
 
-# Concatenate everything:
+#### Concatenate everything: ####
 dat.gua <- read.csv(here("Data", "Curated", "Guarei.csv"))
 dat.sma <- read.csv(here("Data", "Curated", "SantaMaria.csv"))
 dat.suz <- read.csv(here("Data", "Curated", "Suzano.csv"))
