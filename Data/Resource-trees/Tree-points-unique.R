@@ -178,22 +178,25 @@ dat.taq[!duplicated(dat.taq[ , 2:3]), ] %>%
 # Read data
 # dat.suz <- read_excel(here("Data", "DataSet_Suzano_AS_FB_2022_07_d29.xlsx"))
 dat.suz <- read_csv(here("Data", "Curated", "Suzano.csv"))
-# dat.suz <- dat.suz %>% 
-  # dplyr::mutate(`group behav` = recode(`group behav`,"SS" = "Sleeping site"))
+# dat.suz <- dat.suz %>%
+#   dplyr::mutate(`group behav` = recode(`group behav`,"SS" = "Sleeping site"))
 dat.suz <- dat.suz %>% 
   # filter(full_day == 1) %>%  # dados da Anne só possuem buracos na entrada e saída do sleeping site. Como estarei
   # olhando pro DPL, acredito não haver problema usar os dias não completos. O problema
   # é que corrigimos x e y somente pra full_day = 1
-  filter(behavior %in% c("Frugivory", "Sleeping site"))
+  # filter(behavior %in% c("Frugivory", "Sleeping site"))
+  filter(`group behav` %in% c("Frugivory", "Sleeping site"))
 
-# Rename and select cols
-# dat.suz <- dat.suz %>% 
-#   dplyr::rename(x = longitude_x_GAL,
-#                 y = latitude_y_GAL,
-#                 behavior = "group behav") %>%
-#   mutate(POSIXct = lubridate::ymd_hms(POSIX.ct)) %>% 
-#   mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
-#                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
+# # Rename and select cols
+# dat.suz <- dat.suz %>%
+#   dplyr::rename(x = original_longitude_x,
+#                 y = original_latitude_y,
+#                 behavior = `group behav`,
+#                 species = sp
+#                 ) %>%
+#   mutate(POSIXct = lubridate::ymd_hms(POSIX.ct)) %>%
+#   mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE,
+#                                      locale = Sys.setlocale("LC_TIME", "English"))) %>%
 #   mutate(id = as.factor(id))
 
 dat.suz <- dat.suz %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id"))

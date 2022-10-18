@@ -320,8 +320,8 @@ to setup-trees
 
   ; Suzano
   if ( study_area = "Suzano" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_all.shp" ]
-;  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Feb.shp" ]
-;  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Apr.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Feb.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Apr.shp" ]
   if ( study_area = "Suzano" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Sep.shp" ]
   if ( study_area = "Suzano" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Dec.shp" ]
 
@@ -1853,8 +1853,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+459
+370
 -1
 -1
 3.0
@@ -1867,10 +1867,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-73
+73
+-58
+58
 0
 0
 1
@@ -2177,7 +2177,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+2
 
 CHOOSER
 984
@@ -2269,7 +2269,7 @@ travel_speed
 travel_speed
 0
 5
-2.0
+1.3699999999999999
 0.1
 1
 NIL
@@ -3015,7 +3015,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+3
 
 BUTTON
 272
@@ -3045,11 +3045,11 @@ MODEL VERIFICATION:
 1
 
 TEXTBOX
-1138
-15
-1318
-72
-Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr\nTaquara = Jan\nSuzano = Sep, Dec\n
+1145
+10
+1325
+75
+Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr\nTaquara = Jan\nSuzano = Sep, Dec (Feb and Apr for debugging avoid-matrix)\n
 10
 15.0
 1
