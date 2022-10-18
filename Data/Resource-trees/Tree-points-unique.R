@@ -48,7 +48,7 @@ for (i in levels(dat.gua$id_month)) {
 #### Santa Maria ####
 
 # Read data
-dat.sma <- read_excel(here("Data", "Resource-trees", "DataSet_SMa_FB_2022_08_d17.xlsx"))
+dat.sma <- read_excel(here("Data", "Resource-trees", "DataSet_SMa_FB_2022_08_d18.xlsx"))
 dat.sma <- dat.sma %>% 
   dplyr::mutate(group_behav = recode(group_behav,"SS" = "Sleeping site"))
 dat.sma <- dat.sma %>% filter(group_behav %in% c("Frugivory", "Sleeping site"))
