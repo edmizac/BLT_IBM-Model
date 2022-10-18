@@ -976,7 +976,7 @@ to avoid-some-matrix
     ;      print distance tree_target_mem
 
     ask patch_avoid_matrix [ set pcolor red ]
-    type "patch_avoid_matrix :" print patch_avoid_matrix
+;    type "patch_avoid_matrix :" print patch_avoid_matrix
     ;      pen-up
     ;  move-to patch_avoid_matrix
     ;      pen-down
@@ -1564,10 +1564,10 @@ to sleeping
 
   ]
 
-;  if simulation-time-end = TRUE [
-;    ;    output-print "AHOY"
-;
-;  ]
+  if all? monkeys [action = "sleeping"] [
+        output-print "AHOY"
+
+  ]
 
 end
 
