@@ -12,37 +12,29 @@
 library("nlrx")
 library("here")
 library("progressr")
+library("future")
+library("tictoc")
 library("ggplot2")
 library("ggspatial")
 library("gganimate")
+library("tidyverse")
 
 ## ---------------------------
+
+# Packages from github:
+# install.packages('devtools')
+# devtools::install_github('thomasp85/gganimate')
+# remotes::install_github("ropensci/nlrx")
+
+## Empirical data for parameterisation:
+dat.summary <- read_csv(here("Data", "Curated", "BLT_groups_data_summary_aftercleaning.csv")) %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+
+
 ## Options (plotting, memory limit, decimal digits)
 
 # Config cores
 ncores <- parallel::detectCores()
-
-# Config seed number
-nseeds <- 2
-
-# Choose other options
-feedinbout <- "false"
-
-# Choose simulation month
-month <- "Jan"
-month <- "Feb"
-month <- "Mar"
-month <- "Apr"
-month <- "May"
-month <- "Jun"
-month <- "Jul"
-month <- "Aug"
-month <- "Sep"
-month <- "Oct"
-month <- "Nov"
-month <- "Dec"
-
-
 
 # Java memory:
 if(Sys.getenv("JAVA_HOME") == "") {
@@ -121,11 +113,9 @@ simulated_colors_noforage <- c("grey", "#1E8449", "grey", "#E74C3C", "grey")
 empirical_shapes <- c(1, 19, 1, 1, 1, 1, 1, 1, 1, 17, 1, 1)
 empirical_colors <- c("magenta", "#1E8449", "grey", "grey", "grey", "grey", "grey", 
                       "grey", "grey", "#E74C3C", "grey", "grey")
+
 ## ---------------------------
-# Packages from github:
-# install.packages('devtools')
-# devtools::install_github('thomasp85/gganimate')
-# remotes::install_github("ropensci/nlrx")
+
 
 
 # Step 1: Create nl object
@@ -159,10 +149,40 @@ report_model_parameters(nl)
 
 #### Simple design experiment ( = one go button, no varibles) ####
 
-# Step 2: Attach an experiment
-expname = "v1.1_Guarei-May_simplerun"
-# no_days = 10
+## Step 2: Attach an experiment
 
+# Define run and parameterisation: (all strings must use escaped quotes)
+
+# area_run <- paste0("\"", "Guareí", "" "")
+
+area_run <- '"Guareí"'
+month_run <- '"May"'
+expname <-  paste0("v1.1_", 
+                   gsub(area_run, pattern = ('\"'), replacement = '', fixed = T), 
+                   "_", 
+                   gsub(month_run, pattern = ('\"'), replacement = '', fixed = T), 
+                   "_simplerun")
+
+nseeds <- 2 # repetitions (ideally n = 5)
+
+no_days_run <- dat.summary %>% 
+  dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
+                id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+  dplyr::select(ndays) %>% 
+  pull() + 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
+
+simultime_run <- dat.summary %>% 
+  dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
+                id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+  dplyr::select(mean_timesteps) %>% 
+  pull()
+simultime_run <- round(simultime_run * 0.9) # that's the timestep when tamarins should start looking for the sleeping site
+
+empiricalvelocities <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in dat.summary
+feedingbout <- "false" # previous sensitivity analysis showed that this does not matter for Guareí
+
+
+# Attach to nl experiment
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
                             repetition = 1, # number of repetitions with the same seed (use repetition = 1)
@@ -215,19 +235,20 @@ nl@experiment <- experiment(expname = expname,
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
                               "USER" = "\"Eduardo\"",
-                              "empirical-velocities?" = "true",
+                              "empirical-velocities?" = empiricalvelocities, #"true",
+                              'feedingbout-on?' = feedingbout,
                               # "print-step?" = "false",
                               # 'export-png'= "false",
                               # "show-energy?" = "false",
                               # "show-path?" = "false",
                               # "all-slp-trees?" = "false",
-                              # "display-hatched-trees?" = "false",
                               # "path-color-by-day?" = "false",
                               
                               ### resource scenario
-                              "study_area" = "\"Guarei\"",
-                              'feeding-trees-scenario' = "\"May\"",
-                              "no_days" = 10, # DON'T TRY no_days = 1
+                              "study_area" = area_run, #"\"Guareí\"",
+                              'feeding-trees-scenario' = month_run, #"\"May\"",
+                              'no_days' = no_days_run - 1, # DON'T TRY no_days = 1
+                              'simulation-time' = simultime_run
                               # 'feeding-trees?' = "true",
                               # 'sleeping-trees?' = "true",
                               # 'sleeping-trees-scenario' = "\"empirical\"",
@@ -251,11 +272,7 @@ nl@experiment <- experiment(expname = expname,
                               # "n_seeds_hatched" = 1,
                               
                               ### movement
-                              # "travel_speed_val" = 0.7,
-                              # "foraging_speed_val" = 0.7,
-                              
-                              ### others
-                              # "simulation-time" = 108
+                              # travel_speed = 1
                               
                             )
 )
@@ -263,7 +280,7 @@ nl@experiment <- experiment(expname = expname,
 
 # Step 3: Attach a simulation design.
 # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
-nl@simdesign <- simdesign_simple(nl, nseeds = 1)
+nl@simdesign <- simdesign_simple(nl, nseeds = 5)
 
 # Step 4: Run simulations
 # Evaluate nl object:
@@ -273,12 +290,10 @@ print(nl)
 
 nl@simdesign
 
+
 # Run all simulations (loop over all siminputrows and simseeds)
 
-library(future)
-library(tictoc)
-
-# With run_nl_one (with only the first seed)
+## With run_nl_one (with only the first seed)
 tictoc::tic()
 progressr::handlers("progress")
 results <- progressr::with_progress(
@@ -290,15 +305,20 @@ results <- progressr::with_progress(
 tictoc::toc()
 
 
-# With run_nl_all (all 17 seeds)
-# tictoc::tic()
-# progressr::handlers("progress")
-# results <- progressr::with_progress(
-#   run_nl_all(nl,
-#              split = 4
-#              )
-# )
-# tictoc::toc()
+## With run_nl_all (all 17 seeds)
+# Check number of simimputrows:
+siminput_nrow <- nrow(getsim(nl, "siminput"))
+# siminput_nrow %%
+
+tictoc::tic()
+plan(multisession)
+progressr::handlers("progress")
+results <- progressr::with_progress(
+  run_nl_all(nl,
+             split = 1
+             )
+)
+tictoc::toc()
 
 
 ## Step 5:
@@ -317,7 +337,7 @@ nl@experiment@metrics.patches
 nl@experiment@variables
 
 #' Save RDS to avoid losing it by R abortion:
-filename <- here("Model_development", "Model-cleaning", "runtime", "v1.1_simple_tempRDS.Rdata")
+filename <- here("Model_development", "runtime", "v1.1_output", Sys.Date(), paste0(expname, "_tempRDS.Rdata"))
 saveRDS(nl, file = filename) ; rm(results)
 nl <- readRDS(filename)
 

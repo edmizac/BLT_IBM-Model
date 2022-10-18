@@ -228,7 +228,7 @@ nl@experiment <- experiment(expname = expname,
 
 # Step 3: Attach a simulation design.
 # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
-nl@simdesign <- simdesign_simple(nl, nseeds = 17)
+nl@simdesign <- simdesign_simple(nl, nseeds = 1)
 
 # Step 4: Run simulations
 # Evaluate nl object:

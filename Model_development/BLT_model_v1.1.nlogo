@@ -8,9 +8,9 @@
 extensions [ gis palette pathdir] ; using the GIS extension of NetLogo
 
 ;; BREEDS ;;
-; trees
 turtles-own [ x_UTM y_UTM ]
 
+; trees
 breed [feeding-trees feeding-tree]
 feeding-trees-own [ species id-tree visited? ] ; feeding trees have species and id code
 
@@ -1853,8 +1853,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
-370
+501
+406
 -1
 -1
 3.0
@@ -1867,10 +1867,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-80
+80
+-64
+64
 0
 0
 1
@@ -2177,7 +2177,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-9
+5
 
 CHOOSER
 984
@@ -2269,7 +2269,7 @@ travel_speed
 travel_speed
 0
 5
-3.34
+2.0
 0.1
 1
 NIL
@@ -3015,7 +3015,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-3
+0
 
 BUTTON
 272
