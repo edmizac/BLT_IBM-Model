@@ -39,6 +39,6 @@ dat.summary <- dat.all %>%
 
 # Save csv:
 dat.summary %>% 
-  write.csv(here("Data", "Curated", "BLT_groups_data_summary.csv"),
+  write.csv(here("Data", "Curated", "BLT_groups_data_summary_aftercleaning.csv"),
                  row.names = FALSE)
 
