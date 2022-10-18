@@ -30,6 +30,7 @@
 # Specific files in specific folders:
 /Model_analysis/Sensitivity-analysis/**.csv
 /Model_analysis/Sensitivity-analysis/temp/
+Model_analysis/Sensitivity-analysis/v1.1_August2022/
 
 
 
