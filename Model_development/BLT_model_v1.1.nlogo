@@ -450,8 +450,6 @@ to setup-monkeys
     ][ set pen-mode "up" ]
   ] ; end ask monkeys
 
-<<<<<<< Updated upstream
-=======
 
   if empirical-velocities? = TRUE [
     ;; Parameterizing BLT velocity with empirical data:
@@ -468,7 +466,6 @@ to setup-monkeys
     if study_area = "Guareí" [ set travel_speed ( 13.7 / 10 )  ]
   ]
 
->>>>>>> Stashed changes
 end
 
 ; LEGEND
@@ -900,22 +897,22 @@ to avoid-patch-set
 
   ; print count patches with  [ any? neighbors with [ habitat = "border"] ]
 
-<<<<<<< Updated upstream
-;  if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
-    while [ [habitat] of patch-ahead (1 * travel_speed_val) != "forest" AND [habitat] of patch-ahead (2 * travel_speed_val) != "forest" ] [
-      ask patch-ahead (1 * travel_speed_val) [ set pcolor yellow ]
-      ask patch-ahead (2 * travel_speed_val) [ set pcolor cyan ]
-      ;    let direction one-of neighbors with [ habitat = "forest" ]
-      let direction one-of neighbors with [ habitat = "forest" ]
-      if direction = nobody [
-        set direction min-one-of patches with [habitat = "forest"] [distance myself]
-      ]
-      ;    face direction
-      ask direction [ set pcolor yellow ]
-      move-to direction
-    ]
-;  ]
-=======
+
+;;  if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
+;    while [ [habitat] of patch-ahead (1 * travel_speed_val) != "forest" AND [habitat] of patch-ahead (2 * travel_speed_val) != "forest" ] [
+;      ask patch-ahead (1 * travel_speed_val) [ set pcolor yellow ]
+;      ask patch-ahead (2 * travel_speed_val) [ set pcolor cyan ]
+;      ;    let direction one-of neighbors with [ habitat = "forest" ]
+;      let direction one-of neighbors with [ habitat = "forest" ]
+;      if direction = nobody [
+;        set direction min-one-of patches with [habitat = "forest"] [distance myself]
+;      ]
+;      ;    face direction
+;      ask direction [ set pcolor yellow ]
+;      move-to direction
+;    ]
+;;  ]
+
   ;  if ( count patches with [ any? neighbors with [ habitat = "border"] ] > 0 OR count patches with [ any? neighbors with [ habitat = "matrix" ] ]  > 0 ) [
 ;  while [ [habitat] of patch-ahead (1 * travel_speed) != "forest" AND [habitat] of patch-ahead (2 * travel_speed) != "forest" ] [
   if ( [habitat] of patch-ahead (1 * travel_speed) != "forest" AND [habitat] of patch-ahead (2 * travel_speed) != "forest" ) [
@@ -1006,7 +1003,6 @@ to check-straight-line-trail
     set path-ahead-straight? FALSE
 
   ]
->>>>>>> Stashed changes
 
 end
 
@@ -1024,8 +1020,7 @@ to-report get-patches-forward [#me] ; inspired on: https://stackoverflow.com/que
    report front-patches
 end
 
-<<<<<<< Updated upstream
-=======
+
 to test-path
   let front-patches patch-here
   if tree_target != -1 [
@@ -1056,7 +1051,7 @@ to test-path
 
 end
 
->>>>>>> Stashed changes
+
 ;--------------------------------------------------------------------------------
 ; the whole loop for frugivory
 ;--------------------------------------------------------------------------------
@@ -1102,11 +1097,7 @@ end
 ;----------------------------------------
 
 to-report on-feeding-tree?
-<<<<<<< Updated upstream
-  ; print "on-feeding-tree?"
-=======
 ;   print "on-feeding-tree?"
->>>>>>> Stashed changes
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
@@ -1128,10 +1119,8 @@ to-report on-feeding-tree?
 ;        print "on-feeding-tree? TRUE" ; for debugging
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
-<<<<<<< Updated upstream
-=======
 ;        print "on-feeding-tree? TRUE" ; for debugging
->>>>>>> Stashed changes
+
         report true
 
       ][
@@ -1466,7 +1455,7 @@ to travel ; procedure to move (except while foraging) and avoid getting out of t
 ;  ]
 
 
-<<<<<<< Updated upstream
+
   avoid-patch-set ; bump on the territory borders
   if tree_target != -1 [ set heading towards tree_target ]
 
@@ -1479,9 +1468,7 @@ to travel ; procedure to move (except while foraging) and avoid getting out of t
     set next-patch patch-ahead travel_speed
   ]
 
-=======
-;  avoid-patch-set ; bump on the territory borders
->>>>>>> Stashed changes
+
 
   ;; RANDOM movement while traveling:
   if tree_target != -1 [
@@ -1572,14 +1559,9 @@ to resting
   set tree_current -1
 
   set behaviorsequence lput 4 behaviorsequence
-
-<<<<<<< Updated upstream
   set steps-moved steps-moved + 1
-  set energy energy + energy-loss-traveling
-=======
-;  set steps-moved steps-moved + 1
+;  set energy energy + energy-loss-traveling
   set energy energy + energy-loss-resting
->>>>>>> Stashed changes
 
 end
 
@@ -1948,11 +1930,7 @@ end
 GRAPHICS-WINDOW
 10
 10
-<<<<<<< Updated upstream
-460
-=======
 459
->>>>>>> Stashed changes
 370
 -1
 -1
@@ -2276,16 +2254,12 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-<<<<<<< Updated upstream
-4
-=======
-2
->>>>>>> Stashed changes
+5
 
 CHOOSER
-983
+984
 102
-1129
+1130
 147
 sleeping-trees-scenario
 sleeping-trees-scenario
@@ -2444,14 +2418,14 @@ NIL
 HORIZONTAL
 
 CHOOSER
-983
+984
 144
-1129
+1130
 189
 empirical-trees-choice
 empirical-trees-choice
 "closest" "random"
-1
+0
 
 MONITOR
 552
@@ -3148,11 +3122,11 @@ MODEL VERIFICATION:
 1
 
 TEXTBOX
-1149
-14
-1329
-71
-Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr, May\nTaquara = Jan, Feb, Apr, May, Jul, Dec\nSuzano = Feb, Apr, Sep, Dec\n
+1138
+15
+1318
+80
+Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr, May\nTaquara = Jan, Feb, Apr, May, Jul, Sep, Dec\nSuzano = Feb, Apr, Sep, Dec\n
 10
 15.0
 1
@@ -3160,8 +3134,8 @@ Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr, May\nTaquara = Jan, Feb, A
 TEXTBOX
 802
 148
-934
-171
+951
+172
 1.2 Create tree resources
 11
 0.0
@@ -3184,7 +3158,7 @@ BUTTON
 284
 592
 count unvisited trees
-show count feeding-trees with [color = green]
+show count feeding-trees with [color = \"red\"]
 NIL
 1
 T
@@ -3196,12 +3170,12 @@ NIL
 1
 
 BUTTON
-385
-342
-534
-375
-color patches in-cone
-ask one-of monkeys [ let matrix_ahead patch-set patches in-cone 3 max-random-angle print matrix_ahead ask matrix_ahead [ set pcolor green ]]
+299
+560
+406
+594
+NIL
+clear-drawing
 NIL
 1
 T
@@ -3212,142 +3186,6 @@ NIL
 NIL
 1
 
-BUTTON
-424
-148
-525
-181
-go to border
-ask patches with [pcolor = red] [set pcolor lime + 3]\n\nask one-of monkeys [ \n\nmove-to patch 12 8 face patch 12 0\n\n\n]\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-<<<<<<< Updated upstream
-BUTTON
-434
-187
-497
-220
-fd
-ask one-of monkeys [ fd travel_speed_val ]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-422
-227
-516
-260
-test border
-ask one-of monkeys [ \nlet matrix_ahead patch-set patches in-cone 2 max-random-angle\n;let border_ahead patch-set patches in-cone 2 max-random-angle with [border?] = TRUE ]\n\n;ask border_ahead [ set pcolor red ]\n\n]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-428
-265
-545
-298
-avoid-matrix
-ask one-of monkeys [ avoid-matrix ]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-353
-300
-546
-333
-make patch right-and-ahead red
-ask one-of monkeys [ \n\nlet patch_right_ahead patch-right-and-ahead 30 (2 * travel_speed_val )\nask patch_right_ahead [ set pcolor red ]\nlet patch_ahead patch-ahead ( 4 * travel_speed_val ) \nif [habitat] of patch_ahead = \"matrix\" [ ask patch_ahead [ set pcolor cyan ] ]\n\n\n]\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-428
-109
-521
-142
-tentativa 2
-ask one-of monkeys [ tentativa2 ]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-509
-191
-572
-224
-rt 30
-ask one-of monkeys [ rt 30] 
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-163
-384
-282
-417
-avoid-patch-set
-ask one-of monkeys [ avoid-patch-set ]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-=======
 SWITCH
 941
 407
@@ -3356,22 +3194,22 @@ SWITCH
 empirical-velocities?
 empirical-velocities?
 0
->>>>>>> Stashed changes
 1
+-1000
 
 BUTTON
-488
-358
-997
-391
-NIL
-ask one-of monkeys [ \ntest-path \n]
+413
+562
+548
+595
+move-to farther slp tree
+ask one-of monkeys [\nlet choice max-one-of sleeping-trees [xcor]\nmove-to choice\n]
 NIL
 1
 T
 OBSERVER
 NIL
-T
+NIL
 NIL
 NIL
 1
