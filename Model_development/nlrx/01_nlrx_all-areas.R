@@ -122,7 +122,7 @@ for (i in i:nrow(dat.summary)) {
   print(expname)
   i <- i + 1
 #} # loop testing
-  nseeds <- 1 # repetitions (ideally n = 5)
+  nseeds <- 10 # repetitions (ideally n = 5)
   
   no_days_run <- dat.summary %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
@@ -151,6 +151,7 @@ nl@experiment <- experiment(expname = expname,
                             runtime = 2000, #(if = 0 or NA_integer_, define stopcond_)
                             stopcond= "day > no_days", # reporter that returns TRUE
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
+                            # idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
                             # reporters:
                             metrics = c("timestep", "day"), # e.g. "count sheep" or "count patches with [pcolor = green]"
                             metrics.turtles = list("monkeys" = c("x_UTM", "y_UTM",
@@ -270,7 +271,7 @@ nl@experiment <- experiment(expname = expname,
   # # Check number of simimputrows:
   # siminput_nrow <- nrow(getsim(nl, "siminput"))
   # # siminput_nrow %%
-  #
+  # 
   # tictoc::tic()
   # plan(multisession)
   # progressr::handlers("progress")
@@ -280,7 +281,7 @@ nl@experiment <- experiment(expname = expname,
   #              )
   # )
   # tictoc::toc()
-  
+
   
   ## Step 5:
   #' Attach results to nl and run analysis In order to run the
@@ -347,3 +348,12 @@ ggplot() +
   scale_color_manual(values = simulated_colors) +
   scale_shape_manual(values = simulated_shapes) +
   ggtitle(paste0("Simulated data"), expname)
+
+
+
+
+
+#### Factorial design experiment ( = various go buttons, with input matrix for varying parameters) ####
+
+## Step 2: Attach an experiment
+# exptype <- "fullfactorial"
