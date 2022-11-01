@@ -92,7 +92,7 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
 nl <- nl(nlversion = "6.2.2",
          nlpath = netlogopath,
          modelpath = modelpath,
-         jvmmem = 8192)
+         jvmmem = 1024)
 
 report_model_parameters(nl)
 
@@ -119,10 +119,9 @@ for (i in i:nrow(dat.summary)) {
                      "_", exptype)
   expname <- expname %>% 
     str_replace_all(., c("-" = "_", "\\s+" = "_")) # Remove - and space characters.
-  print(expname)
-  i <- i + 1
+  # print(expname)
+  # i <- i + 1
 #} # loop testing
-  nseeds <- 10 # repetitions (ideally n = 5)
   
   no_days_run <- dat.summary %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
@@ -241,7 +240,10 @@ nl@experiment <- experiment(expname = expname,
   
   
   # report_model_parameters(nl)
-  
+
+
+
+  nseeds <- 10 # repetitions (ideally n = 5)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
@@ -258,11 +260,24 @@ nl@experiment <- experiment(expname = expname,
   
   # Run all simulations (loop over all siminputrows and simseeds)
   
+
+  
+k <- 1
+for (seed in unique(nl@simdesign@simseeds)) {
+  
+  # seed <- getsim(nl, "simseeds")[k]
+  # print(seed)
+  # k <- k + 1
+  # print(k)
+# }
+  
+  seed <- getsim(nl, "simseeds")[k] 
+  paste0("running seed ", seed[k])
   ## With run_nl_one (with only the first seed)
   tictoc::tic()
   progressr::handlers("progress")
   results <- progressr::with_progress(run_nl_one(nl,
-                                                 seed = getsim(nl, "simseeds")[1], # only first seed (simple run)
+                                                 seed = seed, #[1], # only first seed (simple run)
                                                  siminputrow = 1))
   tictoc::toc()
   
@@ -294,6 +309,8 @@ nl@experiment <- experiment(expname = expname,
   #' experiment object.  Attach results to nl object:
   setsim(nl, "simoutput") <- results
   
+  # rm(results)
+  
   # nl@experiment@metrics.turtles
   # nl@experiment@metrics.patches
   # nl@experiment@variables
@@ -303,15 +320,25 @@ nl@experiment <- experiment(expname = expname,
     here("Model_development",
          "runtime",
          "v1.1",
-         paste0(expname, "_tempRDS.Rdata"))
+         paste0(expname, seed, "_tempRDS.Rdata"))
   saveRDS(nl, file = filename)
   # rm(nl)
   
   # nl <- readRDS(filename)
   
   gc()
+  
+  print(paste0("seed finished: ", seed))
+  k <- k + 1
+  
+  }
+  
+  print(paste0("finishing ", expname))
   i <- i + 1
 }
+
+
+
 
 #' Go to file 00_Validation_patterns_v1 or ##### Screening data #####
 
