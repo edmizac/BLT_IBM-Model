@@ -91,13 +91,13 @@ theme_set(theme_bw(base_size = 10))
 ### Read and clean
 ```{r Read data, warning=FALSE}
 # Read data from experiments
-nl_off_s <- readRDS(here("Model_analysis/Sensitivity-analysis/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/", "morris_2022-08-04_phenology-off_small.rds"))
+nl_off_s <- readRDS(here("Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/", "morris_2022-08-04_phenology-off_small.rds"))
 data_off_s <- unnest_simoutput(nl_off_s) ; rm(nl_off_s)
 
 data_off_s <- data_off_s %>% 
   mutate(feedingbout = "Feeding bout off")
 
-nl_on_s <- readRDS(here("Model_analysis/Sensitivity-analysis/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/", "morris_2022-08-04_phenology-on_small.rds"))
+nl_on_s <- readRDS(here("Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/", "morris_2022-08-04_phenology-on_small.rds"))
 data_on_s <- unnest_simoutput(nl_on_s) ; rm(nl_on_s)
 
 data_on_s <- data_on_s %>% 
@@ -188,7 +188,8 @@ db <- db %>%
 
 
 # For a specific group:
-a1 <- db %>% filter(id == "GuaSim_19") %>%
+# a1 <- db %>% filter(id == "GuaSim_19") %>% # agente morreu na maioria das primeiras runs
+a1 <- db %>% filter(id == "GuaSim_1150") %>%
   make_track(.x=x, .y=y, id = id, crs = our_crs)
 
 a1
@@ -209,6 +210,7 @@ hr_area(kde1) %>%
 
 # For all groups (require dplyr::nest())
 db_nest <- db %>%
+  dplyr::filter(between(siminputrow, 50, 55)) %>%  # in case you want to subset some data first
   make_track(.x=x, .y=y, id = id, crs = our_crs) %>% 
   nest(data = -c(id)) # group only by id or use: nest(data = c(x_, y_, t_, var1))
 

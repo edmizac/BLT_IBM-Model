@@ -5,10 +5,15 @@
 ; Phenology values (specific energy and species-time values on and off by switcher phenology-on? Stil need to add phenology cycles though)
 ; ------------------------------------------------
 
-extensions [ gis palette pathdir] ; using the GIS extension of NetLogo
+extensions [ gis r palette pathdir] ; using the GIS extension of NetLogo
 
 ;; BREEDS ;;
-turtles-own [ x_UTM y_UTM ]
+turtles-own [
+  x_UTM y_UTM
+  X_coords Y_coords ; X and Y list of coordinates (x_UTM and y_UTM) for home range calculation with the r extension in the end of each run (days = n_days)
+  Name ; monkey who number for home range calculation with the r extension in case there's more than one group
+
+]
 
 ; trees
 breed [feeding-trees feeding-tree]
@@ -405,7 +410,13 @@ to setup-monkeys
   create-monkeys 1
   ask monkeys [
 
+    ; for the behaviorsequence plot
     set behaviorsequence []
+
+    ; for home range calculation with the r extension
+    set Name word "BLT_" ( [who] of self )
+    set X_coords ( list x_UTM )
+    set Y_coords ( list y_UTM )
 
     ;;    set shape "banana"
 ;    set shape "mlp-2"
@@ -590,6 +601,9 @@ to go
     ask monkeys [ set action "travel" ]
     if day > no_days [
       output-print "run-days click finished"
+      output-print "calculating home range with r extension"
+      calc-homerange
+      output-print "home range calculation with r extension finished"
       stop
     ]
   ]
@@ -771,6 +785,11 @@ to move-monkeys
 
     set x_UTM (item 0 gis:envelope-of self)
     set y_UTM (item 2 gis:envelope-of self)
+
+    ; for home range calculation with r extension:
+    set X_coords lput x_UTM X_coords
+    set Y_coords lput y_UTM Y_coords
+
 
     ; Avoid matrix (for other implementations, check v1.1_matrix-avoidance branch):
 ;    avoid-matrix
@@ -1790,11 +1809,64 @@ to write-sleep
   file-close
 end
 ;-----------------------------------------------------------------
+
+to calc-homerange
+  r:eval "library(adehabitat)"
+  r:eval "library(dplyr)"
+  r:eval "library(tidyr)"
+  r:eval "library(amt)"
+
+  ;; create an empty data.frame"
+  r:eval "turtles <- data.frame()"
+
+  ;; merge the Name, X- and Y-lists of all animals to one big data.frame
+  ask monkeys
+  [
+    (r:putdataframe "turtle" "X" X_coords "Y" Y_coords)
+    r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
+    r:eval "turtles <- rbind(turtles, turtle)"
+  ]
+
+  ;; split the data.frame into coordinates and factor variable
+  r:eval "xy <- turtles[,c('X','Y')]"
+  r:eval "id <- turtles$Name"
+
+  ;; calculate homerange (mcp method)
+;  r:eval "homerange <- mcp(xy, id)"
+
+  ;; calculate homerange (amt package)
+  r:eval "db <- cbind(xy, id)"
+  ;  show r:get "db"
+  r:eval "db_nest <- db %>%  make_track(.x=Y, .y=X, id = id) %>% nest(data = -c(id))"
+  ;  show r:get "db_nest"
+  ; calculate HR metrics for every list (=id = run) using map()
+  r:eval "db_nest <- db_nest %>% mutate( KDE95 = map(data, hr_kde), KDE50 = map(data, hr_kde) )"
+  r:eval "db_nest <- db_nest %>%  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
+  r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
+;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
+  r:eval "db_nest <- db_nest %>% dplyr::select(-c(3, 4))"
+  show r:get "db_nest"
+
+  ; Merge HR to db and save
+  r:eval "db <- left_join(db, db_nest)"
+  r:eval "db <- db %>% mutate(hr_area_ha = area / 10000)"
+
+  ; I only calculated KDE95, so I'll simplify the collums
+  r:eval "db <- db %>%    select(-c(KDE_value, area)) %>%   rename(KDE95 = hr_area_ha)"
+  show r:get "db"
+
+end
+;-----------------------------------------------------------------
 ; end of commands ================================================
 ;-----------------------------------------------------------------
 
 
-;; REPORTERS
+
+
+
+;-----------------------------------------------------------------
+;; REPORTERS =====================================================
+;-----------------------------------------------------------------
 
 ;to-report simulation-time-end
 ;  ifelse day = no_days AND all? monkeys [ behavior = "sleeping" ]
@@ -1853,8 +1925,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
-370
+501
+406
 -1
 -1
 3.0
@@ -1867,10 +1939,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-80
+80
+-64
+64
 0
 0
 1
@@ -2177,7 +2249,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-2
+5
 
 CHOOSER
 984
@@ -2209,7 +2281,7 @@ step_forget
 step_forget
 0
 1000
-163.0
+75.0
 1
 1
 NIL
@@ -2269,7 +2341,7 @@ travel_speed
 travel_speed
 0
 5
-1.3699999999999999
+2.0
 0.1
 1
 NIL
@@ -3015,7 +3087,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-3
+0
 
 BUTTON
 272
