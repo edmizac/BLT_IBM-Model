@@ -23,8 +23,9 @@
 
 # Folders:
 /Data/Shapefiles/*
-/Data/Trees-Guarei/*
-/Data/Resource-trees/*
+/Data/Movement/Trees-Guarei/*
+/Data/Movement/Resource-trees/*
+Data/Movement/Trees-Guarei/
 !*/Tree-points-unique.R
 !*/Tree-points-to-shapefile.R
 /Model_development/Model-cleaning/runtime
