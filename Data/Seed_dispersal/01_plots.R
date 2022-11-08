@@ -8,10 +8,6 @@
 #
 #
 
-## Options -------------------------
-# (plotting, memory limit, decimal digits)
-# 
-
 ## Packages -------------------------
 library("here")
 library("tidyverse")
@@ -19,9 +15,87 @@ library("dplyr")
 library("ggplot2")
 library("readxl")
 library("ggalt")
+library("lubridate")
+# library("hms")
+
+## Options -------------------------
+# (plotting, memory limit, decimal digits)
+theme_set(theme_bw(base_size = 15))
 
 
-# Checking when seeds are dispersed next day 
+# Load data
+dat.all <- read.csv2(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDispersal.csv"),
+                     sep = ",")
+dat.all %>% str()
+is.na(dat.all$def_datetime)
+
+# detach("package:hms", unload=TRUE)
+
+# Assiging dispersal event as in the same day or next day
+dat.all <- dat.all %>%
+  mutate(def_datetime = as.POSIXct(def_datetime),
+         feed_datetime = as.POSIXct(feed_datetime),
+         SDD = as.numeric(SDD)) %>%
+  # mutate(def_datetime = ymd_hms(def_datetime),
+         # feed_datetime = ymd_hms(feed_datetime)) %>% 
+  
+
+  # mutate(gut_transit_time_h2 = hm(def_datetime)) %>%
+  mutate(disp_day = ifelse(lubridate::day(def_datetime) == lubridate::day(feed_datetime), # use case_when for a dplyr-er solution: https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
+                           "same day",
+                           "previous day")
+  )
+
+a %>% str()
+
+# Get hour-normalized dispersal events (*! still needs to solve the problem with circular/directional data)
+  # for hms datetime (scale_x_time)
+# a <- dat.all %>% 
+#   mutate(
+#     def_hour = as_hms(def_datetime),
+#     feed_hour = as_hms(feed_datetime),
+#     difftime_hour = difftime(feed_hour, def_hour))
+
+
+
+##### Density plots #####
+
+### Gut transit time ###
+dat.all %>% ggplot(
+  aes(x = gut_transit_time / 60, fill = group, group = group)
+  ) +
+  geom_density(alpha = 0.4) +
+  xlab("gut transit time (in hours)") +
+  # Option 1.1:
+  facet_wrap(~disp_day, nrow = 2)
+  # Option 1.2:
+  # facet_wrap(~species, ncol = 5) +
+  # Option2:
+  # facet_grid(rows = vars(species), cols = vars(disp_day))
+  # theme_bw(base_size = 10)
+
+# Save plot  
+# ggsave('testplot.png', height = 15, width = 8.5)  
+
+
+### SDD ###
+dat.all %>% ggplot(
+  aes(x = SDD, fill = group, group = group)
+) +
+  geom_density(alpha = 0.4) +
+  xlab("Seed dispersal distance (SDD in meters)") +
+  # Option 1.1:
+  facet_wrap(~disp_day, nrow = 2) +
+  # Option 1.2?
+  # facet_wrap(~species) +
+  theme_bw(base_size = 10) # +
+  # theme(axis.text.x = element_text(size=10))
+
+
+### n defecations per day ###
+
+
+##### Checking when seeds are dispersed next day #####
 
 ## for seeds defecated on the next day:
 dat.gua.5 <- dat.gua %>% 
