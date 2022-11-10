@@ -15,11 +15,9 @@ our_crs <- "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_def
 
 ## Packages -------------------------
 library("here")
-library("tidyverse")
 library("lubridate")
 library("hms")
 library("dplyr")
-library("ggplot2")
 library("readxl")
 library("sf")
 
@@ -72,14 +70,15 @@ gua.sdd <- gua.sdd %>%
 ## Gut transit time  
 gua.gtt <- read_excel(here("Data", "Seed_dispersal", "Raw_Guarei_SDD-Mayara-final.xlsx"), sheet = 3)
 gua.gtt <- gua.gtt %>% 
-  rename(disp_event = id_dispersal) %>% 
+  # rename(disp_event = id_dispersal) %>% 
          
   # check if gut_transit_time is correct:
   mutate(feed_datetime = lubridate::dmy_hms(feed_datetime),
          def_datetime = lubridate::dmy_hms(def_datetime),
          month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States")) %>%
   # mutate(gtt_test = difftime(def_datetime, feed_datetime, unit = "min")) %>% # yes, it is correct!
-  mutate(gtt_test = interval(feed_datetime, def_datetime) %/% minutes(1),
+  mutate(gut_transit_time = hms::as_hms(gut_transit_time), 
+         gtt_test = interval(feed_datetime, def_datetime) %/% minutes(1),
          gut_transit_time_h = interval(feed_datetime, def_datetime) %/% hours(1)) %>% # yes, it is correct! (with lubridate)
   dplyr::select(-gut_transit_time) %>% 
   rename(gut_transit_time = gtt_test) %>% 

@@ -10,7 +10,7 @@
 
 ## Packages -------------------------
 library("here")
-library("tidyverse")
+# library("tidyverse")
 library("dplyr")
 library("ggplot2")
 library("readxl")
@@ -28,25 +28,46 @@ dat.all <- read.csv2(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDi
                      sep = ",")
 dat.all %>% str()
 is.na(dat.all$def_datetime)
+nrow(dat.all[is.na(dat.all$def_datetime), ])
+
+# dat.all.m <- dat.all %>% 
+#   dplyr::select(feed_datetime, def_datetime)
 
 # detach("package:hms", unload=TRUE)
 
 # Assiging dispersal event as in the same day or next day
 dat.all <- dat.all %>%
-  mutate(def_datetime = as.POSIXct(def_datetime),
-         feed_datetime = as.POSIXct(feed_datetime),
-         SDD = as.numeric(SDD)) %>%
-  # mutate(def_datetime = ymd_hms(def_datetime),
-         # feed_datetime = ymd_hms(feed_datetime)) %>% 
+  mutate(
+    def_datetime = lubridate::as_datetime(def_datetime), #, tz = "America/Sao_Paulo"),
+    feed_datetime = lubridate::as_datetime(feed_datetime), #, tz = "America/Sao_Paulo"),
+    SDD = as.numeric(SDD) #) %>%
+  ) %>% 
   
-
-  # mutate(gut_transit_time_h2 = hm(def_datetime)) %>%
+  # mutate(
+  #   def_datetime = ymd_hms(def_datetime),
+  #   feed_datetime = ymd_hms(feed_datetime),
+  #   ) #%>%
+  
+  mutate(
+    day = lubridate::as_date(def_datetime),
+    # date_time = parse_date_time(def_datetime, orders = "ymd "),
+    # hours = lubridate::as_datetime(def_datetime),
+    # hours = lubridate::hms(hours)
+    # day = lubridate::dmy(def_datetime, locale = "English")
+  ) %>% 
+  
   mutate(disp_day = ifelse(lubridate::day(def_datetime) == lubridate::day(feed_datetime), # use case_when for a dplyr-er solution: https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
                            "same day",
                            "previous day")
   )
 
-a %>% str()
+# str(dat.all)
+# str(a)
+  
+# x <- dat.all.m$def_datetime[1]
+# format <- guess_formats(x, c("Ymd HMS", "mdY", "BdY", "Bdy", "bdY", "bdy", "mdy", "dby"), locale = "Portuguese")
+# format
+# strptime(x, format)
 
 # Get hour-normalized dispersal events (*! still needs to solve the problem with circular/directional data)
   # for hms datetime (scale_x_time)
@@ -56,6 +77,10 @@ a %>% str()
 #     feed_hour = as_hms(feed_datetime),
 #     difftime_hour = difftime(feed_hour, def_hour))
 
+
+# Check data
+b <- dat.all %>% 
+  dplyr::filter(day == "2017-12-03")
 
 
 ##### Density plots #####
@@ -88,48 +113,36 @@ dat.all %>% ggplot(
   facet_wrap(~disp_day, nrow = 2) +
   # Option 1.2?
   # facet_wrap(~species) +
-  theme_bw(base_size = 10) # +
+  theme_bw(base_size = 15) # +
   # theme(axis.text.x = element_text(size=10))
+
+dat.all %>% 
+  ggplot() +
+  aes(x = group, y = SDD, fill = group) +
+  geom_boxplot()
 
 
 ### n defecations per day ###
-
-
-##### Checking when seeds are dispersed next day #####
-
-## for seeds defecated on the next day:
-dat.gua.5 <- dat.gua %>% 
-  dplyr::filter(gut_transit_time > 5)
-
-dat.gua.5$feed_datetime == dat.gua.5$def_datetime # all days are diferent = seeds were not defecated in the same day
-
-## for seeds dispersed on the same day
-
-dat.gua.sameday <- dat.gua %>% 
-  dplyr::filter(gut_transit_time < 5)
-
-## mean and sd
-sd.data <- data.frame(
-  
-  data = c("All", "other day", "same day"),
-  
-  mean = c(
-    mean(dat.gua$gut_transit_time),
-    mean(dat.gua.5$gut_transit_time),
-    mean(dat.gua.sameday$gut_transit_time)
-  ), 
-  
-  sd = c(
-    sd(dat.gua$gut_transit_time), 
-    sd(dat.gua.5$gut_transit_time),
-    sd(dat.gua.sameday$gut_transit_time)
+dat.all.summary <- dat.all %>% 
+  group_by(group, day) %>% 
+  summarize(
+    defecation_events = n(),
+    mean_SDD = mean(SDD),
+    sd_SDD = sd(SDD)
   )
-)
+
+dat.all.summary %>% 
+  ggplot() +
+  aes(x = group, y = defecation_events, fill = group) +
+  geom_boxplot()
 
 
-## plots (use hms package instead of lubridate)
-gua.nextday <- dat.gua %>% 
-  # dplyr::filter(gut_transit_time > 5) %>% 
+#### defecations by hour ##### 
+
+# prep data (use hms package instead of lubridate)
+dat.all.hourwise.sameday <- dat.all %>% 
+  dplyr::filter(disp_day == "same day") %>%
+  dplyr::filter(group == "Suzano") %>% # for plotting each group
   
   # for hms datetime (scale_x_time)
   mutate(
@@ -140,58 +153,101 @@ gua.nextday <- dat.gua %>%
 
   # filter specific month
   # dplyr::filter(month_id == "May")
+# 
+# ### create function to get circular hours (bases on https://rvanmazijk.github.io/circular-data/)
+# interval(gua.nextday$feed_datetime, gua.nextday$def_datetime)
+# get_month_seq <- function(grt) {
+#   # Creates seq from start to end, unless end <= start
+#   # (e.g. 16 h to 07 h = 11, 12, 1, 2)
+#   
+#   map2(def_interval, function(def_interval) {
+#     hour_seq <- 
+#     if (int_start(def_interval) > int_end(def_interval))          lubridate::int_flip(def_interval)
+#     else if (int_start(def_interval) < int_end(def_interval))     def_interval
+#     hour_seq
+#   })
+# }
+# 
+# grttimes <- gua.nextday %>%
+#   mutate(def_times = get_month_seq(feed_datetime, def_datetime))
+# grttimes
+# 
+# gua.nextday <- gua.nextday
+# 
+# # for POSIXct datetime (scale_x_datetime)
+# # mutate(feed_datetime = as.POSIXct(strptime(feed_datetime, "%Y-%m-%d %H:%M")),
+# # def_datetime = as.POSIXct(strptime(def_datetime, "%Y-%m-%d %H:%M")))
+# 
+# lims <- as.POSIXct(strptime(c("2011-01-01 13:00","2011-01-02 12:00"), format = "%Y-%m-%d %H:%M"))
 
-### create function to get circular hours (bases on https://rvanmazijk.github.io/circular-data/)
-interval(gua.nextday$feed_datetime, gua.nextday$def_datetime)
-get_month_seq <- function(grt) {
-  # Creates seq from start to end, unless end <= start
-  # (e.g. 16 h to 07 h = 11, 12, 1, 2)
-  
-  map2(def_interval, function(def_interval) {
-    hour_seq <- 
-    if (int_start(def_interval) > int_end(def_interval))          lubridate::int_flip(def_interval)
-    else if (int_start(def_interval) < int_end(def_interval))     def_interval
-    hour_seq
-  })
-}
-
-grttimes <- gua.nextday %>%
-  mutate(def_times = get_month_seq(feed_datetime, def_datetime))
-grttimes
-
-gua.nextday <- gua.nextday
-
-# for POSIXct datetime (scale_x_datetime)
-# mutate(feed_datetime = as.POSIXct(strptime(feed_datetime, "%Y-%m-%d %H:%M")),
-# def_datetime = as.POSIXct(strptime(def_datetime, "%Y-%m-%d %H:%M")))
-
-lims <- as.POSIXct(strptime(c("2011-01-01 13:00","2011-01-02 12:00"), format = "%Y-%m-%d %H:%M"))
 
 ### Option 1 - Dunbell plot based on: https://stackoverflow.com/questions/70816256/how-to-plot-time-interval-data-in-r-using-ggplot
-gua.nextday %>%
+dat.all.hourwise.sameday %>%
   ggplot(
     aes(
       x = feed_datetime,
       xend = def_datetime,
-      y = disp_event#species
+      y = species# disp_event
     )
   ) +
   xlab("time (hours)") +
-  scale_x_time() +
+  # scale_x_time() +
 
   geom_dumbbell(
     colour = "#a3c4dc",
     colour_xend = "#e68a00",
     size = 1
-  ) #+
+  ) +
+  geom_jitter(height = 0.1) #+
+  # theme(axis.text.y = element_text(size=5)) #+
 #scale_x_continuous(limits = lims)
 
 ### Option 2 - geom_segment # https://stackoverflow.com/questions/55185599/plotting-time-intervals-as-segments
 ###                          or https://stackoverflow.com/questions/70816256/how-to-plot-time-interval-data-in-r-using-ggplot
-gua.nextday %>%
+dat.all.hourwise.sameday %>%
   ggplot() +
-  geom_point(aes(x=feed_datetime, y=disp_event), size=1) +
-    geom_segment(aes(x=feed_datetime, xend=def_datetime, y = disp_event, yend = disp_event),
-               arrow=arrow(30,unit(1.25,"mm"),"last","closed")) #+
+  geom_point(aes(x=feed_datetime, 
+                 y=species #disp_event
+                 ), 
+             size=1) +
+    geom_segment(aes(x=feed_datetime, xend=def_datetime, y = species, yend = species), # y and yend=disp_event
+               arrow=arrow(30,unit(1.25,"mm"),"last","closed")) +
+  theme(axis.text.y = element_text(size=15)) #+
    # facet_wrap(~month_id)
 
+### Option 2.2 - to jitter lines (based on https://stackoverflow.com/questions/21904364/how-to-jitter-dodge-geom-segments-so-they-remain-parallel
+###                               and https://stackoverflow.com/questions/60981619/apply-jitter-uniformly-across-geoms-in-ggplot2)
+
+dat.all.hourwise.sameday %>%
+  ggplot() +
+  geom_point(aes(y = feed_datetime, x = species), 
+             position = position_jitter(seed = 123, width =0.5)) +
+  geom_point(aes(y = def_datetime, x = species), shape = 10,
+             position = position_jitter(seed = 123, width =0.5)) +
+  # geom_point(aes(y=def_datetime, x = species), shape = 17) +
+  # geom_text(aes(y=feed_datetime, x = species), label = "▶", size = 3, family = "HiraKakuPro-W3") +
+  geom_linerange(
+    aes(y = feed_datetime,
+        ymin=feed_datetime, ymax=def_datetime, 
+        x = species, 
+        # xmin = species, xmax = species,  
+        group = disp_event),
+    position = position_jitter(seed = 123, .5)) +
+  coord_flip()
+
+# Funciona:
+# dat.all.hourwise.sameday %>%
+#   # group_by(disp_event) %>% 
+#   ggplot(aes(y = feed_datetime,
+#              ymin=feed_datetime, ymax=def_datetime, 
+#              x = disp_event, 
+#              xmin = disp_event, xmax = disp_event,  
+#              group = species,
+#              color = species)) +
+#   # geom_point(aes(y = feed_datetime, x = species)) +
+#   # geom_point(aes(y = def_datetime, x = species), shape = 10) +
+#   # geom_point(aes(y=def_datetime, x = species), shape = 17) +
+#   # geom_text(aes(y=feed_datetime, x = species), label = "▶", size = 3, family = "HiraKakuPro-W3") +
+#   geom_linerange(
+#     position = position_dodge(.75)) +
+#   coord_flip()
