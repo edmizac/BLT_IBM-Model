@@ -34,30 +34,27 @@ dat.all <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDis
 # Wrangling data
 dat.all <- dat.all %>%
   
+  # make datetime POSIXct
   mutate(
     def_datetime = lubridate::as_datetime(def_datetime), #, tz = "America/Sao_Paulo"),
     feed_datetime = lubridate::as_datetime(feed_datetime) #, tz = "America/Sao_Paulo"),
     ) %>% 
   
-  # mutate(
-  #   def_datetime = ymd_hms(def_datetime),
-  #   feed_datetime = ymd_hms(feed_datetime),
-  #   ) #%>%
-  
+  # gather yyyy/mm/dd as id
   mutate(
     day = lubridate::as_date(def_datetime),
-    # date_time = parse_date_time(def_datetime, orders = "ymd "),
-    # hours = lubridate::as_datetime(def_datetime),
-    # hours = lubridate::hms(hours)
-    # day = lubridate::dmy(def_datetime, locale = "English")
   ) %>% 
   
-  # Assiging dispersal event as in the same day or next day
+  # Defining each dispersal event as in the same day or next day
   mutate(disp_day = ifelse(lubridate::day(def_datetime) == lubridate::day(feed_datetime), # use case_when for a dplyr-er solution: https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
                            "same day",
-                           "previous day"),
-         disp_dau = as.factor(disp_day)
-  )
+                           "next day"),
+         disp_day = as.factor(disp_day)
+  ) %>% 
+  
+  # Order group levels and drop NA
+  dplyr::filter(!is.na(group)) %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara"))
 
 # str(dat.all)
 # str(a)
@@ -69,46 +66,64 @@ dat.all %>%
   str()
 
 
-##### Density plots #####
+#### Gut transit time #####
 
-### Gut transit time ###
+## Density Option 1: by day of dispersal
 dat.all %>% ggplot(
   aes(x = gut_transit_time / 60, fill = group, group = group)
-  ) +
+) +
   geom_density(alpha = 0.4) +
-  xlab("gut transit time (in hours)") +
-  # Option 1.1:
-  facet_wrap(~disp_day, nrow = 2)
+  facet_wrap(~disp_day, nrow = 2) +
+  xlab("gut transit time (in hours)") # +
   # Option 1.2:
-  # facet_wrap(~species, ncol = 5) +
-  # Option2:
-  # facet_grid(rows = vars(species), cols = vars(disp_day))
-  # theme_bw(base_size = 10)
+  # xlab("hours after each defecation event") +
+  # ggtitle("Gut transit time (in hours)") +
+  # theme(plot.title = element_text(hjust = 0.5))
+
+
+## Density Option 2: by plant species (total mess)
+dat.all %>% ggplot(
+  aes(x = gut_transit_time / 60, fill = group, group = group)
+) +
+  geom_density(alpha = 0.8) +
+  facet_wrap(~species, ncol = 8) +
+  theme_bw(base_size = 10) +
+  xlab("gut transit time (in hours)")
 
 # Save plot  
 # ggsave('testplot.png', height = 15, width = 8.5)  
 
 
-### SDD ###
+
+#### SDD #####
+
+## Density Option 1: by day of dispersal
 dat.all %>% ggplot(
   aes(x = SDD, fill = group, group = group)
 ) +
   geom_density(alpha = 0.4) +
-  xlab("Seed dispersal distance (SDD in meters)") +
-  # Option 1.1:
-  facet_wrap(~disp_day, nrow = 2) +
-  # Option 1.2?
-  # facet_wrap(~species) +
-  theme_bw(base_size = 15) # +
+  xlab("seed dispersal distance (SDD in meters)") +
+  facet_wrap(~disp_day, nrow = 2)
+
+## Density Option 2: by plant species
+dat.all %>% ggplot(
+  aes(x = SDD, group = species)
+) +
+  geom_density(fill = "black") +
+  facet_wrap(~species, ncol = 6) +
+  theme_minimal(base_size = 10) +
+  theme(legend.position="none")
   # theme(axis.text.x = element_text(size=10))
 
-dat.all %>% 
+## Boxplot
+dat.all %>%
   ggplot() +
   aes(x = group, y = SDD, fill = group) +
-  geom_boxplot()
+  geom_boxplot() +
+  theme(axis.title.x = element_blank())
 
 
-### n defecations per day ###
+#### n defecations per day ####
 dat.all.summary <- dat.all %>% 
   group_by(group, day) %>% 
   summarize(
@@ -120,15 +135,17 @@ dat.all.summary <- dat.all %>%
 dat.all.summary %>% 
   ggplot() +
   aes(x = group, y = defecation_events, fill = group) +
-  geom_boxplot()
+  geom_boxplot() +
+  theme(axis.title.x = element_blank())
 
 
-#### defecations by hour ##### 
+
+#### defecations by hour ####
 
 # prep data (use hms package instead of lubridate)
 dat.all.hourwise.sameday <- dat.all %>% 
   dplyr::filter(disp_day == "same day") %>%
-  dplyr::filter(group == "Suzano") %>% # for plotting each group
+  # dplyr::filter(group == "Suzano") %>% # for plotting each group
   
   # for hms datetime (scale_x_time)
   mutate(
@@ -203,13 +220,24 @@ dat.all.hourwise.sameday %>%
 
 ### Option 2.2 - to jitter lines (based on https://stackoverflow.com/questions/21904364/how-to-jitter-dodge-geom-segments-so-they-remain-parallel
 ###                               and https://stackoverflow.com/questions/60981619/apply-jitter-uniformly-across-geoms-in-ggplot2)
+## Get colors:
+library(pals)
+# pals::pal.bands(alphabet)
+unique(dat.all$species)
+cols <- unname(alphabet2(n=19))
+
+class(dat.all.hourwise.sameday$feed_datetime)
+dat.all.hourwise.sameday %>% str()
+
 
 dat.all.hourwise.sameday %>%
+  mutate(feed_datetime = as.POSIXct(feed_datetime),
+         def_datetime = as.POSIXct(def_datetime)) %>% 
   ggplot() +
   geom_point(aes(y = feed_datetime, x = species), 
-             position = position_jitter(seed = 123, width =0.5)) +
+             position = position_jitter(seed = 123, width = .2)) +
   geom_point(aes(y = def_datetime, x = species), shape = 10,
-             position = position_jitter(seed = 123, width =0.5)) +
+             position = position_jitter(seed = 123, width = .2)) +
   # geom_point(aes(y=def_datetime, x = species), shape = 17) +
   # geom_text(aes(y=feed_datetime, x = species), label = "▶", size = 3, family = "HiraKakuPro-W3") +
   geom_linerange(
@@ -217,9 +245,40 @@ dat.all.hourwise.sameday %>%
         ymin=feed_datetime, ymax=def_datetime, 
         x = species, 
         # xmin = species, xmax = species,  
-        group = disp_event),
-    position = position_jitter(seed = 123, .5)) +
-  coord_flip()
+        group = disp_event,
+        color = species),
+    size = .6,
+    position = position_jitter(seed = 123, .2)) +
+  theme(legend.position="none") +
+  # Make space between lines bigger:
+  # theme(aspect.ratio = 2) +
+  # Species name size:
+  theme(
+    axis.text.y = element_text(
+      # lineheight = 1.5
+      # ,
+      size = 15
+    ),
+    axis.text.x = element_text(size = 12)
+    
+  ) +
+  # Adjust hours in y axis:
+  # scale_y_date(breaks = scales::date_breaks("4 hours"), date_labels = "%H:%M") +
+  scale_y_time(limits = c(lubridate::hm("07:00"), lubridate::hm("19:00"))) +
+  theme(
+    strip.text = element_text(size = 17)
+    # angle = 90
+  ) +
+  # Define colors:
+  # scale_color_manual(values = cols) +
+  coord_flip() +
+  facet_grid(~group, scales = "fixed") +
+  ylab("hour of day")
+
+# Save plot  
+# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_species_hourwise_sameday.png'), height = 15, width = 12.5)
+
+
 
 # Funciona:
 # dat.all.hourwise.sameday %>%
