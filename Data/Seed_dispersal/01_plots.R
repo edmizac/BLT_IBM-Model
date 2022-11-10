@@ -12,11 +12,11 @@
 library("here")
 # library("tidyverse")
 library("dplyr")
-library("ggplot2")
 library("readxl")
-library("ggalt")
 library("lubridate")
 # library("hms")
+library("ggplot2")
+library("ggalt")
 
 ## Options -------------------------
 # (plotting, memory limit, decimal digits)
@@ -24,24 +24,20 @@ theme_set(theme_bw(base_size = 15))
 
 
 # Load data
-dat.all <- read.csv2(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDispersal.csv"),
-                     sep = ",")
-dat.all %>% str()
-is.na(dat.all$def_datetime)
-nrow(dat.all[is.na(dat.all$def_datetime), ])
+dat.all <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDispersal.csv"),
+                     sep = ",", stringsAsFactors = TRUE)
+# dat.all %>% str()
+# is.na(dat.all$def_datetime)
+# nrow(dat.all[is.na(dat.all$def_datetime), ])
 
-# dat.all.m <- dat.all %>% 
-#   dplyr::select(feed_datetime, def_datetime)
 
-# detach("package:hms", unload=TRUE)
-
-# Assiging dispersal event as in the same day or next day
+# Wrangling data
 dat.all <- dat.all %>%
+  
   mutate(
     def_datetime = lubridate::as_datetime(def_datetime), #, tz = "America/Sao_Paulo"),
-    feed_datetime = lubridate::as_datetime(feed_datetime), #, tz = "America/Sao_Paulo"),
-    SDD = as.numeric(SDD) #) %>%
-  ) %>% 
+    feed_datetime = lubridate::as_datetime(feed_datetime) #, tz = "America/Sao_Paulo"),
+    ) %>% 
   
   # mutate(
   #   def_datetime = ymd_hms(def_datetime),
@@ -56,31 +52,21 @@ dat.all <- dat.all %>%
     # day = lubridate::dmy(def_datetime, locale = "English")
   ) %>% 
   
+  # Assiging dispersal event as in the same day or next day
   mutate(disp_day = ifelse(lubridate::day(def_datetime) == lubridate::day(feed_datetime), # use case_when for a dplyr-er solution: https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
                            "same day",
-                           "previous day")
+                           "previous day"),
+         disp_dau = as.factor(disp_day)
   )
 
 # str(dat.all)
 # str(a)
   
-# x <- dat.all.m$def_datetime[1]
-# format <- guess_formats(x, c("Ymd HMS", "mdY", "BdY", "Bdy", "bdY", "bdy", "mdy", "dby"), locale = "Portuguese")
-# format
-# strptime(x, format)
-
-# Get hour-normalized dispersal events (*! still needs to solve the problem with circular/directional data)
-  # for hms datetime (scale_x_time)
-# a <- dat.all %>% 
-#   mutate(
-#     def_hour = as_hms(def_datetime),
-#     feed_hour = as_hms(feed_datetime),
-#     difftime_hour = difftime(feed_hour, def_hour))
-
 
 # Check data
-b <- dat.all %>% 
-  dplyr::filter(day == "2017-12-03")
+dat.all %>% 
+  dplyr::filter(day == "2017-12-03") %>% 
+  str()
 
 
 ##### Density plots #####

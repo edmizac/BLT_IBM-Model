@@ -62,6 +62,7 @@ gua.pt <- gua.pt %>%
 ## SDD
 gua.sdd <- read_excel(here("Data", "Seed_dispersal", "Raw_Guarei_SDD-Mayara-final.xlsx"), sheet = 2)
 gua.sdd <- gua.sdd %>% 
+  dplyr::select(-1) %>% 
   rename(disp_event = id_dispersal) %>% 
   dplyr::select(disp_event, SDD) %>% 
   mutate_if(is.character, as.factor)
@@ -69,22 +70,25 @@ gua.sdd <- gua.sdd %>%
 
 ## Gut transit time  
 gua.gtt <- read_excel(here("Data", "Seed_dispersal", "Raw_Guarei_SDD-Mayara-final.xlsx"), sheet = 3)
-gua.gtt <- gua.gtt %>% 
-  # rename(disp_event = id_dispersal) %>% 
-         
+gua.gtt <- gua.gtt %>%
+  dplyr::select(-1) %>%
+  # rename(disp_event = id_dispersal) %>%
+
   # check if gut_transit_time is correct:
   mutate(feed_datetime = lubridate::dmy_hms(feed_datetime),
          def_datetime = lubridate::dmy_hms(def_datetime),
          month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States")) %>%
   # mutate(gtt_test = difftime(def_datetime, feed_datetime, unit = "min")) %>% # yes, it is correct!
-  mutate(gut_transit_time = hms::as_hms(gut_transit_time), 
+  mutate(gut_transit_time_hms = hms::as_hms(gut_transit_time),
          gtt_test = interval(feed_datetime, def_datetime) %/% minutes(1),
-         gut_transit_time_h = interval(feed_datetime, def_datetime) %/% hours(1)) %>% # yes, it is correct! (with lubridate)
-  dplyr::select(-gut_transit_time) %>% 
-  rename(gut_transit_time = gtt_test) %>% 
-  
-  dplyr::select(disp_event, gut_transit_time, gut_transit_time_h, month_id) %>% 
-  mutate_if(is.character, as.factor)  %>% 
+         gtt_test = base::as.difftime(gtt_test, units = "mins")
+         # gut_transit_time_h = interval(feed_datetime, def_datetime) %/% hours(1) %>% # yes, it is correct! (with lubridate)
+  ) %>%
+  dplyr::select(-gut_transit_time) %>%
+  rename(gut_transit_time = gtt_test) %>%
+
+  dplyr::select(disp_event, gut_transit_time, gut_transit_time_hms, month_id) %>%
+  mutate_if(is.character, as.factor)  %>%
   mutate(group = "Guareí")
 
 # gua.gtt %>% str()
@@ -94,7 +98,7 @@ dat.gua <- dplyr::left_join(gua.pt, gua.fec)
 dat.gua <- dplyr::left_join(dat.gua, gua.sdd)
 dat.gua <- dplyr::left_join(dat.gua, gua.gtt)
 dat.gua <- dat.gua %>%
-  dplyr::filter(!is.na(id_feedtree)) 
+  dplyr::filter(!is.na(id_feedtree))
   
 # ### Write csv
 # dat.gua %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Guarei_SeedDispersal.csv"),
@@ -147,16 +151,17 @@ dat.suz <- cbind(dat.suz.coords.feed_UTM, dat.suz.coords.def_UTM, dat.suz) %>%
 
 ## calc gut transit time
 
+
 dat.suz <- dat.suz %>% 
   # for hms datetime (scale_x_time)
   dplyr::mutate(
     month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States"),
     # check if gut_transit_time is correct:
-    # feed_datetime = lubridate::dmy_hms(feed_datetime), # data is already POSIXct
-    # def_datetime = lubridate::dmy_hms(def_datetime),   # data is already POSIXct
-    # gut_transit_time = difftime(def_datetime, feed_datetime, unit = "mins") # %>% # yes, it is correct!
-    gut_transit_time = interval(feed_datetime, def_datetime) %/% minutes(1), # yes, it is correct! (with lubridate)
-    gut_transit_time_h = interval(feed_datetime, def_datetime) %/% hours(1)
+    feed_datetime = lubridate::ymd_hms(feed_datetime), # data is already POSIXct
+    def_datetime = lubridate::ymd_hms(def_datetime),   # data is already POSIXct
+    gut_transit_time = difftime(def_datetime, feed_datetime, unit = "mins"), # %>% # yes, it is correct!
+    # gut_transit_time = interval(feed_datetime, def_datetime) %/% minutes(1), # yes, it is correct! (with lubridate)
+    gut_transit_time_hms = hms::as_hms(gut_transit_time)
     ) %>%
   rename(n_seeds = n_seeds_sp) %>%   # rename for consistency with the other datasets
   rename(id_feedtree = id_tree_gps) %>% 
@@ -229,11 +234,11 @@ dat.taq <- dat.taq %>%
   dplyr::mutate(
     month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States"),
     # check if gut_transit_time is correct:
-    # feed_datetime = lubridate::dmy_hms(feed_datetime), # data is already POSIXct
-    # def_datetime = lubridate::dmy_hms(def_datetime),   # data is already POSIXct
-    # gut_transit_time = difftime(def_datetime, feed_datetime, unit = "mins") # %>% # yes, it is correct!
-    gut_transit_time = interval(feed_datetime, def_datetime) %/% minutes(1), # yes, it is correct! (with lubridate)
-    gut_transit_time_h = interval(feed_datetime, def_datetime) %/% hours(1)
+    feed_datetime = lubridate::ymd_hms(feed_datetime), # data is already POSIXct
+    def_datetime = lubridate::ymd_hms(def_datetime),   # data is already POSIXct
+    gut_transit_time = difftime(def_datetime, feed_datetime, unit = "mins"), # %>% # yes, it is correct!
+    # gut_transit_time = interval(feed_datetime, def_datetime) %/% minutes(1), # yes, it is correct! (with lubridate)
+    gut_transit_time_hms = hms::as_hms(gut_transit_time)
   ) %>%
   # rename(n_seeds = n_seeds_sp) %>%   # rename for consistency with the other datasets
   rename(id_feedtree = id_tree_gps) %>%
@@ -243,7 +248,7 @@ dat.taq <- dat.taq %>%
   mutate_if(is.character, as.factor) %>% 
   mutate(group = "Taquara")
 
-dat.taq %>% str()
+# dat.taq %>% str()
 
 
 # ### Write csv
@@ -253,7 +258,35 @@ dat.taq %>% str()
 
 
 #### Santa Maria ####
+# Read data
+dat.sma <- read_excel(here("Data", "Seed_dispersal", "Raw_SantaMaria_Laurence_2017_07_d17.xlsx"))
 
+dat.sma <- dat.sma %>% 
+  dplyr::select(-c(15:18)) %>% 
+  
+  # for hms datetime (scale_x_time)
+  dplyr::mutate(
+    month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States"),
+    # check if gut_transit_time is correct:
+    feed_datetime = lubridate::ymd_hms(feed_datetime), # data is already POSIXct
+    def_datetime = lubridate::ymd_hms(def_datetime),   # data is already POSIXct
+    gut_transit_time = round(difftime(def_datetime, feed_datetime, unit = "mins"), digits = 0), # %>% # yes, it is correct!
+    # gut_transit_time = interval(feed_datetime, def_datetime) %/% minutes(1), # yes, it is correct! (with lubridate)
+    gut_transit_time_hms = hms::as_hms(gut_transit_time)
+  ) %>% 
+  dplyr::mutate(id_feedtree = as.character(id_feedtree)) %>% 
+  # dplyr::filter(n_seeds == ">100") %>% 
+  # dplyr::mutate(n_seeds = as.numeric(dplyr::recode(n_seeds, ">100" = "100"))) %>% 
+  mutate(feed_x = as.numeric(feed_x),
+         def_x = as.numeric(def_x),
+         def_y = as.numeric(def_y)) %>% 
+  mutate_if(is.character, as.factor) %>% 
+  mutate(group = "Santa Maria") %>% 
+  select(-disp_day) # this will be derived together in 01_plots.R script
+
+### Write csv
+# dat.sma %>% write.csv(here("Data", "Seed_dispersal", "Curated", "SantaMaria_SeedDispersal.csv"),
+#                       row.names = FALSE)
 
 
 #### Bind all data together ####
@@ -262,6 +295,7 @@ dat.taq %>% str()
 dat.gua %>% colnames()
 dat.suz %>% colnames()
 dat.taq %>% colnames()
+dat.sma %>% colnames()
 
 # Check rownumber
 sum(
@@ -270,13 +304,22 @@ sum(
   nrow(dat.suz)
   ,
   nrow(dat.taq)
+  ,
+  nrow(dat.sma)
 )
+
+dat.gua %>% str()
+dat.taq %>% str()
+dat.suz %>% str()
+dat.sma %>% str()
+
 
 # merge dataframes
 # library(purrr)
 # dat.all <- purrr::reduce(list(dat.gua, dat.suz, dat.taq), dplyr::inner_join#, by = 'disp_event' # nope
                          # )
-dat.all <- dplyr::bind_rows(dat.gua, dat.suz, dat.taq)
+dat.all <- dplyr::bind_rows(dat.gua, dat.suz, dat.taq, dat.sma)
+# dat.all <- dplyr::bind_rows(dat.gua, dat.sma)
 nrow(dat.all) # stimmt!
 dat.all %>% str()
 
