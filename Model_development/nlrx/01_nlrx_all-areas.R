@@ -47,7 +47,8 @@ simulated_colors <- c("foraging" = "magenta",
 
 
 # Empirical data for parameterisation:
-dat.summary <- read_csv(here("Data", "Curated", "BLT_groups_data_summary_aftercleaning.csv")) %>% 
+dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_aftercleaning.csv"),
+                                          sep = ";", dec = ".", stringsAsFactors = TRUE) %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
 
 
