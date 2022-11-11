@@ -165,9 +165,9 @@ dat.all %>%
 dat.all.summary <- dat.all %>% 
   group_by(group, day) %>% 
   summarize(
-    defecation_events = n(),
-    mean_SDD = mean(SDD),
-    sd_SDD = sd(SDD)
+    defecation_events = n()
+    # mean_SDD = mean(SDD),
+    # sd_SDD = sd(SDD)
   )
 
 dat.all.summary %>% 
@@ -184,7 +184,59 @@ dat.all.summary %>%
 # ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_n_defecations.png'), height = 7, width = 5)
 
 
-#### defecations by hour ####
+
+#### n seeds by defecation ####
+# unique(dat.all$species) # get small seeded species names
+dat.all %>% 
+  dplyr::filter(n_seeds > 20) %>% 
+  select(species, n_seeds)
+
+small_seeds <- c("Epiphyllum phyllanthus", 
+                 "Aechmea bromeliifolia", "Aechmea distichantha", 
+                 "Ficus enormis", "Ficus luschnathiana", "Ficus guaranitica",
+                 "Rhipsalis teres", "Trichilia catigua",
+                 "Phoradendron quadrangulare", "Cereus hildmannianus",
+                 "Miconia latecrenata", "Miconia pusilliflora",
+                 "Philodendron spp."
+                 )
+
+gp1 <- dat.all %>% 
+  dplyr::filter(!species %in% small_seeds) %>% 
+  ggplot() +
+  aes(x = group, y = n_seeds, fill = group) +
+  geom_violin() +
+  geom_boxplot(width=0.1, fill = "white") +
+  theme(
+    axis.title.x = element_blank()
+  ) +
+  ylab("number of seeds per feces") +
+  theme(axis.title.y = element_text(size = 11)) +
+  ggtitle("Number of seeds per feces (small seeds excluded)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15))
+
+gp2 <- dat.all %>% 
+  ggplot() +
+  aes(x = group, y = log10(n_seeds), fill = group) +
+  geom_violin() +
+  geom_boxplot(width=0.1, fill = "white") +
+  theme(
+    axis.title.x = element_blank()
+  ) +
+  ylab("log10(number of seeds per feces)") +
+  theme(axis.title.y = element_text(size = 11)) +
+  ggtitle("Number of seeds per feces (all seeds)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15))
+
+g <- gridExtra::grid.arrange(gp1, gp2)
+# g
+# Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_n_seeds.png'),
+       # g, height = 5, width = 7)
+
+
+
+
+#### defecations hourwise ####
 
 # prep data (use hms package instead of lubridate)
 dat.all.hourwise.sameday <- dat.all %>% 
