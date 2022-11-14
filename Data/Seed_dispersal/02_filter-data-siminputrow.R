@@ -18,6 +18,8 @@ library("here")
 library("dplyr")
 library("ggplot2")
 library("readxl")
+library("lubridate")
+library("hms")
 
 
 #### Siminputrow matrix  -------------------------
@@ -77,14 +79,43 @@ mv.summary <- mv %>%
   mutate(
     time_wakesleep_diff = round(seconds_to_period(seconds(time_sleep_mean) - seconds(time_wakeup_mean)))
   )
+
+# Merge to siminputmatrix
+siminputmatrix <- left_join(siminputmatrix, mv.summary, by = c("group", "id_month"))
+
+# mv.summary %>% str()
   
 # Get all back to hms
-mv.summary <- mv.summary %>% 
-  mutate_if(is.period, period_to_seconds) %>% 
+mv.summary <- mv.summary %>%
+  mutate_if(is.period, period_to_seconds) %>%
   mutate_at(vars(matches("time")), as_hms)
+
+# Make it POSIXct to get difftime (= gut_transit_time in 00_prepare-data.R)
+foo <- function(x) {
+  posixct <- paste(Sys.Date(), x)
+  return(posixct)
+}
+mv.summary <- mv.summary %>%
+  mutate_at(vars(matches("time")), foo) %>% 
+  mutate_at(vars(matches("time")), ymd_hms)
+  
+# Get difftime in minutes and timesteps
+mv.summary <- mv.summary %>%
+  mutate(
+    time_wakesleep_diff_minutes = round(difftime(time_sleep_mean, time_wakeup_mean, unit = "mins"), digits = 0),
+    timesteps_wakesleep_diff = round(as.numeric(time_wakesleep_diff_minutes / 5, digits = 0))
+  )
+
+# Drop unuseful columns
+mv.summary <- mv.summary %>%
+  select(-c(time_sleep_mean, time_wakeup_mean, time_wakesleep_diff))
 
 # Merge into siminputmatrix
 siminputmatrix <- dplyr::left_join(siminputmatrix, mv.summary)
+
+# Now we can check how long is the maximum in timesteps it takes for tamarins to defecate seeds after the start of the day.
+# timesteps_wakesleep_diff matches mean_timesteps, this means my calculations are correct
+
 
   
 # Empirical seed dispersal data for summary:  -------------------------
@@ -128,16 +159,16 @@ a <- dat.all.sd %>%
   ) %>% 
   
   # # get time of feeding and defecation in period
-  # mutate(    
+  # mutate(
   #   def_time_per = lubridate::seconds_to_period(def_time),
   #   feed_time_per = lubridate::seconds_to_period(feed_time)
-  # ) %>%                 
-  # 
-  # # get duration of feeding and defecation in seconds
-  # mutate(    
-  #   def_time_sec = lubridate::period_to_seconds(def_time_per),
-  #   feed_time_sec = lubridate::period_to_seconds(feed_time_per)
-  # ) %>%                 
+  # ) %>%
+
+  # get duration of feeding and defecation in seconds
+  mutate(
+    def_time_sec = lubridate::period_to_seconds(def_time_per),
+    feed_time_sec = lubridate::period_to_seconds(feed_time_per)
+  ) %>%
   
   # Order group levels and drop NA
   dplyr::filter(!is.na(group)) %>% 
@@ -147,28 +178,90 @@ a <- dat.all.sd %>%
 
 # dat.all.sd$id_month %>% levels()
 a %>% str()
-a$feed_time_per %>% sum()
+# a$feed_time_per %>% sum()
+
+
 
 # Make summary of interest variables for parameterization:  -------------------------
+
+# Diminish the start hour from the defecation hour
+a <- a %>% 
+  mutate(
+    # time_from_wake_to_defecation = def_datetime - 
+    
+  )
+  
+  
 b <- a %>%
 
   group_by(group, id_month, disp_day) %>% 
   summarise(
-    GTT_timesteps_mean = mean(gut_transit_time) / 5, # 1 timestep = 5 mins
-    GTT_timesteps_sd = sd(gut_transit_time) / 5,
+    GTT_timesteps_mean = round(mean(gut_transit_time) / 5, digits = 0), # 1 timestep = 5 mins
+    GTT_timesteps_sd = round(sd(gut_transit_time) / 5, digits = 0), 
     
     # Quantos timesteps se passam até os micos terem a última defecaçao do dia?
-    # time_def_mean = round(seconds_to_period(mean(seconds(lubridate::hms(def_time))))),
-    # time_def_sd = round(seconds_to_period(sd(seconds(lubridate::hms(def_time))))),
+    # time_def_mean = 
+    
+    time_def_mean = round(seconds_to_period(mean(seconds(lubridate::hms(def_time))))),
+    time_def_sd = round(seconds_to_period(sd(seconds(lubridate::hms(def_time))))),
     # Terei que fazer depois, ja que o número de timesteps que os micos demoraram para defecar depende do horário que eles acordaram (timestep = 1)
-    # timestep_def_mean = mean(def_time_sec / 60 / 5), # 08H 33M = # 510 min (9 * 60) - 30); 510 / 5 = 102 timesteps
-    # timestep_def_sd = sd(def_time_sec / 60 / 5)
+    timestep_def_mean = round(mean(def_time_sec / 60 / 5), digits = 0), # 08H 33M = # 510 min (9 * 60) - 30); 510 / 5 = 102 timesteps
+    timestep_def_sd = round(sd(def_time_sec / 60 / 5), digits = 0)
+  ) 
 
-  ) %>% 
+## Write csv for next day events (they are not entering the siminputmatrix)
+siminputmatrix_nextday_seeddispersal <- b %>% 
+  dplyr::filter(disp_day == "next day")
+siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix_nextday_seeddispersal, siminputmatrix) %>% 
+  filter(!is.na(timesteps))
+  # mutate(timestep_def_mean = timestep_def_mean - mean_wakeuptime) %>% 
+  # write.csv(here("Data", "Seed_dispersal", "Curated", "Siminputrow_nexday_seed-dispersal.csv"),
+            # row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+# Continue with the siminputmatrix
+b <- b %>% 
   dplyr::filter(disp_day == "same day")
-  #%>% 
+
+
   mutate(
-    time_def_mean = (time_def_mean)
+    # time_def_mean = (time_def_mean)
     # max_time_seeds_mean = seconds_to_period(max_time_seeds_mean), # divided by 60 (= minutes)
       # max_time_seeds_sd = seconds_to_period(max_time_seeds_sd)     # divided by 60 (= minutes) 
       )
