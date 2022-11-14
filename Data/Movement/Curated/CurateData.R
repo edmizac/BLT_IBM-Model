@@ -31,11 +31,14 @@ dat.gua <- dat.gua %>%
                 id = tree,
                 species = sp,
                 POSIXct = POSIX.ct) %>%
+  dplyr::mutate(group_behav = recode(group_behav,"" = "Sleeping site"))
   mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
   dplyr::select(c("id_nday", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
   dplyr::rename(id_day = id_nday)
 
+dat.gua$id_day %>% as.factor() %>% levels()
+  
 # Write csv
 dat.gua %>% write.csv(here("Data", "Curated","Guarei.csv"),
           row.names = FALSE)
@@ -48,7 +51,7 @@ dat.sma <- read_excel(here("Data", "DataSet_SMa_FB_2022_08_d18.xlsx"))
 dat.sma <- dat.sma %>% 
   dplyr::mutate(group_behav = recode(group_behav,"SS" = "Sleeping site"))
 
-aa <- dat.sma %>% filter(!is.na(original_longitude_x)) # tem três observações sem coordenadas -> ***rever com o Felipe.
+# aa <- dat.sma %>% filter(!is.na(original_longitude_x)) # tem três observações sem coordenadas -> ***rever com o Felipe.
 
 # Rename and select cols
 dat.sma <- dat.sma %>% 
@@ -62,6 +65,13 @@ dat.sma <- dat.sma %>%
   mutate(POSIXct = lubridate::ymd_hms(POSIXct)) %>% 
   mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
                                      locale = Sys.setlocale("LC_TIME", "English")))
+
+# * Recode timeframes (Mar 15, 18, 20, 21 should be one timeframe and 29 and 30 another one [it would be dropped as n < 2 days is not enough], but I used them as one anyways (ver "BLT_groups_data_summary.csv") *
+# dat.sma$id_month <- dat.sma$id_month %>% as.factor
+# dat.sma <- dat.sma %>%
+#   dplyr::filter(id_day_mon != "15/03/2015") %>%
+#   dplyr::filter(id_day_mon != "18/03/2015") %>%
+# dat.sma$id_month <- dat.sma$id_month %>% droplevels()
 
 dat.sma <- dat.sma %>% 
   dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
@@ -95,9 +105,13 @@ dat.taq <- dat.taq %>%
   mutate(POSIXct = lubridate::ymd_hms(POSIX.ct)) %>% 
   mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
-  mutate(id = as.factor(id))
+  mutate(id = as.factor(id)) %>% 
+  select(-id_day) %>% 
+  dplyr::rename(id_day = id_nday)
 
-# Recode timeframes (Jan 27-31 + Feb 03rd in the same timeframe "January") (ver "BLT_groups_data_summary.csv")
+# dat.taq$id_day %>% as.factor() %>% levels()
+
+# * Recode timeframes (Jan 27-31 + Feb 03rd in the same timeframe "January") (ver "BLT_groups_data_summary.csv") *
 dat.taq$id_month <- dat.taq$id_month %>% as.factor
 dat.taq <- dat.taq %>% 
   dplyr::mutate(id_month = recode(id_month, "Feb" = "Jan"))
@@ -107,7 +121,6 @@ dat.taq$id_month <- dat.taq$id_month %>% droplevels()
 
 dat.taq <- dat.taq %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
   dplyr::filter(id_month == "Jan") # only month with more than 2 days of data 
-
 
 # Write csv
 dat.taq %>% write.csv(here("Data", "Curated", "Taquara.csv"),
