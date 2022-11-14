@@ -31,17 +31,17 @@ dat.gua <- dat.gua %>%
                 id = tree,
                 species = sp,
                 POSIXct = POSIX.ct) %>%
-  dplyr::mutate(group_behav = recode(group_behav,"" = "Sleeping site"))
-  mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
-                                     locale = Sys.setlocale("LC_TIME", "English"))) %>% 
+  dplyr::mutate(#behavior = recode(behavior,"" = "Sleeping site"),
+                id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
+                                     locale = Sys.setlocale("LC_TIME", "English"))) %>%  # Guareí has good timeframes (we don't need to assign days of different months to the same timefrae)
   dplyr::select(c("id_nday", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
   dplyr::rename(id_day = id_nday)
 
 dat.gua$id_day %>% as.factor() %>% levels()
   
 # Write csv
-dat.gua %>% write.csv(here("Data", "Curated","Guarei.csv"),
-          row.names = FALSE)
+# dat.gua %>% write.csv(here("Data", "Movement",  "Curated", "Guarei.csv"),
+#           row.names = FALSE)
 
 
 #### Santa Maria ####
@@ -66,7 +66,7 @@ dat.sma <- dat.sma %>%
   mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
                                      locale = Sys.setlocale("LC_TIME", "English")))
 
-# * Recode timeframes (Mar 15, 18, 20, 21 should be one timeframe and 29 and 30 another one [it would be dropped as n < 2 days is not enough], but I used them as one anyways (ver "BLT_groups_data_summary.csv") *
+# * Recode timeframes (Mar 15, 18, 20, 21 should be one timeframe and 29 and 30 another one [it would be dropped as n < 2 days is not enough], but I used them as one anyways (ver "BLT_groups_data_summary.csv" e Obsidian 'Parameterization' note) *
 # dat.sma$id_month <- dat.sma$id_month %>% as.factor
 # dat.sma <- dat.sma %>%
 #   dplyr::filter(id_day_mon != "15/03/2015") %>%
@@ -74,14 +74,14 @@ dat.sma <- dat.sma %>%
 # dat.sma$id_month <- dat.sma$id_month %>% droplevels()
 
 dat.sma <- dat.sma %>% 
-  dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
-  dplyr::filter(id_month != "May") # less than two days # timeframes (check BLT-Movement-Patterns repository) can be ignored because the field trip timeframes are not taking two months (e.g. 31/03 and 01/04)
+  dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) #%>% 
+  # dplyr::filter(id_month != "May") # less than two days # timeframes (check BLT-Movement-Patterns repository) can be ignored because the field trip timeframes are not taking two months (e.g. 31/03 and 01/04)
 
 dat.sma %>% dplyr::filter(is.na(x)) 
 
 # Write csv
-dat.sma %>% write.csv(here("Data", "Curated","SantaMaria.csv"),
-                      row.names = FALSE)
+# dat.sma %>% write.csv(here("Data", "Movement", "Curated","SantaMaria.csv"),
+                      # row.names = FALSE)
 
 
 #### Taquara ####
@@ -111,20 +111,25 @@ dat.taq <- dat.taq %>%
 
 # dat.taq$id_day %>% as.factor() %>% levels()
 
-# * Recode timeframes (Jan 27-31 + Feb 03rd in the same timeframe "January") (ver "BLT_groups_data_summary.csv") *
+# * Recode timeframes (Jan 27-31 + Feb 03rd in the same timeframe "January" and 28/02/2017 should be = "March", but it is not a full day so it is discarded) (ver "BLT_groups_data_summary.csv") *
 dat.taq$id_month <- dat.taq$id_month %>% as.factor
-dat.taq <- dat.taq %>% 
-  dplyr::mutate(id_month = recode(id_month, "Feb" = "Jan"))
-dat.taq$id_month <- dat.taq$id_month %>% droplevels()
+dat.taq <- dat.taq %>%
+  dplyr::mutate(id_month = recode(id_month, "Feb" = "Jan"),
+                # id_month = case_when(ymd(POSIXct) ...
+                id_month = case_when(id_day_all == "002" ~ "Dec_2017", # because there are two Dec months in raw data (maybe Dec 2018 has not any complete days)
+                                     TRUE ~ as.character(id_month)
+                )) #
+dat.taq$id_month <- dat.taq$id_month %>% as.factor() %>%  droplevels()
 
-# dat.taq$id_month %>% levels()
+dat.taq$id_month %>% levels()
 
-dat.taq <- dat.taq %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
-  dplyr::filter(id_month == "Jan") # only month with more than 2 days of data 
+dat.taq <- dat.taq %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) # %>% 
+  # dplyr::filter(id_month == "Jan") # only month with more than 2 days of data 
 
-# Write csv
-dat.taq %>% write.csv(here("Data", "Curated", "Taquara.csv"),
-                      row.names = FALSE)
+# # Write csv
+# dat.taq %>% write.csv(here("Data", "Movement", "Curated", "Taquara.csv"),
+#                       row.names = FALSE)
+
 
 #### Suzano ####
 
@@ -148,42 +153,55 @@ dat.suz <- dat.suz %>%
                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
   mutate(id = as.factor(id))
 
-choosen_mo <- c("Dec", "Sep")
-dat.suz <- dat.suz %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) %>% 
-  dplyr::filter(id_month %in% choosen_mo)
+# choosen_mo <- c("Dec", "Sep")
+dat.suz <- dat.suz %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) #%>% 
+  # dplyr::filter(id_month %in% choosen_mo)
 dat.suz$id_month <- dat.suz$id_month %>% droplevels()
 
-# dat.suz$id_month %>% levels()
+dat.suz$id_month %>% levels()
 
 # Write csv
-dat.suz %>% write.csv(here("Data", "Curated","Suzano.csv"),
+dat.suz %>% write.csv(here("Data","Movement",  "Curated","Suzano.csv"),
                       row.names = FALSE)
 
 
 #### Concatenate everything: ####
-dat.gua <- read.csv(here("Data", "Curated", "Guarei.csv"))
-dat.sma <- read.csv(here("Data", "Curated", "SantaMaria.csv"))
-dat.suz <- read.csv(here("Data", "Curated", "Suzano.csv"))
-dat.taq <- read.csv(here("Data", "Curated", "Taquara.csv"))
+dat.gua <- read.csv(here("Data", "Movement",  "Curated", "Guarei.csv"))
+dat.sma <- read.csv(here("Data", "Movement",  "Curated", "SantaMaria.csv"))
+dat.suz <- read.csv(here("Data", "Movement",  "Curated", "Suzano.csv"))
+dat.taq <- read.csv(here("Data", "Movement",  "Curated", "Taquara.csv"))
 
 # add id
 dat.gua <- dat.gua %>% 
   mutate(group = "Guarei") %>% 
+  # select(-id_day)
   rename(id_day_all = id_day)
 dat.sma <- dat.sma %>% 
   mutate(group = "Santa Maria") %>% 
-  mutate(id_day_all = as.character(id_day_all))
+  # select(-id_day_all)
+  mutate(id_day_all = as.character(id_day_all),
+         id_day_all = paste0(id_month, "_", id_day_all)
+         )
+
 dat.taq <- dat.taq %>% 
-  mutate(group = "Taquara") %>% 
-  mutate(id_day_all = as.character(id_day_all))
+  mutate(group = "Taquara",
+  ) %>% 
+  # select(-id_day_all)
+  mutate(id_day_all = as.character(id_day_all),
+         id_day_all = paste0(id_month, "_", id_day_all)
+  )
+
 dat.suz <- dat.suz %>% 
   mutate(group = "Suzano") %>% 
-  mutate(id_day_all = as.character(id_day_all))
+  # select(-id_day_all)
+  mutate(id_day_all = as.character(id_day_all),
+         id_day_all = paste0(id_month, "_", id_day_all)
+  )
 
 
 df_list <- list(dat.gua, dat.sma, dat.taq, dat.suz)
 dat.all <- df_list %>% purrr::reduce(full_join)
 
-dat.all %>% write.csv(here("Data", "Curated","BLT_groups_data.csv"),
-                      row.names = FALSE)
+# dat.all %>% write.csv(here("Data", "Movement", "Curated","BLT_groups_data.csv"),
+#                       row.names = FALSE)
 

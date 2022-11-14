@@ -112,8 +112,8 @@ dat.suz <- read_excel(here("Data", "Seed_dispersal", "Raw_SuzanoAnne_07d-04-2021
 
 # Convert coordinates
 ## coordenadas importadas contendo duas colunas, X e Y
-dat.suz.coords.feed <- dat.suz[ , c(4, 5)]
-dat.suz.coords.def <- dat.suz[ , c(9, 10)]
+dat.suz.coords.feed <- dat.suz[ , c(5, 6)]
+dat.suz.coords.def <- dat.suz[ , c(10, 11)]
 str(dat.suz.coords.feed)
 str(dat.suz.coords.def)
 
@@ -155,7 +155,7 @@ dat.suz <- cbind(dat.suz.coords.feed_UTM, dat.suz.coords.def_UTM, dat.suz) %>%
 dat.suz <- dat.suz %>% 
   # for hms datetime (scale_x_time)
   dplyr::mutate(
-    month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States"),
+    # month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States"),
     # check if gut_transit_time is correct:
     feed_datetime = lubridate::ymd_hms(feed_datetime), # data is already POSIXct
     def_datetime = lubridate::ymd_hms(def_datetime),   # data is already POSIXct
@@ -190,8 +190,8 @@ dat.taq <- read_excel(here("Data", "Seed_dispersal", "Raw_TaquaraAnne_EMZ4_Seed-
 
 # Convert coordinates
 ## coordenadas importadas contendo duas colunas, X e Y
-dat.taq.coords.feed <- dat.taq[ , c(4, 5)]
-dat.taq.coords.def <- dat.taq[ , c(8, 9)]
+dat.taq.coords.feed <- dat.taq[ , c(5, 6)]
+dat.taq.coords.def <- dat.taq[ , c(9, 10)]
 str(dat.taq.coords.feed)
 str(dat.taq.coords.def)
 
@@ -232,7 +232,9 @@ dat.taq <- cbind(dat.taq.coords.feed_UTM, dat.taq.coords.def_UTM, dat.taq) %>%
 dat.taq <- dat.taq %>% 
   # for hms datetime (scale_x_time)
   dplyr::mutate(
-    month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States"),
+    # month_id = lubridate::month(feed_datetime, label = TRUE, locale="English_United States"),
+    # Recorde 02nd, 03rd to match January timeframe (as in Movement dataset) *** DONE BY HAND (ON THE XLSX) TO MATCH MOVEMENT DATA; ALSO, SEED DISPERSAL EVENTS (disp_event) ARE ALREADY SETTLED LIKE THIS
+    id_month = recode(id_month, "Feb" = "Jan"),
     # check if gut_transit_time is correct:
     feed_datetime = lubridate::ymd_hms(feed_datetime), # data is already POSIXct
     def_datetime = lubridate::ymd_hms(def_datetime),   # data is already POSIXct
@@ -247,6 +249,7 @@ dat.taq <- dat.taq %>%
   dplyr::mutate(n_seeds = as.numeric(dplyr::recode(n_seeds, ">100" = "100"))) %>% 
   mutate_if(is.character, as.factor) %>% 
   mutate(group = "Taquara")
+
 
 # dat.taq %>% str()
 
@@ -284,6 +287,7 @@ dat.sma <- dat.sma %>%
   mutate(group = "Santa Maria") %>% 
   select(-disp_day) # this will be derived together in 01_plots.R script
 
+
 ### Write csv
 # dat.sma %>% write.csv(here("Data", "Seed_dispersal", "Curated", "SantaMaria_SeedDispersal.csv"),
 #                       row.names = FALSE)
@@ -292,6 +296,7 @@ dat.sma <- dat.sma %>%
 #### Bind all data together ####
 
 # Check colnames
+colnames(dat.suz) %in% colnames(dat.sma)
 dat.gua %>% colnames()
 dat.suz %>% colnames()
 dat.taq %>% colnames()
