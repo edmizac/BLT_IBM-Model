@@ -1,4 +1,4 @@
-"disp_event","species","feed_datetime","feed_x","feed_y","id_feedtree","def_datetime","def_x","def_y","id_feces","n_seeds","SDD","gut_transit_time","gut_transit_time_hms","month_id","group"
+"disp_event","species","feed_datetime","feed_x","feed_y","id_feedtree","def_datetime","def_x","def_y","id_feces","n_seeds","SDD","gut_transit_time","gut_transit_time_hms","id_month","group"
 "SDApr1","Celtis iguanaea",2019-04-10 14:14:00,781867.255689029,7407917.99003149,"AG75Y",2019-04-11 07:14:00,781894.405185706,7407642.48480937,"FGA1",5,276.844509788217,1020,17:00:00,"Apr","Guareí"
 "SDApr2","Celtis iguanaea",2019-04-10 14:14:00,781867.255689029,7407917.99003149,"AG75Y",2019-04-11 08:24:00,781927.369882474,7407424.94936604,"FGA2",1,496.690702248426,1090,18:10:00,"Apr","Guareí"
 "SDApr3","Celtis iguanaea",2019-04-10 14:14:00,781867.255689029,7407917.99003149,"AG75Y",2019-04-11 08:40:00,781940.89027332,7407383.34965821,"FGA3",2,539.68630379197,1106,18:26:00,"Apr","Guareí"

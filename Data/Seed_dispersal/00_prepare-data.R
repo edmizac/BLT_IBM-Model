@@ -169,7 +169,7 @@ dat.suz <- dat.suz %>%
   rename(id_feedtree = id_tree_gps) %>% 
   dplyr::mutate(id_feedtree = as.character(id_feedtree)) %>% 
   # dplyr::filter(n_seeds == ">100") %>% 
-  dplyr::mutate(n_seeds = as.numeric(dplyr::recode(n_seeds, ">100" = "100"))) %>% 
+  dplyr::mutate(n_seeds = as.numeric(dplyr::(n_seeds, ">100" = "100"))) %>% 
   mutate_if(is.character, as.factor) %>% 
   mutate(group = "Suzano")
 
