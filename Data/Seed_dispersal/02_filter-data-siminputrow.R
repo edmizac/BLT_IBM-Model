@@ -21,8 +21,8 @@ library("readxl")
 
 
 # Load siminputrow matrix from movement data
-siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_aftercleaning.csv"),
-                           sep = ";", dec = ".", stringsAsFactors = TRUE)
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
+                           sep = ",", dec = ".", stringsAsFactors = TRUE)
 siminputmatrix %>% str()
 
 # groups <- siminputmatrix$group

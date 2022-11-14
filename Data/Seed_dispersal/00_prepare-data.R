@@ -88,7 +88,7 @@ gua.gtt <- gua.gtt %>%
   rename(gut_transit_time = gtt_test) %>%
 
   dplyr::select(disp_event, gut_transit_time, gut_transit_time_hms, month_id) %>%
-  mutate_if(is.character, as.factor)  %>%
+  mutate_if(is.character, as.factor) %>% 
   mutate(group = "Guareí")
 
 # gua.gtt %>% str()
@@ -98,8 +98,10 @@ dat.gua <- dplyr::left_join(gua.pt, gua.fec)
 dat.gua <- dplyr::left_join(dat.gua, gua.sdd)
 dat.gua <- dplyr::left_join(dat.gua, gua.gtt)
 dat.gua <- dat.gua %>%
-  dplyr::filter(!is.na(id_feedtree))
-  
+  dplyr::filter(!is.na(id_feedtree)) %>% 
+  mutate(month_id = as.factor(as.character(month_id))) %>% # otherwise it becomes ord.factor() and we can't merge all data in the end of the script
+  rename(id_month = month_id)
+
 # ### Write csv
 # dat.gua %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Guarei_SeedDispersal.csv"),
 #                       row.names = FALSE)
@@ -248,6 +250,7 @@ dat.taq <- dat.taq %>%
   # dplyr::filter(n_seeds == ">100") %>% 
   dplyr::mutate(n_seeds = as.numeric(dplyr::recode(n_seeds, ">100" = "100"))) %>% 
   mutate_if(is.character, as.factor) %>% 
+  # rename(id_month = month_id) %>% 
   mutate(group = "Taquara")
 
 
@@ -285,7 +288,10 @@ dat.sma <- dat.sma %>%
          def_y = as.numeric(def_y)) %>% 
   mutate_if(is.character, as.factor) %>% 
   mutate(group = "Santa Maria") %>% 
+  rename(id_month = month_id) %>%
+  mutate(id_month = as.factor(as.character(id_month))) %>%  # otherwise it becomes ord.factor() and we can't merge all data in the end of the script
   select(-disp_day) # this will be derived together in 01_plots.R script
+
 
 
 ### Write csv
@@ -324,11 +330,12 @@ dat.sma %>% str()
 # dat.all <- purrr::reduce(list(dat.gua, dat.suz, dat.taq), dplyr::inner_join#, by = 'disp_event' # nope
                          # )
 dat.all <- dplyr::bind_rows(dat.gua, dat.suz, dat.taq, dat.sma)
-# dat.all <- dplyr::bind_rows(dat.gua, dat.sma)
+# dat.all <- dplyr::bind_rows(dat.gua, dat.sma, dat.taq)
+
 nrow(dat.all) # stimmt!
 dat.all %>% str()
 
-# ### Write csv
+### Write csv
 # dat.all %>% write.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDispersal.csv"),
 #                       row.names = FALSE)
 
