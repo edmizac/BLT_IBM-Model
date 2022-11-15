@@ -102,6 +102,10 @@ dat.gua <- dat.gua %>%
   mutate(month_id = as.factor(as.character(month_id))) %>% # otherwise it becomes ord.factor() and we can't merge all data in the end of the script
   rename(id_month = month_id)
 
+# Add id
+dat.gua <- dat.gua %>% 
+  mutate(group = "Guareí")
+
 # ### Write csv
 # dat.gua %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Guarei_SeedDispersal.csv"),
 #                       row.names = FALSE)
@@ -169,8 +173,11 @@ dat.suz <- dat.suz %>%
   rename(id_feedtree = id_tree_gps) %>% 
   dplyr::mutate(id_feedtree = as.character(id_feedtree)) %>% 
   # dplyr::filter(n_seeds == ">100") %>% 
-  dplyr::mutate(n_seeds = as.numeric(dplyr::(n_seeds, ">100" = "100"))) %>% 
-  mutate_if(is.character, as.factor) %>% 
+  dplyr::mutate(n_seeds = as.numeric(dplyr::recode(n_seeds, ">100" = "100"))) %>% 
+  mutate_if(is.character, as.factor)
+
+# Add group id
+dat.suz <- dat.suz %>% 
   mutate(group = "Suzano")
 
 # dat.suz %>% str()
@@ -249,8 +256,11 @@ dat.taq <- dat.taq %>%
   dplyr::mutate(id_feedtree = as.character(id_feedtree)) %>% 
   # dplyr::filter(n_seeds == ">100") %>% 
   dplyr::mutate(n_seeds = as.numeric(dplyr::recode(n_seeds, ">100" = "100"))) %>% 
-  mutate_if(is.character, as.factor) %>% 
-  # rename(id_month = month_id) %>% 
+  mutate_if(is.character, as.factor)
+  # rename(id_month = month_id)
+  
+# Add group id
+dat.taq <- dat.taq %>% 
   mutate(group = "Taquara")
 
 
@@ -292,6 +302,9 @@ dat.sma <- dat.sma %>%
   mutate(id_month = as.factor(as.character(id_month))) %>%  # otherwise it becomes ord.factor() and we can't merge all data in the end of the script
   select(-disp_day) # this will be derived together in 01_plots.R script
 
+# Add group id
+dat.sma <- dat.sma %>% 
+  mutate(group = "Santa Maria")
 
 
 ### Write csv
