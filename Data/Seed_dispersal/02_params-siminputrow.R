@@ -35,8 +35,6 @@ siminputmatrix %>% str()
 
 
 
-#### Movement data  -------------------------
-
 # Load movement dataset to gather the time tamarins wake up and mean time tamarins go to sleep 
 dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
@@ -78,7 +76,7 @@ mv.days <- mv %>%
   mutate_at(vars(matches("time")), as_hms)
 
 # Write csv
-# mv.days %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Siminputrow_activity-time_days.csv"),
+# mv.days %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_activity-time_days.csv"),
 #                       row.names = FALSE)
 
 
@@ -125,7 +123,7 @@ mv.summary <- mv.summary %>%
 siminputmatrix <- dplyr::left_join(siminputmatrix, mv.summary)
 
 # Write csv
-# siminputmatrix %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Siminputrow_activity-time_means.csv"),
+# siminputmatrix %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",  "Siminputrow_activity-time_means.csv"),
 #                       row.names = FALSE)
 
 # Now we can check how long is the maximum in timesteps it takes for tamarins to defecate seeds after the start of the day.
@@ -140,14 +138,14 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_Seed
 # dat.all.sd %>% str()
 
 
-# Make seed dispersal data match siminputrow/movement data -------------------------
+## Make seed dispersal data match siminputrow/movement data -------------------------
 dat.all.sd <- dat.all.sd %>%
   # dplyr::filter(!(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month)) # only ~50 seed dispersal events don't match!
   dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>% 
   droplevels()
 
 
-# Wrangle seed dispersal data  -------------------------
+### Wrangle seed dispersal data  -------------------------
 a <- dat.all.sd %>%
   # make datetime POSIXct
   mutate(
@@ -195,26 +193,26 @@ a <- dat.all.sd %>%
 a %>% str()
 # a$feed_time_per %>% sum()
 
-# Merge wake up and sleep times to seed dispersal data
+### Merge wake up and sleep times to seed dispersal data
 a <- left_join(a, mv.days) #, by = c("group", "id_month", "date"))
 
 # colnames(a)
 # colnames(mv.days)
 # colnames(mv.days) %in% colnames(a)
 
-# Define complete days (for which we have wake up and sleeping time according to timediff collum)
+### Define complete days (for which we have wake up and sleeping time according to timediff collum)
 a <- a %>% 
   mutate(full_day = case_when(is.na(time_wakeup) ~ "incomplete",
                               TRUE ~ "complete"
                               ))
 
-# Diminish the start hour from the defecation hour
+### Diminish the start hour from the defecation hour
 str(a)
 b <- a %>%
   # filter NAs
   dplyr::filter(!is.na(time_wakeup))
 
-# Make it POSIXct to get difftime (= gut_transit_time in 00_prepare-data.R)
+### Make it POSIXct to get difftime (= gut_transit_time in 00_prepare-data.R)
   foo <- function(x) {
     posixct <- paste(Sys.Date(), x)
     return(posixct)
@@ -223,7 +221,7 @@ b <- b %>%
     mutate_at(c("def_time", "time_wakeup"), foo) %>% 
     mutate_at(c("def_time", "time_wakeup"), ymd_hms)
 
-# Get mean difftime in minutes and timesteps
+### Get mean difftime in minutes and timesteps
 b <- b %>%
   mutate(
     time_wakeup_to_def = round(difftime(def_time, time_wakeup, unit = "mins"), digits = 0),
@@ -231,7 +229,7 @@ b <- b %>%
   )
 
 
-  # Make summary of timesteps for defecation by disp_day:  -------------------------  
+### Make summary of timesteps for defecation by disp_day:  -------------------------  
 c <- b %>%
   group_by(group, id_month, disp_day) %>% 
   summarise(
@@ -243,7 +241,7 @@ c <- b %>%
     timesteps_wakeup_to_def_sd = round(sd(timesteps_wakeup_to_def), digits = 0)
   )
 
-# Get the latest morning defecation
+### Get the latest morning defecation
 e <-  c %>% 
   dplyr::filter(disp_day == "next day") %>%
   summarise(
@@ -251,10 +249,10 @@ e <-  c %>%
   )
 hline2 <- max(e$max_timestep)
 hline3 <- mean(e$max_timestep)
-## From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 7)  
+### From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 12)  
 
 
-# Plot it
+### Plot it
 c %>% 
   ggplot(
     aes(x = group, y = timesteps_wakeup_to_def_mean, 
@@ -287,16 +285,16 @@ c %>%
                                   )) +
   scale_color_viridis_d()
 
-# Save plot
+#### Save plot
 ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 
             'Plot_GTT_disp-day_morning-defecation.png'), height = 7, width = 6)
 
-# Write csv
+##### Write csv
 c %>% 
   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day.csv"),
             row.names = FALSE)
 
-## Write csv for next day events (same day values are not entering the siminputmatrix as this is estimated by GTT in 00_prepare-data.R already)
+#### Write csv for next day events (same day values are not entering the siminputmatrix as this is estimated by GTT in 00_prepare-data.R already)
 d <- c %>% 
   dplyr::filter(disp_day == "next day") %>% 
   ungroup()
@@ -309,13 +307,13 @@ d <- d %>%
   # tidyr::pivot_wider()
   select(-disp_day)
 
-# Join and save
+### Join and save
 siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d)
 siminputmatrix_nextday_seeddispersal %>% 
   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
   row.names = FALSE)
 
-## From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 12, but mean = 6.3)  
+### From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 12, but mean = 6.3)  
 
 
 
