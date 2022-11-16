@@ -23,7 +23,7 @@ library("hms")
 
 #### Siminputrow matrix  -------------------------
 
-# Load siminputrow matrix from movement data as base -------------------------
+# 1) Load siminputrow matrix from movement data as base -------------------------
 siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
@@ -34,14 +34,8 @@ siminputmatrix %>% str()
 
 
 
-# Load movement dataset to gather step length, max turning angles and p_foraging
-dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data.csv"),
-                       sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
-  rename(datetime = POSIXct)
-
-
-# Load seed dispersal siminputrow matrix to gather GTT, timesteps to morning defecation, number of defecations per day, etc
+# 2) Load seed dispersal siminputrow matrix 
+## to gather GTT, timesteps to morning defecation, number of defecations per day, etc
 dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",  "Siminputrow_disp-day_nex-day_params.csv"),
                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   # mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
@@ -120,4 +114,21 @@ dat.all.sd <- dat.all.sd %>%
   mutate(across(where(is.numeric), round2))
   
   
-    
+
+# 3) Load movement siminputrow matrix
+## to gather step length, max turning angles and p_foraging
+dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminputrow",  "Siminputrow_XXXXXX.csv"),
+                       sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  # mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
+  rename(datetime = POSIXct)
+
+
+
+
+
+
+
+
+
+
+

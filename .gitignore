@@ -43,6 +43,11 @@ Data/Seed_dispersal/Curated/Param_siminputrow/**.png
 Data/Seed_dispersal/Curated/Param_all-data/**.png
 Data/Seed_dispersal/Curated/Validation/**.png
 
+Data/Movement/Curated/**.png
+Data/Movement/Curated/Param_siminputrow/**.png
+Data/Movement/Curated/Param_all-data/**.png
+Data/Movement/Curated/Validation/**.png
+
 
 # Temporary files
 **/runtime
