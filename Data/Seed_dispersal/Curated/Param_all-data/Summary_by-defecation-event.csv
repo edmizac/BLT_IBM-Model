@@ -1,0 +1,469 @@
+"group","id_month","disp_day","id_feces","defecation_events","nseeds_mean","nseeds_sd","mean_GTT_timesteps","sd_GTT_timesteps"
+"Suzano","Feb","next day","FSFev44",2,3,0,203,2.83
+"Suzano","Feb","next day","FSFev45",2,3,0,204,2.83
+"Suzano","Feb","same day","FSFev39",2,3,1.41,22,1.41
+"Suzano","Feb","same day","FSFev40",2,4,1.41,24,1.41
+"Suzano","Feb","same day","FSFev41",1,3,NA,28,NA
+"Suzano","Feb","same day","FSFev42",1,5,NA,31,NA
+"Suzano","Feb","same day","FSFev43",1,2,NA,23,NA
+"Suzano","Feb","same day","FSFev46",2,2.5,0.71,23.5,2.12
+"Suzano","Feb","same day","FSFev47",1,100,NA,8,NA
+"Suzano","Feb","same day","FSFev48",2,3.5,0.71,30,5.66
+"Suzano","Feb","same day","FSFev49",1,5,NA,66,NA
+"Suzano","Feb","same day","FSFev50",2,3.5,2.12,36,2.83
+"Suzano","Feb","same day","FSFev51",1,100,NA,12,NA
+"Suzano","Feb","same day","FSFev52",2,3,2.83,28.5,9.19
+"Suzano","Apr","next day","FSApr54",1,4,NA,207,NA
+"Suzano","Apr","next day","FSApr55",2,53,66.47,202.5,13.44
+"Suzano","Apr","same day","FSApr53",1,4,NA,26,NA
+"Suzano","Apr","same day","FSApr56",1,7,NA,23,NA
+"Suzano","Apr","same day","FSApr57",2,53,66.47,29,5.66
+"Suzano","Apr","same day","FSApr58",2,4.5,3.54,19,0
+"Suzano","Apr","same day","FSApr59",1,100,NA,16,NA
+"Suzano","Sep","next day","FSSep3",1,7,NA,202,NA
+"Suzano","Sep","next day","FSSep4",1,6,NA,202,NA
+"Suzano","Sep","next day","FSSep5",1,4,NA,186,NA
+"Suzano","Sep","next day","FSSep6",1,5,NA,190,NA
+"Suzano","Sep","next day","FSSep8",1,2,NA,185,NA
+"Suzano","Sep","same day","FSSep1",3,6,2,32.33,8.08
+"Suzano","Sep","same day","FSSep10",3,37,54.56,14,12.29
+"Suzano","Sep","same day","FSSep11",1,4,NA,13,NA
+"Suzano","Sep","same day","FSSep12",1,5,NA,30,NA
+"Suzano","Sep","same day","FSSep13",1,5,NA,23,NA
+"Suzano","Sep","same day","FSSep14",1,6,NA,26,NA
+"Suzano","Sep","same day","FSSep15",2,53.5,65.76,30.5,2.12
+"Suzano","Sep","same day","FSSep16",2,54,65.05,32.5,2.12
+"Suzano","Sep","same day","FSSep2",3,5.67,1.15,33,8.66
+"Suzano","Sep","same day","FSSep7",1,4,NA,23,NA
+"Suzano","Sep","same day","FSSep9",1,3,NA,24,NA
+"Suzano","Dec","next day","FSDec26",1,7,NA,174,NA
+"Suzano","Dec","next day","FSDec27",1,7,NA,183,NA
+"Suzano","Dec","next day","FSDec30",1,6,NA,202,NA
+"Suzano","Dec","next day","FSDec31",1,5,NA,197,NA
+"Suzano","Dec","same day","FSDec17",1,7,NA,26,NA
+"Suzano","Dec","same day","FSDec18",1,8,NA,34,NA
+"Suzano","Dec","same day","FSDec19",1,7,NA,24,NA
+"Suzano","Dec","same day","FSDec20",2,7,0,30.5,2.12
+"Suzano","Dec","same day","FSDec21",2,19.5,17.68,16.5,2.12
+"Suzano","Dec","same day","FSDec22",2,25,26.87,19.5,2.12
+"Suzano","Dec","same day","FSDec23",2,17.5,14.85,24.5,2.12
+"Suzano","Dec","same day","FSDec24",1,8,NA,26,NA
+"Suzano","Dec","same day","FSDec25",1,7,NA,26,NA
+"Suzano","Dec","same day","FSDec28",2,7.5,0.71,11,5.66
+"Suzano","Dec","same day","FSDec29",1,7,NA,19,NA
+"Suzano","Dec","same day","FSDec32",2,20,18.38,19,0
+"Suzano","Dec","same day","FSDec33",2,22,22.63,27,0
+"Suzano","Dec","same day","FSDec34",1,5,NA,17,NA
+"Suzano","Dec","same day","FSDec35",1,7,NA,27,NA
+"Suzano","Dec","same day","FSDec36",2,26,26.87,35.5,6.36
+"Suzano","Dec","same day","FSDec37",2,6.5,0.71,6,0
+"Suzano","Dec","same day","FSDec38",2,6.5,0.71,9,0
+"Guareí","Apr","next day","FGA1",1,5,NA,204,NA
+"Guareí","Apr","next day","FGA101",1,5,NA,249.8,NA
+"Guareí","Apr","next day","FGA12",3,3.33,2.08,211.6,0
+"Guareí","Apr","next day","FGA13",1,1,NA,219.8,NA
+"Guareí","Apr","next day","FGA14",1,3,NA,230.2,NA
+"Guareí","Apr","next day","FGA16",1,6,NA,202.8,NA
+"Guareí","Apr","next day","FGA2",1,1,NA,218,NA
+"Guareí","Apr","next day","FGA3",1,2,NA,221.2,NA
+"Guareí","Apr","next day","FGA35",1,4,NA,185.6,NA
+"Guareí","Apr","next day","FGA36",2,7.5,0.71,185.8,0
+"Guareí","Apr","next day","FGA37",1,4,NA,186,NA
+"Guareí","Apr","next day","FGA38",1,3,NA,186.4,NA
+"Guareí","Apr","next day","FGA39",3,5,2.65,186.6,0
+"Guareí","Apr","next day","FGA40",1,4,NA,188.2,NA
+"Guareí","Apr","next day","FGA41",1,5,NA,189,NA
+"Guareí","Apr","next day","FGA42",1,5,NA,189.2,NA
+"Guareí","Apr","next day","FGA43",2,3,2.83,189.8,0
+"Guareí","Apr","next day","FGA63",1,2,NA,179,NA
+"Guareí","Apr","next day","FGA79",1,1,NA,198.4,NA
+"Guareí","Apr","same day","FGA10",1,5,NA,26.6,NA
+"Guareí","Apr","same day","FGA102",1,4,NA,8,NA
+"Guareí","Apr","same day","FGA103",1,5,NA,12.8,NA
+"Guareí","Apr","same day","FGA104",1,8,NA,13.4,NA
+"Guareí","Apr","same day","FGA105",1,2,NA,14,NA
+"Guareí","Apr","same day","FGA106",1,4,NA,14.4,NA
+"Guareí","Apr","same day","FGA107",1,6,NA,16,NA
+"Guareí","Apr","same day","FGA108",2,10.5,2.12,1.4,0
+"Guareí","Apr","same day","FGA109",1,14,NA,2.4,NA
+"Guareí","Apr","same day","FGA11",1,3,NA,27.8,NA
+"Guareí","Apr","same day","FGA110",1,9,NA,5.4,NA
+"Guareí","Apr","same day","FGA111",1,6,NA,5.6,NA
+"Guareí","Apr","same day","FGA112",1,4,NA,7.2,NA
+"Guareí","Apr","same day","FGA113",1,4,NA,9.8,NA
+"Guareí","Apr","same day","FGA114",1,2,NA,11.6,NA
+"Guareí","Apr","same day","FGA115",1,2,NA,14.2,NA
+"Guareí","Apr","same day","FGA116",1,3,NA,15.4,NA
+"Guareí","Apr","same day","FGA20",1,7,NA,14.4,NA
+"Guareí","Apr","same day","FGA21",1,3,NA,37.6,NA
+"Guareí","Apr","same day","FGA22",1,1,NA,8.8,NA
+"Guareí","Apr","same day","FGA23",1,7,NA,15.6,NA
+"Guareí","Apr","same day","FGA24",1,2,NA,30.6,NA
+"Guareí","Apr","same day","FGA25",1,3,NA,15.8,NA
+"Guareí","Apr","same day","FGA26",1,3,NA,30.2,NA
+"Guareí","Apr","same day","FGA27",1,3,NA,14.6,NA
+"Guareí","Apr","same day","FGA28",1,5,NA,18.6,NA
+"Guareí","Apr","same day","FGA29",1,2,NA,15.8,NA
+"Guareí","Apr","same day","FGA3",1,1,NA,11.8,NA
+"Guareí","Apr","same day","FGA30",1,3,NA,36.2,NA
+"Guareí","Apr","same day","FGA31",1,2,NA,7.8,NA
+"Guareí","Apr","same day","FGA32",1,2,NA,29,NA
+"Guareí","Apr","same day","FGA33",2,1.5,0.71,15,17.54
+"Guareí","Apr","same day","FGA44",1,2,NA,4.2,NA
+"Guareí","Apr","same day","FGA45",1,3,NA,4.4,NA
+"Guareí","Apr","same day","FGA46",1,2,NA,6.6,NA
+"Guareí","Apr","same day","FGA47",1,6,NA,8.4,NA
+"Guareí","Apr","same day","FGA48",1,4,NA,7.2,NA
+"Guareí","Apr","same day","FGA49",1,2,NA,12.2,NA
+"Guareí","Apr","same day","FGA50",1,6,NA,16,NA
+"Guareí","Apr","same day","FGA51",2,7.5,3.54,16.2,0
+"Guareí","Apr","same day","FGA52",1,6,NA,16.4,NA
+"Guareí","Apr","same day","FGA53",1,1,NA,10.4,NA
+"Guareí","Apr","same day","FGA54",1,7,NA,39.2,NA
+"Guareí","Apr","same day","FGA55",1,2,NA,11.2,NA
+"Guareí","Apr","same day","FGA56",1,4,NA,36.4,NA
+"Guareí","Apr","same day","FGA57",1,3,NA,36.8,NA
+"Guareí","Apr","same day","FGA58",1,9,NA,32.8,NA
+"Guareí","Apr","same day","FGA59",1,2,NA,39.8,NA
+"Guareí","Apr","same day","FGA6",1,3,NA,14,NA
+"Guareí","Apr","same day","FGA60",1,1,NA,44,NA
+"Guareí","Apr","same day","FGA61",2,2,1.41,28.3,10.04
+"Guareí","Apr","same day","FGA62",1,7,NA,36.6,NA
+"Guareí","Apr","same day","FGA64",1,3,NA,13,NA
+"Guareí","Apr","same day","FGA65",1,3,NA,13.2,NA
+"Guareí","Apr","same day","FGA66",1,4,NA,13.4,NA
+"Guareí","Apr","same day","FGA67",1,6,NA,9,NA
+"Guareí","Apr","same day","FGA68",1,5,NA,9.6,NA
+"Guareí","Apr","same day","FGA69",1,3,NA,11.2,NA
+"Guareí","Apr","same day","FGA7",1,3,NA,14.6,NA
+"Guareí","Apr","same day","FGA70",1,4,NA,13.4,NA
+"Guareí","Apr","same day","FGA71",1,3,NA,16.4,NA
+"Guareí","Apr","same day","FGA72",1,4,NA,20.4,NA
+"Guareí","Apr","same day","FGA73",1,3,NA,11.4,NA
+"Guareí","Apr","same day","FGA74",1,4,NA,14.2,NA
+"Guareí","Apr","same day","FGA77",2,3,1.41,15.2,1.98
+"Guareí","Apr","same day","FGA78",2,1.5,0.71,23.8,5.94
+"Guareí","Apr","same day","FGA8",1,3,NA,17.4,NA
+"Guareí","Apr","same day","FGA80",1,3,NA,22,NA
+"Guareí","Apr","same day","FGA81",1,9,NA,16.6,NA
+"Guareí","Apr","same day","FGA82",1,2,NA,14.6,NA
+"Guareí","Apr","same day","FGA83",1,1,NA,7.8,NA
+"Guareí","Apr","same day","FGA84",1,1,NA,17.2,NA
+"Guareí","Apr","same day","FGA85",1,10,NA,18,NA
+"Guareí","Apr","same day","FGA86",1,1,NA,16,NA
+"Guareí","Apr","same day","FGA87",1,6,NA,20,NA
+"Guareí","Apr","same day","FGA88",1,3,NA,8.6,NA
+"Guareí","Apr","same day","FGA89",2,1.5,0.71,18,6.79
+"Guareí","Apr","same day","FGA9",1,2,NA,18.6,NA
+"Guareí","Apr","same day","FGA90",1,1,NA,11.2,NA
+"Guareí","Apr","same day","FGA91",1,2,NA,13.2,NA
+"Guareí","Apr","same day","FGA92",1,4,NA,20.2,NA
+"Guareí","Apr","same day","FGA93",2,2.5,2.12,19.2,6.79
+"Guareí","Apr","same day","FGA94",1,3,NA,12.6,NA
+"Guareí","Apr","same day","FGA95",1,7,NA,17.4,NA
+"Guareí","Apr","same day","FGA96",2,4,4.24,16.8,0
+"Guareí","Apr","same day","FGA97",1,3,NA,8,NA
+"Guareí","Apr","same day","FGA98",1,1,NA,16.6,NA
+"Guareí","May","next day","FGM1",3,1,1,175.2,0
+"Guareí","May","next day","FGM2",2,2.5,3.54,175.8,0
+"Guareí","May","next day","FGM24",1,6,NA,184.4,NA
+"Guareí","May","next day","FGM25",1,7,NA,185,NA
+"Guareí","May","next day","FGM26",3,3.33,2.08,186,0
+"Guareí","May","next day","FGM27",1,1,NA,186.4,NA
+"Guareí","May","next day","FGM3",1,4,NA,176,NA
+"Guareí","May","next day","FGM4",1,7,NA,177.4,NA
+"Guareí","May","next day","FGM48",1,4,NA,188.8,NA
+"Guareí","May","next day","FGM49",2,3,0,189.2,0
+"Guareí","May","next day","FGM5",1,5,NA,178.4,NA
+"Guareí","May","next day","FGM50",1,4,NA,189.4,NA
+"Guareí","May","next day","FGM52",1,2,NA,192,NA
+"Guareí","May","same day","FGM10",1,2,NA,11.2,NA
+"Guareí","May","same day","FGM11",1,6,NA,11.6,NA
+"Guareí","May","same day","FGM12",1,7,NA,12.2,NA
+"Guareí","May","same day","FGM13",1,3,NA,14,NA
+"Guareí","May","same day","FGM14",1,6,NA,16.8,NA
+"Guareí","May","same day","FGM15",1,5,NA,11.4,NA
+"Guareí","May","same day","FGM16",1,1,NA,17.4,NA
+"Guareí","May","same day","FGM17",1,5,NA,18.4,NA
+"Guareí","May","same day","FGM18",1,7,NA,17,NA
+"Guareí","May","same day","FGM19",1,3,NA,28.6,NA
+"Guareí","May","same day","FGM20",1,2,NA,13.6,NA
+"Guareí","May","same day","FGM21",1,1,NA,17,NA
+"Guareí","May","same day","FGM22",1,7,NA,24.8,NA
+"Guareí","May","same day","FGM23",1,9,NA,26.6,NA
+"Guareí","May","same day","FGM28",1,3,NA,13.2,NA
+"Guareí","May","same day","FGM29",1,9,NA,15,NA
+"Guareí","May","same day","FGM30",1,12,NA,15.2,NA
+"Guareí","May","same day","FGM31",1,3,NA,16,NA
+"Guareí","May","same day","FGM32",1,5,NA,11.6,NA
+"Guareí","May","same day","FGM33",1,6,NA,12.4,NA
+"Guareí","May","same day","FGM34",1,6,NA,13.2,NA
+"Guareí","May","same day","FGM35",1,7,NA,15.4,NA
+"Guareí","May","same day","FGM36",1,5,NA,21.4,NA
+"Guareí","May","same day","FGM37",1,11,NA,22,NA
+"Guareí","May","same day","FGM38",1,6,NA,23.6,NA
+"Guareí","May","same day","FGM39",2,7.5,9.19,17.6,0
+"Guareí","May","same day","FGM46",1,1,NA,92.2,NA
+"Guareí","May","same day","FGM53",1,10,NA,18.2,NA
+"Guareí","May","same day","FGM54",1,12,NA,14.8,NA
+"Guareí","May","same day","FGM55",1,2,NA,15.8,NA
+"Guareí","May","same day","FGM56",1,3,NA,16.8,NA
+"Guareí","May","same day","FGM57",1,7,NA,19,NA
+"Guareí","May","same day","FGM58",1,5,NA,19.8,NA
+"Guareí","May","same day","FGM59",1,6,NA,20.4,NA
+"Guareí","May","same day","FGM6",1,4,NA,8.4,NA
+"Guareí","May","same day","FGM60",1,5,NA,20.8,NA
+"Guareí","May","same day","FGM61",1,16,NA,16.4,NA
+"Guareí","May","same day","FGM62",1,1,NA,20.2,NA
+"Guareí","May","same day","FGM63",1,3,NA,15.6,NA
+"Guareí","May","same day","FGM64",1,6,NA,16.6,NA
+"Guareí","May","same day","FGM65",1,12,NA,17.6,NA
+"Guareí","May","same day","FGM66",1,8,NA,18.6,NA
+"Guareí","May","same day","FGM67",1,2,NA,38,NA
+"Guareí","May","same day","FGM68",1,4,NA,38.4,NA
+"Guareí","May","same day","FGM7",1,7,NA,9.4,NA
+"Guareí","May","same day","FGM71",2,2,1.41,14.2,0.85
+"Guareí","May","same day","FGM72",1,6,NA,13.8,NA
+"Guareí","May","same day","FGM73",1,3,NA,14,NA
+"Guareí","May","same day","FGM74",1,2,NA,16.6,NA
+"Guareí","May","same day","FGM75",1,9,NA,18.6,NA
+"Guareí","May","same day","FGM76",1,6,NA,10.6,NA
+"Guareí","May","same day","FGM77",1,2,NA,11,NA
+"Guareí","May","same day","FGM78",1,11,NA,11.4,NA
+"Guareí","May","same day","FGM79",2,7,4.24,12.4,0
+"Guareí","May","same day","FGM8",1,6,NA,9.6,NA
+"Guareí","May","same day","FGM80",1,6,NA,10.4,NA
+"Guareí","May","same day","FGM81",2,5.5,2.12,11.6,0
+"Guareí","May","same day","FGM82",2,10,5.66,14,0
+"Guareí","May","same day","FGM83",1,5,NA,14.8,NA
+"Guareí","May","same day","FGM9",1,4,NA,9.8,NA
+"Guareí","Jun","next day","FGJ14",4,5,0,221.9,39.84
+"Guareí","Jun","next day","FGJ15",2,1,0,187.6,0
+"Guareí","Jun","next day","FGJ16",2,3,0,188.8,0
+"Guareí","Jun","next day","FGJ17",2,2,0,189.8,0
+"Guareí","Jun","next day","FGJ18",2,6,0,190.6,0
+"Guareí","Jun","next day","FGJ19",4,2,1.15,191.2,0
+"Guareí","Jun","next day","FGJ20",2,4,0,191.8,0
+"Guareí","Jun","next day","FGJ21",2,3,0,200.6,0
+"Guareí","Jun","next day","FGJ26",2,4,0,229.4,0
+"Guareí","Jun","next day","FGJ27",4,12.5,10.97,219.1,12.59
+"Guareí","Jun","next day","FGJ28",6,4.67,1.37,215.87,11.26
+"Guareí","Jun","next day","FGJ29",2,13,0,209.8,0
+"Guareí","Jun","next day","FGJ45",4,3.5,0.58,195.6,0
+"Guareí","Jun","next day","FGJ46",2,8,0,196.2,0
+"Guareí","Jun","next day","FGJ47",2,10,0,204.6,0
+"Guareí","Jun","next day","FGJ48",2,1,0,208,0
+"Guareí","Jun","next day","FGJ57",2,1,0,193.8,0
+"Guareí","Jun","next day","FGJ58",2,1,0,221.4,0
+"Guareí","Jun","next day","FGJ71",2,2,0,193.8,0
+"Guareí","Jun","next day","FGJ72",2,4,0,179.2,0
+"Guareí","Jun","next day","FGJ73",2,2,0,180.8,0
+"Guareí","Jun","next day","FGJ74",2,1,0,177.6,0
+"Guareí","Jun","same day","FGJ22",2,7,0,11.2,0
+"Guareí","Jun","same day","FGJ23",2,4,0,13.2,0
+"Guareí","Jun","same day","FGJ24",2,6,0,12.4,0
+"Guareí","Jun","same day","FGJ25",2,2,0,12.8,0
+"Guareí","Jun","same day","FGJ30",2,3,0,17.8,0
+"Guareí","Jun","same day","FGJ34",2,2,0,40.8,0
+"Guareí","Jun","same day","FGJ36",2,7,0,12.8,0
+"Guareí","Jun","same day","FGJ38",2,6,0,12.4,0
+"Guareí","Jun","same day","FGJ39",2,7,0,10.8,0
+"Guareí","Jun","same day","FGJ40",2,4,0,16.4,0
+"Guareí","Jun","same day","FGJ41",2,9,0,16.8,0
+"Guareí","Jun","same day","FGJ42",2,6,0,19.4,0
+"Guareí","Jun","same day","FGJ43",2,9,0,20.6,0
+"Guareí","Jun","same day","FGJ44",2,8,0,21.8,0
+"Guareí","Jun","same day","FGJ50",2,4,0,9.6,0
+"Guareí","Jun","same day","FGJ51",2,3,0,14.2,0
+"Guareí","Jun","same day","FGJ52",2,2,0,14.6,0
+"Guareí","Jun","same day","FGJ53",2,3,0,10.8,0
+"Guareí","Jun","same day","FGJ54",2,7,0,11.2,0
+"Guareí","Jun","same day","FGJ55",4,6,0,11.6,0
+"Guareí","Jun","same day","FGJ56",2,3,0,16,0
+"Guareí","Jun","same day","FGJ62",2,2,0,36.4,0
+"Guareí","Jun","same day","FGJ63",2,1,0,38,0
+"Guareí","Jun","same day","FGJ66",2,6,0,46.2,0
+"Guareí","Jun","same day","FGJ67",2,2,0,51.2,0
+"Guareí","Jun","same day","FGJ82",2,6,0,11.2,0
+"Guareí","Jun","same day","FGJ84",2,2,0,8.6,0
+"Guareí","Jun","same day","FGJ91",2,4,0,13,0
+"Guareí","Jun","same day","FGJ92",2,3,0,13.6,0
+"Guareí","Jun","same day","FGJ93",2,2,0,15,0
+"Guareí","Jun","same day","FGJ94",2,5,0,9.6,0
+"Guareí","Jun","same day","FGJ95",2,4,0,16.8,0
+"Guareí","Jun","same day","FGJ96",2,1,0,18.4,0
+"Guareí","Jun","same day","FGJ97",2,3,0,13.6,0
+"Guareí","Jun","same day","FGJ98",2,1,0,7.8,0
+"Guareí","Jul","next day","FGJY48",1,6,NA,197,NA
+"Guareí","Jul","next day","FGJY49",1,5,NA,197.2,NA
+"Guareí","Jul","next day","FGJY50",1,2,NA,198.6,NA
+"Guareí","Jul","next day","FGJY51",1,23,NA,199.2,NA
+"Guareí","Jul","next day","FGJY52",1,13,NA,199.6,NA
+"Guareí","Jul","next day","FGJY53",2,7.5,0.71,199.8,0
+"Guareí","Jul","next day","FGJY54",2,4.5,3.54,200,0
+"Guareí","Jul","next day","FGJY55",1,4,NA,201.4,NA
+"Guareí","Jul","same day","FGJY28",1,2,NA,7.6,NA
+"Guareí","Jul","same day","FGJY29",1,4,NA,8.2,NA
+"Santa Maria","Mar","next day","FM009",1,3,NA,204,NA
+"Santa Maria","Mar","next day","FM010",1,3,NA,206.8,NA
+"Santa Maria","Mar","same day","FM005",1,6,NA,8.2,NA
+"Santa Maria","Mar","same day","FM006",1,3,NA,10.6,NA
+"Santa Maria","Mar","same day","FM007",1,7,NA,18.4,NA
+"Santa Maria","Mar","same day","FM008",2,5,2.83,20.2,21.5
+"Santa Maria","May","next day","FM021",1,6,NA,198,NA
+"Santa Maria","May","next day","FM031",1,4,NA,206.2,NA
+"Santa Maria","May","next day","FM035",1,2,NA,274.2,NA
+"Santa Maria","May","next day","FM036",1,2,NA,274.2,NA
+"Santa Maria","May","next day","FM037",1,4,NA,281.6,NA
+"Santa Maria","May","same day","FM027",2,1.5,0.71,5,1.7
+"Santa Maria","May","same day","FM029",1,2,NA,20.4,NA
+"Santa Maria","May","same day","FM030",2,15,15.56,6.9,3.25
+"Santa Maria","May","same day","FM031",1,26,NA,12.6,NA
+"Santa Maria","May","same day","FM032",2,17,21.21,8.5,7.5
+"Santa Maria","May","same day","FM033",1,54,NA,40.6,NA
+"Santa Maria","May","same day","FM038",1,3,NA,19.6,NA
+"Santa Maria","May","same day","FM039",1,2,NA,23.6,NA
+"Santa Maria","May","same day","FM040",1,42,NA,45.6,NA
+"Santa Maria","May","same day","FM041",2,21,25.46,3.4,0.28
+"Santa Maria","May","same day","FM042",1,75,NA,4.4,NA
+"Santa Maria","May","same day","FM043",1,84,NA,5.4,NA
+"Santa Maria","Jun","next day","FM054",3,7,2.65,201.33,18.71
+"Santa Maria","Jun","next day","FM055",3,7,2.65,201.33,18.71
+"Santa Maria","Jun","next day","FM074",1,2,NA,197.4,NA
+"Santa Maria","Jun","next day","FM075",1,2,NA,197.4,NA
+"Santa Maria","Jun","same day","FM052",1,2,NA,18.4,NA
+"Santa Maria","Jun","same day","FM053",1,2,NA,34.4,NA
+"Santa Maria","Jun","same day","FM056",1,1,NA,12.6,NA
+"Santa Maria","Jun","same day","FM058",1,3,NA,23.4,NA
+"Santa Maria","Jun","same day","FM059",1,3,NA,23.4,NA
+"Santa Maria","Aug","next day","FM105",1,27,NA,184.2,NA
+"Santa Maria","Aug","next day","FM106",1,27,NA,184.2,NA
+"Santa Maria","Aug","same day","FM100",1,7,NA,1.6,NA
+"Santa Maria","Aug","same day","FM101",1,4,NA,7.8,NA
+"Santa Maria","Aug","same day","FM114",1,7,NA,6.4,NA
+"Santa Maria","Aug","same day","FM117",1,10,NA,6,NA
+"Santa Maria","Aug","same day","FM118",1,3,NA,6.8,NA
+"Santa Maria","Sep","next day","FM152",1,4,NA,163,NA
+"Santa Maria","Sep","next day","FM161",1,30,NA,165,NA
+"Santa Maria","Sep","next day","FM162",1,30,NA,165,NA
+"Santa Maria","Sep","next day","FM179",1,1500,NA,216.8,NA
+"Santa Maria","Sep","next day","FM180",2,550,636.4,243.3,34.65
+"Santa Maria","Sep","same day","FM156",1,605,NA,47.4,NA
+"Santa Maria","Sep","same day","FM157",1,606,NA,47.4,NA
+"Santa Maria","Sep","same day","FM164",1,1,NA,22.4,NA
+"Santa Maria","Sep","same day","FM167",1,900,NA,14.6,NA
+"Santa Maria","Sep","same day","FM168",1,600,NA,20,NA
+"Santa Maria","Sep","same day","FM169",1,350,NA,39,NA
+"Santa Maria","Sep","same day","FM170",1,200,NA,70.6,NA
+"Santa Maria","Sep","same day","FM171",2,201,0,64.4,46.95
+"Santa Maria","Sep","same day","FM178",1,1000,NA,33.4,NA
+"Santa Maria","Sep","same day","FM181",1,400,NA,33.8,NA
+"Santa Maria","Sep","same day","FM182",1,400,NA,42,NA
+"Santa Maria","Sep","same day","FM183",1,250,NA,58.4,NA
+"Santa Maria","Sep","same day","FM184",2,125,141.42,76.7,21.07
+"Taquara","Jan","next day","FTJan*30",1,29,NA,152,NA
+"Taquara","Jan","next day","FTJan18",1,9,NA,161,NA
+"Taquara","Jan","same day","FTJan*24",2,15.5,13.44,18.5,2.12
+"Taquara","Jan","same day","FTJan*25",2,13,11.31,18.5,12.02
+"Taquara","Jan","same day","FTJan*26",2,11,9.9,19.5,12.02
+"Taquara","Jan","same day","FTJan*27",1,32,NA,21,NA
+"Taquara","Jan","same day","FTJan*28",2,15.5,10.61,15.5,3.54
+"Taquara","Jan","same day","FTJan*29",2,18.5,17.68,18.5,3.54
+"Taquara","Jan","same day","FTJan*31",2,5,0,20.5,2.12
+"Taquara","Jan","same day","FTJan*32",1,9,NA,22,NA
+"Taquara","Jan","same day","FTJan*33",2,5.5,0.71,11,5.66
+"Taquara","Jan","same day","FTJan*34",2,5.5,3.54,13,5.66
+"Taquara","Jan","same day","FTJan10",1,6,NA,10,NA
+"Taquara","Jan","same day","FTJan11",1,3,NA,13,NA
+"Taquara","Jan","same day","FTJan12",2,4.5,0.71,16,0
+"Taquara","Jan","same day","FTJan13",2,7,1.41,12,0
+"Taquara","Jan","same day","FTJan14",1,4,NA,18,NA
+"Taquara","Jan","same day","FTJan15",1,5,NA,19,NA
+"Taquara","Jan","same day","FTJan16",2,19.5,2.12,37,0
+"Taquara","Jan","same day","FTJan17",2,5,0,11,0
+"Taquara","Jan","same day","FTJan19",2,7,1.41,19.5,4.95
+"Taquara","Jan","same day","FTJan20",2,7,2.83,22.5,4.95
+"Taquara","Jan","same day","FTJan21",1,8,NA,14,NA
+"Taquara","Jan","same day","FTJan22",1,9,NA,16,NA
+"Taquara","Jan","same day","FTJan23",1,21,NA,20,NA
+"Taquara","Jan","same day","FTJan4",2,6,1.41,11,9.9
+"Taquara","Jan","same day","FTJan5",2,6.5,2.12,13,9.9
+"Taquara","Jan","same day","FTJan6",1,9,NA,11,NA
+"Taquara","Jan","same day","FTJan7",3,37,54.62,10.67,6.66
+"Taquara","Jan","same day","FTJan8",3,38,53.73,12.67,6.66
+"Taquara","Jan","same day","FTJan9",3,36.67,54.99,13.67,6.66
+"Taquara","Mar","same day","FTMar*35",2,13,12.73,7.5,2.12
+"Taquara","Mar","same day","FTMar*36",2,10.5,10.61,8.5,2.12
+"Taquara","Mar","same day","FTMar*37",2,14,12.73,11.5,6.36
+"Taquara","Mar","same day","FTMar*38",2,12.5,12.02,19.5,6.36
+"Taquara","Mar","same day","FTMar*39",2,18,18.38,9,1.41
+"Taquara","Mar","same day","FTMar*40",2,20,21.21,12,1.41
+"Taquara","Mar","same day","FTMar*41",2,16.5,17.68,13,1.41
+"Taquara","Mar","same day","FTMar*42",1,5,NA,10,NA
+"Taquara","Mar","same day","FTMar*43",1,38,NA,10,NA
+"Taquara","Mar","same day","FTMar*44",1,32,NA,13,NA
+"Taquara","Mar","same day","FTMar*45",1,6,NA,12,NA
+"Taquara","Mar","same day","FTMar*46",1,4,NA,23,NA
+"Taquara","Mar","same day","FTMar*47",1,5,NA,13,NA
+"Taquara","May","next day","FTMay50",1,4,NA,149,NA
+"Taquara","May","next day","FTMay51",1,3,NA,149,NA
+"Taquara","May","next day","FTMay52",1,4,NA,149,NA
+"Taquara","May","same day","FTMay48",1,100,NA,12,NA
+"Taquara","May","same day","FTMay49",1,8,NA,28,NA
+"Taquara","May","same day","FTMay53",1,100,NA,13,NA
+"Taquara","May","same day","FTMay54",1,100,NA,13,NA
+"Taquara","May","same day","FTMay55",1,100,NA,15,NA
+"Taquara","May","same day","FTMay56",1,100,NA,18,NA
+"Taquara","May","same day","FTMay57",2,54.5,64.35,10.5,3.54
+"Taquara","May","same day","FTMay58",2,54,65.05,14.5,3.54
+"Taquara","May","same day","FTMay59",2,54,65.05,10,5.66
+"Taquara","May","same day","FTMay60",2,54.5,64.35,11,5.66
+"Taquara","Jul","same day","FTJul61",1,13,NA,22,NA
+"Taquara","Jul","same day","FTJul62",1,10,NA,23,NA
+"Taquara","Jul","same day","FTJul63",1,3,NA,21,NA
+"Taquara","Jul","same day","FTJul64",1,4,NA,21,NA
+"Taquara","Jul","same day","FTJul65",1,6,NA,23,NA
+"Taquara","Jul","same day","FTJul66",1,5,NA,12,NA
+"Taquara","Jul","same day","FTJul67",1,5,NA,16,NA
+"Taquara","Jul","same day","FTJul68",1,9,NA,20,NA
+"Taquara","Jul","same day","FTJul69",1,10,NA,23,NA
+"Taquara","Jul","same day","FTJul70",1,15,NA,14,NA
+"Taquara","Jul","same day","FTJul71",1,7,NA,18,NA
+"Taquara","Jul","same day","FTJul72",1,7,NA,11,NA
+"Taquara","Jul","same day","FTJul73",1,6,NA,25,NA
+"Taquara","Jul","same day","FTJul74",1,4,NA,26,NA
+"Taquara","Jul","same day","FTJul75",1,5,NA,26,NA
+"Taquara","Jul","same day","FTJul76",1,4,NA,28,NA
+"Taquara","Sep","next day","FTSep81",2,10,8.49,196.5,2.12
+"Taquara","Sep","same day","FTSep75",1,9,NA,23,NA
+"Taquara","Sep","same day","FTSep76",1,8,NA,25,NA
+"Taquara","Sep","same day","FTSep77",2,8,4.24,15.5,2.12
+"Taquara","Sep","same day","FTSep78",2,5.5,2.12,19.5,2.12
+"Taquara","Sep","same day","FTSep79",1,10,NA,14,NA
+"Taquara","Sep","same day","FTSep80",1,9,NA,16,NA
+"Taquara","Sep","same day","FTSep82",1,14,NA,18,NA
+"Taquara","Sep","same day","FTSep83",1,9,NA,20,NA
+"Taquara","Sep","same day","FTSep84",1,11,NA,21,NA
+"Taquara","Sep","same day","FTSep85",1,6,NA,25,NA
+"Taquara","Sep","same day","FTSep86",1,7,NA,28,NA
+"Taquara","Sep","same day","FTSep87",2,5,2.83,15.5,2.12
+"Taquara","Sep","same day","FTSep88",2,5.5,2.12,17.5,2.12
+"Taquara","Sep","same day","FTSep89",1,11,NA,18,NA
+"Taquara","Sep","same day","FTSep90",1,8,NA,16,NA
+"Taquara","Nov","next day","FTNov100",1,4,NA,196,NA
+"Taquara","Nov","next day","FTNov98",1,8,NA,196,NA
+"Taquara","Nov","next day","FTNov99",1,8,NA,196,NA
+"Taquara","Nov","same day","FTNov91",2,7.5,4.95,18.5,2.12
+"Taquara","Nov","same day","FTNov92",2,7.5,3.54,19.5,2.12
+"Taquara","Nov","same day","FTNov93",1,8,NA,14,NA
+"Taquara","Nov","same day","FTNov94",2,4.5,0.71,25.5,2.12
+"Taquara","Nov","same day","FTNov95",2,5.5,0.71,28.5,2.12
+"Taquara","Nov","same day","FTNov96",1,26,NA,14,NA
+"Taquara","Nov","same day","FTNov97",1,6,NA,23,NA
+"Taquara","Dec2017","same day","FTDec2017_1",1,2,NA,8,NA
+"Taquara","Dec2017","same day","FTDec2017_2",1,1,NA,8,NA
+"Taquara","Dec2017","same day","FTDec2017_3",1,3,NA,9,NA
+"Taquara","Dec2018","same day","FTDec2018_101",1,11,NA,15,NA
+"Taquara","Dec2018","same day","FTDec2018_102",1,10,NA,23,NA
+"Taquara","Dec2018","same day","FTDec2018_103",2,8,0,29,2.83
+"Taquara","Dec2018","same day","FTDec2018_104",2,9,0,35,2.83

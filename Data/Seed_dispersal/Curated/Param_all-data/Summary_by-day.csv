@@ -1,0 +1,116 @@
+"group","id_month","disp_day","day","defecation_events","nseeds_mean","sd_SDD","mean_GTT_timesteps","sd_GTT_timesteps"
+"Suzano","Feb","next day",2019-02-20,4,3,14.26,203.5,2.38
+"Suzano","Feb","same day",2019-02-19,7,3.43,85.7,24.86,3.48
+"Suzano","Feb","same day",2019-02-20,5,22.4,95.81,23,9.49
+"Suzano","Feb","same day",2019-02-21,3,4,106.08,46,17.44
+"Suzano","Feb","same day",2019-02-22,3,35.33,79.73,23,11.53
+"Suzano","Apr","next day",2019-04-07,1,4,NA,207,NA
+"Suzano","Apr","next day",2019-04-08,2,53,57.28,202.5,13.44
+"Suzano","Apr","same day",2019-04-06,1,4,NA,26,NA
+"Suzano","Apr","same day",2019-04-09,3,37.67,12.17,27,5.29
+"Suzano","Apr","same day",2019-04-13,2,4.5,0,19,0
+"Suzano","Apr","same day",2019-04-14,1,100,NA,16,NA
+"Suzano","Sep","next day",2018-09-10,4,5.5,15.6,195,8.25
+"Suzano","Sep","next day",2018-09-11,1,2,NA,185,NA
+"Suzano","Sep","same day",2018-09-09,6,5.83,31.06,32.67,7.5
+"Suzano","Sep","same day",2018-09-10,1,4,NA,23,NA
+"Suzano","Sep","same day",2018-09-11,6,20.5,53.61,18.17,10.53
+"Suzano","Sep","same day",2018-09-12,6,37.67,37.62,29.17,4.07
+"Suzano","Dec","next day",2018-12-08,2,7,15.56,178.5,6.36
+"Suzano","Dec","next day",2018-12-09,2,5.5,9.9,199.5,3.54
+"Suzano","Dec","same day",2018-12-07,13,13.46,20.7,24.46,5.52
+"Suzano","Dec","same day",2018-12-08,3,7.33,41.59,13.67,6.11
+"Suzano","Dec","same day",2018-12-09,4,21,25.4,23,4.62
+"Suzano","Dec","same day",2018-12-10,2,6,2.12,22,7.07
+"Suzano","Dec","same day",2018-12-11,2,26,1.41,35.5,6.36
+"Suzano","Dec","same day",2018-12-12,4,6.5,8.66,7.5,1.73
+"Guareí","Apr","next day",2019-04-11,3,2.67,140.99,214.4,9.15
+"Guareí","Apr","next day",2019-04-12,6,3.33,32.39,214.6,9.34
+"Guareí","Apr","next day",2019-04-16,13,4.69,0.37,187.34,1.61
+"Guareí","Apr","next day",2019-04-18,1,2,NA,179,NA
+"Guareí","Apr","next day",2019-04-19,1,1,NA,198.4,NA
+"Guareí","Apr","next day",2019-04-20,1,5,NA,249.8,NA
+"Guareí","Apr","same day",2019-04-11,7,2.86,93.58,18.69,6.24
+"Guareí","Apr","same day",2019-04-15,15,3.07,67.82,20.33,10.75
+"Guareí","Apr","same day",2019-04-16,10,4.6,27.68,10.78,5.16
+"Guareí","Apr","same day",2019-04-17,11,3.64,110.23,31.25,11.59
+"Guareí","Apr","same day",2019-04-18,11,3.82,51.95,13.2,3.18
+"Guareí","Apr","same day",2019-04-19,26,3.15,59.95,16.38,4.85
+"Guareí","Apr","same day",2019-04-20,16,5.88,79.63,9.56,5.13
+"Guareí","May","next day",2019-05-14,8,3,16.32,176.12,1.17
+"Guareí","May","next day",2019-05-16,6,4,24.39,185.63,0.76
+"Guareí","May","next day",2019-05-18,5,3.2,16.44,189.72,1.29
+"Guareí","May","same day",2019-05-14,14,4.71,51.84,13.99,5.36
+"Guareí","May","same day",2019-05-15,4,4.75,62.18,20.5,6.21
+"Guareí","May","same day",2019-05-16,13,6.77,40.19,16.48,3.82
+"Guareí","May","same day",2019-05-17,1,1,NA,92.2,NA
+"Guareí","May","same day",2019-05-18,16,6.38,58.57,20.44,7.17
+"Guareí","May","same day",2019-05-20,17,5.82,13.96,13.27,2.2
+"Guareí","Jun","next day",2019-06-11,20,3.3,132.66,197.54,20.45
+"Guareí","Jun","next day",2019-06-12,14,8,45.39,217.86,10.87
+"Guareí","Jun","next day",2019-06-13,10,5.2,17.8,200,5.54
+"Guareí","Jun","next day",2019-06-14,6,1.33,208.02,203,14.25
+"Guareí","Jun","next day",2019-06-15,6,2.33,33.82,179.2,1.43
+"Guareí","Jun","same day",2019-06-11,8,4.75,9.1,12.4,0.8
+"Guareí","Jun","same day",2019-06-12,20,6.1,93.26,18.96,8.26
+"Guareí","Jun","same day",2019-06-13,16,4.25,48.45,12.45,2.13
+"Guareí","Jun","same day",2019-06-14,8,2.75,86.07,42.95,6.46
+"Guareí","Jun","same day",2019-06-15,4,4,16.94,9.9,1.5
+"Guareí","Jun","same day",2019-06-17,16,2.88,81.08,13.47,3.37
+"Guareí","Jul","next day",2019-07-18,10,7.7,9.33,199.26,1.34
+"Guareí","Jul","same day",2019-07-13,2,3,8.53,7.9,0.42
+"Santa Maria","Mar","next day",2015-03-30,2,3,63.53,205.4,1.98
+"Santa Maria","Mar","same day",2015-03-29,5,5.2,256.08,15.52,12.17
+"Santa Maria","May","next day",2015-05-09,1,6,NA,198,NA
+"Santa Maria","May","next day",2015-05-10,1,4,NA,206.2,NA
+"Santa Maria","May","next day",2015-05-11,3,2.67,94.84,276.67,4.27
+"Santa Maria","May","same day",2015-05-09,5,7,95.47,8.84,6.78
+"Santa Maria","May","same day",2015-05-10,4,28.5,192.47,17.55,16.08
+"Santa Maria","May","same day",2015-05-11,7,35.43,65.28,15.06,15.84
+"Santa Maria","Jun","next day",2015-06-27,6,7,243.15,201.33,16.74
+"Santa Maria","Jun","next day",2015-06-29,2,2,0,197.4,0
+"Santa Maria","Jun","same day",2015-06-26,2,2,263.71,26.4,11.31
+"Santa Maria","Jun","same day",2015-06-27,3,2.33,72.53,19.8,6.24
+"Santa Maria","Aug","next day",2015-08-26,2,27,0,184.2,0
+"Santa Maria","Aug","same day",2015-08-25,2,5.5,78.42,4.7,4.38
+"Santa Maria","Aug","same day",2015-08-26,3,6.67,101.14,6.4,0.4
+"Santa Maria","Sep","next day",2015-09-22,1,4,NA,163,NA
+"Santa Maria","Sep","next day",2015-09-24,2,30,0,165,0
+"Santa Maria","Sep","next day",2015-09-30,3,866.67,402.38,234.47,28.88
+"Santa Maria","Sep","same day",2015-09-23,2,605.5,0,47.4,0
+"Santa Maria","Sep","same day",2015-09-24,1,1,NA,22.4,NA
+"Santa Maria","Sep","same day",2015-09-25,6,408.67,213.17,45.5,32.24
+"Santa Maria","Sep","same day",2015-09-29,1,1000,NA,33.4,NA
+"Santa Maria","Sep","same day",2015-09-30,5,260,169.56,57.52,22.27
+"Taquara","Jan","next day",2018-01-30,1,9,NA,161,NA
+"Taquara","Jan","next day",2018-02-03,1,29,NA,152,NA
+"Taquara","Jan","same day",2018-01-27,14,26.36,175.57,12.14,6.09
+"Taquara","Jan","same day",2018-01-28,2,4.5,0,11.5,2.12
+"Taquara","Jan","same day",2018-01-29,10,8.1,115.51,18.9,9.96
+"Taquara","Jan","same day",2018-01-30,4,7,38.03,21,4.4
+"Taquara","Jan","same day",2018-01-31,3,12.67,121.08,16.67,3.06
+"Taquara","Jan","same day",2018-02-01,7,15.86,55.52,19.14,7.06
+"Taquara","Jan","same day",2018-02-02,4,17,71.77,17,3.37
+"Taquara","Jan","same day",2018-02-03,2,5,12.02,20.5,2.12
+"Taquara","Jan","same day",2018-02-04,5,6.2,137.16,14,6.08
+"Taquara","Mar","same day",2018-02-28,8,12.5,64.98,11.75,6.18
+"Taquara","Mar","same day",2018-03-01,7,16.29,71.88,11.14,2.04
+"Taquara","Mar","same day",2018-03-02,5,17,91.68,14.2,5.07
+"Taquara","May","next day",2018-05-03,3,3.67,0,149,0
+"Taquara","May","same day",2018-05-02,2,54,45.96,20,11.31
+"Taquara","May","same day",2018-05-03,12,69.5,149.7,12.58,3.8
+"Taquara","Jul","same day",2018-07-02,7,6.57,48.9,19.71,4.15
+"Taquara","Jul","same day",2018-07-03,3,11.33,69.63,19,4.58
+"Taquara","Jul","same day",2018-07-04,2,7,58.69,14.5,4.95
+"Taquara","Jul","same day",2018-07-05,2,5,20.51,25.5,0.71
+"Taquara","Jul","same day",2018-09-16,2,4.5,53.74,27,1.41
+"Taquara","Sep","next day",2018-09-18,2,10,9.19,196.5,2.12
+"Taquara","Sep","same day",2018-09-16,6,7.33,58.47,19.67,4.08
+"Taquara","Sep","same day",2018-09-17,2,9.5,67.18,15,1.41
+"Taquara","Sep","same day",2018-09-18,5,9.4,101.22,22.4,4.04
+"Taquara","Sep","same day",2018-09-19,6,6.67,53.82,16.67,1.75
+"Taquara","Nov","next day",2018-12-01,3,6.67,0,196,0
+"Taquara","Nov","same day",2018-11-30,11,8.18,72.21,21.36,5.37
+"Taquara","Dec2017","same day",2017-12-02,2,1.5,0,8,0
+"Taquara","Dec2017","same day",2017-12-03,1,3,NA,9,NA
+"Taquara","Dec2018","same day",2018-12-01,6,9.17,29.99,27.67,7.87

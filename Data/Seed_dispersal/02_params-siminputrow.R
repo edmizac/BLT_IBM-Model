@@ -1,6 +1,7 @@
 # Script name: 01_filter-data-siminputrow.R
-# Script purpose: derive empirical values for parameterizing the model to run in the nine situations
-# assigned in BLT_groups_data_summary_aftercleaning.csv in Data/Movement/Curated
+# Script purpose: derive empirical values for parameterizing the model to run in 
+# the nine situations assigned in BLT_groups_data_summary_aftercleaning.csv in 
+# Data/Movement/Curated.
 
 # Date created: 2022-11-03d
 # Author: Eduardo Zanette

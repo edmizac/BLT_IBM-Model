@@ -1,5 +1,8 @@
-# Script name: 01_plots.R
-# Script purpose: plot and analize Seed dispersal empirical data
+# Script name: 01_params-all-data.R
+# Script purpose: summarize, plot and analize Seed dispersal empirical data for PARAMETERIZATION
+# Derive empirical values for parameterizing the model to run GENERALLY (CHAPTER 2)
+# and NOT in the nine situations assigned in BLT_groups_data_summary_aftercleaning.csv in 
+# Data/Movement/Curated. For this, Go to 02_params-siminputrow.R
 
 # Date created: 2022-11-03d
 # Author: Eduardo Zanette
@@ -54,17 +57,86 @@ dat.all <- dat.all %>%
   ) %>% 
   
   # Order group levels and drop NA
-  dplyr::filter(!is.na(group)) %>% 
-  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara"))
+  dplyr::filter(!is.na(id_feces)) %>% 
+  droplevels() %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Feb", "Mar", "Apr", "May", 
+                                         "Jun", "Jul", "Aug", "Sep", "Nov",  "Dec", "Dec2017", "Dec2018"))
 
+# dat.all$id_month %>% levels()
 # str(dat.all)
 # str(a)
   
 
 # Check data
 dat.all %>% 
-  dplyr::filter(day == "2017-12-03") %>% 
+  # dplyr::filter(day == "2017-12-03") %>% 
+  summarise_all(funs(sum(is.na(.)))) #-> extra_NA
+
+dat.all %>% 
   str()
+
+
+# General summary by month -> THESE ARE THE VALUES I WILL USE FOR PARAMETRIZATION ON CHAPTER 2
+round2 <- function(x) (round(x, digits = 2))
+
+dat.all.summary.month <- dat.all %>% 
+  group_by(group, id_month, disp_day) %>% 
+  summarize(
+    defecation_events = n(),
+    nseeds_mean = mean((n_seeds)),
+    nseeds_sd = sd((n_seeds)),
+    # mean_SDD = mean(SDD), # THIS IS A VALIDATION VARIABLE, NOT A PARAMETRIZATION PARAMETER
+    # sd_SDD = sd(SDD), # Ibid
+    mean_GTT_timesteps = mean(gut_transit_time / 5),
+    sd_GTT_timesteps = sd(gut_transit_time / 5)
+  ) %>% 
+  mutate(across(where(is.numeric), round2))
+
+## Write csv
+dat.all.summary.month %>%
+  write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_by-month.csv"),
+            row.names = FALSE)
+
+
+# General summary by day
+dat.all.summary.day <- dat.all %>% 
+  group_by(group, id_month, disp_day, day) %>% 
+  summarize(
+    defecation_events = n(),
+    nseeds_mean = mean((n_seeds)),
+    # mean_SDD = mean(SDD), # THIS IS A VALIDATION VARIABLE, NOT A PARAMETRIZATION PARAMETER
+    # sd_SDD = sd(SDD), # Ibid
+    sd_SDD = sd(SDD),
+    mean_GTT_timesteps = mean(gut_transit_time / 5),
+    sd_GTT_timesteps = sd(gut_transit_time / 5)
+  ) %>% 
+  mutate(across(where(is.numeric), round2))
+
+# # Write csv
+# dat.all.summary.day %>%
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_by-day.csv"),
+#             row.names = FALSE)
+
+
+# General summary by defecation event
+dat.all.summary.feces <- dat.all %>% 
+  group_by(group, id_month, disp_day, id_feces) %>% 
+  summarize(
+    defecation_events = n(),
+    nseeds_mean = mean((n_seeds)),
+    nseeds_sd = sd((n_seeds)),
+    # mean_SDD = mean(SDD), # THIS IS A VALIDATION VARIABLE, NOT A PARAMETRIZATION PARAMETER
+    # sd_SDD = sd(SDD), # Ibid
+    mean_GTT_timesteps = mean(gut_transit_time / 5),
+    sd_GTT_timesteps = sd(gut_transit_time / 5)
+  ) %>% 
+  mutate(across(where(is.numeric), round2))
+
+# # Write csv
+# dat.all.summary.feces %>%
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_by-defecation-event.csv"),
+#             row.names = FALSE)
 
 
 #### Gut transit time #####
@@ -82,21 +154,21 @@ dat.all %>% ggplot(
   # theme(plot.title = element_text(hjust = 0.5))
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_GTT_disp_day.png'), height = 7, width = 6)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_GTT_disp_day.png'), height = 7, width = 6)
 
 
 ## Density Option 2: by plant species (total mess)
-dat.all %>% ggplot(
-  aes(x = gut_transit_time / 60, fill = group, group = group)
-) +
-  geom_density(alpha = 0.8) +
-  facet_wrap(~species, ncol = 8) +
-  theme_bw(base_size = 10) +
-  xlab("gut transit time (in hours)")
+# dat.all %>% ggplot(
+#   aes(x = gut_transit_time / 60, fill = group, group = group)
+# ) +
+#   geom_density(alpha = 0.8) +
+#   facet_wrap(~species, ncol = 8) +
+#   theme_bw(base_size = 10) +
+#   xlab("gut transit time (in hours)")
 
 # Save plot  
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_GTT_species.png'), height = 15, width = 12.5)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_GTT_species.png'), height = 15, width = 12.5)
 
 
 
@@ -112,19 +184,19 @@ dat.all %>% ggplot(
   facet_wrap(~disp_day, nrow = 2)
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_SDD_disp_day.png'), height = 7, width = 6)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_SDD_disp_day.png'), height = 7, width = 6)
 
 
 ## Density Option 2: by plant species
-dat.all %>% ggplot(
-  aes(x = SDD, group = species)
-) +
-  geom_density(fill = "black") +
-  facet_wrap(~species, ncol = 6) +
-  theme_minimal(base_size = 10) +
-  theme(legend.position="none") #+
-  # facet_wrap(~disp_day, nrow = 2)
-  # theme(axis.text.x = element_text(size=10))
+# dat.all %>% ggplot(
+#   aes(x = SDD, group = species)
+# ) +
+#   geom_density(fill = "black") +
+#   facet_wrap(~species, ncol = 6) +
+#   theme_minimal(base_size = 10) +
+#   theme(legend.position="none") #+
+#   # facet_wrap(~disp_day, nrow = 2)
+#   # theme(axis.text.x = element_text(size=10))
 
 
 ## Boxplot
@@ -132,32 +204,35 @@ dat.all %>% ggplot(
 dat.all %>%
   ggplot() +
   aes(x = group, y = SDD, fill = group) +
-  geom_boxplot() +
+  geom_violin() +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
   theme(axis.title.x = element_blank()) +
-  facet_wrap(~disp_day, nrow = 2)
+  facet_wrap(~disp_day, nrow = 2) +
+  ylab("SDD (m)") +
+  ylim(0, 1000)
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_SDD_disp_day.png'), height = 7, width = 6)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_SDD_disp_day.png'), height = 5, width = 7)
 
 
 # By plant species
-dat.all %>%
-  ggplot() +
-  aes(x = group, y = SDD, fill = group) +
-  geom_boxplot() +
-  theme(axis.title.x = element_blank()) +
-  # theme(aspect.ratio = 0.5) +
-  theme(legend.text=element_text(size=10)) +
-  theme(strip.text = element_text(size = 10),
-        axis.text.x = element_text(size = 8,
-                                   angle = 45),
-        axis.text.y = element_text(size = 8)) +
-  # theme(legend.position="none") +
-  # facet_grid(~species, rows = 6)#, scales = "free", space = "free")
-  facet_wrap(~species, nrow = 6)
+# dat.all %>%
+#   ggplot() +
+#   aes(x = group, y = SDD, fill = group) +
+#   geom_boxplot() +
+#   theme(axis.title.x = element_blank()) +
+#   # theme(aspect.ratio = 0.5) +
+#   theme(legend.text=element_text(size=10)) +
+#   theme(strip.text = element_text(size = 10),
+#         axis.text.x = element_text(size = 8,
+#                                    angle = 45),
+#         axis.text.y = element_text(size = 8)) +
+#   # theme(legend.position="none") +
+#   # facet_grid(~species, rows = 6)#, scales = "free", space = "free")
+#   facet_wrap(~species, nrow = 6)
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_species_SDD_byarea.png'), height = 15, width = 15)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_species_SDD_byarea.png'), height = 15, width = 15)
 
 
 
@@ -170,10 +245,20 @@ dat.all.summary <- dat.all %>%
     # sd_SDD = sd(SDD)
   )
 
+### Write csv
+# dat.all.summary %>% 
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Table_n_defecations.csv"),
+#             row.names = FALSE)
+
+# dat.all.summary %>% str()
+
 dat.all.summary %>% 
   ggplot() +
-  aes(x = group, y = defecation_events, fill = group) +
-  geom_boxplot() +
+  geom_boxplot(aes(x = group, y = defecation_events, fill = group),
+               notch = TRUE) +
+  geom_point(aes(x = group, y = defecation_events, fill = group),
+             position = position_jitter(width = .05)) + # position_dodge() does not work for geom_point: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
+  # geom_dotplot(aes(x = group, y = defecation_events, fill = group)) + # didnt work: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
   theme(
     axis.title.x = element_blank()
   ) +
@@ -181,7 +266,7 @@ dat.all.summary %>%
   # facet_wrap(~disp_event, nrow = 2)
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_n_defecations.png'), height = 7, width = 5)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_n_defecations.png'), height = 7, width = 5)
 
 
 
@@ -230,8 +315,8 @@ gp2 <- dat.all %>%
 g <- gridExtra::grid.arrange(gp1, gp2)
 # g
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", 'Plot_n_seeds.png'),
-       # g, height = 5, width = 7)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_n_seeds.png'),
+# g, height = 5, width = 7)
 
 
 
@@ -289,7 +374,7 @@ for (BLT_group in unique(dat.all.hourwise.sameday$group)) {
   print(gp1)
   
   # Save plot
-  # ggsave(here("Data", "Seed_dispersal", "Curated", paste0('Plot_Dunbell_', BLT_group, '_sameday', '.png')), height = 12, width = 10)
+  # ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", paste0('Plot_Dunbell_', BLT_group, '_sameday', '.png')), height = 12, width = 10)
   
 }
 
@@ -309,7 +394,7 @@ dat.all.hourwise.sameday %>%
    # facet_wrap(~month_id)
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Plot_Dunbell_geom-segment_sameday.png"), height = 15, width = 12)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Plot_Dunbell_geom-segment_sameday.png"), height = 15, width = 12)
 
 
 ### Option 2.2 - to jitter lines (based on https://stackoverflow.com/questions/21904364/how-to-jitter-dodge-geom-segments-so-they-remain-parallel
@@ -373,14 +458,14 @@ dat.all.hourwise.sameday %>%
   theme(plot.title = element_text(hjust = 0.5, size = 30))
 
 # Save plot  
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Plot_Dunbell_geom-linerange_sameday.png"), height = 15, width = 15)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Plot_Dunbell_geom-linerange_sameday.png"), height = 15, width = 15)
 
 
 library(pals)
 library(Polychrome)
 # By defecation event (color by species)
 for (BLT_group in unique(dat.all.hourwise.sameday$group)) {
-  BLT_group <- "Guareí" # 31 colors needed
+  # BLT_group <- "Guareí" # 31 colors needed
   
   aux <- dat.all.hourwise.sameday %>% 
     dplyr::filter(group == BLT_group) %>%
@@ -414,7 +499,7 @@ for (BLT_group in unique(dat.all.hourwise.sameday$group)) {
   # df.l %>% str()
   # df.l %>% dplyr::filter(species == "Species 5")
   
-  df.l %>% 
+gp2 <- df.l %>% 
     ggplot(aes(y = feed_datetime,
                ymin=feed_datetime, ymax=def_datetime,
                x = disp_event,
@@ -441,8 +526,9 @@ for (BLT_group in unique(dat.all.hourwise.sameday$group)) {
   # scale_color_brewer(palette = "YlOrRd")
   # theme(legend.position="none")
   
+print(gp2)
   # # Save plot  
-  # ggsave(here("Data", "Seed_dispersal", "Curated", paste0("Plot_Dunbell_geom-linerange_sameday",
+  # ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", paste0("Plot_Dunbell_geom-linerange_sameday",
   #             BLT_group,  "_disp-event2", ".png")), height = 15, width = 12)
 }
 
@@ -598,5 +684,5 @@ a %>%
            )
   
 # Save plot  
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Plot_Dunbell_geom-linerange_nextday.png"), height = 15, width = 15)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Plot_Dunbell_geom-linerange_nextday.png"), height = 15, width = 15)
 
