@@ -77,6 +77,9 @@ dat.all %>%
   str()
 
 
+
+## Data Summary -------------------------
+
 # General summary by month -> THESE ARE THE VALUES I WILL USE FOR PARAMETRIZATION ON CHAPTER 2
 round2 <- function(x) (round(x, digits = 2))
 
@@ -139,13 +142,23 @@ dat.all.summary.feces <- dat.all %>%
 #             row.names = FALSE)
 
 
+
+
+
+## Plots -------------------------------
+
+
+
 #### Gut transit time #####
 
 ## Density Option 1: by day of dispersal
+# By group
 dat.all %>% ggplot(
   aes(x = gut_transit_time / 60, fill = group, group = group)
 ) +
-  geom_density(alpha = 0.4) +
+  geom_density(alpha = 0.4#,
+               #adjust = .5
+               ) +
   facet_wrap(~disp_day, nrow = 2) +
   xlab("gut transit time (in hours)") # +
   # Option 1.2:
@@ -154,7 +167,44 @@ dat.all %>% ggplot(
   # theme(plot.title = element_text(hjust = 0.5))
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_GTT_disp_day.png'), height = 7, width = 6)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'GTT_disp_day_By-group.png'), height = 7, width = 6)
+
+# By group and month
+dat.all %>% ggplot(
+  aes(x = gut_transit_time / 60, color = id_month)
+) +
+  geom_density(alpha = 0.4
+               # , adjust = 5
+               # , position = "stack"
+               ) +
+  facet_wrap(~disp_day, nrow = 2) +
+  xlab("gut transit time (in hours)") +
+  scale_color_viridis_d()
+# Option 1.2:
+# xlab("hours after each defecation event") +
+# ggtitle("Gut transit time (in hours)") +
+# theme(plot.title = element_text(hjust = 0.5))
+
+# Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'GTT_disp_day_By-month_density.png'), height = 7, width = 6)
+
+
+
+library("ggridges")
+dat.all %>% ggplot(
+  aes(x = gut_transit_time / 60, y = group, fill = id_month)
+) +
+  geom_density_ridges( #alpha = 0.4,
+    # adjust = 5,
+    # position = "stack"
+  ) +
+  xlab("gut transit time (in hours)") +
+  facet_wrap(~disp_day, nrow = 2) +
+  scale_fill_viridis_d() +
+  theme(axis.title.y = element_blank())
+
+# Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'GTT_disp_day_By-month_density-ridge.png'), height = 7, width = 6)
 
 
 ## Density Option 2: by plant species (total mess)
@@ -173,70 +223,8 @@ dat.all %>% ggplot(
 
 
 
-#### SDD #####
-
-## Density Option 1: by day of dispersal
-dat.all %>% ggplot(
-  aes(x = SDD, fill = group, group = group)
-) +
-  geom_density(alpha = 0.4) +
-  xlab("seed dispersal distance (SDD in meters)") +
-  facet_wrap(~disp_day, nrow = 2)
-
-# Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_SDD_disp_day.png'), height = 7, width = 6)
-
-
-## Density Option 2: by plant species
-# dat.all %>% ggplot(
-#   aes(x = SDD, group = species)
-# ) +
-#   geom_density(fill = "black") +
-#   facet_wrap(~species, ncol = 6) +
-#   theme_minimal(base_size = 10) +
-#   theme(legend.position="none") #+
-#   # facet_wrap(~disp_day, nrow = 2)
-#   # theme(axis.text.x = element_text(size=10))
-
-
-## Boxplot
-# By area
-dat.all %>%
-  ggplot() +
-  aes(x = group, y = SDD, fill = group) +
-  geom_violin() +
-  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  theme(axis.title.x = element_blank()) +
-  facet_wrap(~disp_day, nrow = 2) +
-  ylab("SDD (m)") +
-  ylim(0, 1000)
-
-# Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_SDD_disp_day.png'), height = 5, width = 7)
-
-
-# By plant species
-# dat.all %>%
-#   ggplot() +
-#   aes(x = group, y = SDD, fill = group) +
-#   geom_boxplot() +
-#   theme(axis.title.x = element_blank()) +
-#   # theme(aspect.ratio = 0.5) +
-#   theme(legend.text=element_text(size=10)) +
-#   theme(strip.text = element_text(size = 10),
-#         axis.text.x = element_text(size = 8,
-#                                    angle = 45),
-#         axis.text.y = element_text(size = 8)) +
-#   # theme(legend.position="none") +
-#   # facet_grid(~species, rows = 6)#, scales = "free", space = "free")
-#   facet_wrap(~species, nrow = 6)
-
-# Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_species_SDD_byarea.png'), height = 15, width = 15)
-
-
-
 #### n defecations per day ####
+# By group
 dat.all.summary <- dat.all %>% 
   group_by(group, day) %>% 
   summarize(
@@ -260,13 +248,49 @@ dat.all.summary %>%
              position = position_jitter(width = .05)) + # position_dodge() does not work for geom_point: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
   # geom_dotplot(aes(x = group, y = defecation_events, fill = group)) + # didnt work: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
   theme(
-    axis.title.x = element_blank()
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 13)
   ) +
   ylab("number of defecations per day") #+
   # facet_wrap(~disp_event, nrow = 2)
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_n_defecations.png'), height = 7, width = 5)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'n-defecations-per-day_By-group.png'), height = 5, width = 5)
+
+
+# By group and month
+dat.all.summary <- dat.all %>% 
+  group_by(group, id_month, day) %>% 
+  summarize(
+    defecation_events = n()
+    # mean_SDD = mean(SDD),
+    # sd_SDD = sd(SDD)
+  )
+
+### Write csv
+# dat.all.summary %>% 
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Table_n_defecations.csv"),
+#             row.names = FALSE)
+
+# dat.all.summary %>% str()
+
+dat.all.summary %>% 
+  ggplot() +
+  geom_boxplot(aes(x = group, y = defecation_events, color = id_month),
+               notch = FALSE) +
+  geom_point(aes(x = group, y = defecation_events, color = id_month),
+             position = position_jitterdodge(jitter.width = .05)) + # only way of dodging the points and jitter it
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 13)
+  ) +
+  ylab("number of defecations per day") +
+  scale_color_viridis_d()
+# facet_wrap(~disp_event, nrow = 2)
+
+# Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'n-defecations-per-day_By-month.png'), height = 5, width = 5)
+
 
 
 
@@ -285,6 +309,7 @@ small_seeds <- c("Epiphyllum phyllanthus",
                  "Philodendron spp."
                  )
 
+# By group
 gp1 <- dat.all %>% 
   dplyr::filter(!species %in% small_seeds) %>% 
   ggplot() +
@@ -315,9 +340,52 @@ gp2 <- dat.all %>%
 g <- gridExtra::grid.arrange(gp1, gp2)
 # g
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'Plot_n_seeds.png'),
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'n_seeds_By-group.png'),
 # g, height = 5, width = 7)
 
+
+# By month
+gp1 <- dat.all %>% 
+  dplyr::filter(!species %in% small_seeds) %>% 
+  ggplot() +
+  aes(x = group, y = n_seeds, color = id_month) +
+  geom_violin() +
+  geom_boxplot(width=0.1, fill = "white") +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x=element_blank(),
+    legend.title = element_text(size=12),
+    legend.key.size = unit(.3, 'cm')
+  ) +
+  ylab("number of seeds per feces") +
+  theme(axis.title.y = element_text(size = 11)) +
+  ggtitle("Number of seeds per feces (small seeds excluded)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15)) +
+  scale_color_viridis_d()
+
+gp2 <- dat.all %>% 
+  ggplot() +
+  aes(x = group, y = log10(n_seeds), color = id_month) +
+  geom_violin() +
+  geom_boxplot(width=0.1, fill = "white") +
+  theme(
+    axis.title.x = element_blank()
+  ) +
+  ylab("log10(number of seeds per feces)") +
+  theme(axis.title.y = element_text(size = 11),
+        legend.key.size = unit(.3, 'cm'),
+        legend.title = element_text(size=12)) +
+  ggtitle("Number of seeds per feces (all seeds)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15)) +
+  scale_color_viridis_d() #+
+  # theme(legend.position="none")
+
+g <- gridExtra::grid.arrange(gp1, gp2)
+# g
+
+# # Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'n_seeds_By-month_violin.png'),
+#        g, height = 5, width = 7)
 
 
 

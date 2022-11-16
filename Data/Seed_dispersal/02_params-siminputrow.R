@@ -277,7 +277,7 @@ c %>%
   annotate("text", label = "wake up time",  x = 2.5, y = 0 - 2, color = "black") +
   
   ylab("timesteps (5 min)") +
-  ggtitle("timesteps from waking up to defecation (complete days only)") +
+  ggtitle("timesteps from waking up to defecation (siminputrows only)") +
   theme_bw(base_size = 15) +
   theme(axis.title.x = element_blank(),
         plot.title = element_text(
@@ -310,9 +310,9 @@ d <- d %>%
 
 ### Join and save
 siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d)
-siminputmatrix_nextday_seeddispersal %>% 
-  write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
-  row.names = FALSE)
+# siminputmatrix_nextday_seeddispersal %>% 
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
+#   row.names = FALSE)
 
 ### From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 12, but mean = 6.3)  
 
