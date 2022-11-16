@@ -17,6 +17,7 @@ library("lubridate")
 library("hms")
 library("ggplot2")
 library("ggalt")
+library("ggridges")
 
 ## Options -------------------------
 # (plotting, memory limit, decimal digits)
@@ -129,7 +130,6 @@ dat.all %>% ggplot(
 # ggsave(here("Data", "Seed_dispersal", "Curated", "Validation", 'SDD_disp_day_By-month_density-stack.png'), height = 7, width = 6)
 
 
-library("ggridges")
 dat.all %>% ggplot(
   aes(x = SDD, y = group, fill = id_month)
 ) +

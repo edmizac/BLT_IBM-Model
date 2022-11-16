@@ -21,6 +21,7 @@ library("lubridate")
 library("hms")
 library("ggplot2")
 library("ggalt")
+library("ggridges")
 
 ## Options -------------------------
 # (plotting, memory limit, decimal digits)
@@ -190,7 +191,6 @@ dat.all %>% ggplot(
 
 
 
-library("ggridges")
 dat.all %>% ggplot(
   aes(x = gut_transit_time / 60, y = group, fill = id_month)
 ) +

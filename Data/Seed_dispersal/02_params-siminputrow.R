@@ -287,30 +287,44 @@ c %>%
   scale_color_viridis_d()
 
 #### Save plot
-ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 
-            'Plot_GTT_disp-day_morning-defecation.png'), height = 7, width = 6)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 
+#             'Plot_GTT_disp-day_morning-defecation.png'), height = 7, width = 6)
 
 ##### Write csv
-c %>% 
-  write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day.csv"),
-            row.names = FALSE)
+# c %>% 
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day.csv"),
+#             row.names = FALSE)
 
 #### Write csv for next day events (same day values are not entering the siminputmatrix as this is estimated by GTT in 00_prepare-data.R already)
-d <- c %>% 
+d1 <- c %>% 
   dplyr::filter(disp_day == "next day") %>% 
   ungroup()
 
-to_app <- "next_day_"
-cols <- d %>% dplyr::select("GTT_timesteps_mean":"timesteps_wakeup_to_def_sd") %>% colnames()
+d2 <- c %>% 
+  dplyr::filter(disp_day == "same day") %>% 
+  ungroup()
 
-d <- d %>% 
-  rename_with(., ~paste(to_app, cols), all_of(cols)) %>% 
+to_app1 <- "_next_day"
+to_app2 <- "_same_day"
+cols1 <- d1 %>% dplyr::select("GTT_timesteps_mean":"timesteps_wakeup_to_def_sd") %>% colnames()
+cols2 <- d2 %>% dplyr::select("GTT_timesteps_mean":"timesteps_wakeup_to_def_sd") %>% colnames()
+
+d1 <- d1 %>% 
+  rename_with(., ~paste(cols1, to_app1), all_of(cols1)) %>% 
   # tidyr::pivot_wider()
   select(-disp_day)
 
+d2 <- d2 %>% 
+  rename_with(., ~paste(cols2, to_app2), all_of(cols2)) %>% 
+  # tidyr::pivot_wider()
+  select(-disp_day)
+
+
 ### Join and save
-siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d)
-# siminputmatrix_nextday_seeddispersal %>% 
+siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d1)
+siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d2)
+
+# siminputmatrix_nextday_seeddispersal %>%
 #   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
 #   row.names = FALSE)
 
