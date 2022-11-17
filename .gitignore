@@ -38,6 +38,11 @@
 /Model_analysis/Sensitivity-analysis/v1.1_August2022/**.rds
 /Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/**.rds
 
+Data/Movement/Resource-trees/**.dbf
+Data/Movement/Resource-trees/**.prj
+Data/Movement/Resource-trees/**.shp
+Data/Movement/Resource-trees/**.shx
+
 Data/Seed_dispersal/Curated/**.png
 Data/Seed_dispersal/Curated/Param_siminputrow/**.png
 Data/Seed_dispersal/Curated/Param_all-data/**.png
