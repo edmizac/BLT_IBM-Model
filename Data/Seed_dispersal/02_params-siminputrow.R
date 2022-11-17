@@ -26,7 +26,7 @@ library("hms")
 #### Siminputrow matrix  -------------------------
 
 # Load siminputrow matrix from movement data -------------------------
-siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation-time",  "BLT_groups_data_summary_siminputrow.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
 siminputmatrix %>% str()
@@ -45,8 +45,11 @@ dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data.csv"
 # dat.all.mv %>% str
 
 # Filter by siminputrow
+target <- siminputmatrix[ , 1:2]
+
 mv <- dat.all.mv %>% 
-  dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>% 
+  inner_join(target) %>%  # FILTER IS WRONG. YOU HAVE TO USE INNER_JOIN() # https://stackoverflow.com/questions/67097301/dplyr-filter-not-filtering-entire-dataset
+  # dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>%
   droplevels()  
 
 mv <- mv %>%
@@ -140,9 +143,11 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_Seed
 
 
 ## Make seed dispersal data match siminputrow/movement data -------------------------
+target <- siminputmatrix[ , 1:2]
+
 dat.all.sd <- dat.all.sd %>%
-  # dplyr::filter(!(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month)) # only ~50 seed dispersal events don't match!
-  dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>% 
+  inner_join(target) %>%  # FILTER IS WRONG. YOU HAVE TO USE INNER_JOIN()
+  # dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>% 
   droplevels()
 
 
@@ -272,8 +277,8 @@ c %>%
   geom_hline(yintercept = hline2, col = "red") +
   geom_hline(yintercept = hline3, col = "blue") +
   # coord_cartesian(clip = "off") + # this allows plotting text outside of plot
-  annotate("text", label = "max morning defecation time ( = 12 )",  x = 2.5, y = hline2 + 2.5, color = "red") +
-  annotate("text", label = "mean = 6.3",  x = 2.5, y = hline3 + 2.5, color = "blue") +
+  annotate("text", label = paste("max morning defecation time ( = ", hline2, ")"),  x = 2.5, y = hline2 + 2.5, color = "red") +
+  annotate("text", label = paste("mean =", hline3),  x = 2.5, y = hline3 + 2.5, color = "blue") +
   annotate("text", label = "wake up time",  x = 2.5, y = 0 - 2, color = "black") +
   
   ylab("timesteps (5 min)") +
@@ -287,11 +292,11 @@ c %>%
   scale_color_viridis_d()
 
 #### Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 
-#             'Plot_GTT_disp-day_morning-defecation.png'), height = 7, width = 6)
+ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",
+            'Plot_GTT_disp-day_morning-defecation.png'), height = 7, width = 5)
 
 ##### Write csv
-# c %>% 
+# c %>%
 #   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day.csv"),
 #             row.names = FALSE)
 
@@ -325,8 +330,8 @@ siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d1)
 siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d2)
 
 # siminputmatrix_nextday_seeddispersal %>%
-#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
-#   row.names = FALSE)
+  # write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
+  # row.names = FALSE)
 
 ### From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 12, but mean = 6.3)  
 
