@@ -40,7 +40,7 @@ dat.summary <- dat.all %>%
   ) 
 
 # Save csv:
-# dat.summary %>% 
+# dat.summary %>%
 #   write.csv(here("Data","Movement",  "Curated", "BLT_groups_data_summary.csv"),
 #             row.names = FALSE)
 
@@ -51,7 +51,7 @@ dat.summary.siminputrow <- dat.summary %>%
   droplevels()
 
 # Save csv:
-# dat.summary.siminputrow %>% 
+# dat.summary.siminputrow %>%
 #   write.csv(here("Data","Movement",  "Curated", "BLT_groups_data_summary_siminputrow.csv"),
 #                  row.names = FALSE)
 

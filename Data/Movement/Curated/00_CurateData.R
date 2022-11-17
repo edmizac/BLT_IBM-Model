@@ -38,7 +38,14 @@ dat.gua <- dat.gua %>%
   dplyr::rename(id_day = id_nday)
 
 dat.gua$id_day %>% as.factor() %>% levels()
-  
+
+# Check behaviors
+dat.gua$behavior %>% as.factor() %>% levels()
+dat.gua <- dat.gua %>%
+  dplyr::mutate(behavior = recode(behavior, 
+                                  "out of sight" = "Out of sight"))  
+
+
 # Write csv
 # dat.gua %>% write.csv(here("Data", "Movement",  "Curated", "Guarei.csv"),
 #           row.names = FALSE)
@@ -79,9 +86,24 @@ dat.sma <- dat.sma %>%
 
 dat.sma %>% dplyr::filter(is.na(x)) 
 
+# Check behaviors
+dat.sma$behavior %>% as.factor() %>% levels()
+dat.sma <- dat.sma %>%
+  dplyr::mutate(
+    behavior = na_if(behavior, 'NA'),
+    species = na_if(species, 'NA'),
+  )
+
+# Check species
+dat.sma$species %>% as.factor() %>% levels()
+dat.sma <- dat.sma %>%
+  dplyr::mutate(species = recode(species, 
+                                  "Myrcia splendens (Sw.) DC." = "Myrcia splendens"))  
+
+
 # Write csv
 # dat.sma %>% write.csv(here("Data", "Movement", "Curated","SantaMaria.csv"),
-                      # row.names = FALSE)
+# row.names = FALSE)
 
 
 #### Taquara ####
@@ -106,7 +128,7 @@ dat.taq <- dat.taq %>%
   mutate(id_month = lubridate::month(POSIXct, label = TRUE, abbr = TRUE, 
                                      locale = Sys.setlocale("LC_TIME", "English"))) %>% 
   mutate(id = as.factor(id)) %>% 
-  select(-id_day) %>% 
+  dplyr::select(-id_day) %>% 
   dplyr::rename(id_day = id_nday)
 
 # dat.taq$id_day %>% as.factor() %>% levels()
@@ -125,6 +147,13 @@ dat.taq$id_month %>% levels()
 
 dat.taq <- dat.taq %>% dplyr::select(c("id_day_all", "x", "y", "id_month", "POSIXct", "behavior", "species", "id")) # %>% 
   # dplyr::filter(id_month == "Jan") # only month with more than 2 days of data 
+
+# Check behaviors
+dat.taq$behavior %>% as.factor() %>% levels()
+dat.taq <- dat.taq %>%
+  dplyr::mutate(behavior = recode(behavior, 
+                                  "Descanso" = "Resting",
+                                  "Interação social" =  "Social interaction"))
 
 # # Write csv
 # dat.taq %>% write.csv(here("Data", "Movement", "Curated", "Taquara.csv"),
@@ -160,9 +189,16 @@ dat.suz$id_month <- dat.suz$id_month %>% droplevels()
 
 dat.suz$id_month %>% levels()
 
+# Check behaviors
+dat.suz$behavior %>% as.factor() %>% levels()
+dat.suz <- dat.suz %>%
+  dplyr::mutate(behavior = recode(behavior, 
+                                  "Idle" = "Inactive",
+                                  "RES" =  "Resting"))
+
 # Write csv
-dat.suz %>% write.csv(here("Data","Movement",  "Curated","Suzano.csv"),
-                      row.names = FALSE)
+# dat.suz %>% write.csv(here("Data","Movement",  "Curated","Suzano.csv"),
+#                       row.names = FALSE)
 
 
 #### Concatenate everything: ####
@@ -201,6 +237,9 @@ dat.suz <- dat.suz %>%
 
 df_list <- list(dat.gua, dat.sma, dat.taq, dat.suz)
 dat.all <- df_list %>% purrr::reduce(full_join)
+
+dat.all <- dat.all %>% 
+  mutate(behavior = recode(behavior, "Locomotion" = "Travel"))
 
 # dat.all %>% write.csv(here("Data", "Movement", "Curated","BLT_groups_data.csv"),
 #                       row.names = FALSE)
