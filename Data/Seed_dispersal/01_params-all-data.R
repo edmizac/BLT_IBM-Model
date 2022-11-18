@@ -98,9 +98,9 @@ dat.all.summary.month <- dat.all %>%
   mutate(across(where(is.numeric), round2))
 
 ## Write csv
-dat.all.summary.month %>%
-  write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_by-month.csv"),
-            row.names = FALSE)
+# dat.all.summary.month %>%
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_by-month.csv"),
+#             row.names = FALSE)
 
 
 # General summary by day

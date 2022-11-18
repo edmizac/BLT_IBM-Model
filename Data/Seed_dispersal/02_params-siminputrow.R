@@ -39,21 +39,15 @@ siminputmatrix %>% str()
 # Load movement dataset to gather the time tamarins wake up and mean time tamarins go to sleep 
 dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
-  rename(datetime = POSIXct)
+  mutate(group = recode(group, "Guarei" = "Guareí"))# %>% 
+  # rename(datetime = POSIXct)
 
 # dat.all.mv %>% str
+dat.all.mv[ , c("group", "id_month") ] %>% distinct() # This dataset is already filtered by siminputrow!
 
-# Filter by siminputrow
-target <- siminputmatrix[ , 1:2]
 
-mv <- dat.all.mv %>% 
-  inner_join(target) %>%  # FILTER IS WRONG. YOU HAVE TO USE INNER_JOIN() # https://stackoverflow.com/questions/67097301/dplyr-filter-not-filtering-entire-dataset
-  # dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>%
-  droplevels()  
-
-mv <- mv %>%
-# get HH:mm:ss of feeding and defecation
+mv <- dat.all.mv %>%
+# get HH:mm:ss of wakeup and sleeping times
   mutate(
     datetime = lubridate::as_datetime(datetime),
     date = as_date(datetime),
@@ -79,7 +73,8 @@ mv.days <- mv %>%
   mutate_if(is.period, period_to_seconds) %>%
   mutate_at(vars(matches("time")), as_hms)
 
-# Write csv
+
+# # Write csv
 # mv.days %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_activity-time_days.csv"),
 #                       row.names = FALSE)
 
@@ -142,13 +137,34 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_Seed
 # dat.all.sd %>% str()
 
 
-## Make seed dispersal data match siminputrow/movement data -------------------------
-target <- siminputmatrix[ , 1:2]
 
-dat.all.sd <- dat.all.sd %>%
-  inner_join(target) %>%  # FILTER IS WRONG. YOU HAVE TO USE INNER_JOIN()
-  # dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>% 
-  droplevels()
+
+
+
+
+
+# 
+# ## Make seed dispersal data match siminputrow/movement data -------------------------
+# target <- siminputmatrix[ , 1:2]
+# 
+# dat.all.sd <- dat.all.sd %>%
+#   inner_join(target) %>%  # FILTER IS WRONG. YOU HAVE TO USE INNER_JOIN()
+#   # dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>%
+#   droplevels()
+# 
+# gm <- dat.all.sd %>% group_by(group, id_month) %>%
+#   summarise(
+#     count = n()
+#   ) ## SANTA MARIA APRIL AND GUAREI AUGUST DOES NOT HAVE SEED DISPERSAL DATA!
+# 
+
+
+
+
+
+
+
+
 
 
 ### Wrangle seed dispersal data  -------------------------
@@ -212,9 +228,18 @@ a <- a %>%
                               TRUE ~ "complete"
                               ))
 
+### Calculate GTT
+a <- a %>% 
+  group_by(group, id_month) %>% 
+  summarise(
+    GTT_timesteps_mean = round(mean(gut_transit_time, na.rm = TRUE) / 5, digits = 0), # 1 timestep = 5 mins
+    GTT_timesteps_sd = round(sd(gut_transit_time, na.rm = TRUE) / 5, digits = 0), 
+    
+  )
+
 ### Diminish the start hour from the defecation hour
 str(a)
-b <- a %>%
+b <- a  %>%
   # filter NAs
   dplyr::filter(!is.na(time_wakeup))
 
@@ -239,9 +264,6 @@ b <- b %>%
 c <- b %>%
   group_by(group, id_month, disp_day) %>% 
   summarise(
-    GTT_timesteps_mean = round(mean(gut_transit_time) / 5, digits = 0), # 1 timestep = 5 mins
-    GTT_timesteps_sd = round(sd(gut_transit_time) / 5, digits = 0), 
-    
     # Quantos timesteps se passam em média até os micos terem a última defecaçao do dia?
     timesteps_wakeup_to_def_mean = round(mean(timesteps_wakeup_to_def), digits = 0),
     timesteps_wakeup_to_def_sd = round(sd(timesteps_wakeup_to_def), digits = 0)
@@ -287,13 +309,13 @@ c %>%
   theme(axis.title.x = element_blank(),
         plot.title = element_text(
           hjust = 0.3  ,
-          size = 15
+          size = 12
                                   )) +
   scale_color_viridis_d()
 
 #### Save plot
-ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",
-            'Plot_GTT_disp-day_morning-defecation.png'), height = 7, width = 5)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",
+#             'Plot_GTT_disp-day_morning-defecation.png'), height = 7, width = 5)
 
 ##### Write csv
 # c %>%

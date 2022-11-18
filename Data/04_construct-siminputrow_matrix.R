@@ -80,30 +80,30 @@ dat.all.sd[ 1 , "morning_defecation_GTT_sd"] <- dat.all.sd %>%
     sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
   )  
 
-## Santa Maria  
+## Santa Maria 
 dat.all.sd[ 5 , "GTT_mean"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
+  dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("GTT_mean") %>%
   summarise(
     mean = mean(GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "GTT_sd"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
+  dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("GTT_sd") %>%
   summarise(
     sd = sd(GTT_sd, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
+  dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("morning_defecation_GTT_mean") %>%
   summarise(
     mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
+  dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("morning_defecation_GTT_sd") %>%
   summarise(
     sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
