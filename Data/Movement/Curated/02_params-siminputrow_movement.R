@@ -21,6 +21,7 @@ library("here")
 library("lubridate")
 # library("hms")
 library("dplyr")
+library("tidyr")
 library("readxl")
 # library("sf")
 library("sp")
@@ -78,6 +79,23 @@ dat.all.ltraj.df %>% str()
 #             row.names = FALSE)
 
 
+# a <- dat.all.ltraj.df$rel.angle %>%
+#   rad2deg(
+#   # circular::circular(
+#     # units='degrees'
+#                      # , rotation='clock', 
+# # ,zero=pi/2,
+# # modulo='2pi'
+# ) %>% 
+#   plot()
+# 
+# a$zero
+# a$rotation
+# a$next.points
+
+
+
+
 
 ## Summary  -------------------
 
@@ -85,24 +103,51 @@ dat.all.ltraj.df %>% str()
 # dat.all.ltraj.df <- dat.all.ltraj.df %>% 
   # mutate(rel.angle = circular::as.circular(rel.angle))
 
-# Summarize step length and turning angles
+# Convert rel.angles to degrees
+# dat.all.ltraj.df$rel.angle %>% max(na.rm = TRUE) # 3.1415 = 180°. Why is not relative angles bigger than 180°? Because it is to the left or to the right! # adehabitatLT: "abs.angle,rel.angle are expressed in radians"
+# dat.all.ltraj.df$rel.angle %>% circular() %>% plot() # https://www.google.com/search?q=convert+pi+to+degrees&oq=converting+pi+&aqs=chrome.1.69i57j0i13i19i512l9.7254j0j4&sourceid=chrome&ie=UTF-8
+# dat.all.ltraj.df <- dat.all.ltraj.df %>% 
+#   mutate(
+#     rel.angle.degree = rel.angle * 180 / pi,
+#     abs.angle.degree = abs.angle * 180 / pi
+#   )
+
+
+# Summarize step length and turning angles for travel behavior only
+target_behav <- c("Travel", "Foraging")
 dat.mv.summary <- dat.all.ltraj.df %>% 
-  group_by(group, id_month) %>%
-  dplyr::filter(behavior == "Travel") %>% # Try "Frugivory"
+  dplyr::filter(behavior %in% target_behav) %>% # or (after group_by) dplyr::filter(behavior == "Travel") %>% # Try "Frugivory", "Travel" and "Foraging"
+  droplevels() %>% 
+  group_by(group, id_month, behavior) %>%
   summarise(
+    step_len_median = median(dist, na.rm = TRUE),
     step_len_mean = mean(dist, na.rm = TRUE),
     step_len_sd = sd(dist, na.rm = TRUE),
-    rel_angle_mean = circular::mean.circular(rel.angle, type = "angles", na.rm = TRUE),
-    rel_angle_sd = circular::sd.circular(rel.angle, type = "angles", na.rm = TRUE),
+    rel_angle_mean = mean(circular(rel.angle.degree, type="angles", units="degrees",
+                                             modulo="pi", template='geographics'),
+                                    na.rm = TRUE),
+    rel_angle_sd = sd(circular(rel.angle.degree, type="angles", units="degrees",
+                                 modulo="pi", template='geographics'),
+                        na.rm = TRUE),
+    # Although the mean is output in degreees, sd is not # https://stackoverflow.com/questions/55870751/is-the-standard-deviation-in-the-circular-package-in-r-correct
+    rel_angle_sd = rel_angle_sd * 180 / pi,
     
-    max_random_angle_75q = quantile(Mod(
-      circular::as.circular(rel.angle, type = "angles", na.rm = TRUE) # units = "radians",
-      ), 
-      0.75,
-      na.rm = TRUE
+    # Max angle quantiles
+    max_random_angle_95q = quantile(
+      Mod(rel.angle.degree), 
+      0.95, na.rm = TRUE
+    ),
+    max_random_angle_75q = quantile(
+      Mod(rel.angle.degree), 
+      0.75, na.rm = TRUE
     )
   )
 
+# pivor wider
+dat.mv.summary <- dat.mv.summary %>% 
+  tidyr::pivot_wider(id_cols = c(group, id_month), names_from = "behavior", 
+                     values_from = c(step_len_mean:max_random_angle_75q)
+  )
 
 # Mod(dat.all.ltraj.df$rel.angle)
 
@@ -128,7 +173,8 @@ dat.ab.summary.day <- dat.all.ltraj.df %>%
   ) %>% 
   
   # filter only behaviors of interest of the model
-  dplyr::filter(behavior %in% target_behav)
+  dplyr::filter(behavior %in% target_behav
+  )
 
 # # Write csv
 # dat.ab.summary.day %>%
@@ -150,26 +196,40 @@ dat.ab.summary <- dat.ab.summary.day %>%
 #             row.names = FALSE)
 
 
-# Derive p_foraging_while_traveling
-target_behav <- c("Foraging", "Travel")
-normalize <- function(x, na.rm = TRUE) {
-  return((x- min(x)) /(max(x)-min(x)))
-}
+
+# Derive p_foraging_while_traveling based on Ronald's suggestion: 
+## p_foraging_while_traveling = foraging / (foraging + traveling)
+target_behav <- c("Travel", "Foraging")
+dat.ab.summary <- dat.ab.summary %>% 
+  dplyr::filter(behavior %in% target_behav) %>%  # only behaviors of interest 
+  tidyr::pivot_wider(values_from = c(perc_behavior_mean, perc_behavior_sd), names_from = "behavior")
+
 dat.ab.summary.p_travel <- dat.ab.summary %>% 
-  # ungroup() %>% 
- 
-  group_by(group, id_month, behavior) %>%
-  # # normalize percentage data ( for some reason it does not work inside mutate)
-  # mutate(
-  #   perc_behavior_mean_norm = normalize(perc_behavior_mean),
-  #   perc_behavior_sd_norm = normalize(perc_behavior_sd)
-  # ) %>%
-  dplyr::filter(behavior %in% target_behav) #%>%
-  
-dat.ab.summary.p_travel$perc_behavior_mean_norm <- dat.ab.summary.p_travel$perc_behavior_mean %>% normalize()
-dat.ab.summary.p_travel$perc_behavior_sd_norm <- dat.ab.summary.p_travel$perc_behavior_sd %>% normalize()
+  group_by(group, id_month) %>%
+  # dplyr::filter(behavior %in% target_behav) %>% 
+  mutate(
+    p_foraging_while_traveling = perc_behavior_mean_Foraging / (perc_behavior_mean_Foraging + perc_behavior_mean_Travel)
+  ) 
 
-# normalize(dat.ab.summary$perc_behavior_mean)
-# Other parameters not initially assessed (R2n = Square displacement)
+# # Write csv
+# dat.ab.summary.p_travel %>%
+#   write.csv(here("Data", "Movement", "Curated", "Param_siminputrow", "Siminputrow_Activity-budget_p-foraging.csv"),
+#             row.names = FALSE)
 
-dat.ab.summary.p_travel %>% str()
+
+## Load siminputrow matrix from simulation time data -------------------
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation-time", 
+                                "BLT_groups_data_summary_siminputrow.csv"),
+                           sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
+siminputmatrix %>% str()
+
+
+## Merge parameters data derived here to siminputrow matrix -------------------
+siminputmatrix_mov <- left_join(siminputmatrix, dat.mv.summary)
+siminputmatrix_mov <- left_join(siminputmatrix_mov, dat.ab.summary.p_travel)
+
+# # Write csv
+# siminputmatrix_mov %>%
+#   write.csv(here("Data", "Movement", "Curated", "Param_siminputrow", "Siminputrow_parameters_movement.csv"),
+#             row.names = FALSE)

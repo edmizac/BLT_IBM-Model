@@ -34,13 +34,13 @@ library("lubridate")
 library("hms")
 
 
-#### Siminputrow matrix  -------------------------
+# Siminputrow matrix  -------------------------
 
-# Load siminputrow matrix from movement data -------------------------
-siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
+## Load siminputrow matrix from simulation time data -------------------
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation-time", 
+                                "BLT_groups_data_summary_siminputrow.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
-siminputmatrix %>% str()
 
 
 # # Read siminputrow movement data
@@ -67,4 +67,10 @@ dat.ab.summary <- dat.all.ltraj.df %>%
 
 # Summarize DPL
 
+
+
+
+
+# Other parameters not initially assessed -------------------------
+# (R2n = Square displacement)
 

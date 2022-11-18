@@ -23,8 +23,9 @@ library("hms")
 
 #### Siminputrow matrix  -------------------------
 
-# 1) Load siminputrow matrix from movement data as base -------------------------
-siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
+# 1) Load siminputrow matrix from simulation timeas base -------------------------
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation-time",
+                                "BLT_groups_data_summary_siminputrow.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
 siminputmatrix %>% str()
@@ -34,7 +35,7 @@ siminputmatrix %>% str()
 
 
 
-# 2) Load seed dispersal siminputrow matrix 
+# 2) Load seed dispersal siminputrow matrix  -------------------------
 ## to gather GTT, timesteps to morning defecation, number of defecations per day, etc
 dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",  "Siminputrow_disp-day_nex-day_params.csv"),
                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
@@ -53,28 +54,28 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminput
 ## Guareí
 dat.all.sd[ 1 , "GTT_mean"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("GTT_mean") %>%
+  dplyr::select("GTT_mean") %>%
   summarise(
     mean = mean(GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 1 , "GTT_sd"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("GTT_sd") %>%
+  dplyr::select("GTT_sd") %>%
   summarise(
     sd = sd(GTT_sd, na.rm = TRUE)
   )
   
 dat.all.sd[ 1 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("morning_defecation_GTT_mean") %>%
+  dplyr::select("morning_defecation_GTT_mean") %>%
   summarise(
     mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 1 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("morning_defecation_GTT_sd") %>%
+  dplyr::select("morning_defecation_GTT_sd") %>%
   summarise(
     sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
   )  
@@ -82,28 +83,28 @@ dat.all.sd[ 1 , "morning_defecation_GTT_sd"] <- dat.all.sd %>%
 ## Santa Maria  
 dat.all.sd[ 5 , "GTT_mean"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("GTT_mean") %>%
+  dplyr::select("GTT_mean") %>%
   summarise(
     mean = mean(GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "GTT_sd"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("GTT_sd") %>%
+  dplyr::select("GTT_sd") %>%
   summarise(
     sd = sd(GTT_sd, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("morning_defecation_GTT_mean") %>%
+  dplyr::select("morning_defecation_GTT_mean") %>%
   summarise(
     mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
   dplyr::filter(group == "Guareí") %>% 
-  select("morning_defecation_GTT_sd") %>%
+  dplyr::select("morning_defecation_GTT_sd") %>%
   summarise(
     sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
   )   
@@ -112,18 +113,60 @@ dat.all.sd[ 5 , "morning_defecation_GTT_sd"] <- dat.all.sd %>%
 round2 <- function(x) (round(x, digits = 2))
 dat.all.sd <- dat.all.sd %>% 
   mutate(across(where(is.numeric), round2))
-  
+
+# Rename siminputmatrix objetct
+siminputmatrix_sd <- dat.all.sd
   
 
-# 3) Load movement siminputrow matrix
+
+# 3) Load movement siminputrow matrix -------------------------
+
 ## to gather step length, max turning angles and p_foraging
-dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminputrow",  "Siminputrow_XXXXXX.csv"),
+siminputmatrix_mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminputrow", "Siminputrow_parameters_movement.csv"),
                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  # mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
-  rename(datetime = POSIXct)
+  dplyr::select(!starts_with("perc_"))
 
 
 
+# 4) Gather other siminputrow data -------------------------
+## (number of trees, number of sleeping sites, number of tamarins). I'll take this from movement data
+
+dat.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_siminputrow.csv")
+                    , stringsAsFactors = TRUE
+)  %>% 
+  mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
+
+# dat.mv %>%  dplyr::filter(behavior == "Sleeping site")
+
+target_behav <- c("Sleeping site", "Frugivory") 
+
+siminputmatrix_others <- dat.mv %>% 
+  dplyr::filter(behavior %in% target_behav) %>%
+  group_by(group, id_month, behavior) %>%
+  summarise(
+    n_trees = n_distinct(id_tree)
+  ) %>% 
+  
+  # pivot wider
+  tidyr::pivot_wider(names_from = behavior, values_from = n_trees,
+                     names_glue = "{.value}_{behavior}")
+  
+
+
+# 5) Merge all parameter tables together into one siminputrow table -------------------------
+siminputmatrix_complete <- left_join(siminputmatrix_mv, siminputmatrix_sd)
+siminputmatrix_complete <- left_join(siminputmatrix_complete, siminputmatrix_others)
+
+
+# 6) Input number of tamarins by hand -------------------------
+siminputmatrix_complete$n_tamarins <- c(5, 5, 5, 5, 2, 2, 6, 4, 4) # values from: Guareí (Dissert. Felipe), Santa Maria (Dissert. Yness), Taquara and Suzano (Dissert. Anne and LaP Demography database https://www.dropbox.com/s/vt81l28hqg5yzaz/Demography_MLP_LaP.xlsx?dl=0) 
+
+
+# 7)  Write csv -------------------------
+siminputmatrix_complete %>% str()
+# siminputmatrix_complete %>%
+#   write.csv(here("Data", "Parameter_table.csv"),
+#             row.names = FALSE)
 
 
 
