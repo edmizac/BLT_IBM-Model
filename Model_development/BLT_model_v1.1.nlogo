@@ -12,6 +12,7 @@ turtles-own [
   x_UTM y_UTM
   X_coords Y_coords ; X and Y list of coordinates (x_UTM and y_UTM) for home range calculation with the r extension in the end of each run (days = n_days)
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
+  KDE_values ; output of amt package in calc-homerange
 
 ]
 
@@ -1845,12 +1846,19 @@ to calc-homerange
   r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
 ;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
   r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
-  r:eval "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)"
+  r:eval "db_nest <- db_nest %>% mutate(area = area / 10000)"
 
-;  print "db_nest: "
-;  show r:get "db_nest"
-;
-;
+  print "db_nest: "
+  show r:get "db_nest"
+
+  r:gc
+
+  ; get hr values to agent variable
+  ask monkeys [
+   set KDE_values item 3 r:get "db_nest"
+  ]
+
+
 ;  ; Merge HR to db and save
 ;  r:eval "db <- left_join(db, db_nest)"
 ;  r:eval "db <- db %>% mutate(hr_area_ha = area / 10000)"
@@ -2255,7 +2263,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+6
 
 CHOOSER
 984
