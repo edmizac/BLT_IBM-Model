@@ -1,0 +1,26 @@
+"group","id_month","disp_day","timesteps_wakeup_to_def_mean","timesteps_wakeup_to_def_sd","max_timestep_to_def"
+"Suzano","Feb","next day",0,0,0
+"Suzano","Feb","same day",59,32,91
+"Suzano","Apr","next day",7,8,15
+"Suzano","Apr","same day",83,31,114
+"Suzano","Sep","next day",7,4,11
+"Suzano","Sep","same day",78,18,96
+"Suzano","Dec","next day",6,5,11
+"Suzano","Dec","same day",67,27,94
+"Guareí","May","next day",1,1,2
+"Guareí","May","same day",41,24,65
+"Guareí","Jun","next day",5,6,11
+"Guareí","Jun","same day",63,32,95
+"Guareí","Jul","next day",4,2,6
+"Guareí","Jul","same day",72,1,73
+"Santa Maria","Mar","next day",20,2,22
+"Santa Maria","Mar","same day",80,29,109
+"Santa Maria","May","next day",9,9,18
+"Santa Maria","May","same day",64,31,95
+"Taquara","Jan","next day",1,0,1
+"Taquara","Jan","same day",61,28,89
+"Taquara","May","next day",0,0,0
+"Taquara","May","same day",56,34,90
+"Taquara","Jul","same day",53,26,79
+"Taquara","Sep","next day",1,0,1
+"Taquara","Sep","same day",48,22,70

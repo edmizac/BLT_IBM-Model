@@ -178,8 +178,8 @@ mv.summary.siminputrow <- mv.summary.means %>%
   droplevels()
 
 # Drop unuseful columns
-mv.summary.siminputrow <- mv.summary.siminputrow %>%
-  select(-c(time_sleep_mean, time_wakeup_mean, time_wakesleep_mean_diff))
+# mv.summary.siminputrow <- mv.summary.siminputrow %>%
+#   select(-c(time_sleep_mean, time_wakeup_mean, time_wakesleep_mean_diff))
 
 # # Write csv (siminputrow data)
 # mv.summary.siminputrow %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",
@@ -217,14 +217,6 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_Seed
 #     count = n()
 #   ) ## SANTA MARIA APRIL AND GUAREI AUGUST DOES NOT HAVE SEED DISPERSAL DATA!
 # 
-
-
-
-
-
-
-
-
 
 
 ### Wrangle seed dispersal data  -------------------------
@@ -268,10 +260,12 @@ dat.all.sd <- dat.all.sd %>%
   # Order group levels and drop NA
   dplyr::filter(!is.na(group)) %>% 
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>%
-  mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Mar", "Apr", "May", 
-                                         "Jun", "Jul", "Aug", "Sep", "Dec"))
+  mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Feb", "Mar", "Apr", "May", 
+                                         "Jun", "Jul", "Aug", "Sep", "Nov",  "Dec", "Dec2017", "Dec2018"))
+  # mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Mar", "Apr", "May", 
+  #                                        "Jun", "Jul", "Aug", "Sep", "Dec"))
 
-# dat.all.sd$id_month %>% levels()
+dat.all.sd$id_month %>% levels()
 dat.all.sd %>% str()
 # a$feed_time_per %>% sum()
 
@@ -281,13 +275,6 @@ sd.mv <- left_join(dat.all.sd, mv.days) # not mv.summary.day
 # colnames(sd.mv)
 # colnames(mv.days)
 # colnames(mv.days) %in% colnames(sd.mv)
-
-
-### Define complete days (for which we have wake up and sleeping time according to timediff collum)
-sd.mv <- sd.mv %>% 
-  mutate(full_day = case_when(is.na(time_wakeup) ~ "incomplete",
-                              TRUE ~ "complete"
-                              ))
 
 # ### Calculate GTT (original)
 # a <- a %>% 
@@ -312,13 +299,69 @@ sd.mv.summary <- sd.mv %>%
 #   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_GTT_mean.csv"),
 #             row.names = FALSE)
 
+# Filtering for siminputrow
+target <- siminputmatrix[ , 1:2]
+sd.mv.summary_siminputrow <- sd.mv.summary %>%
+  inner_join(target) %>%  
+  droplevels()
+# ### Write csv
+# sd.mv.summary_siminputrow %>%
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_GTT_mean.csv"),
+#             row.names = FALSE)
 
-### Diminish the start hour from the defecation hour (complete days only)
-str(a)
+
+
+
+### Deriving how many timesteps defecation occurs after wakeuping up  ----------
+### Define complete days (for which we have wake up and sleeping time according to timediff collum)
+sd.mv <- sd.mv %>% 
+  mutate(full_day = case_when(is.na(time_wakeup) ~ "incomplete",
+                              TRUE ~ "complete"
+                              ))
+
+# Estimate wakeup time of incomplete days from mean daily wakeuptime (month means)
+aux <- mv.summary.means %>%
+  dplyr::select(c("group", "id_month", 
+                  "time_wakeup_mean", "time_sleep_mean")) %>% 
+  mutate(
+    time_wakeup_mean = as_hms(time_wakeup_mean),
+    time_sleep_mean = as_hms(time_sleep_mean)
+  )
+test <- left_join(sd.mv, aux, by = c("group", "id_month"))
+
+test <- test %>% 
+  mutate(time_wakeup = case_when(full_day == "incomplete"  ~ paste0(time_wakeup_mean),
+                              full_day == "complete"    ~ paste0(time_wakeup)
+  )) %>% 
+  dplyr::filter(time_wakeup != "NA")
+
+test <- test %>% 
+  mutate(timesteps_to_def_estimated = case_when(full_day == "incomplete"  ~ "estimated",
+                                                full_day == "complete"    ~ "observed")
+  )
+
+# Check if there was any feeding event
+test$feed_time %>% str()
+test$time_wakeup %>% str()
+test$time_wakeup <- test$time_wakeup %>% as_hms()
+
+test$feed_time < test$time_wakeup # Some values are negative (estimated wakeup time is later then the feeding events)
+
+test <- test %>% 
+  mutate(time_wakeup = case_when(
+    disp_day == "same_day" | def_time < time_wakeup ~ def_time,
+    disp_day == "same_day" | def_time >= time_wakeup ~ time_wakeup)
+    
+  )
+
+sd.mv <- test
+
+
+### Diminish the start hour from the defecation hour (complete days)
+# str(a)
 sd.mv.complete <- sd.mv  %>%
   # filter NAs
-  # dplyr::filter(full_day == "complete") %>%  # mesma coisa
-  dplyr::filter(!is.na(time_wakeup)) # mesma coisa
+  dplyr::filter(!is.na(time_wakeup)) # using mean wakeuptimes enhances seed dispersal events from 290 to 447
 
 ### Make it POSIXct to get difftime (= gut_transit_time in 00_prepare-data.R)
 # foo <- function(x) {
@@ -336,12 +379,17 @@ sd.mv.complete <- sd.mv.complete %>%
     time_wakeup = case_when(
       disp_day == "same day" ~ paste(Sys.Date(), time_wakeup),
       disp_day == "next day" ~ paste(Sys.Date()+1, time_wakeup)
-    )
+    )#,
+    # feed_time = case_when(
+    #   disp_day == "same day" ~ paste(Sys.Date(), feed_time),
+    #   disp_day == "next day" ~ paste(Sys.Date()+1, feed_time)
+    # )
   ) %>% 
   # mutate_at(c("def_time", "time_wakeup"), foo) %>% 
   mutate_at(c("def_time", "time_wakeup"), ymd_hms)
 
 # sd.mv.complete %>% str()
+
 
 ### Get mean difftime in minutes and timesteps
 sd.mv.complete <- sd.mv.complete %>%
@@ -349,6 +397,13 @@ sd.mv.complete <- sd.mv.complete %>%
     time_wakeup_to_def = round(difftime(def_time, time_wakeup, unit = "mins"), digits = 0),
     timesteps_wakeup_to_def = round(as.numeric(time_wakeup_to_def / 5, digits = 0))
   )
+
+sd.mv.complete$time_wakeup_to_def # There aren't any negative values left! Attention to the events that were estimated (sd.mv.complete$timesteps_to_def_estimated)
+sd.mv.complete$timesteps_to_def_estimated %>% table() # 157 estimated events!
+
+# ### [not needed anymore] Make negative values = 0 (does not solve the problem with the timestamps)
+# sd.mv.complete <- sd.mv.complete %>% 
+#   dplyr::mutate(across(everything(), ~replace(., . < 0, 0 )))
 
 
 ### Make summary of timesteps for defecation by disp_day:  -------------------------  
@@ -361,16 +416,20 @@ c <- sd.mv.complete %>%
     max_timestep_to_def = max(timesteps_wakeup_to_def_mean + timesteps_wakeup_to_def_sd)
   )
 
+
 ### Get the latest morning defecation
 e <-  c %>%
   dplyr::filter(disp_day == "next day")
+# e$max_timestep_to_def # quite high value
+# e$timesteps_wakeup_to_def_mean # quite high value
+
 # e <- f %>%
 # e <- c %>%
 #   summarise(
 #     max_timestep = max(timesteps_wakeup_to_def_mean + timesteps_wakeup_to_def_sd)
 #   )
-hline2 <- max(e$max_timestep)
-hline3 <- mean(e$max_timestep)
+hline2 <- max(e$max_timestep_to_def)
+hline3 <- mean(e$max_timestep_to_def)
 ### From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 12)  
 
 sd.mv.complete.nextday <- sd.mv.complete %>%
@@ -420,22 +479,22 @@ c %>%
   annotate("text", label = "wake up time",  x = 2.5, y = 0 - 2, color = "black") +
   
   ylab("timesteps (5 min)") +
-  ggtitle("timesteps from waking up to defecation (complete days only)") +
+  ggtitle("timesteps from waking up to defecation\n(complete days + wakeup time estimated)") +
   theme_bw(base_size = 15) +
   theme(axis.title.x = element_blank(),
         plot.title = element_text(
           hjust = 0.3  ,
-          size = 12
+          size = 14
                                   )) +
   scale_color_viridis_d()
 
 #### Save plot
 # ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data",
-#             'Summary_GTT_morning-defecation_complete-days.png'), height = 7, width = 5)
+#             'Summary_GTT_morning-defecation_complete-and-estimated-days.png'), height = 7, width = 5)
 
 ##### Write csv
 # c %>%
-#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_GTT_morning-defecation_complete-days.csv"),
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_GTT_morning-defecation_complete-and-estimated-days.csv"),
 #             row.names = FALSE)
 
 
@@ -459,10 +518,10 @@ e_siminputrow <-  c_siminputrow %>%
   dplyr::filter(disp_day == "next day")
 # e <- c %>%
 #   summarise(
-#     max_timestep = max(timesteps_wakeup_to_def_mean + timesteps_wakeup_to_def_sd)
+#     max_timestep_to_def = max(timesteps_wakeup_to_def_mean + timesteps_wakeup_to_def_sd)
 #   )
-hline2 <- max(e_siminputrow$max_timestep)
-hline3 <- mean(e_siminputrow$max_timestep)
+hline2 <- max(e_siminputrow$max_timestep_to_def)
+hline3 <- mean(e_siminputrow$max_timestep_to_def)
 
 ### Plot it
 # e %>% 
@@ -509,22 +568,22 @@ c_siminputrow %>%
   annotate("text", label = "wake up time",  x = 2.5, y = 0 - 2, color = "black") +
   
   ylab("timesteps (5 min)") +
-  ggtitle("timesteps from waking up to defecation (complete days only)") +
+  ggtitle("timesteps from waking up to defecation\n(complete days + wakeup time estimated)") +
   theme_bw(base_size = 15) +
   theme(axis.title.x = element_blank(),
         plot.title = element_text(
           hjust = 0.3  ,
-          size = 12
+          size = 14
         )) +
   scale_color_viridis_d()
 
 #### Save plot
 # ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",
-#             'Siminputrow_GTT_morning-defecation_complete-days_siminputrow.png'), height = 7, width = 5)
+#             'Siminputrow_GTT_morning-defecation_complete-and-estimated-days_siminputrow.png'), height = 7, width = 5)
 
 ##### Write csv
 # c %>%
-#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_GTT_morning-defecation_complete-days.csv"),
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_GTT_morning-defecation_complete-and-estimated-days.csv"),
 #             row.names = FALSE)
 
 
@@ -543,16 +602,16 @@ d2 <- c_join %>%
 
 to_app1 <- "_next_day"
 to_app2 <- "_same_day"
-cols1 <- d1 %>% dplyr::select("timesteps_wakeup_to_def_mean":"max_timestep_to_def") %>% colnames()
-cols2 <- d2 %>% dplyr::select("timesteps_wakeup_to_def_mean":"max_timestep_to_def") %>% colnames()
+cols1 <- d1 %>% dplyr::select("GTT_timesteps_mean":"max_timestep_to_def") %>% colnames()
+cols2 <- d2 %>% dplyr::select("GTT_timesteps_mean":"max_timestep_to_def") %>% colnames()
 
 d1 <- d1 %>% 
-  rename_with(., ~paste(cols1, to_app1), all_of(cols1)) %>% 
+  rename_with(., ~paste0(cols1, to_app1), all_of(cols1)) %>% 
   # tidyr::pivot_wider()
   select(-disp_day)
 
 d2 <- d2 %>% 
-  rename_with(., ~paste(cols2, to_app2), all_of(cols2)) %>% 
+  rename_with(., ~paste0(cols2, to_app2), all_of(cols2)) %>% 
   # tidyr::pivot_wider()
   select(-disp_day)
 
@@ -560,9 +619,9 @@ d2 <- d2 %>%
 
 #### All data
 d_all <- left_join(d1,d2)
-# # Write csv
+# # # Write csv
 # d_all %>%
-#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_seed-dispersal_params.csv"),
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_seed-dispersal_params-estimated.csv"),
 #           row.names = FALSE)
 
 #### Siminputrow data
@@ -572,13 +631,12 @@ d_siminputrow <- d_all %>%
   inner_join(target) %>%
   droplevels()
 
-
 # d_siminputrow %>%
 #   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_seed-dispersal_params.csv"),
 #             row.names = FALSE)
 
 ### Unfortunately there's no seed dispersal for two of the nine siminputrows (Guarei Aug and Santa Maria Apri). 
-### These parameters will be gathered from averages on 04_construct_siminputrow.R
+### These parameters will be gathered from averages on 04_construct_siminputrow.R based on d_all
 
 
 

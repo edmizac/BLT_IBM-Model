@@ -23,8 +23,8 @@ library("hms")
 
 #### Siminputrow matrix  -------------------------
 
-# 1) Load siminputrow matrix from simulation timeas base -------------------------
-siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation-time",
+# 1) Load siminputrow matrix from simulation times base -------------------------
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", #"Param_Simulation-time",
                                 "BLT_groups_data_summary_siminputrow.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
@@ -37,85 +37,106 @@ siminputmatrix %>% str()
 
 # 2) Load seed dispersal siminputrow matrix  -------------------------
 ## to gather GTT, timesteps to morning defecation, number of defecations per day, etc
-dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",  "Siminputrow_disp-day_nex-day_params.csv"),
+siminputmatrix_sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",  "Siminputrow_seed-dispersal_params.csv"),
                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   # mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
   
   # Rename variables of interest:
-  rename(
-    GTT_mean = GTT_timesteps_mean._same_day,
-    GTT_sd = GTT_timesteps_sd._same_day,
-    morning_defecation_GTT_mean = timesteps_wakeup_to_def_mean._same_day,
-    morning_defecation_GTT_sd = timesteps_wakeup_to_def_sd._same_day,
-  ) %>% 
-  dplyr::select(c("group":"mean_timesteps", "GTT_mean":"morning_defecation_GTT_sd"))
+  dplyr::rename(
+    timesteps_to_def_sameday_mean = timesteps_wakeup_to_def_mean_same_day,
+    timesteps_to_def_sameday_sd = timesteps_wakeup_to_def_sd_same_day,
+    timesteps_to_def_morningdefecation_mean = timesteps_wakeup_to_def_mean_next_day,
+    timesteps_to_def_morningdefecation_sd = timesteps_wakeup_to_def_sd_next_day,
+  ) %>%
   
-# Guess missing values based on the same group values
+  dplyr::select(c(1:2, starts_with("timesteps_")))
+
+# siminputmatrix_sd <- siminputmatrix_sd %>% 
+#   dplyr::select(c("group", "id_month",
+#                   "timesteps_to_def_sameday_mean", "timesteps_to_def_sameday_sd",
+#                   "timesteps_to_def_morningdefecation_mean", "timesteps_to_def_morningdefecation_sd"))
+
+
+### 2.1) Load seed dispersal siminputrow matrix  -------------------------
+# As one might see, there are missing values. Thus, we can read all data to estimate missing values based on the same group valu
+siminputmatrix_sd_all <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data",  "Summary_seed-dispersal_params-estimated.csv"),
+                              sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  # mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
+  
+  # Rename variables of interest:
+  dplyr::rename(
+    timesteps_to_def_sameday_mean = timesteps_wakeup_to_def_mean_same_day,
+    timesteps_to_def_sameday_sd = timesteps_wakeup_to_def_sd_same_day,
+    timesteps_to_def_morningdefecation_mean = timesteps_wakeup_to_def_mean_next_day,
+    timesteps_to_def_morningdefecation_sd = timesteps_wakeup_to_def_sd_next_day,
+  ) %>%
+  
+  dplyr::select(c(1:2, starts_with("timesteps_")))# %>% 
+  # dplyr::filter(!is.na())
+
 ## Guareí
-dat.all.sd[ 1 , "GTT_mean"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "timesteps_to_def_morningdefecation_mean"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("GTT_mean") %>%
+  dplyr::select("timesteps_to_def_morningdefecation_mean") %>%
   summarise(
-    mean = mean(GTT_mean, na.rm = TRUE)
+    mean = mean(timesteps_to_def_morningdefecation_mean, na.rm = TRUE)
   )
 
-dat.all.sd[ 1 , "GTT_sd"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "timesteps_to_def_morningdefecation_sd"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("GTT_sd") %>%
+  dplyr::select("timesteps_to_def_morningdefecation_sd") %>%
   summarise(
-    sd = sd(GTT_sd, na.rm = TRUE)
+    sd = sd(timesteps_to_def_morningdefecation_sd, na.rm = TRUE)
   )
   
-dat.all.sd[ 1 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "timesteps_to_def_sameday_mean"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("morning_defecation_GTT_mean") %>%
+  dplyr::select("timesteps_to_def_sameday_mean") %>%
   summarise(
-    mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
+    mean = mean(timesteps_to_def_sameday_mean, na.rm = TRUE)
   )
 
-dat.all.sd[ 1 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "timesteps_to_def_sameday_sd"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("morning_defecation_GTT_sd") %>%
+  dplyr::select("timesteps_to_def_sameday_sd") %>%
   summarise(
-    sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
+    sd = sd(timesteps_to_def_sameday_sd, na.rm = TRUE)
   )  
 
 ## Santa Maria 
-dat.all.sd[ 5 , "GTT_mean"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "GTT_mean"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("GTT_mean") %>%
   summarise(
     mean = mean(GTT_mean, na.rm = TRUE)
   )
 
-dat.all.sd[ 5 , "GTT_sd"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "GTT_sd"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("GTT_sd") %>%
   summarise(
     sd = sd(GTT_sd, na.rm = TRUE)
   )
 
-dat.all.sd[ 5 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "morning_defecation_GTT_mean"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("morning_defecation_GTT_mean") %>%
   summarise(
     mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
   )
 
-dat.all.sd[ 5 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
+siminputmatrix_sd_all[ 5 , "morning_defecation_GTT_sd"] <- siminputmatrix_sd_all %>% 
   dplyr::filter(group == "Santa Maria") %>% 
   dplyr::select("morning_defecation_GTT_sd") %>%
   summarise(
     sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
   )   
 
-# Round numeric values
+# Round numeric values and rename
 round2 <- function(x) (round(x, digits = 2))
-dat.all.sd <- dat.all.sd %>% 
+siminputmatrix_sd <- siminputmatrix_sd_all %>% 
   mutate(across(where(is.numeric), round2))
 
-# Rename siminputmatrix objetct
-siminputmatrix_sd <- dat.all.sd
   
 
 

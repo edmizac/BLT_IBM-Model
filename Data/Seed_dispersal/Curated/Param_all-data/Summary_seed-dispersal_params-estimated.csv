@@ -1,18 +1,18 @@
 "group","id_month","GTT_timesteps_mean_next_day","GTT_timesteps_sd_next_day","n_disp_events_next_day","timesteps_wakeup_to_def_mean_next_day","timesteps_wakeup_to_def_sd_next_day","max_timestep_to_def_next_day","GTT_timesteps_mean_same_day","GTT_timesteps_sd_same_day","n_disp_events_same_day","timesteps_wakeup_to_def_mean_same_day","timesteps_wakeup_to_def_sd_same_day","max_timestep_to_def_same_day"
-"Suzano","Apr",204,10,3,NA,NA,NA,23,6,7,82,NA,NA
-"Suzano","Sep",193,8,5,7,4,11,26,9,19,85,9,94
-"Suzano","Dec",189,13,4,6,6,12,21,9,28,70,28,98
-"Suzano","Feb",204,2,4,-6,1,-5,28,12,18,51,30,81
+"Suzano","Feb",204,2,4,0,0,0,28,12,18,59,32,91
+"Suzano","Apr",204,10,3,7,8,15,23,6,7,83,31,114
+"Suzano","Sep",193,8,5,7,4,11,26,9,19,78,18,96
+"Suzano","Dec",189,13,4,6,5,11,21,9,28,67,27,94
 "Guareí","Apr",200,18,25,NA,NA,NA,17,9,97,NA,NA,NA
-"Guareí","May",183,6,19,2,1,3,17,11,65,46,20,66
-"Guareí","Jun",202,18,56,4,6,10,18,11,72,52,27,79
+"Guareí","May",183,6,19,1,1,2,17,11,65,41,24,65
+"Guareí","Jun",202,18,56,5,6,11,18,11,72,63,32,95
 "Guareí","Jul",199,1,10,4,2,6,8,0,2,72,1,73
-"Santa Maria","Mar",205,2,2,NA,NA,NA,16,12,5,80,29,109
-"Santa Maria","May",247,41,5,NA,NA,NA,14,13,16,NA,NA,NA
+"Santa Maria","Mar",205,2,2,20,2,22,16,12,5,80,29,109
+"Santa Maria","May",247,41,5,9,9,18,14,13,16,64,31,95
 "Santa Maria","Jun",200,14,8,NA,NA,NA,22,8,5,NA,NA,NA
 "Santa Maria","Aug",184,0,2,NA,NA,NA,6,2,5,NA,NA,NA
 "Santa Maria","Sep",199,43,6,NA,NA,NA,47,25,15,NA,NA,NA
 "Taquara","Jan",156,6,2,1,0,1,16,7,51,61,28,89
-"Taquara","May",149,0,3,NA,NA,NA,14,5,14,58,30,88
-"Taquara","Sep",196,2,2,1,0,1,19,4,19,47,30,77
+"Taquara","May",149,0,3,0,0,0,14,5,14,56,34,90
+"Taquara","Sep",196,2,2,1,0,1,19,4,19,48,22,70
 "Taquara","Nov",196,0,3,NA,NA,NA,21,5,11,NA,NA,NA
