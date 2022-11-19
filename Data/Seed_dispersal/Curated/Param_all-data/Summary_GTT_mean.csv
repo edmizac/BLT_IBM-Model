@@ -1,0 +1,39 @@
+"group","id_month","disp_day","GTT_timesteps_mean","GTT_timesteps_sd","n_disp_events"
+"Suzano","Apr","next day",204,10,3
+"Suzano","Apr","same day",23,6,7
+"Suzano","Sep","next day",193,8,5
+"Suzano","Sep","same day",26,9,19
+"Suzano","Dec","next day",189,13,4
+"Suzano","Dec","same day",21,9,28
+"Suzano","Feb","next day",204,2,4
+"Suzano","Feb","same day",28,12,18
+"Guareí","Apr","next day",200,18,25
+"Guareí","Apr","same day",17,9,97
+"Guareí","May","next day",183,6,19
+"Guareí","May","same day",17,11,65
+"Guareí","Jun","next day",202,18,56
+"Guareí","Jun","same day",18,11,72
+"Guareí","Jul","next day",199,1,10
+"Guareí","Jul","same day",8,0,2
+"Santa Maria","Mar","next day",205,2,2
+"Santa Maria","Mar","same day",16,12,5
+"Santa Maria","May","next day",247,41,5
+"Santa Maria","May","same day",14,13,16
+"Santa Maria","Jun","next day",200,14,8
+"Santa Maria","Jun","same day",22,8,5
+"Santa Maria","Aug","next day",184,0,2
+"Santa Maria","Aug","same day",6,2,5
+"Santa Maria","Sep","next day",199,43,6
+"Santa Maria","Sep","same day",47,25,15
+"Taquara","Jan","next day",156,6,2
+"Taquara","Jan","same day",16,7,51
+"Taquara","Mar","same day",12,5,20
+"Taquara","May","next day",149,0,3
+"Taquara","May","same day",14,5,14
+"Taquara","Jul","same day",21,5,16
+"Taquara","Sep","next day",196,2,2
+"Taquara","Sep","same day",19,4,19
+"Taquara","Dec2017","same day",8,1,3
+"Taquara","Dec2018","same day",28,8,6
+"Taquara","Nov","next day",196,0,3
+"Taquara","Nov","same day",21,5,11

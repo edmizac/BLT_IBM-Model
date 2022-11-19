@@ -1,0 +1,18 @@
+"group","id_month","GTT_timesteps_mean","GTT_timesteps_sd","n_disp_events","timesteps_wakeup_to_def_mean _next_day","timesteps_wakeup_to_def_sd _next_day","max_timestep_to_def _next_day","timesteps_wakeup_to_def_mean _same_day","timesteps_wakeup_to_def_sd _same_day","max_timestep_to_def _same_day"
+"Suzano","Apr",204,10,3,NA,NA,NA,NA,NA,NA
+"Suzano","Sep",193,8,5,7,4,11,NA,NA,NA
+"Suzano","Dec",189,13,4,6,6,12,NA,NA,NA
+"Suzano","Feb",204,2,4,-6,1,-5,NA,NA,NA
+"Guareí","Apr",200,18,25,NA,NA,NA,NA,NA,NA
+"Guareí","May",183,6,19,2,1,3,NA,NA,NA
+"Guareí","Jun",202,18,56,4,6,10,NA,NA,NA
+"Guareí","Jul",199,1,10,4,2,6,NA,NA,NA
+"Santa Maria","Mar",205,2,2,NA,NA,NA,NA,NA,NA
+"Santa Maria","May",247,41,5,NA,NA,NA,NA,NA,NA
+"Santa Maria","Jun",200,14,8,NA,NA,NA,NA,NA,NA
+"Santa Maria","Aug",184,0,2,NA,NA,NA,NA,NA,NA
+"Santa Maria","Sep",199,43,6,NA,NA,NA,NA,NA,NA
+"Taquara","Jan",156,6,2,1,0,1,NA,NA,NA
+"Taquara","May",149,0,3,NA,NA,NA,NA,NA,NA
+"Taquara","Sep",196,2,2,1,0,1,NA,NA,NA
+"Taquara","Nov",196,0,3,NA,NA,NA,NA,NA,NA

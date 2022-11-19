@@ -66,10 +66,10 @@ dat.all.siminputrow <- dat.all %>%
   
 # dat.all$group %in% dat.summary.siminputrow$group
 
-# Save csv
-dat.all.siminputrow %>% 
-  write.csv(here("Data","Movement",  "Curated", "BLT_groups_data_siminputrow.csv"),
-            row.names = FALSE)
+# # Save csv
+# dat.all.siminputrow %>% 
+#   write.csv(here("Data","Movement",  "Curated", "BLT_groups_data_siminputrow.csv"),
+#             row.names = FALSE)
   
   
   
