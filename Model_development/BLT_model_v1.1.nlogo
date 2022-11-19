@@ -301,34 +301,34 @@ to setup-trees
   ;;;;;;; load tree-file according to tree-scenario chooser (.SHP) ;;;;;;;
 
   ; Guareí
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_all.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_May.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jun" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_Jun.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_Jul.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "Aug" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_Aug.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_all.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_May.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jun" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_Jun.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_Jul.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Aug" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_Aug.shp" ]
 
   ; Santa Maria
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_all.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Mar" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_Mar.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_Apr.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_May.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_all.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Mar" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_Mar.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_Apr.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_May.shp" ]
 
   ; Taquara
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_all.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jan" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Jan.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Feb.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Apr.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_May.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Jul.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Sep.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_Dec.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_all.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jan" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Jan.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Feb.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Apr.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_May.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Jul.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Sep.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Dec.shp" ]
 
   ; Suzano
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_all.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Feb.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Apr.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Sep.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_Dec.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_all.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Feb.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Apr.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Sep.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Dec.shp" ]
 
 
   let number 0
@@ -337,8 +337,8 @@ to setup-trees
   let tree-type 0 ; phenology types
 
 ;  procedure to check if the file exists (not working):
-;  let direct_list sort pathdir:list word (local-path) "/Data/Resource-Trees/"
-;  let local-path "D:/Data/Documentos/github/BLT_IBM-Model" let direct_list sort pathdir:list word (local-path) "/Data/Resource-Trees/"     ( foreach [direct_list] [ i -> read-from-string ( item i direct_list) ] )
+;  let direct_list sort pathdir:list word (local-path) "/Data/Movement/Resource-Trees/"
+;  let local-path "D:/Data/Movement/Documentos/github/BLT_IBM-Model" let direct_list sort pathdir:list word (local-path) "/Data/Movement/Resource-Trees/"     ( foreach [direct_list] [ i -> read-from-string ( item i direct_list) ] )
 ;  ifelse file-exists? ( map [ i -> read-from-string direct_list ] ) [
 
 
@@ -598,7 +598,7 @@ to go
   if all? monkeys [action = "sleeping"] [
     set day day + 1
     set timestep 0
-    ask monkeys [ set action "travel" ]
+    ask monkeys [ set action "" ]
     if day > no_days [
       output-print "run-days click finished"
       output-print "calculating home range with r extension"
@@ -1845,7 +1845,7 @@ to calc-homerange
   r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
 ;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
   r:eval "db_nest <- db_nest %>% dplyr::select(-c(3, 4))"
-  show r:get "db_nest"
+;  show r:get "db_nest"
 
   ; Merge HR to db and save
   r:eval "db <- left_join(db, db_nest)"
