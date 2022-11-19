@@ -196,10 +196,10 @@ a1
 kde1 <- a1 %>%
   hr_kde(levels = c(0.3, 0.95))
 
-# kde1$h
-# kde1$estimator
-# kde1$ud
-# kde1$h
+kde1$h
+kde1$estimator
+kde1$ud
+kde1$h
 
 plot(kde1)
 amt::hr_isopleths(kde1)
@@ -210,7 +210,7 @@ hr_area(kde1) %>%
 
 # For all groups (require dplyr::nest())
 db_nest <- db %>%
-  dplyr::filter(between(siminputrow, 50, 55)) %>%  # in case you want to subset some data first
+  dplyr::filter(between(siminputrow, 50, 52)) %>%  # in case you want to subset some data first
   make_track(.x=x, .y=y, id = id, crs = our_crs) %>% 
   nest(data = -c(id)) # group only by id or use: nest(data = c(x_, y_, t_, var1))
 
@@ -220,37 +220,38 @@ db_nest$data[[1]]
   # calculate HR metrics for every list (=id = run) using map()
 db_nest <- db_nest %>% 
   mutate(
-    KDE95 = map(data, hr_kde),
-    KDE50 = map(data, hr_kde)
+    KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)),
+    KDE50 = amt::map(data, ~ hr_kde(., level = 0.50))
   )
 
-db_nest <- db_nest %>% 
+
+```
+
+```{r, eval=F, warning=FALSE}
+db_nest2 <- db_nest %>% 
   select(-data) %>% # drop all track data, we don't need it anymore (it was used to calculate HR)
   pivot_longer(KDE95:KDE50, names_to = "KDE_value", values_to = "hr")
 
-db_nest <- db_nest %>% 
+db_nest2 <- db_nest2 %>% 
   mutate(hr_area = map(hr, hr_area)) %>% 
   unnest(cols = hr_area)
 
-# db_nest %>%
-  # select(-what) %>%
-  # select(-hr)
-
-# Deu ruim no KD_50 (ficou igual ao 95)
-db_nest <- db_nest %>% filter(KDE_value == "KDE95")
-
-db_nest <- db_nest %>% 
-  dplyr::select(-c(3, 4)) # does not work by collumn name
+# drop hr and level columns
+db_nest2 <- db_nest2 %>%
+  dplyr::select(-c("what","hr"))
 
 # Merge HR to db and save
-db <- left_join(db, db_nest)
+db <- left_join(db, db_nest2)
 db <- db %>% 
   mutate(hr_area_ha = area / 10000)
 
-# I only calculated KDE95, so I'll simplify the collums
+# # I only calculated KDE95, so I'll simplify the collums
+# db <- db %>% 
+#   select(-c(KDE_value, area)) %>% 
+#   rename(KDE95 = hr_area_ha)
+
 db <- db %>% 
-  select(-c(KDE_value, area)) %>% 
-  rename(KDE95 = hr_area_ha)
+  dplyr::select(-c("level", "area"))
 
 # Save data imediatly because it is very memory consuming:
 # db %>% write.csv(file=here("Model_analysis", "Sensitivity-analysis",

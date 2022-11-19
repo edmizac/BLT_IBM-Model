@@ -1840,20 +1840,26 @@ to calc-homerange
   r:eval "db_nest <- db %>%  make_track(.x=Y, .y=X, id = id) %>% nest(data = -c(id))"
   ;  show r:get "db_nest"
   ; calculate HR metrics for every list (=id = run) using map()
-  r:eval "db_nest <- db_nest %>% mutate( KDE95 = map(data, hr_kde), KDE50 = map(data, hr_kde) )"
+  r:eval "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
   r:eval "db_nest <- db_nest %>%  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
   r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
 ;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
-  r:eval "db_nest <- db_nest %>% dplyr::select(-c(3, 4))"
+  r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
+  r:eval "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)"
+
+;  print "db_nest: "
 ;  show r:get "db_nest"
+;
+;
+;  ; Merge HR to db and save
+;  r:eval "db <- left_join(db, db_nest)"
+;  r:eval "db <- db %>% mutate(hr_area_ha = area / 10000)"
+;
+;  ; drop columns
+;  r:eval "db <- db %>%    select(-c(KDE_value, area))"
+;  print "db: "
+;  show r:get "db"
 
-  ; Merge HR to db and save
-  r:eval "db <- left_join(db, db_nest)"
-  r:eval "db <- db %>% mutate(hr_area_ha = area / 10000)"
-
-  ; I only calculated KDE95, so I'll simplify the collums
-  r:eval "db <- db %>%    select(-c(KDE_value, area)) %>%   rename(KDE95 = hr_area_ha)"
-  show r:get "db"
 
 end
 ;-----------------------------------------------------------------
@@ -2151,7 +2157,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-4.0
+4.3
 0.1
 1
 NIL
