@@ -230,7 +230,7 @@ a <- a %>%
 
 ### Calculate GTT
 a_summary <- a %>%
-  group_by(group, id_month) %>%
+  group_by(group, id_month, disp_day) %>%
   summarise(
     GTT_timesteps_mean = round(mean(gut_transit_time, na.rm = TRUE) / 5, digits = 0), # 1 timestep = 5 mins
     GTT_timesteps_sd = round(sd(gut_transit_time, na.rm = TRUE) / 5, digits = 0),
@@ -265,8 +265,8 @@ c <- b %>%
   group_by(group, id_month, disp_day) %>% 
   summarise(
     # Quantos timesteps se passam em média até os micos terem a última defecaçao do dia?
-    timesteps_wakeup_to_def_mean = round(mean(timesteps_wakeup_to_def), digits = 0),
-    timesteps_wakeup_to_def_sd = round(sd(timesteps_wakeup_to_def), digits = 0)
+    timesteps_wakeup_to_def_mean = mean(timesteps_wakeup_to_def),
+    timesteps_wakeup_to_def_sd = sd(timesteps_wakeup_to_def)
   )
 
 ### Get the latest morning defecation
@@ -335,16 +335,16 @@ d2 <- c2 %>%
 
 to_app1 <- "_next_day"
 to_app2 <- "_same_day"
-cols1 <- d1 %>% dplyr::select("timesteps_wakeup_to_def_mean":"GTT_timesteps_sd") %>% colnames()
-cols2 <- d2 %>% dplyr::select("timesteps_wakeup_to_def_mean":"GTT_timesteps_sd") %>% colnames()
+cols1 <- d1 %>% dplyr::select(-c(1:3)) %>% colnames()
+cols2 <- d2 %>% dplyr::select(-c(1:3)) %>% colnames()
 
 d1 <- d1 %>% 
-  rename_with(., ~paste(cols1, to_app1), all_of(cols1)) %>% 
+  rename_with(., ~paste0(cols1, to_app1), all_of(cols1)) %>% 
   # tidyr::pivot_wider()
   select(-disp_day)
 
 d2 <- d2 %>% 
-  rename_with(., ~paste(cols2, to_app2), all_of(cols2)) %>% 
+  rename_with(., ~paste0(cols2, to_app2), all_of(cols2)) %>% 
   # tidyr::pivot_wider()
   select(-disp_day)
 

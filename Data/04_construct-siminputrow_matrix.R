@@ -43,10 +43,10 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminput
   
   # Rename variables of interest:
   rename(
-    GTT_mean = GTT_timesteps_mean._same_day,
-    GTT_sd = GTT_timesteps_sd._same_day,
-    morning_defecation_GTT_mean = timesteps_wakeup_to_def_mean._next_day,
-    morning_defecation_GTT_sd = timesteps_wakeup_to_def_sd._next_day,
+    GTT_mean = GTT_timesteps_mean_same_day,
+    GTT_sd = GTT_timesteps_sd_same_day,
+    morning_defecation_GTT_mean = timesteps_wakeup_to_def_mean_next_day,
+    morning_defecation_GTT_sd = timesteps_wakeup_to_def_sd_next_day,
   ) %>% 
   dplyr::select(c(1:5, "GTT_mean", "GTT_sd",
                   "morning_defecation_GTT_mean", "morning_defecation_GTT_sd"))
