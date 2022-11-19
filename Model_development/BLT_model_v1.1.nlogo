@@ -29,7 +29,7 @@ resting-trees-own [ species id-tree ]
 breed [legend-trees legend-tree] ; to set up a legend with the color of trees
 
 breed [seeds seed]
-seeds-own [ id-seed species mother-tree ]
+seeds-own [ id-seed species mother-tree disp-day ]
 
 breed [monkeys monkey]
 monkeys-own [
@@ -55,11 +55,13 @@ monkeys-own [
   straight-line-to-target? ; if there is matrix in front of the tamarin in straight line
   travelmodelist  ; list to make travel mode histogram
   tree_current    ; old_tree
+
   tree_pot_list   ; list of all feeding trees in homerange for that tamarin
   tree_ate_list   ; list of trees the tamarins did eat
   tree_mem_list   ; list of timesteps since the tamarin feeded on that tree
   tree_add_list   ; helper list to increase the mem list
-  seed_ate_list   ; list of the seeds they fed on
+
+  seed_ate_list   ; list of trees they fed on ([who] of tree_current)
   seed_mem_list   ; list of timesteps since the tamarin ate the seed
   seed_add_list   ; helper list to increase the mem list by 1 each time step
 ;  x_UTM
@@ -673,7 +675,7 @@ to step ; FOR DEBUG PURPOSES ONLY
       type "behavior: " type behavior type " "
       type "action: " print action
 ;      type "tree_pot_list: " print length tree_pot_list print tree_pot_list
-;      type "tree_ate_list: " print length tree_ate_list print tree_ate_list
+      type "tree_ate_list: " print length tree_ate_list print tree_ate_list
 ;      type "tree_mem_list: " print length tree_mem_list print tree_mem_list
       ;    type "tree_add_list " print length tree_add_list print tree_add_list
       type "action-time: " print action-time
@@ -804,7 +806,9 @@ to move-monkeys
           set DPL 0 ; set daily path length to 0 every day
           set going-sleeping? FALSE
           remove_trees_surrounding ; to avoid feeding in the closest tree
-          morning-defecation ]              ;; MORNING-DEFECATION PROCEDURE
+          morning-defecation               ;; MORNING-DEFECATION PROCEDURE
+    ]
+
 
     if timestep >= simulation-time [
       if timestep = simulation-time [
@@ -1168,7 +1172,7 @@ to feeding
 
   ; consume seeds:
   set seed_ate_list lput [who] of tree_current seed_ate_list
-  set seed_mem_list lput 1 seed_mem_list
+  set seed_mem_list lput 0 seed_mem_list
   set seed_add_list lput 1 seed_add_list
 end
 
@@ -1434,7 +1438,7 @@ end
 ; Defecation commands
 ;---------------------------------------------------------------------------------------------
 to defecation
-  if timestep < 84 [ ; 84 is for 7 hours after waking up (after 3pm)
+  if timestep < simulation-time * 85 / 100 [ ; 10% of the simulation-time (check parameterization);   Mayara's model: 84 is for 7 hours after waking up (after 3pm)
                      ; testing if the monkey defecates the seeds AND put the seeds to the seeds' agent list
     if member? gut_transit_time seed_mem_list [
       let loc_index position gut_transit_time seed_mem_list
@@ -1447,6 +1451,7 @@ to defecation
         set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
         set species [species] of feeding-trees with [ who = loc_who ]
         set id-seed who
+        set disp-day "same day"
         set label ""
         set shape "plant"
         set size 0.45
@@ -1467,6 +1472,7 @@ to morning-defecation
       set mother-tree [id-tree] of feeding-trees with [ who = x ]
       set species [species] of feeding-trees with [ who = x ]
       set id-seed who
+      set disp-day "next day"
       set label ""
       set shape "plant"
       set size 1
@@ -2524,7 +2530,7 @@ SWITCH
 258
 print-step?
 print-step?
-1
+0
 1
 -1000
 
