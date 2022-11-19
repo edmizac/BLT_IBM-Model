@@ -1,6 +1,20 @@
 # Script name: 04_construct-siminputrow_matrix.R
 # Script purpose: Construct the siminputrow matrix to use in run_nl_all() script
 
+
+
+
+###############################################################
+# THIS BRANCH IS A BACKUP FOR SOME ANALYSIS I DID IN 
+# SEED_DISPERSAL/02_params-siminputrow  AND RESULTED
+# IN A WRONG PARAMETER TABLE (MAINLY BECAUSE SANTA MARIA)
+# DOES NOT HAVE SEED DISPERSAL DATA. I CONTINUED ON
+# v1.1_seed-dispersal-submodel BRANCH
+###############################################################
+
+
+
+
 # Date created: 2022-11-16d
 # Author: Eduardo Zanette
 
