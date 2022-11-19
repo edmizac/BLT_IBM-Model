@@ -1439,13 +1439,14 @@ end
 ;---------------------------------------------------------------------------------------------
 to defecation
   if timestep < simulation-time * 85 / 100 [ ; 10% of the simulation-time (check parameterization);   Mayara's model: 84 is for 7 hours after waking up (after 3pm)
-                     ; testing if the monkey defecates the seeds AND put the seeds to the seeds' agent list
-    if member? gut_transit_time seed_mem_list [
-      let loc_index position gut_transit_time seed_mem_list
-      let loc_who item loc_index seed_ate_list
-      set seed_ate_list remove-item 0 seed_ate_list
-      set seed_add_list remove-item 0 seed_add_list
-      set seed_mem_list remove gut_transit_time seed_mem_list
+
+    ; testing if the monkey defecates the seeds AND put the seeds to the seeds' agent list
+    if member? gut_transit_time seed_mem_list [                            ; if the timestep since consumed (seed_mem_list) is equal to gut_transit_time ...
+      let loc_index position gut_transit_time seed_mem_list                ;
+      let loc_who item loc_index seed_ate_list                             ; take the who number of the consumed seed based on the seed_mem_lit and save it in an index
+      set seed_ate_list remove-item 0 seed_ate_list                        ; remove the first seed from the seed_ate_list
+      set seed_add_list remove-item 0 seed_add_list                        ; do the same for the helper list (seed_add_list)
+      set seed_mem_list remove gut_transit_time seed_mem_list              ; remove the gut_transit_time item from the seed_mem_list
       hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
         setxy xcor ycor
         set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
@@ -1459,7 +1460,9 @@ to defecation
       ]
     ]
   ]
+
   set seed_mem_list (map + seed_add_list seed_mem_list)
+
 end
 
 ;----------------------------------------------------
