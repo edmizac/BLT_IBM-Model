@@ -98,7 +98,7 @@ dat.gua <- dplyr::left_join(gua.pt, gua.fec)
 dat.gua <- dplyr::left_join(dat.gua, gua.sdd)
 dat.gua <- dplyr::left_join(dat.gua, gua.gtt)
 dat.gua <- dat.gua %>%
-  dplyr::filter(!is.na(id_feedtree)) %>% 
+  # dplyr::filter(!is.na(id_feedtree)) %>% if I filter it now I won't have GTT time for August
   mutate(month_id = as.factor(as.character(month_id))) %>% # otherwise it becomes ord.factor() and we can't merge all data in the end of the script
   rename(id_month = month_id)
 

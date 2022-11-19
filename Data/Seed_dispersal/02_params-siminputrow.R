@@ -152,10 +152,10 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_Seed
 #   # dplyr::filter(group %in% siminputmatrix$group & id_month %in% siminputmatrix$id_month) %>%
 #   droplevels()
 # 
-# gm <- dat.all.sd %>% group_by(group, id_month) %>%
-#   summarise(
-#     count = n()
-#   ) ## SANTA MARIA APRIL AND GUAREI AUGUST DOES NOT HAVE SEED DISPERSAL DATA!
+gm <- dat.all.sd %>% group_by(group, id_month) %>%
+  summarise(
+    count = n()
+  ) ## SANTA MARIA APRIL DOES NOT HAVE SEED DISPERSAL DATA!
 # 
 
 
@@ -229,12 +229,12 @@ a <- a %>%
                               ))
 
 ### Calculate GTT
-a <- a %>% 
-  group_by(group, id_month) %>% 
+a_summary <- a %>%
+  group_by(group, id_month) %>%
   summarise(
     GTT_timesteps_mean = round(mean(gut_transit_time, na.rm = TRUE) / 5, digits = 0), # 1 timestep = 5 mins
-    GTT_timesteps_sd = round(sd(gut_transit_time, na.rm = TRUE) / 5, digits = 0), 
-    
+    GTT_timesteps_sd = round(sd(gut_transit_time, na.rm = TRUE) / 5, digits = 0),
+
   )
 
 ### Diminish the start hour from the defecation hour
@@ -323,18 +323,20 @@ c %>%
 #             row.names = FALSE)
 
 #### Write csv for next day events (same day values are not entering the siminputmatrix as this is estimated by GTT in 00_prepare-data.R already)
-d1 <- c %>% 
+c2 <- left_join(c, a_summary) # Santa Maria April lacking
+
+d1 <- c2 %>% 
   dplyr::filter(disp_day == "next day") %>% 
   ungroup()
 
-d2 <- c %>% 
+d2 <- c2 %>% 
   dplyr::filter(disp_day == "same day") %>% 
   ungroup()
 
 to_app1 <- "_next_day"
 to_app2 <- "_same_day"
-cols1 <- d1 %>% dplyr::select("GTT_timesteps_mean":"timesteps_wakeup_to_def_sd") %>% colnames()
-cols2 <- d2 %>% dplyr::select("GTT_timesteps_mean":"timesteps_wakeup_to_def_sd") %>% colnames()
+cols1 <- d1 %>% dplyr::select("timesteps_wakeup_to_def_mean":"GTT_timesteps_sd") %>% colnames()
+cols2 <- d2 %>% dplyr::select("timesteps_wakeup_to_def_mean":"GTT_timesteps_sd") %>% colnames()
 
 d1 <- d1 %>% 
   rename_with(., ~paste(cols1, to_app1), all_of(cols1)) %>% 
@@ -346,14 +348,16 @@ d2 <- d2 %>%
   # tidyr::pivot_wider()
   select(-disp_day)
 
+siminputmatrix <- siminputmatrix %>% 
+  dplyr::select(1:5)
 
 ### Join and save
 siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d1)
-siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix, d2)
+siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix_nextday_seeddispersal, d2, by = c("group", "id_month"))
 
 # siminputmatrix_nextday_seeddispersal %>%
-  # write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
-  # row.names = FALSE)
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", "Siminputrow_disp-day_nex-day_params.csv"),
+#             row.names = FALSE)
 
 ### From this we can see that the timesteps taken to morning defecation after tamarins wake up is very small (from 1 to 12, but mean = 6.3)  
 

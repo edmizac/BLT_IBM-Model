@@ -45,65 +45,95 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminput
   rename(
     GTT_mean = GTT_timesteps_mean._same_day,
     GTT_sd = GTT_timesteps_sd._same_day,
-    morning_defecation_GTT_mean = timesteps_wakeup_to_def_mean._same_day,
-    morning_defecation_GTT_sd = timesteps_wakeup_to_def_sd._same_day,
+    morning_defecation_GTT_mean = timesteps_wakeup_to_def_mean._next_day,
+    morning_defecation_GTT_sd = timesteps_wakeup_to_def_sd._next_day,
   ) %>% 
-  dplyr::select(c("group":"mean_timesteps", "GTT_mean":"morning_defecation_GTT_sd"))
+  dplyr::select(c(1:5, "GTT_mean", "GTT_sd",
+                  "morning_defecation_GTT_mean", "morning_defecation_GTT_sd"))
+
+# dat.all.sd$GTT_timesteps_mean._same_day
+# dat.all.sd$GTT_timesteps_sd._same_day
+# dat.all.sd$timesteps_wakeup_to_def_mean._next_day
+# dat.all.sd$timesteps_wakeup_to_def_sd._next_day
+
   
-# Guess missing values based on the same group values
+# (NOT NEEDED) Guess missing values based on the same group values 
+#(it was for Guareí August, but it only does not have SDD, but has dispersal data (it was being filtered out on the 00_prepare-data.R))
 ## Guareí
-dat.all.sd[ 1 , "GTT_mean"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("GTT_mean") %>%
-  summarise(
-    mean = mean(GTT_mean, na.rm = TRUE)
-  )
+# dat.all.sd[ 1 , "GTT_mean"] <- dat.all.sd %>% 
+#   dplyr::filter(group == "Guareí") %>% 
+#   dplyr::select("GTT_mean") %>%
+#   summarise(
+#     mean = mean(GTT_mean, na.rm = TRUE)
+#   )
+# 
+# dat.all.sd[ 1 , "GTT_sd"] <- dat.all.sd %>% 
+#   dplyr::filter(group == "Guareí") %>% 
+#   dplyr::select("GTT_sd") %>%
+#   summarise(
+#     sd = sd(GTT_sd, na.rm = TRUE)
+#   )
+#   
+# dat.all.sd[ 1 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
+#   dplyr::filter(group == "Guareí") %>% 
+#   dplyr::select("morning_defecation_GTT_mean") %>%
+#   summarise(
+#     mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
+#   )
+# 
+# dat.all.sd[ 1 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
+#   dplyr::filter(group == "Guareí") %>% 
+#   dplyr::select("morning_defecation_GTT_sd") %>%
+#   summarise(
+#     sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
+#   )  
 
-dat.all.sd[ 1 , "GTT_sd"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("GTT_sd") %>%
-  summarise(
-    sd = sd(GTT_sd, na.rm = TRUE)
-  )
-  
-dat.all.sd[ 1 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("morning_defecation_GTT_mean") %>%
-  summarise(
-    mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
-  )
+## Santa Maria APRIL HAS NO SEED DISPERSAL DATA. AS SANTA MARIA HAS ONLY ONE MORE MONTH, I'LL AVERAGE OUT FROM GUAREI AS WELL
+target <- c("Santa Maria", "Guareí")
 
-dat.all.sd[ 1 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Guareí") %>% 
-  dplyr::select("morning_defecation_GTT_sd") %>%
-  summarise(
-    sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
-  )  
-
-## Santa Maria 
 dat.all.sd[ 5 , "GTT_mean"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Santa Maria") %>% 
+  dplyr::filter(group %in% target) %>% 
   dplyr::select("GTT_mean") %>%
   summarise(
     mean = mean(GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "GTT_sd"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Santa Maria") %>% 
+  dplyr::filter(group %in% target) %>% 
   dplyr::select("GTT_sd") %>%
   summarise(
     sd = sd(GTT_sd, na.rm = TRUE)
   )
 
+target <- "Guareí"
+
 dat.all.sd[ 5 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Santa Maria") %>% 
+  dplyr::filter(group %in% target) %>% 
   dplyr::select("morning_defecation_GTT_mean") %>%
   summarise(
     mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
   )
 
 dat.all.sd[ 5 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
-  dplyr::filter(group == "Santa Maria") %>% 
+  dplyr::filter(group %in% target) %>% 
+  dplyr::select("morning_defecation_GTT_sd") %>%
+  summarise(
+    sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
+  )   
+
+
+## Santa Maria MARCH HAS NO NEXT DAY SEED DISPERSAL EVENTS; I'LL MAKE IT EQUAL TO SANTA MARIA APRIL (GUAREÍ AVERAGE)
+target <- c("Guareí")
+
+dat.all.sd[ 6 , "morning_defecation_GTT_mean"] <- dat.all.sd %>% 
+  dplyr::filter(group %in% target) %>% 
+  dplyr::select("morning_defecation_GTT_mean") %>%
+  summarise(
+    mean = mean(morning_defecation_GTT_mean, na.rm = TRUE)
+  )
+
+dat.all.sd[ 6 , "morning_defecation_GTT_sd"] <- dat.all.sd %>% 
+  dplyr::filter(group %in% target) %>% 
   dplyr::select("morning_defecation_GTT_sd") %>%
   summarise(
     sd = sd(morning_defecation_GTT_sd, na.rm = TRUE)
