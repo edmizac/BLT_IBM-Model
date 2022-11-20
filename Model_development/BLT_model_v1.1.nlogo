@@ -1111,10 +1111,11 @@ to-report on-feeding-tree?
 
         set tree_current ld_tree_target
 
-;        set x_UTM [ x_UTM ] of tree_current
-;        set y_UTM [ y_UTM ] of tree_current
-;        set xcor [ xcor] of tree_current
-;        set ycor [ ycor ] of tree_current
+        set x_UTM [ x_UTM ] of tree_current
+        set y_UTM [ y_UTM ] of tree_current
+        ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
+        set xcor [xcor] of ld_tree_target + 0.01
+        set ycor [ycor] of ld_tree_target + 0.01
 
         set ld_tree_target -1
         set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
@@ -2725,7 +2726,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.5
+0.8
 0.05
 1
 NIL
