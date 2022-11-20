@@ -18,10 +18,10 @@ turtles-own [
 
 ; trees
 breed [feeding-trees feeding-tree]
-feeding-trees-own [ species id-tree visited? ] ; feeding trees have species and id code
+feeding-trees-own [ species id-tree visitations ] ; feeding trees have species and id code and a visited counter
 
 breed [sleeping-trees sleeping-tree]
-sleeping-trees-own [ species id-tree visited? ]
+sleeping-trees-own [ species id-tree visitations ]
 
 breed [resting-trees resting-tree]
 resting-trees-own [ species id-tree ]
@@ -356,7 +356,7 @@ to setup-trees
         set size 3
         set shape "tree"
         set color green
-        set visited? FALSE
+        set visitations 0
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "species"
         set id-tree gis:property-value vector-feature "id"
@@ -372,7 +372,7 @@ to setup-trees
         set size 3
         set shape "tree"
         set color magenta
-        set visited? FALSE
+        set visitations 0
         setxy item 0 location item 1 location
         set species gis:property-value vector-feature "species"
         set id-tree gis:property-value vector-feature "id"
@@ -1074,7 +1074,7 @@ to-report on-feeding-tree?
         ;        set xcor [ xcor] of tree_current
         ;        set ycor [ ycor ] of tree_current
 
-        ask tree_target [ set visited? TRUE ]
+        ask tree_target [ set visitations visitations + 1 ]
         set tree_target -1
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
@@ -2272,7 +2272,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-6
+7
 
 CHOOSER
 984
@@ -2719,7 +2719,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.1
+0.15
 0.05
 1
 NIL
@@ -3176,7 +3176,7 @@ BUTTON
 284
 592
 count unvisited trees
-show count feeding-trees with [visited? = TRUE]
+type \"unvisited trees: \" print count feeding-trees with [visitations = 0]\n\ntype \"visited trees: \" print count feeding-trees with [visitations > 0]
 NIL
 1
 T
