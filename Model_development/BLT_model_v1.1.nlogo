@@ -1268,7 +1268,7 @@ to to-feeding-tree
       ;; RANDOM movement while traveling:
 ;      if tree_target != -1 [
         if random-angle? = TRUE AND distance tree_target > 1.5 * travel_speed [
-          rt ( random max-random-angle ) - ( max-random-angle / 2 )
+          rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )
 ;        ]
       ]
     ]
@@ -1303,7 +1303,7 @@ to to-feeding-tree
 
       ;; RANDOM movement while traveling:
       if random-angle? = TRUE AND distance ld_tree_target > 1.5 [
-        rt ( random max-random-angle ) - ( max-random-angle / 2 )
+        rt ( random max-random-angle / 2) - ( max-random-angle / 2 )
       ]
     ]
   ]
@@ -1567,7 +1567,7 @@ to sleeping
 
     ;; RANDOM movement while traveling:
     if random-angle? = TRUE  AND distance tree_target > 1.5 [
-      rt ( random max-random-angle ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
+      rt ( random max-random-angle / 3 ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
       ]
 
     ;-------------------- = travel
