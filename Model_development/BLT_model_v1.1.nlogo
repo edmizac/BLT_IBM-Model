@@ -687,12 +687,14 @@ to step ; FOR DEBUG PURPOSES ONLY
         type "target_species: " print tree_target_species
       ]
       type "DPL_d: " print DPL_d
-      type "DPL (m): " print DPL
+      type "DPL (m): " print DPL * 10
 ;      ifelse travel_mode = "short_distance" [
 ;        ; print distance tree_target
 ;      ][
 ;        print distance ld_tree_target
 ;      ]
+      type "on-feeding-tree? = " print on-feeding-tree?
+      print " ----------------step end------------------------"
     ]
   ]
 
@@ -866,7 +868,7 @@ to move-monkeys
         ][ ; travel_mode = "long_distance"
 
 
-          ifelse random (2 * duration) < action-time [ ; action time for other than feeding
+          ifelse duration < action-time [ ; action time for other than feeding
             ; set ld_tree_target -1  ;; commented out by Ronnald on 14th of July ;; has to be set to -1 otherwise tamarins will come back in the next ld travel cycle
             frugivory
           ][
@@ -1017,7 +1019,7 @@ end
 ;--------------------------------------------------------------------------------
 to frugivory
 
-;  print "frugivory"  ; debugging
+  print "frugivory"  ; debugging
 
   avoid-patch-set ; bump on the territory borders
 
@@ -1026,14 +1028,15 @@ to frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
       ifelse random (2 * species_time ) > action-time [
+        print "I'm feeding!" ; for debugging
         feeding
       ][
         set tree_current -1
-;        print "time over -- New feeding tree" ; for debugging
+        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-;      print "New feeding tree" ; for debugging
+      print "New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1062,7 +1065,7 @@ to-report on-feeding-tree?
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
-    ;  print distance tree_target ; for debugging
+      type "on-feeding-tree? reporter distance to target : " print distance tree_target ; for debugging
       ifelse distance tree_target < 0.8 * travel_speed [
 
         set tree_current tree_target
@@ -1070,9 +1073,9 @@ to-report on-feeding-tree?
         ; make UTM of tamarins match UTM of trees (like empirical data collection):
         set x_UTM [ x_UTM ] of tree_current
         set y_UTM [ y_UTM ] of tree_current
-        ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error
-        ;        set xcor [ xcor] of tree_current
-        ;        set ycor [ ycor ] of tree_current
+        ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
+        set xcor [xcor] of tree_target + 0.01
+        set ycor [ycor] of tree_target + 0.01
 
         ask tree_target [ set visitations visitations + 1 ]
         set tree_target -1
@@ -1136,7 +1139,7 @@ end
 ;----------------------------------------
 
 to feeding
-;  print "feeding"    ; debugging
+  print "feeding"    ; debugging
   set action "feeding"
   set behavior "frugivory"
 
@@ -1230,6 +1233,9 @@ end
 
 to to-feeding-tree
 
+    print "TO-FEEDING-TREE"
+
+
 ;  print "TO-FEEDING-TREE"
 
   if travel_mode = "short_distance" [
@@ -1243,13 +1249,14 @@ to to-feeding-tree
       set heading towards tree_target
     ]
 
-    ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
+    ifelse ( action = "travel" OR action = "forage" AND random-float 1 < p-foraging-while-traveling ) [
+
       if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
         forage
 ;        if distance tree_target > 0.8 * travel_speed [
-        if distance tree_target > travel_speed [
-          travel
-        ]
+;        if distance tree_target > travel_speed [
+;          travel
+;        ]
       ]
       ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
     ][
@@ -1281,7 +1288,7 @@ to to-feeding-tree
 ;  ]
 
 
-    ifelse ( action = "travel" AND random-float 1 < p-foraging-while-traveling ) [
+    ifelse ( action = "travel" OR action = "forage" AND random-float 1 < p-foraging-while-traveling ) [
       if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
         forage
         if distance ld_tree_target > travel_speed * 0.8 [
@@ -1312,7 +1319,6 @@ to to-feeding-tree
 
   ; ========================================= ;
   ;; this procedure independs of travel mode:
-
 
 
 end
@@ -1416,7 +1422,7 @@ to travel
 
   ifelse straight-line-to-target? = FALSE AND patch_avoid_matrix != nobody [
 ;    print "straight line false"
-    face patch_avoid_matrix
+    face patch_avoid_matrix ; ignores random-angle while going to-feeding-tree
     forward travel_speed
     set dist-traveled travel_speed
     set steps-moved steps-moved + 1
@@ -1491,7 +1497,7 @@ end
 ; Resting commands
 ;---------------------------------------------------------------------------------------------
 to resting
-;  print "resting"   ; debugging
+  print "resting"   ; debugging
   set action "resting"
   set behavior "resting"
 
@@ -1529,8 +1535,7 @@ to sleeping
       move-to tree_target
       set x_UTM [ x_UTM ] of tree_target
       set y_UTM [ y_UTM ] of tree_target
-      set xcor [ xcor] of tree_target
-      set ycor [ ycor ] of tree_target
+      setxy ( [ xcor] of tree_target + 0.01 ) ( [ ycor ] of tree_target + 0.01 ) ; use set timestep 108 to test this
 
       set tree_current tree_target
       set tree_target -1
@@ -1655,23 +1660,24 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-;  print "last-action-again"   ; debugging
+  print "last-action-again"   ; debugging
 
-  if action = "forage" [
-    forage
-    ; the following lines were excluded from the foraging procedure to not conflict with the to-feeding-tree procedure (agents were doing two steps)
+;  if action = "forage" [
+;    forage
+;    ; the following lines were excluded from the foraging procedure to not conflict with the to-feeding-tree procedure (agents were doing two steps)
+;
+;    if travel_mode = "long_distance" AND distance ld_tree_target > travel_speed * 0.8 [
+;      travel
+;    ]
+;
+;    if travel_mode = "short_distance" AND distance tree_target > travel_speed * 0.8 [
+;      travel
+;;      set color grey ; in case the tamarin has foraged, it became magenta
+;    ]
+;  ]
 
-    if travel_mode = "long_distance" AND distance ld_tree_target > travel_speed * 0.8 [
-      travel
-    ]
-
-    if travel_mode = "short_distance" AND distance tree_target > travel_speed * 0.8 [
-      travel
-;      set color grey ; in case the tamarin has foraged, it became magenta
-    ]
-  ]
   if action = "resting" [ resting ]
-  if action = "travel" [ frugivory ]
+  if action = "travel" OR action = "forage" [ frugivory ]
 
 end
 
@@ -2080,7 +2086,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-12.0
+6.0
 1
 1
 NIL
@@ -2160,7 +2166,7 @@ INPUTBOX
 601
 82
 no_days
-5.0
+8.0
 1
 0
 Number
@@ -2304,7 +2310,7 @@ step_forget
 step_forget
 0
 1000
-75.0
+102.0
 1
 1
 NIL
@@ -2533,7 +2539,7 @@ SWITCH
 258
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -2631,7 +2637,7 @@ visual
 visual
 0
 20
-1.0
+0.0
 1
 1
 NIL
@@ -2719,7 +2725,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-1.0
+0.5
 0.05
 1
 NIL
