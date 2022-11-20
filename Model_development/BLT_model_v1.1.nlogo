@@ -2719,7 +2719,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.15
+1.0
 0.05
 1
 NIL
@@ -3175,7 +3175,7 @@ BUTTON
 559
 284
 592
-count unvisited trees
+count visited trees
 type \"unvisited trees: \" print count feeding-trees with [visitations = 0]\n\ntype \"visited trees: \" print count feeding-trees with [visitations > 0]
 NIL
 1
