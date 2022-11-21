@@ -157,8 +157,21 @@ to setup
   set day 1
   set midday 58
   set timestep 0
-  set gut_transit_time round (gut_transit_time)
+;  set gut_transit_time round (gut_transit_time)
 ;  set travel_speed travel_speed
+
+  if p-forage-param? = TRUE [
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set gut_transit_time 17 ]  ; ( BLT mean velocity / patch resolution)
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set gut_transit_time 18 ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set gut_transit_time 13 ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set gut_transit_time 19 ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set gut_transit_time 16 ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set gut_transit_time 16 ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set gut_transit_time 26 ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set gut_transit_time 21 ]
+    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set gut_transit_time 16 ]
+
+  ]
 
   if p-forage-param? = TRUE [
     if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set p_foraging_while_traveling 0.36 ]  ; ( BLT mean velocity / patch resolution)
@@ -2452,7 +2465,7 @@ step_forget
 step_forget
 0
 1000
-30.0
+29.0
 1
 1
 NIL
@@ -2480,9 +2493,9 @@ TEXTBOX
 
 SLIDER
 924
-616
+648
 1075
-649
+681
 gut_transit_time
 gut_transit_time
 0
@@ -2555,9 +2568,9 @@ TEXTBOX
 
 SLIDER
 925
-655
+687
 1074
-688
+720
 n_seeds_hatched
 n_seeds_hatched
 0
@@ -2852,7 +2865,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.7
+0.21
 0.05
 1
 NIL
@@ -3018,7 +3031,7 @@ SWITCH
 549
 feedingbout-on?
 feedingbout-on?
-1
+0
 1
 -1000
 
@@ -3433,7 +3446,18 @@ SWITCH
 552
 p-forage-param?
 p-forage-param?
+0
 1
+-1000
+
+SWITCH
+941
+616
+1058
+649
+gtt-param?
+gtt-param?
+0
 1
 -1000
 
