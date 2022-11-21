@@ -1324,7 +1324,7 @@ to to-feeding-tree
           forage
           ;; RANDOM movement while foraging:
           if step-model-param? = TRUE  AND distance tree_target > 0.8 [
-            rt ( random max_rel_ang_forage_75q * 0.7 ) - ( random max_rel_ang_forage_75q * 0.7 )  ; feeding is less directed than travel
+            rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
           ]
           travel
           set action "travel"
@@ -1335,7 +1335,7 @@ to to-feeding-tree
       ][
 
         if step-model-param? = TRUE  AND distance tree_target > 0.8 [
-          rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+          rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q)  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
         set action "travel"
@@ -1345,7 +1345,7 @@ to to-feeding-tree
       ]
     ][
       if step-model-param? = TRUE  AND distance tree_target > 0.8 [
-        rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+        rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
       ]
       travel
       set action "travel"
@@ -1377,10 +1377,10 @@ to to-feeding-tree
           forage
           ;; RANDOM movement while foraging:
           if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
-            rt ( random max_rel_ang_forage_75q * 0.7 ) - ( random max_rel_ang_forage_75q * 0.7 )  ; feeding is less directed than travel
+            rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
           ]
           if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
-            rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+            rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
           set action "travel"
@@ -1391,7 +1391,7 @@ to to-feeding-tree
       ][
 
         if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
-          rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+          rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
         set action "travel"
@@ -1676,7 +1676,7 @@ to sleeping
 
     ;; RANDOM movement while traveling:
     if step-model-param? = TRUE  AND distance tree_target > 1.5 [
-      rt ( random max_rel_ang_travel_75q / 3 ) - ( random max_rel_ang_travel_75q / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
+      rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
       ]
 
     ;-------------------- = travel
@@ -2098,7 +2098,7 @@ start-energy
 start-energy
 30
 170
-97.0
+92.0
 1
 1
 NIL
@@ -2197,7 +2197,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-5.0
+4.0
 1
 1
 NIL
@@ -2321,7 +2321,7 @@ energy-loss-foraging
 energy-loss-foraging
 -10
 0
--1.7
+-2.5
 0.1
 1
 NIL
@@ -2336,7 +2336,7 @@ energy-loss-resting
 energy-loss-resting
 -10
 0
--1.8
+-2.5
 0.1
 1
 NIL
@@ -2389,7 +2389,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-6
+5
 
 CHOOSER
 984
@@ -2813,10 +2813,10 @@ output-print?
 -1000
 
 SLIDER
-926
-529
-1070
-562
+924
+546
+1068
+579
 p-foraging-while-traveling
 p-foraging-while-traveling
 0
@@ -3334,7 +3334,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.214
+1.4060000000000001
 0.1
 1
 NIL
