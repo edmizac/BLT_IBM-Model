@@ -810,9 +810,11 @@ to move-monkeys
           set DPL 0 ; set daily path length to 0 every day
           set going-sleeping? FALSE
           remove_trees_surrounding ; to avoid feeding in the closest tree
-          morning-defecation               ;; MORNING-DEFECATION PROCEDURE
     ]
 
+    if timestep = 1 [
+      morning-defecation
+    ]
 
     if timestep >= simulation-time [
       if timestep = simulation-time [
