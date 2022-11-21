@@ -110,9 +110,9 @@ globals [
 
 
   ;param values;
-  gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
+;  gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
 ;  travel_speed ; global speed for travel
-  species_time ; how long the tamarin feeds on the tree species
+;  species_time ; how long the tamarin feeds on the tree species
   energy_species ; value of energy they get from feeding of each species
 
   ;; OUTPUT ;;
@@ -156,7 +156,7 @@ to setup
   set day 1
   set midday 58
   set timestep 0
-  set gut_transit_time gut_transit_time_val
+  set gut_transit_time round (gut_transit_time)
 ;  set travel_speed travel_speed
 
   reset-ticks
@@ -444,7 +444,7 @@ to setup-monkeys
     set travel_mode "short_distance"
     set tree_target -1
     set ld_tree_target -1
-    set patch_avoid_matrix patch-ahead travel_speed
+    set patch_avoid_matrix patch-ahead step_len_travel
     set straight-line-to-target? TRUE ; this should be checked (travel procedure)
 
     set steps-moved 0
@@ -486,7 +486,7 @@ to setup-monkeys
     ][ set pen-mode "up" ]
   ] ; end ask monkeys
 
-  if empirical-velocities? = TRUE [
+  if step-model-param? = TRUE [
     ;; Parameterizing BLT velocity with empirical data:
     ;option 1 (= mean velocities, Zanette et al 2021 ATBC) (I believe this underestimates tamarin velocities as our model only uses travelling speed
     ;  if study_area = "Guareí" [ set travel_speed ( 15.27 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
@@ -494,11 +494,42 @@ to setup-monkeys
     ;  if study_area = "Taquara" [ set travel_speed ( 23.24 / 10 ) ]
     ;  if study_area = "Guareí" [ set travel_speed ( 8.93 / 10 )  ]
 
-    ;option 2 (= 3 steps before feeding on fruits, Zanette et al 2021 ATBC)
-    if study_area = "Guareí" [ set travel_speed ( 20 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
-    if study_area = "Santa Maria" [ set travel_speed ( 20.2 / 10 ) ]
-    if study_area = "Taquara" [ set travel_speed ( 33.4 / 10 ) ]
-    if study_area = "Suzano" [ set travel_speed ( 13.7 / 10 )  ]
+;    ;option 2 (= 3 steps before feeding on fruits, Zanette et al 2021 ATBC)
+;    if study_area = "Guareí" [ set travel_speed ( 20 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
+;    if study_area = "Santa Maria" [ set travel_speed ( 20.2 / 10 ) ]
+;    if study_area = "Taquara" [ set travel_speed ( 33.4 / 10 ) ]
+;    if study_area = "Suzano" [ set travel_speed ( 13.7 / 10 )  ]
+;  ]
+
+    ;option 3 (= Data/Parameter-table.csv)
+; travel
+if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_forage ( 23.43 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
+if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_forage ( 25.44 / 10 ) ]
+if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_forage ( 25.20 / 10 ) ]
+if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_forage ( 25.30 / 10 ) ]
+
+if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_forage ( 32.37 / 10 ) ]
+if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_forage ( 35.97 / 10 ) ]
+
+if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_forage ( 17.94 / 10 )  ]
+if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_forage ( 17.49 / 10 )  ]
+
+if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_forage ( 39.31 / 10 ) ]
+
+; foraging
+if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_forage ( 14.06 / 10 ) ]  ; ( BLT mean velocity / patch resolution)
+if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_forage ( 12.14 / 10 ) ]
+if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_forage ( 12.93 / 10 ) ]
+if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_forage ( 13.87 / 10 ) ]
+
+if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_forage ( 16.95 / 10 ) ]
+if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_forage ( 21.3 / 10 ) ]
+
+if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_forage ( 7.51 / 10 )  ]
+if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_forage ( 8.83 / 10 )  ]
+
+if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_forage ( 30.89 / 10 ) ]
+
   ]
 
 end
@@ -904,7 +935,7 @@ to avoid-patch-set
   ; print count patches with  [ any? neighbors with [ habitat = "border"] ]
 
   ; make patch_avoid_matrix a new one every step if tamarins are close to it (it can be the same)
-  if patch_avoid_matrix = nobody OR patch_avoid_matrix = 0 OR distance patch_avoid_matrix < (2 * travel_speed ) [
+  if patch_avoid_matrix = nobody OR patch_avoid_matrix = 0 OR distance patch_avoid_matrix < (2 * step_len_travel ) [
     set patch_avoid_matrix nobody
   ]
 
@@ -919,7 +950,7 @@ to avoid-patch-set
 
 
       ; define patch-set in front of tamarins (in Taquara 2 * 2.4 = 4.8 is their velocity when going to sleep, so add one more for reaching more than the maximum tamarins can move)
-      set front_patches patches in-cone (2 * travel_speed + 1) ( 60 ) ; with [ habitat = "matrix" ] ; cone
+      set front_patches patches in-cone (2 * step_len_travel + 1) ( 60 ) ; with [ habitat = "matrix" ] ; cone
       ;set front_patches patches with [habitat = "forest"] in-radius 5 ; in radius
 
       ;paint them
@@ -1076,7 +1107,7 @@ to-report on-feeding-tree?
     ifelse action = "travel" OR action = "forage" AND tree_target != -1 [
 ;      type "on-feeding-tree? reporter distance to target : "
       print distance tree_target ; for debugging
-      ifelse distance tree_target < 0.8 * travel_speed [
+      ifelse distance tree_target < 0.8 * step_len_travel [
 
 ;        print "HERE ***************"
 
@@ -1128,7 +1159,7 @@ to-report on-feeding-tree?
     ifelse action = "travel" OR action = "forage" AND ld_tree_target != -1 [
 ;      type "on-feeding-tree? reporter distance to target : "
       print distance ld_tree_target ; for debugging
-      ifelse distance ld_tree_target < 0.8 * travel_speed [
+      ifelse distance ld_tree_target < 0.8 * step_len_travel [
         print "distance to ld_tree_target is < 80%"
 
         set tree_current ld_tree_target
@@ -1141,6 +1172,8 @@ to-report on-feeding-tree?
         ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
         set xcor [xcor] of tree_current + 0.01
         set ycor [ycor] of tree_current + 0.01
+
+        ask ld_tree_target [ set visitations visitations + 1 ]
 
         set tree_target -1
         set ld_tree_target -1
@@ -1286,11 +1319,11 @@ to to-feeding-tree
 
       ifelse ( random-float 1 < p-foraging-while-traveling ) [
 
-        if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+        if tree_target != -1 AND distance tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
           forage
           ;; RANDOM movement while foraging:
-          if random-angle? = TRUE  AND distance tree_target > 0.8 [
-            rt ( random max-random-angle * 0.7 ) - ( random max-random-angle * 0.7 )  ; feeding is less directed than travel
+          if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+            rt ( random max_rel_ang_forage_75q * 0.7 ) - ( random max_rel_ang_forage_75q * 0.7 )  ; feeding is less directed than travel
           ]
           travel
           set action "travel"
@@ -1300,8 +1333,8 @@ to to-feeding-tree
 
       ][
 
-        if random-angle? = TRUE  AND distance tree_target > 0.8 [
-          rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+        if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+          rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
         set action "travel"
@@ -1310,8 +1343,8 @@ to to-feeding-tree
 
       ]
     ][
-      if random-angle? = TRUE  AND distance tree_target > 0.8 [
-        rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+      if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+        rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
       ]
       travel
       set action "travel"
@@ -1339,14 +1372,14 @@ to to-feeding-tree
 
       ifelse ( random-float 1 < p-foraging-while-traveling ) [
 
-        if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+        if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
           forage
           ;; RANDOM movement while foraging:
-          if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
-            rt ( random max-random-angle * 0.7 ) - ( random max-random-angle * 0.7 )  ; feeding is less directed than travel
+          if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+            rt ( random max_rel_ang_forage_75q * 0.7 ) - ( random max_rel_ang_forage_75q * 0.7 )  ; feeding is less directed than travel
           ]
-          if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
-            rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+          if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+            rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
           set action "travel"
@@ -1356,8 +1389,8 @@ to to-feeding-tree
 
       ][
 
-        if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
-          rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+        if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+          rt ( random max_rel_ang_travel_75q / 2 ) - ( random max_rel_ang_travel_75q / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
         set action "travel"
@@ -1394,7 +1427,7 @@ end
 to search-feeding-tree
 
 
-  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
+;  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
   if travel_mode = "short_distance" [
     let let_pot_list tree_pot_list
@@ -1489,16 +1522,18 @@ to travel
   ifelse straight-line-to-target? = FALSE AND patch_avoid_matrix != nobody [
 ;    print "straight line false"
     face patch_avoid_matrix ; ignores random-angle while going to-feeding-tree
-    forward travel_speed
-    set dist-traveled travel_speed
+    if (action = "travel" ) [ forward step_len_travel ]
+    if (action = "forage" ) [ forward step_len_forage ]
+    set dist-traveled step_len_travel
     set steps-moved steps-moved + 1
-    set energy energy + ( energy-loss-traveling * travel_speed )
+    set energy energy + ( energy-loss-traveling * step_len_travel )
 ;    print "travel 2"
   ][
-    forward travel_speed
-    set dist-traveled travel_speed
+    forward step_len_travel
+    set dist-traveled step_len_travel
     set steps-moved steps-moved + 1
-    set energy energy + ( energy-loss-traveling * travel_speed )
+    if (action = "travel" ) [ forward step_len_travel ]
+    if (action = "forage" ) [ forward step_len_forage ]
     set straight-line-to-target? TRUE
 ;    print "travel 3"
   ]
@@ -1596,7 +1631,7 @@ to sleeping
 ;    set straight-line-to-target? TRUE
 
 
-    if distance tree_target < 2 * travel_speed * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
+    if distance tree_target < 2 * step_len_travel * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
 
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
@@ -1606,6 +1641,8 @@ to sleeping
       ; use set timestep 108 to test this
       set xcor [xcor] of tree_target + 0.01
       set ycor [ycor] of tree_target + 0.01
+
+      ask tree_target [ set visitations visitations + 1 ]
 
       set tree_current tree_target
       set tree_target -1
@@ -1637,15 +1674,15 @@ to sleeping
       face tree_target
 
     ;; RANDOM movement while traveling:
-    if random-angle? = TRUE  AND distance tree_target > 1.5 [
-      rt ( random max-random-angle / 3 ) - ( random max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
+    if step-model-param? = TRUE  AND distance tree_target > 1.5 [
+      rt ( random max_rel_ang_travel_75q / 3 ) - ( random max_rel_ang_travel_75q / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
       ]
 
     ;-------------------- = travel
-    forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
-    set dist-traveled ( 2 * travel_speed )
+    forward 2 * step_len_travel ; travel speed basically doubles when tamrarins are going to the sleeping site
+    set dist-traveled ( 2 * step_len_travel )
     set steps-moved steps-moved + 1
-    set energy energy + ( energy-loss-traveling * ( 2 * travel_speed ) )
+    set energy energy + ( energy-loss-traveling * ( 2 * step_len_travel ) )
     set action "travel"
     set behavior "travel"
     ;--------------------
@@ -1653,10 +1690,10 @@ to sleeping
     ][
 ;      print "straight line false"
       face patch_avoid_matrix
-      forward 2 * travel_speed ; travel speed basically doubles when tamrarins are going to the sleeping site
-      set dist-traveled ( 2 * travel_speed )
+      forward 2 * step_len_travel ; travel speed basically doubles when tamrarins are going to the sleeping site
+      set dist-traveled ( 2 * step_len_travel )
       set steps-moved steps-moved + 1
-      set energy energy + ( energy-loss-traveling * ( 2 * travel_speed ) )
+      set energy energy + ( energy-loss-traveling * ( 2 * step_len_travel ) )
       set action "travel"
       set behavior "travel"
     ]
@@ -2052,9 +2089,9 @@ ticks
 30.0
 
 SLIDER
-564
+516
 312
-736
+688
 345
 start-energy
 start-energy
@@ -2151,15 +2188,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-564
+516
 348
-736
+688
 381
 energy-from-fruits
 energy-from-fruits
 0
 30
-6.0
+4.0
 1
 1
 NIL
@@ -2245,9 +2282,9 @@ no_days
 Number
 
 SLIDER
-564
+516
 386
-736
+688
 419
 energy-from-prey
 energy-from-prey
@@ -2260,25 +2297,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-564
+516
 423
-737
+689
 456
 energy-loss-traveling
 energy-loss-traveling
 -10
 0
--1.0
+-2.0
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-564
-460
-737
-493
+516
+459
+689
+492
 energy-loss-foraging
 energy-loss-foraging
 -10
@@ -2290,9 +2327,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-564
+516
 497
-737
+689
 530
 energy-loss-resting
 energy-loss-resting
@@ -2375,10 +2412,10 @@ export-png
 -1000
 
 SLIDER
-766
-338
-928
-371
+715
+337
+877
+370
 step_forget
 step_forget
 0
@@ -2390,9 +2427,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-589
+542
 292
-725
+678
 328
 2. energy related
 14
@@ -2400,22 +2437,22 @@ TEXTBOX
 1
 
 TEXTBOX
-780
-290
-917
-324
+728
+288
+865
+322
 3. memory related
 14
 15.0
 1
 
 SLIDER
-768
-526
-919
-559
-gut_transit_time_val
-gut_transit_time_val
+924
+616
+1075
+649
+gut_transit_time
+gut_transit_time
 0
 100
 13.0
@@ -2425,44 +2462,29 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-943
-290
-1100
-324
+912
+287
+1069
+321
 4. movement related
 14
 15.0
 1
 
-SLIDER
-952
-437
-1094
-470
-travel_speed
-travel_speed
-0
-5
-2.0
-0.1
-1
-NIL
-HORIZONTAL
-
 TEXTBOX
-953
-578
-1093
-614
-6. feeding bout
+753
+495
+893
+531
+5. feeding bout
 14
-0.0
+15.0
 1
 
 SLIDER
-583
+535
 538
-719
+671
 571
 energy_level_1
 energy_level_1
@@ -2475,9 +2497,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-583
+535
 573
-719
+671
 606
 energy_level_2
 energy_level_2
@@ -2490,20 +2512,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-780
-506
-907
-542
-5. dispersal related
+935
+596
+1062
+632
+6. seed dispersal
 14
-0.0
+15.0
 1
 
 SLIDER
-769
-565
-918
-598
+925
+655
+1074
+688
 n_seeds_hatched
 n_seeds_hatched
 0
@@ -2676,10 +2698,10 @@ NIL
 1
 
 SLIDER
-953
-515
-1098
-548
+726
+642
+871
+675
 duration
 duration
 0
@@ -2702,10 +2724,10 @@ Energy
 11
 
 SLIDER
-766
-387
-930
-420
+715
+386
+879
+419
 visual
 visual
 0
@@ -2717,20 +2739,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-759
-314
-926
-339
+708
+313
+875
+338
 How many timesteps BLTs take to forget a tree:
 10
 0.0
 1
 
 TEXTBOX
-762
-373
-929
-393
+710
+372
+877
+392
 exclude trees in radii from pot list:
 10
 0.0
@@ -2790,25 +2812,25 @@ output-print?
 -1000
 
 SLIDER
-953
-477
-1097
-510
+926
+529
+1070
+562
 p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.65
+0.7
 0.05
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-963
-547
-1113
-569
+732
+676
+882
+699
 max timesteps repeating same behavior (other than feeding)
 9
 0.0
@@ -2912,23 +2934,12 @@ PENS
 "pen-1" 1.0 0 -16777216 true "" "plot energy_level_1"
 "pen-2" 1.0 0 -955883 true "" "plot energy_level_2"
 
-SWITCH
-946
-310
-1088
-343
-random-angle?
-random-angle?
-0
-1
--1000
-
 TEXTBOX
-948
+909
 344
-1098
-370
-add random variation in direction each step. If so:
+1083
+371
+add empirical step parameters. If so:
 9
 0.0
 1
@@ -2936,8 +2947,8 @@ add random variation in direction each step. If so:
 BUTTON
 402
 483
-535
-517
+499
+518
 NIL
 test-long-distance
 NIL
@@ -2969,10 +2980,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 SWITCH
-950
-597
-1097
-630
+727
+516
+874
+549
 feedingbout-on?
 feedingbout-on?
 1
@@ -2999,8 +3010,8 @@ NIL
 BUTTON
 262
 448
-391
-481
+358
+482
 NIL
 reset-perspective
 NIL
@@ -3014,10 +3025,10 @@ NIL
 1
 
 BUTTON
-394
-448
-557
-481
+360
+449
+499
+483
 NIL
 inspect one-of monkeys
 NIL
@@ -3048,10 +3059,10 @@ NIL
 1
 
 SLIDER
-766
-430
-930
-463
+715
+428
+879
+461
 prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
@@ -3063,36 +3074,21 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-767
-465
-917
-483
+716
+464
+866
+482
 don't choose 1
 9
 0.0
 1
 
-SLIDER
-947
-367
-1088
-400
-max-random-angle
-max-random-angle
-0
-180
-90.0
-1
-1
-NIL
-HORIZONTAL
-
 TEXTBOX
-949
-630
-1099
-652
-energy and time spent feeding for each tree species
+728
+552
+878
+574
+energy and time spent feeding for each tree species. If not:
 9
 0.0
 1
@@ -3119,8 +3115,8 @@ PENS
 BUTTON
 135
 518
-269
-552
+244
+553
 check tree species
 ask one-of feeding-trees [ let specieslist [species] of feeding-trees set specieslist remove-duplicates specieslist print specieslist] 
 NIL
@@ -3194,11 +3190,11 @@ study_area
 0
 
 BUTTON
-272
-519
-442
-552
-NIL
+247
+520
+370
+554
+count feeding-trees
 print count feeding-trees
 NIL
 1
@@ -3211,10 +3207,10 @@ NIL
 1
 
 TEXTBOX
-240
+287
+378
+525
 422
-478
-466
 MODEL VERIFICATION:
 18
 15.0
@@ -3252,10 +3248,10 @@ patch-scale
 11
 
 BUTTON
-136
-559
-284
-592
+372
+520
+500
+554
 count visited trees
 type \"unvisited trees: \" print count feeding-trees with [visitations = 0]\n\ntype \"visited trees: \" print count feeding-trees with [visitations > 0]
 NIL
@@ -3269,10 +3265,10 @@ NIL
 1
 
 BUTTON
-299
-560
-406
-594
+136
+556
+243
+590
 NIL
 clear-drawing
 NIL
@@ -3285,22 +3281,11 @@ NIL
 NIL
 1
 
-SWITCH
-941
-407
-1107
-440
-empirical-velocities?
-empirical-velocities?
-0
-1
--1000
-
 BUTTON
-413
-562
-548
-595
+246
+557
+381
+590
 move-to farther slp tree
 ask one-of monkeys [\nlet choice max-one-of sleeping-trees [xcor]\nmove-to choice\n]
 NIL
@@ -3311,6 +3296,102 @@ NIL
 NIL
 NIL
 NIL
+1
+
+SWITCH
+920
+309
+1063
+343
+step-model-param?
+step-model-param?
+0
+1
+-1000
+
+SLIDER
+907
+395
+1101
+429
+max_rel_ang_forage_75q
+max_rel_ang_forage_75q
+0
+180
+50.0
+5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+908
+466
+1081
+500
+step_len_forage
+step_len_forage
+0
+20
+1.214
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+908
+435
+1081
+469
+step_len_travel
+step_len_travel
+0
+20
+3.0
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+908
+362
+1097
+396
+max_rel_ang_travel_75q
+max_rel_ang_travel_75q
+0
+180
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+726
+578
+874
+612
+species_time
+species_time
+1
+20
+2.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+744
+615
+868
+644
+max timesteps feeding on the same tree species
+10
+0.0
 1
 
 @#$#@#$#@
