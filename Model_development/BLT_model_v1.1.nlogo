@@ -159,6 +159,18 @@ to setup
   set gut_transit_time round (gut_transit_time)
 ;  set travel_speed travel_speed
 
+  if p-forage-param? = TRUE [
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set p_foraging_while_traveling 0.36 ]  ; ( BLT mean velocity / patch resolution)
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set p_foraging_while_traveling 0.47 ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set p_foraging_while_traveling 0.54 ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set p_foraging_while_traveling 0.70 ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set p_foraging_while_traveling 0.59 ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set p_foraging_while_traveling 0.61 ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set p_foraging_while_traveling 0.31 ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set p_foraging_while_traveling 0.21 ]
+    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set p_foraging_while_traveling 0.21 ]
+  ]
+
   reset-ticks
 end
 
@@ -1318,7 +1330,7 @@ to to-feeding-tree
 
     ifelse ( action = "travel" OR action = "forage" ) [
 
-      ifelse ( random-float 1 < p-foraging-while-traveling ) [
+      ifelse ( random-float 1 < p_foraging_while_traveling ) [
 
         if tree_target != -1 AND distance tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
           forage
@@ -1371,7 +1383,7 @@ to to-feeding-tree
 
     ifelse ( action = "travel" OR action = "forage" ) [
 
-      ifelse ( random-float 1 < p-foraging-while-traveling ) [
+      ifelse ( random-float 1 < p_foraging_while_traveling ) [
 
         if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
           forage
@@ -2197,7 +2209,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-4.0
+6.0
 1
 1
 NIL
@@ -2291,7 +2303,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-2.3
+1.1
 0.1
 1
 NIL
@@ -2771,12 +2783,12 @@ path-color-by-day?
 -1000
 
 TEXTBOX
-32
-423
-104
-446
+30
+422
+102
+466
 OUTPUT:
-16
+18
 15.0
 1
 
@@ -2814,11 +2826,11 @@ output-print?
 
 SLIDER
 924
-546
-1068
-579
-p-foraging-while-traveling
-p-foraging-while-traveling
+550
+1128
+583
+p_foraging_while_traveling
+p_foraging_while_traveling
 0
 1
 0.7
@@ -3208,10 +3220,10 @@ NIL
 1
 
 TEXTBOX
-287
-378
-525
+224
 422
+462
+466
 MODEL VERIFICATION:
 18
 15.0
@@ -3303,7 +3315,7 @@ SWITCH
 920
 309
 1063
-343
+342
 step-model-param?
 step-model-param?
 0
@@ -3314,7 +3326,7 @@ SLIDER
 907
 395
 1101
-429
+428
 max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
@@ -3329,7 +3341,7 @@ SLIDER
 908
 466
 1081
-500
+499
 step_len_forage
 step_len_forage
 0
@@ -3344,7 +3356,7 @@ SLIDER
 908
 435
 1081
-469
+468
 step_len_travel
 step_len_travel
 0
@@ -3359,7 +3371,7 @@ SLIDER
 908
 362
 1097
-396
+395
 max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
@@ -3374,7 +3386,7 @@ SLIDER
 726
 578
 874
-612
+611
 species_time
 species_time
 1
@@ -3394,6 +3406,17 @@ max timesteps feeding on the same tree species
 10
 0.0
 1
+
+SWITCH
+931
+519
+1061
+552
+p-forage-param?
+p-forage-param?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -6,7 +6,7 @@
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
-# 1) Made energy = start=energy every day (take this out after calibration)
+# 1) Made energy = start=energy every day (take this out after calibrationg)
 #
 
 ## Packages -------------------------
