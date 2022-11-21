@@ -161,7 +161,7 @@ to setup
 ;  set travel_speed travel_speed
 
   if p-forage-param? = TRUE [
-    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set gut_transit_time 17 ]  ; ( BLT mean velocity / patch resolution)
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set gut_transit_time 17 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set gut_transit_time 18 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set gut_transit_time 13 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set gut_transit_time 19 ]
@@ -174,7 +174,7 @@ to setup
   ]
 
   if p-forage-param? = TRUE [
-    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set p_foraging_while_traveling 0.36 ]  ; ( BLT mean velocity / patch resolution)
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set p_foraging_while_traveling 0.36 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set p_foraging_while_traveling 0.47 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set p_foraging_while_traveling 0.54 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set p_foraging_while_traveling 0.70 ]
@@ -1359,27 +1359,70 @@ to to-feeding-tree
       set heading towards tree_target
     ]
 
+    ; the first part of the following ifelse was created because Taquara group would circle around the trees because their timesteps were too large and
+    ; they would frequently circumvent the tree. This happened because the rule of "approaching the tree" was 'if distance tree_target < 0.8 step length', which was
+    ; basically not relevant for other groups. But on Taquara's case, 0.8 of the step lengh is almost 30 m, which we find relevant. Thus, if the distance to the
+    ; next feeding-tree is lower than a step legnth, a random angle is not drawn and the tamarins move straight to it.
+    ; The code is basically the same as the one on-feeding-tree? reporter
+    ifelse distance tree_target < step_len_travel [
+      print "NEW PROCEDURE"
 
-    ifelse ( action = "travel" OR action = "forage" ) [
+      set tree_current tree_target
+      set dist-traveled dist-traveled + distance tree_target
+      move-to tree_target
+      ; make UTM of tamarins match UTM of trees (like empirical data collection):
+      set x_UTM [ x_UTM ] of tree_current
+      set y_UTM [ y_UTM ] of tree_current
+      ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
+      set xcor [xcor] of tree_current + 0.01
+      set ycor [ycor] of tree_current + 0.01
 
-      ifelse ( random-float 1 < p_foraging_while_traveling ) [
+      ask tree_target [ set visitations visitations + 1 ]
+      set tree_target -1
+      ifelse feedingbout-on?
+      [ set species_time [ species_time ] of tree_current ]
+      ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
+      [ set species_time 2 ]
+      ;      type "tree_current: " print tree_current
+      ;      type "tree_target: " print tree_target
+      ;        print "on-feeding-tree? TRUE" ; for debugging
+      print "ON tree NEW PROCEDURE"
 
-        if tree_target != -1 AND distance tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
-          forage
-          ;; RANDOM movement while foraging:
+      set action "feeding"
+
+      set energy energy + ( energy-loss-traveling * dist-traveled )
+
+    ][
+      ifelse ( action = "travel" OR action = "forage" ) [
+
+        ifelse ( random-float 1 < p_foraging_while_traveling ) [
+
+          if tree_target != -1 AND distance tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+            forage
+            ;; RANDOM movement while foraging:
+            if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+              rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
+            ]
+            travel
+            set action "travel"
+            set behavior "travel"
+            set behaviorsequence lput 3 behaviorsequence
+          ]
+
+        ][
+
           if step-model-param? = TRUE  AND distance tree_target > 0.8 [
-            rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
+            rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q)  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
           set action "travel"
           set behavior "travel"
           set behaviorsequence lput 3 behaviorsequence
+
         ]
-
       ][
-
         if step-model-param? = TRUE  AND distance tree_target > 0.8 [
-          rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q)  ; travel is more directed than foraging, so we don't divide the max-random-angle
+          rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
         set action "travel"
@@ -1387,16 +1430,9 @@ to to-feeding-tree
         set behaviorsequence lput 3 behaviorsequence
 
       ]
-    ][
-      if step-model-param? = TRUE  AND distance tree_target > 0.8 [
-        rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
-      ]
-      travel
-      set action "travel"
-      set behavior "travel"
-      set behaviorsequence lput 3 behaviorsequence
 
     ]
+
   ]
 
 
@@ -1412,17 +1448,58 @@ to to-feeding-tree
       face ld_tree_target
     ]
 
+    ifelse distance ld_tree_target < step_len_travel [
+      print "NEW PROCEDURE"
 
-    ifelse ( action = "travel" OR action = "forage" ) [
+      set tree_current ld_tree_target
+      set dist-traveled dist-traveled + distance ld_tree_target
+      move-to ld_tree_target
 
-      ifelse ( random-float 1 < p_foraging_while_traveling ) [
+      ; make UTM of tamarins match UTM of trees (like empirical data collection):
+      set x_UTM [ x_UTM ] of tree_current
+      set y_UTM [ y_UTM ] of tree_current
+      ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
+      set xcor [xcor] of tree_current + 0.01
+      set ycor [ycor] of tree_current + 0.01
 
-        if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
-          forage
-          ;; RANDOM movement while foraging:
-          if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
-            rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
+      ask ld_tree_target [ set visitations visitations + 1 ]
+      set ld_tree_target -1
+      ifelse feedingbout-on?
+      [ set species_time [ species_time ] of tree_current ]
+      ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
+      [ set species_time 2 ]
+      ;      type "tree_current: " print tree_current
+      ;      type "tree_target: " print tree_target
+      ;        print "on-feeding-tree? TRUE" ; for debugging
+      print "ON tree NEW PROCEDURE"
+
+      set action "feeding"
+
+      set energy energy + ( energy-loss-traveling * dist-traveled )
+
+    ][
+
+      ifelse ( action = "travel" OR action = "forage" ) [
+
+        ifelse ( random-float 1 < p_foraging_while_traveling ) [
+
+          if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+            forage
+            ;; RANDOM movement while foraging:
+            if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+              rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
+            ]
+            if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+              rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+            ]
+            travel
+            set action "travel"
+            set behavior "travel"
+            set behaviorsequence lput 3 behaviorsequence
           ]
+
+        ][
+
           if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
             rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
@@ -1430,27 +1507,19 @@ to to-feeding-tree
           set action "travel"
           set behavior "travel"
           set behaviorsequence lput 3 behaviorsequence
-        ]
 
+        ]
       ][
-
-        if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
-          rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
-        ]
         travel
         set action "travel"
         set behavior "travel"
         set behaviorsequence lput 3 behaviorsequence
 
       ]
-    ][
-      travel
-      set action "travel"
-      set behavior "travel"
-      set behaviorsequence lput 3 behaviorsequence
-
     ]
+
   ]
+
 
 
   ; ========================================= ;
@@ -2335,7 +2404,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-1.1
+1.5
 0.1
 1
 NIL
@@ -2350,7 +2419,7 @@ energy-loss-traveling
 energy-loss-traveling
 -10
 0
--3.0
+-1.5
 0.1
 1
 NIL
@@ -2380,7 +2449,7 @@ energy-loss-resting
 energy-loss-resting
 -10
 0
--6.0
+-4.5
 0.1
 1
 NIL
@@ -2465,7 +2534,7 @@ step_forget
 step_forget
 0
 1000
-29.0
+95.0
 1
 1
 NIL
@@ -2500,7 +2569,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-13.0
+16.0
 1
 1
 NIL
@@ -2751,7 +2820,7 @@ duration
 duration
 0
 20
-3.0
+4.0
 1
 1
 NIL
@@ -3031,7 +3100,7 @@ SWITCH
 549
 feedingbout-on?
 feedingbout-on?
-0
+1
 1
 -1000
 
