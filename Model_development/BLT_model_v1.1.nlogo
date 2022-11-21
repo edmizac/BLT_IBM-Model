@@ -679,7 +679,9 @@ to go
   if all? monkeys [action = "sleeping"] [
     set day day + 1
     set timestep 0
-    ask monkeys [ set action "" ]
+    ask monkeys [
+      set action ""
+    ]
     if day > no_days [
       output-print "run-days click finished"
       output-print "calculating home range with r extension"
@@ -885,8 +887,6 @@ to move-monkeys
     if timestep = 0 [
       ;set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
       set tree_current -1
-      set DPL_d lput DPL DPL_d
-      set DPL 0 ; set daily path length to 0 every day
       set going-sleeping? FALSE
       remove_trees_surrounding ; to avoid feeding in the closest tree
     ]
@@ -1783,6 +1783,9 @@ to sleeping
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 
+      set DPL_d lput ( precision DPL 2 ) DPL_d
+      set DPL 0 ; set daily path length to 0 every day
+
       output-type "*simulation-time* "
       output-type ticks
       output-print " ----"
@@ -2188,11 +2191,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2202,10 +2205,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -2512,7 +2515,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+1
 
 CHOOSER
 984
@@ -2579,7 +2582,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-17.0
+16.0
 1
 1
 NIL
@@ -2944,7 +2947,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.21
 0.05
 1
 NIL
@@ -3311,7 +3314,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 247
@@ -3442,7 +3445,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+43.02
 5
 1
 NIL
@@ -3457,7 +3460,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+3.089
 0.1
 1
 NIL
@@ -3472,7 +3475,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+3.931
 0.1
 1
 NIL
@@ -3487,7 +3490,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+17.85
 1
 1
 NIL

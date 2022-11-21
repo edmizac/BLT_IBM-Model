@@ -15,13 +15,13 @@
 ## Packages -------------------------
 library("nlrx")
 library("here")
+library("dplyr")
+library("stringr")
 library("progressr")
 library("future")
 library("tictoc")
 library("ggplot2")
-library("ggspatial")
-library("gganimate")
-library("tidyverse")
+# library("tidyverse")
 
 ## ---------------------------
 
@@ -34,18 +34,6 @@ library("tidyverse")
 
 # Spatial plots
 theme_set(theme_bw())
-
-simulated_shapes <- c("foraging" = 1,
-                      "frugivory" = 19, 
-                      "resting" = 1, 
-                      "sleeping" = 17, 
-                      "travel" = 1)
-
-simulated_colors <- c("foraging" = "magenta",
-                      "frugivory" = "#1E8449", 
-                      "resting" = "grey", 
-                      "sleeping" = "#E74C3C", 
-                      "travel" = "grey")
 
 ## ---------------------------
 
@@ -132,8 +120,8 @@ for (i in i:nrow(param.table)) {
   no_days_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
-    dplyr::select(ndays) # %>% 
-    # pull() + 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
+    dplyr::select(ndays) %>% 
+     pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
   
   simultime_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
@@ -146,7 +134,6 @@ for (i in i:nrow(param.table)) {
   step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
   gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
   p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
-  
   feedingbout <- "false" # previous sensitivity analysis showed that this does not matter, at least for Guareí
   
 
@@ -162,17 +149,21 @@ nl@experiment <- experiment(expname = expname,
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
                             idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
                             # reporters:
-                            metrics = c("timestep", "day"), # e.g. "count sheep" or "count patches with [pcolor = green]"
+                            metrics = c(
+                              "timestep",
+                              "day" # e.g. "count sheep" or "count patches with [pcolor = green]"
+                            ),
                             metrics.turtles = list("monkeys" = c(#"x_UTM", "y_UTM",
                                                                  # "xcor", "ycor",
                                                                  # "behavior",
                                                                  "X_coords", "Y_coords", # to plot the routes without running another nlrx experiment
                                                                  "energy", # final energy
                                                                  "DPL_d", #DPL is set to 0 everyday 
-                                                                 "KDE_values", # KDE home range size values calculated by the r extension and amt package
+                                                                 "KDE_values" # KDE home range size values calculated by the r extension and amt package
                                                                  # ""
                                                                  #"travel_mode "
                                                                  ),
+                                                   
                                                    "feeding-trees" = c(
                                                      "x_UTM", "y_UTM",
                                                      "id-tree",
