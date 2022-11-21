@@ -20,35 +20,29 @@ library("readr")
 
 ### Read empirical tree files
 ```{r}
-pathfiles <- here("Data", "Movement", "Resource-trees")
-trees_to_dfs <- list.files(pathfiles, pattern = ".csv")
-unwanted <- list.files(pathfiles, pattern = "all.csv")
-trees_to_dfs <- base::setdiff(trees_to_dfs, unwanted) #https://stackoverflow.com/questions/31590730/list-files-in-r-that-do-not-match-a-pattern
+treepath <- here("Data", "Movement", "Resource-trees")
+trees <- read.csv(paste0(treepath, "/", "Siminputrow_trees.csv"),
+                           sep = ",", dec = ".", stringsAsFactors = TRUE) #%>% 
+  # mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
 
-# i <- 20
-# for (tf in trees_to_dfs) {
-  
-  # tf <- trees_to_dfs[i]
-  # tf_csv <- paste0(pathfiles, "/", tf)
-  # csv <- read_csv(tf_csv)
-  
-  tf_csv <- paste0(pathfiles, "/", trees_to_dfs)
-  
-  trees <- trees_to_dfs %>%
-    purrr::map_df(~read_csv(paste0(pathfiles, "/", .), col_types = cols(.default = "?", id_day_all = "c"))) %>%
-    mutate(species = case_when(
-      
-    ))
-    dplyr::select(-c("id_day_all", "sp"))
-  
-  # if (i == 1) {
-  #   csv1 <- readr::read_csv(tf_csv)
-  # }
-  # 
-  # trees <- dplyr::bind_rows(trees, csv1)
-  
-  # i <- i + 1
-# }
+# feeding_trees_gua <- read.csv()
+# sleeping_trees_gua <- read.csv()
 
+```
+
+### Plot some examples
+```{r}
+ggplot(db) +
+  geom_point(data = subset(db, breed == "seeds"), 
+             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) + #https://stackoverflow.com/questions/60817705/filtering-values-in-ggplot2
+  geom_point(data = feeding_trees_gua,
+             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) +
+  geom_point(data = sleeping_trees_gua,
+             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`))
+
+ggplot(subset(db, study_area == "Taquara" | `feeding-trees-scenario` == "Jan" | `random-seed` == 	2106024157)) +
+  geom_point(data = subset(db, breed == "seeds"), 
+             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) #+ #https://stackoverflow.com/questions/60817705/filtering-values-in-ggplot2
+ 
 ```
 

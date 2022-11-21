@@ -12,13 +12,6 @@ db  <-  unnest_simoutput(nl)
 
 
 
-# Read empirical tree files
-# Grep files
-csvs_to_sf <- list.files(here("Data", "Resource-trees"), pattern = ".csv")
-
-# feeding_trees_gua <- read.csv()
-# sleeping_trees_gua <- read.csv()
-
 seeds <- db %>% 
   dplyr::filter(breed == "seeds") %>% 
   droplevels()
@@ -31,11 +24,7 @@ seeds %>%
 
 ggplot(db) +
   geom_point(data = subset(db, breed == "seeds"), 
-             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) + #https://stackoverflow.com/questions/60817705/filtering-values-in-ggplot2
-  geom_point(data = feeding_trees_gua,
-             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) +
-  geom_point(data = sleeping_trees_gua,
-             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`))
+             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) #https://stackoverflow.com/questions/60817705/filtering-values-in-ggplot2
   
 
 
@@ -60,12 +49,13 @@ for (f in nls_to_df) {
   i <- i + 1
 }
 
+# Write csv
+db %>%
+  write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
+            row.names = FALSE)
+
 
 ggplot(subset(db, study_area == "Taquara" | `feeding-trees-scenario` == "Jan" | `random-seed` == 	2106024157)) +
   geom_point(data = subset(db, breed == "seeds"), 
-             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) #+ #https://stackoverflow.com/questions/60817705/filtering-values-in-ggplot2
-  # facet_grid( ~ `random-seed`)
-  # geom_point(data = feeding_trees_gua,
-  #            aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) +
-  # geom_point(data = sleeping_trees_gua,
-  #            aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`))
+             aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) + #https://stackoverflow.com/questions/60817705/filtering-values-in-ggplot2
+  theme(legend.position = "none")
