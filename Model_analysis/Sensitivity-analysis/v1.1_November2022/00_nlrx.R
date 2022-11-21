@@ -6,7 +6,10 @@
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
-# 1) Made energy = start=energy every day (take this out after calibrationg)
+# From the previous sensitivity analysis to this one, lots of stuff changed:
+# 1) last-action was changed
+# 2) to-feeding-tree procedure was heavily changed
+# 3) There's a step model parameterization now, not to mention seed dispersal and p_foraging parameters
 #
 
 ## Packages -------------------------
@@ -48,8 +51,8 @@ simulated_colors <- c("foraging" = "magenta",
 
 
 # Empirical data for parameterisation:
-dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_aftercleaning.csv"),
-                                          sep = ";", dec = ".", stringsAsFactors = TRUE) %>% 
+param.table <- read.csv(here("Data", "Parameter_table.csv"),
+                                          sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
 
 
@@ -87,7 +90,7 @@ if(Sys.info()[["nodename"]] == "PC146") {
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_development", "runtime")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "runtime")
 }
 
 
@@ -96,8 +99,9 @@ nl <- nl(nlversion = "6.2.2",
          modelpath = modelpath,
          jvmmem = 1024)
 
-report_model_parameters(nl)
-
+nlogo_model_param <- report_model_parameters(nl)
+nlogo_model_param
+# saveRDS(nlogo_model_param, file = paste0(outpath, "/nlogo_model_param.rds"))
 
 
 #### Simple design experiment ( = one go button, no varibles) ####
@@ -106,11 +110,11 @@ report_model_parameters(nl)
 exptype <- "simple"
 
 i <- 1
-for (i in i:nrow(dat.summary)) {
+for (i in i:nrow(param.table)) {
   
   # Define run and parameterisation: (all strings must use escaped quotes)
-  area_run <- paste0('\"', dat.summary$group[i], '\"')
-  month_run <- paste0('\"', dat.summary$id_month[i], '\"')
+  area_run <- paste0('\"', param.table$group[i], '\"')
+  month_run <- paste0('\"', param.table$id_month[i], '\"')
   
   # area_run <- '"Guareí"'
   # month_run <- '"Jun"'
@@ -125,40 +129,47 @@ for (i in i:nrow(dat.summary)) {
   # i <- i + 1
 #} # loop testing
   
-  no_days_run <- dat.summary %>% 
+  no_days_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(ndays) %>% 
     pull() + 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
   
-  simultime_run <- dat.summary %>% 
+  simultime_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(mean_timesteps) %>% 
     pull()
-  simultime_run <- round(simultime_run * 0.9) # that's the timestep when tamarins should start looking for the sleeping site
+  simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
   
-  empiricalvelocities <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in dat.summary
-  feedingbout <- "false" # previous sensitivity analysis showed that this does not matter for Guareí
+  
+  step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
+  gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
+  p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
+  
+  feedingbout <- "false" # previous sensitivity analysis showed that this does not matter, at least for Guareí
   
 
 # # Attach to nl experiment
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
                             repetition = 1, # number of repetitions with the same seed (use repetition = 1)
-                            tickmetrics = "true", # "false" for metrics only in the end of the simulation
+                            tickmetrics = "false", # "true" for every tick, "false" for metrics only in the end of the simulation
                             idsetup = "setup",
                             idgo = "go",
                             runtime = 2000, #(if = 0 or NA_integer_, define stopcond_)
                             stopcond= "day > no_days", # reporter that returns TRUE
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
-                            # idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
+                            idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
                             # reporters:
                             metrics = c("timestep", "day"), # e.g. "count sheep" or "count patches with [pcolor = green]"
-                            metrics.turtles = list("monkeys" = c("x_UTM", "y_UTM",
+                            metrics.turtles = list("monkeys" = c(#"x_UTM", "y_UTM",
                                                                  # "xcor", "ycor",
-                                                                 "energy", "behavior",
-                                                                 "dist-traveled"#,
+                                                                 # "behavior",
+                                                                 "energy", 
+                                                                 "DPL", 
+                                                                 "KDE_values"
+                                                                 # ""
                                                                  #"travel_mode "
                                                                  )
 
@@ -196,8 +207,11 @@ nl@experiment <- experiment(expname = expname,
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
                               "USER" = "\"Eduardo\"",
-                              "empirical-velocities?" = empiricalvelocities, #"true",
                               'feedingbout-on?' = feedingbout,
+                              "step-model-param?" = step_model_param,
+                              "gtt-param?"= gtt_param,
+                              "p-forage-param?" = p_forage_param,
+                              
                               # "print-step?" = "false",
                               # 'export-png'= "false",
                               # "show-energy?" = "false",
@@ -241,11 +255,11 @@ nl@experiment <- experiment(expname = expname,
   
   
   
-  # report_model_parameters(nl)
+  report_model_parameters(nl)
 
 
 
-  nseeds <- 10 # repetitions (ideally n = 5)
+  nseeds <- 5 # repetitions (ideally n = 5)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
@@ -319,10 +333,7 @@ for (seed in unique(nl@simdesign@simseeds)) {
   
   #' Save RDS to avoid losing it by R abortion:
   filename <-
-    here("Model_development",
-         "runtime",
-         "v1.1",
-         paste0(expname, seed, "_tempRDS.Rdata"))
+         paste0(outpath, "/", expname, "/", seed, "_tempRDS.Rdata")
   saveRDS(nl, file = filename)
   # rm(nl)
   
