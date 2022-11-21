@@ -29,7 +29,11 @@ resting-trees-own [ species id-tree ]
 breed [legend-trees legend-tree] ; to set up a legend with the color of trees
 
 breed [seeds seed]
-seeds-own [ id-seed species mother-tree disp-day ]
+seeds-own [
+  id-seed species mother-tree
+  disp-day
+  SDD
+]
 
 breed [monkeys monkey]
 monkeys-own [
@@ -1680,6 +1684,7 @@ to defecation
         set species [species] of feeding-trees with [ who = loc_who ]
         set id-seed who
         set disp-day "same day"
+        set SDD distance ( feeding-tree loc_who ) ;with [id-tree] = mother-tree]
         set label ""
         set shape "plant"
         set size 0.45
@@ -2271,10 +2276,10 @@ Defecated seeds
 1
 
 SWITCH
-1382
-514
-1500
-547
+7
+618
+125
+651
 show-energy?
 show-energy?
 0
@@ -2282,10 +2287,10 @@ show-energy?
 -1000
 
 SWITCH
-1382
-557
-1502
-590
+7
+661
+127
+694
 show-path?
 show-path?
 0
@@ -2490,7 +2495,7 @@ Tamarin
 1
 
 INPUTBOX
-4
+137
 612
 411
 698
@@ -2521,10 +2526,10 @@ sleeping-trees-scenario
 0
 
 SWITCH
-1382
-473
-1502
-506
+7
+577
+127
+610
 export-png
 export-png
 1
@@ -2759,10 +2764,10 @@ print-step?
 -1000
 
 PLOT
-1134
-338
-1357
-532
+1374
+538
+1597
+732
 Memory
 tick
 count memory lists
@@ -2879,10 +2884,10 @@ exclude trees in radii from pot list:
 1
 
 SWITCH
-1383
-598
-1548
-631
+8
+702
+173
+735
 path-color-by-day?
 path-color-by-day?
 1
@@ -2957,10 +2962,10 @@ max timesteps repeating same behavior (other than feeding)
 1
 
 PLOT
-1360
-209
-1533
-333
+1148
+336
+1356
+460
 action-time (red) / frugivory-time (blue)
 NIL
 NIL
@@ -3082,10 +3087,10 @@ NIL
 1
 
 PLOT
-1135
-538
-1335
-688
+1151
+588
+1351
+738
 Travel mode frequency
 NIL
 NIL
@@ -3214,10 +3219,10 @@ energy and time spent feeding for each tree species. If not:
 1
 
 PLOT
-1362
-338
-1535
-458
+1148
+461
+1356
+581
 duration (red) / species_time (blue)
 NIL
 NIL
@@ -3535,6 +3540,26 @@ gtt-param?
 0
 1
 -1000
+
+PLOT
+1362
+216
+1562
+366
+SDD
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [SDD] of seeds"
+"pen-1" 1.0 0 -14070903 true "" "plot min [SDD] of seeds"
+"pen-2" 1.0 0 -2674135 true "" "plot max [SDD] of seeds"
 
 @#$#@#$#@
 ## WHAT IS IT?

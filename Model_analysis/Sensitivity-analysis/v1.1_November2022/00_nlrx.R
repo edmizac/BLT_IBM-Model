@@ -173,14 +173,17 @@ nl@experiment <- experiment(expname = expname,
                                                                  #"travel_mode "
                                                                  ),
                                                    "feeding-trees" = c(
+                                                     "id-tree",
                                                      "visitations"
                                                     ),
                                                    
                                                    "sleeping-trees" = c(
+                                                     "id-tree",
                                                      "visitations"
                                                    ),
                                                    
                                                    "seeds" = c(
+                                                     "SDD", 
                                                      "x_UTM", "y_UTM",
                                                      "id-seed", 
                                                      "species", 
