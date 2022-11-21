@@ -12,8 +12,7 @@ extensions [ gis r palette pathdir] ; using the GIS extension of NetLogo
 turtles-own [
   x_UTM y_UTM
   X_coords Y_coords ; X and Y list of coordinates (x_UTM and y_UTM) for home range calculation with the r extension in the end of each run (days = n_days)
-  Name ; monkey who number for home range calculation with the r extension in case there's more than one group
-  KDE_values ; output of amt package in calc-homerange
+
 
 ]
 
@@ -66,8 +65,9 @@ monkeys-own [
   seed_ate_list   ; list of trees they fed on ([who] of tree_current)
   seed_mem_list   ; list of timesteps since the tamarin ate the seed
   seed_add_list   ; helper list to increase the mem list by 1 each time step
-;  x_UTM
-;  y_UTM
+
+  Name ; monkey who number for home range calculation with the r extension in case there's more than one group
+  KDE_values ; output of amt package in calc-homerange
 
 ]
 
@@ -1031,7 +1031,7 @@ end
 
 to avoid-full-matrix
 
-  print "I'm in the middle of the sugarcane!"
+;  print "I'm in the middle of the sugarcane!"
   ;    set color "red"
 
   ; choose closest patch within radius that is not matrix
@@ -1053,7 +1053,7 @@ end
 
 to avoid-some-matrix
 ;  if ( any? front_patches [habitat = "matrix"] ) [
-    print "there's some matrix in front of me!"
+;    print "there's some matrix in front of me!"
 ;    set color orange
 
     let d tree_target_mem ; d is a local variable and tree_target_mem is a monkey variable; the patch_avoid_matrix can't be set because it is within the patch context and patche can't access monkey variables
@@ -1101,7 +1101,7 @@ end
 ;--------------------------------------------------------------------------------
 to frugivory
 
-  print "frugivory"  ; debugging
+;  print "frugivory"  ; debugging
 
   avoid-patch-set ; bump on the territory borders
 
@@ -1151,10 +1151,10 @@ to-report on-feeding-tree?
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "forage" AND tree_target != -1 [
 ;      type "on-feeding-tree? reporter distance to target : "
-      print distance tree_target ; for debugging
+;      print distance tree_target ; for debugging
       ifelse distance tree_target < 0.8 * step_len_travel [
 
-        print "HERE ***************"
+;        print "HERE ***************"
 
         set tree_current tree_target
 
@@ -1177,22 +1177,22 @@ to-report on-feeding-tree?
   ;      type "tree_current: " print tree_current
   ;      type "tree_target: " print tree_target
 ;        print "on-feeding-tree? TRUE" ; for debugging
-        print "ON tree"
+;        print "ON tree"
         report true
 
       ][
 ;        print "on-feeding-tree? FALSE" ; for debugging
   ;      print tree_target
-        print "NOT on tree"
+;        print "NOT on tree"
         report false
       ]
     ][
 ;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
-        print "ON tree"
+;        print "ON tree"
         report true
       ][
-        print "NOT on tree"
+;        print "NOT on tree"
         report false
       ]
     ]
@@ -1203,9 +1203,9 @@ to-report on-feeding-tree?
 
     ifelse action = "travel" OR action = "forage" AND ld_tree_target != -1 [
 ;      type "on-feeding-tree? reporter distance to target : "
-      print distance ld_tree_target ; for debugging
+;      print distance ld_tree_target ; for debugging
       ifelse distance ld_tree_target < 0.8 * step_len_travel [
-        print "distance to ld_tree_target is < 80%"
+;        print "distance to ld_tree_target is < 80%"
 
         set tree_current ld_tree_target
 
@@ -1227,19 +1227,19 @@ to-report on-feeding-tree?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time 2 ]
-        print "ON tree"
+;        print "ON tree"
         report true
       ][
-        print "NOT on tree"
+;        print "NOT on tree"
         report false
       ]
     ][
 ;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
-        print "ON tree"
+;        print "ON tree"
         report true
       ][
-        print "NOT on tree"
+;        print "NOT on tree"
         report false
       ]
     ]
@@ -1249,8 +1249,8 @@ end
 ;----------------------------------------
 
 to feeding
-  print "feeding"    ; debugging
-  if travel_mode = "long_distance" [ print "FEEDING IS HAPPENING" ]
+;  print "feeding"    ; debugging
+;  if travel_mode = "long_distance" [ print "FEEDING IS HAPPENING" ]
 
   set action "feeding"
   set behavior "frugivory"
@@ -1270,7 +1270,7 @@ to feeding
     ; remove_trees_surrounding
   ]
 
-  if tree_current = -1 [ print "========== tree_current = -1 ============" ]
+;  if tree_current = -1 [ print "========== tree_current = -1 ============" ]
 
   ifelse( member? [who] of tree_current tree_ate_list) [
     set tree_mem_list replace-item (length tree_mem_list - 1) tree_mem_list 0
@@ -1345,7 +1345,7 @@ end
 
 to to-feeding-tree
 
-  print "TO-FEEDING-TREE"
+;  print "TO-FEEDING-TREE"
 
 
   if travel_mode = "short_distance" [
@@ -1365,7 +1365,7 @@ to to-feeding-tree
     ; next feeding-tree is lower than a step legnth, a random angle is not drawn and the tamarins move straight to it.
     ; The code is basically the same as the one on-feeding-tree? reporter
     ifelse distance tree_target < step_len_travel [
-      print "NEW PROCEDURE"
+;      print "NEW PROCEDURE"
 
       set tree_current tree_target
       set dist-traveled dist-traveled + distance tree_target
@@ -1386,7 +1386,7 @@ to to-feeding-tree
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
-      print "ON tree NEW PROCEDURE"
+;      print "ON tree NEW PROCEDURE"
 
       set action "feeding"
 
@@ -1449,7 +1449,7 @@ to to-feeding-tree
     ]
 
     ifelse distance ld_tree_target < step_len_travel [
-      print "NEW PROCEDURE"
+;      print "NEW PROCEDURE"
 
       set tree_current ld_tree_target
       set dist-traveled dist-traveled + distance ld_tree_target
@@ -1471,7 +1471,7 @@ to to-feeding-tree
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
-      print "ON tree NEW PROCEDURE"
+;      print "ON tree NEW PROCEDURE"
 
       set action "feeding"
 
@@ -1718,7 +1718,7 @@ end
 ; Resting commands
 ;---------------------------------------------------------------------------------------------
 to resting
-  print "resting"   ; debugging
+;  print "resting"   ; debugging
   set action "resting"
   set behavior "resting"
 
@@ -1890,7 +1890,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-  print "last-action-again"   ; debugging
+;  print "last-action-again"   ; debugging
 
 ;  if action = "forage" [
 ;    forage
@@ -2184,11 +2184,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+501
+406
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2198,10 +2198,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -2508,7 +2508,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+5
 
 CHOOSER
 984
@@ -2539,8 +2539,8 @@ SLIDER
 step_forget
 step_forget
 0
-1000
-88.0
+200
+40.0
 1
 1
 NIL
@@ -2575,7 +2575,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+17.0
 1
 1
 NIL
@@ -2940,7 +2940,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.36
 0.05
 1
 NIL
@@ -3307,7 +3307,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 247
@@ -3438,7 +3438,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+68.98
 5
 1
 NIL
@@ -3453,7 +3453,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.4060000000000001
 0.1
 1
 NIL
@@ -3468,7 +3468,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.343
 0.1
 1
 NIL
@@ -3483,7 +3483,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+67.86
 1
 1
 NIL

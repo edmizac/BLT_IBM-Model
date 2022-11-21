@@ -90,7 +90,7 @@ if(Sys.info()[["nodename"]] == "PC146") {
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "runtime")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp")
 }
 
 
@@ -171,7 +171,22 @@ nl@experiment <- experiment(expname = expname,
                                                                  "KDE_values"
                                                                  # ""
                                                                  #"travel_mode "
-                                                                 )
+                                                                 ),
+                                                   "feeding-trees" = c(
+                                                     "visitations"
+                                                    ),
+                                                   
+                                                   "sleeping-trees" = c(
+                                                     "visitations"
+                                                   ),
+                                                   
+                                                   "seeds" = c(
+                                                     "x_UTM", "y_UTM",
+                                                     "id-seed", 
+                                                     "species", 
+                                                     "mother-tree", 
+                                                     "disp-day"
+                                                   )
 
                                                    # , "steps-moved"
 
@@ -259,7 +274,7 @@ nl@experiment <- experiment(expname = expname,
 
 
 
-  nseeds <- 5 # repetitions (ideally n = 5)
+  nseeds <- 10 # repetitions (ideally n = 5)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
@@ -333,7 +348,7 @@ for (seed in unique(nl@simdesign@simseeds)) {
   
   #' Save RDS to avoid losing it by R abortion:
   filename <-
-         paste0(outpath, "/", expname, "/", seed, "_tempRDS.Rdata")
+         paste0(outpath, "/", expname, seed, "_tempRDS.Rdata")
   saveRDS(nl, file = filename)
   # rm(nl)
   

@@ -1,0 +1,42 @@
+---
+title: "02_analysis-simple"
+author: "Eduardo Zanette"
+date: "2022-11-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# packages
+library("here")
+library("nlrx")
+library("ggplot2")
+
+
+```
+
+### Read empirical tree files
+```{r}
+pathfiles <- here("Data", "Movement", "Resource-trees")
+trees_to_dfs <- list.files(pathfiles, pattern = ".csv")
+unwanted <- list.files(pathfiles, pattern = "all.csv")
+trees_to_dfs <- base::setdiff(trees_to_dfs, unwanted) #https://stackoverflow.com/questions/31590730/list-files-in-r-that-do-not-match-a-pattern
+
+i <- 1
+for (tf in trees_to_dfs) {
+  
+  tf <- trees_to_dfs[i]
+  tf_csv <- paste0(pathfiles, "/", tf)
+  
+  if (i == 1) {
+    trees <- readr::read_csv(tf_csv)
+  }
+  
+  trees <- dplyr::bind_rows(trees, trees)
+  
+  i <- i + 1
+}
+
+```
+
