@@ -36,7 +36,8 @@ monkeys-own [
   energy          ; energy the tamarin has left
 ;  status         ; what is the desire ===== DO WE REALLY NEED THIS? ==============
   action          ; what was the last action
-  action-time     ; how long you do the same action again
+  action-time     ; how long you do the same action again (other than frugivory)
+  frugivory-time  ; how long you consume the same species (= feeding bout)
   going-sleeping? ; if timestep > 108 and tamarins are going to sl
   behavior        ; as in activity budget data tables
   steps-moved     ; number of steps taken
@@ -693,7 +694,6 @@ to step ; FOR DEBUG PURPOSES ONLY
 ;      ][
 ;        print distance ld_tree_target
 ;      ]
-      type "on-feeding-tree? = " print on-feeding-tree?
       print " ----------------step end------------------------"
     ]
   ]
@@ -746,6 +746,7 @@ to next_day
           set color one-of color-days
         ]
         set action-time 0
+        set frugivory-time 0
         type timestep type " - Energy: " type energy type " "
         type tree_target  type " " show action
       ]
@@ -850,7 +851,7 @@ to move-monkeys
           set ld_tree_target -1  ; if this is not here it will make the tamarin lose the target very close to the tree when coming from long distance bc of the condition ld_tree_target = tree_target (Ronald debugged on the 14th of July 2022)
         ]
         frugivory
-      ][
+      ][ ; energy > level 1
 ;        ifelse (action = "feeding" or action = "travel") [              ;; v1.0 version
         ifelse (travel_mode = "short_distance" ) [                       ;; v1.1 version (long and short-distance travel)
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
@@ -868,10 +869,12 @@ to move-monkeys
         ][ ; travel_mode = "long_distance"
 
 
-          ifelse duration < action-time [ ; action time for other than feeding
+          ifelse random (2 * duration) < action-time [ ; action time for other than feeding
             ; set ld_tree_target -1  ;; commented out by Ronnald on 14th of July ;; has to be set to -1 otherwise tamarins will come back in the next ld travel cycle
+            print " *********** 2"
             frugivory
           ][
+            print " *********** 1"
             set action-time action-time + 1
             last-action-again
           ]
@@ -1027,7 +1030,7 @@ to frugivory
   if travel_mode = "short_distance" [   ;; short distance frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
-      ifelse random (2 * species_time ) > action-time [
+      ifelse random (2 * species_time ) > frugivory-time [
         print "I'm feeding!" ; for debugging
         feeding
       ][
@@ -1044,13 +1047,16 @@ to frugivory
   if travel_mode = "long_distance" [    ;; long distance frugivory
     set travelmodelist lput 2 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
-      ifelse random (2 * species_time) > action-time [
+      ifelse random (2 * species_time ) > frugivory-time [
+        print "I'm feeding!" ; for debugging
         feeding
       ][
         set tree_current -1
+        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
+      print "New long distance feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1061,76 +1067,89 @@ end
 ;----------------------------------------
 
 to-report on-feeding-tree?
-;   print "on-feeding-tree?"
 
-  if travel_mode = "short_distance" [   ;; short distance frugivory
-    ifelse action = "travel" OR action = "foraging" AND tree_target != -1 [
-      type "on-feeding-tree? reporter distance to target : " print distance tree_target ; for debugging
-      ifelse distance tree_target < 0.8 * travel_speed [
 
-        set tree_current tree_target
-
-        ; make UTM of tamarins match UTM of trees (like empirical data collection):
-        set x_UTM [ x_UTM ] of tree_current
-        set y_UTM [ y_UTM ] of tree_current
-        ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
-        set xcor [xcor] of tree_target + 0.01
-        set ycor [ycor] of tree_target + 0.01
-
-        ask tree_target [ set visitations visitations + 1 ]
-        set tree_target -1
-        ifelse feedingbout-on?
-        [ set species_time [ species_time ] of tree_current ]
-;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
-        [ set species_time 2 ]
-  ;      type "tree_current: " print tree_current
-  ;      type "tree_target: " print tree_target
-;        print "on-feeding-tree? TRUE" ; for debugging
-        report true
-
-      ][
-;        print "on-feeding-tree? FALSE" ; for debugging
-  ;      print tree_target
-        report false
-      ]
-    ][
-  ;    print "Action != travel OR tree_target = -1" ; for debugging
-      ifelse action = "feeding" [
-        report true
-      ][
-        report false
-      ]
-    ]
-  ]
+;  if travel_mode = "short_distance" [   ;; short distance frugivory
+;    ifelse action = "travel" OR action = "forage" AND tree_target != -1 [
+;      type "on-feeding-tree? reporter distance to target : " print distance tree_target ; for debugging
+;      ifelse distance tree_target < 0.8 * travel_speed [
+;
+;;        print "HERE ***************"
+;
+;        set tree_current tree_target
+;
+;        ; make UTM of tamarins match UTM of trees (like empirical data collection):
+;        set x_UTM [ x_UTM ] of tree_current
+;        set y_UTM [ y_UTM ] of tree_current
+;        ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
+;        set xcor [xcor] of tree_current + 0.01
+;        set ycor [ycor] of tree_current + 0.01
+;
+;        ask tree_target [ set visitations visitations + 1 ]
+;        set tree_target -1
+;        ifelse feedingbout-on?
+;        [ set species_time [ species_time ] of tree_current ]
+;;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
+;        [ set species_time 2 ]
+;  ;      type "tree_current: " print tree_current
+;  ;      type "tree_target: " print tree_target
+;;        print "on-feeding-tree? TRUE" ; for debugging
+;        print "ON tree"
+;        report true
+;
+;      ][
+;;        print "on-feeding-tree? FALSE" ; for debugging
+;  ;      print tree_target
+;        print "NOT on tree"
+;        report false
+;      ]
+;    ][
+;      print "Action != travel OR tree_target = -1" ; for debugging
+;      ifelse action = "feeding" [
+;        print "ON tree"
+;        report true
+;      ][
+;        print "NOT on tree"
+;        report false
+;      ]
+;    ]
+;  ]
 
 
   if travel_mode = "long_distance" [    ;; long distance frugivory
 
-    ifelse action = "travel" OR action = "foraging" AND ld_tree_target != -1 [
+    ifelse action = "travel" OR action = "forage" AND ld_tree_target != -1 [
+      type "on-feeding-tree? reporter distance to target : " print distance ld_tree_target ; for debugging
       ifelse distance ld_tree_target < 0.8 * travel_speed [
+        print "distance to ld_tree_target is < 80%"
 
         set tree_current ld_tree_target
 
         set x_UTM [ x_UTM ] of tree_current
         set y_UTM [ y_UTM ] of tree_current
         ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
-        set xcor [xcor] of ld_tree_target + 0.01
-        set ycor [ycor] of ld_tree_target + 0.01
+        set xcor [xcor] of tree_current + 0.01
+        set ycor [ycor] of tree_current + 0.01
 
+        set tree_target -1
         set ld_tree_target -1
-        set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
+;        set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time 2 ]
+        print "ON tree"
         report true
       ][
+        print "NOT on tree"
         report false
       ]
     ][
       ifelse action = "feeding" [
+        print "ON tree"
         report true
       ][
+        print "NOT on tree"
         report false
       ]
     ]
@@ -1141,13 +1160,15 @@ end
 
 to feeding
   print "feeding"    ; debugging
+  if travel_mode = "long_distance" [ print "FEEDING IS HAPPENING" ]
+
   set action "feeding"
   set behavior "frugivory"
 
   set behaviorsequence lput 1 behaviorsequence ;; activity budget
 
   set energy energy + energy-from-fruits + energy_species
-  set action-time action-time + 1
+  set frugivory-time frugivory-time + 1
 
   ; change mem list
   if( length tree_ate_list = 0 ) [
@@ -1234,87 +1255,95 @@ end
 
 to to-feeding-tree
 
-    print "TO-FEEDING-TREE"
+  print "TO-FEEDING-TREE"
 
-
-;  print "TO-FEEDING-TREE"
 
   if travel_mode = "short_distance" [
     if tree_target = -1 [
-      set action-time 0
+      set frugivory-time 0
       search-feeding-tree
     ]
 
-;    if on-feeding-tree? = FALSE [ set heading towards tree_target ] ; to avoid the same point (x,y) error
+    ;    if on-feeding-tree? = FALSE [ set heading towards tree_target ] ; to avoid the same point (x,y) error
     if straight-line-to-target? = TRUE [ ; otherwise it might enter the matrix
       set heading towards tree_target
     ]
 
-    ifelse ( action = "travel" OR action = "forage" AND random-float 1 < p-foraging-while-traveling ) [
 
-      if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
-        forage
-;        if distance tree_target > 0.8 * travel_speed [
-;        if distance tree_target > travel_speed [
-;          travel
-;        ]
+    ifelse ( action = "travel" OR action = "forage" ) [
+
+      ifelse ( random-float 1 < p-foraging-while-traveling ) [
+
+        if tree_target != -1 AND distance tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+          forage
+          travel
+        ]
+
+      ][
+
+
+        travel
+        set action "travel"
+        set behavior "travel"
+        set behaviorsequence lput 3 behaviorsequence
+
       ]
-      ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
     ][
-      ;    travel
+      travel
       set action "travel"
       set behavior "travel"
+      set behaviorsequence lput 3 behaviorsequence
 
-
-      ;; RANDOM movement while traveling:
-;      if tree_target != -1 [
-        if random-angle? = TRUE AND distance tree_target > 1.5 * travel_speed [
-          rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )
-;        ]
-      ]
     ]
   ]
 
 
+
   if travel_mode = "long_distance" [
-    set action-time 0
     if ld_tree_target = -1 [
+      set frugivory-time 0
       search-feeding-tree
     ]
 
-;    if tree_target != ld_tree_target [
+    ;    if on-feeding-tree? = FALSE [ set heading towards ld_tree_target ] ; to avoid the same point (x,y) error
     if straight-line-to-target? = TRUE [ ; otherwise it might enter the matrix
-      set heading towards ld_tree_target
+      face ld_tree_target
     ]
-;  ]
 
 
-    ifelse ( action = "travel" OR action = "forage" AND random-float 1 < p-foraging-while-traveling ) [
-      if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
-        forage
-        if distance ld_tree_target > travel_speed * 0.8 [
+    ifelse ( action = "travel" OR action = "forage" ) [
+
+      ifelse ( random-float 1 < p-foraging-while-traveling ) [
+
+        if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+          forage
           travel
         ]
+
+      ][
+
+
+        travel
+        set action "travel"
+        set behavior "travel"
+        set behaviorsequence lput 3 behaviorsequence
+
       ]
-      ;    set action "travel" ;; KEEP THIS HERE OTHERWISE TAMARINS WILL KEEP FORAGING UP TO WHEN ENERGY < LVL 1
     ][
-      ;    travel
+      travel
       set action "travel"
       set behavior "travel"
+      set behaviorsequence lput 3 behaviorsequence
 
-      ;; RANDOM movement while traveling:
-      if random-angle? = TRUE AND distance ld_tree_target > 1.5 [
-        rt ( random max-random-angle / 2) - ( max-random-angle / 2 )
-      ]
     ]
   ]
 
 
   ; ========================================= ;
   ;; this procedure independs of travel mode:
-  travel
-
-  set behaviorsequence lput 3 behaviorsequence
+;  travel
+;
+;  set behaviorsequence lput 3 behaviorsequence
 
 ;  set color grey ; in case the tamarin foraged, it became magenta
 
@@ -1536,13 +1565,14 @@ to sleeping
       move-to tree_target
       set x_UTM [ x_UTM ] of tree_target
       set y_UTM [ y_UTM ] of tree_target
-      setxy ( [ xcor] of tree_target + 0.01 ) ( [ ycor ] of tree_target + 0.01 ) ; use set timestep 108 to test this
+;      setxy ( [ xcor] of tree_target + 0.01 ) ( [ ycor ] of tree_target + 0.01 ) ; use set timestep 108 to test this
 
       set tree_current tree_target
       set tree_target -1
       set action "sleeping"
       set behavior "sleeping"
       set action-time 0
+      set frugivory-time 0
 ;       trees in the tree_ate_list[] had to get back to the tree_pot_list[]
 ;       they forget about the trees they visited last day
 ;      while [length tree_ate_list > 0] [
@@ -1564,7 +1594,7 @@ to sleeping
     avoid-patch-set
 
     ifelse straight-line-to-target? = TRUE [ ; otherwise it might enter the matrix
-      set heading towards tree_target
+      face tree_target
 
     ;; RANDOM movement while traveling:
     if random-angle? = TRUE  AND distance tree_target > 1.5 [
@@ -1646,7 +1676,9 @@ to random-action
 ;  print "random-action"    ; debugging
 
   set action-time 0
-  ifelse random-float 1 > 0.25 [
+  set frugivory-time 0
+
+  ifelse random-float 1 < 0.25 [
 ;    set color black
 ;    ask patch-here [ set pcolor orange ]
     frugivory ;; because travel, forage and frugivory are within the same loop
@@ -1988,7 +2020,7 @@ start-energy
 start-energy
 30
 170
-124.0
+97.0
 1
 1
 NIL
@@ -2181,7 +2213,7 @@ energy-from-prey
 energy-from-prey
 0
 15
-4.3
+2.3
 0.1
 1
 NIL
@@ -2747,7 +2779,7 @@ PLOT
 209
 1533
 333
-action-time
+action-time (red) / frugivory-time (blue)
 NIL
 NIL
 0.0
@@ -2758,7 +2790,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "ask monkeys [ plot action-time ]"
+"default" 1.0 0 -2674135 true "" "ask monkeys [ plot action-time ]"
+"pen-1" 1.0 0 -13345367 true "" "ask monkeys [ plot frugivory-time ]"
 
 PLOT
 1360
@@ -2861,10 +2894,10 @@ add random variation in direction each step. If so:
 1
 
 BUTTON
-403
-485
-536
-519
+402
+483
+535
+517
 NIL
 test-long-distance
 NIL
@@ -3029,7 +3062,7 @@ PLOT
 338
 1535
 458
-species_time
+duration (red) / species_time (blue)
 NIL
 NIL
 0.0
@@ -3040,7 +3073,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "ask monkeys [ ifelse tree_current != -1 [ plot [ species_time ] of tree_current ] [ plot 0 ] ]"
+"default" 1.0 0 -13345367 true "" "ask monkeys [ ifelse tree_current != -1 [ plot [ species_time ] of tree_current ] [ plot 0 ] ]"
+"pen-1" 1.0 0 -2674135 true "" ";ask monkeys [ ifelse tree_current != -1 [ plot [ duration ] of tree_current ] [ plot 0 ] ]\n\nplot duration\n\n"
 
 BUTTON
 135
