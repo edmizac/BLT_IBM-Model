@@ -881,7 +881,7 @@ to move-monkeys
   ;; BLT ROUTINE
 
     if timestep = 0 [
-      set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
+      ;set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
       set tree_current -1
       set DPL 0 ; set daily path length to 0 every day
       set going-sleeping? FALSE
@@ -1646,8 +1646,14 @@ to travel
     forward step_len_travel
     set dist-traveled step_len_travel
     set steps-moved steps-moved + 1
-    if (action = "travel" ) [ forward step_len_travel ]
-    if (action = "forage" ) [ forward step_len_forage ]
+    if (action = "travel" ) [
+      forward step_len_travel
+      set energy energy + ( energy-loss-traveling * step_len_travel )
+    ]
+    if (action = "forage" ) [
+      forward step_len_forage
+      set energy energy + ( energy-loss-traveling * step_len_forage )
+    ]
     set straight-line-to-target? TRUE
 ;    print "travel 3"
   ]
@@ -2310,7 +2316,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-6.0
+12.0
 1
 1
 NIL
@@ -2390,7 +2396,7 @@ INPUTBOX
 601
 82
 no_days
-8.0
+6.0
 1
 0
 Number
@@ -2534,7 +2540,7 @@ step_forget
 step_forget
 0
 1000
-95.0
+88.0
 1
 1
 NIL
