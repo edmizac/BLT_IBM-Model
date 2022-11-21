@@ -988,7 +988,7 @@ to avoid-some-matrix
       set patch_avoid_matrix one-of ( ( (candidate_patches ) with [ habitat != "matrix"] ) with-min [distance d] )
 
     ][
-      ask candidate_patches [ set pcolor green + 4 ]
+      ask candidate_patches [ set pcolor green + 2 ]
       ;    type "CANDIDATE PATCHES: " print candidate_patches
       ;    type "distance of patches to monkey target: " ask candidate_patches [ print distance d ]
 
@@ -1131,8 +1131,8 @@ to-report on-feeding-tree?
 
         set tree_current ld_tree_target
 
-        set dist-traveled dist-traveled + distance tree_target
-        move-to tree_target
+        set dist-traveled dist-traveled + distance ld_tree_target
+        move-to ld_tree_target
 
         set x_UTM [ x_UTM ] of tree_current
         set y_UTM [ y_UTM ] of tree_current
@@ -2349,7 +2349,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+6
 
 CHOOSER
 984
@@ -2796,7 +2796,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-1.0
+0.65
 0.05
 1
 NIL
