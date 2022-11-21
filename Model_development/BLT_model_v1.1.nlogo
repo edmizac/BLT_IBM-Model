@@ -515,33 +515,51 @@ to setup-monkeys
 ;  ]
 
     ;option 3 (= Data/Parameter-table.csv)
-; travel
-if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_travel ( 23.43 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
-if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_travel ( 25.44 / 10 ) ]
-if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_travel ( 25.20 / 10 ) ]
-if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_travel ( 25.30 / 10 ) ]
 
-if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_travel ( 32.37 / 10 ) ]
-if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_travel ( 35.97 / 10 ) ]
+    ; travel velocity
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_travel ( 23.43 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_travel ( 25.44 / 10 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_travel ( 25.20 / 10 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_travel ( 25.30 / 10 ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_travel ( 32.37 / 10 ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_travel ( 35.97 / 10 ) ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_travel ( 17.94 / 10 )  ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_travel ( 17.49 / 10 )  ]
+    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_travel ( 39.31 / 10 ) ]
 
-if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_travel ( 17.94 / 10 )  ]
-if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_travel ( 17.49 / 10 )  ]
+    ; forage velocity
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_forage ( 14.06 / 10 ) ]  ; ( BLT mean velocity / patch resolution)
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_forage ( 12.14 / 10 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_forage ( 12.93 / 10 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_forage ( 13.87 / 10 ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_forage ( 16.95 / 10 ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_forage ( 21.3 / 10 ) ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_forage ( 7.51 / 10 )  ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_forage ( 8.83 / 10 )  ]
+    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_forage ( 30.89 / 10 ) ]
 
-if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_travel ( 39.31 / 10 ) ]
+    ; travel angle
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set max_rel_ang_travel_75q ( 67.86 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set max_rel_ang_travel_75q ( 75.63 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set max_rel_ang_travel_75q ( 72.75 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set max_rel_ang_travel_75q ( 59.53 ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set max_rel_ang_travel_75q ( 68.99 ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set max_rel_ang_travel_75q ( 58.76 ) ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set max_rel_ang_travel_75q ( 63.61 )  ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set max_rel_ang_travel_75q ( 47.53 )  ]
+    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set max_rel_ang_travel_75q ( 17.85 ) ]
 
-; foraging
-if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_forage ( 14.06 / 10 ) ]  ; ( BLT mean velocity / patch resolution)
-if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_forage ( 12.14 / 10 ) ]
-if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_forage ( 12.93 / 10 ) ]
-if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_forage ( 13.87 / 10 ) ]
-
-if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_forage ( 16.95 / 10 ) ]
-if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_forage ( 21.3 / 10 ) ]
-
-if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_forage ( 7.51 / 10 )  ]
-if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_forage ( 8.83 / 10 )  ]
-
-if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_forage ( 30.89 / 10 ) ]
+    ; forage angle
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set max_rel_ang_forage_75q ( 68.98 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set max_rel_ang_forage_75q ( 78.99
+    ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set max_rel_ang_forage_75q ( 75.66 ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set max_rel_ang_forage_75q ( 77.22 ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set max_rel_ang_forage_75q ( 89.73  ) ]
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set max_rel_ang_forage_75q ( 63.00) ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set max_rel_ang_forage_75q ( 55.92  )  ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set max_rel_ang_forage_75q ( 51.20 )  ]
+    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set max_rel_ang_forage_75q ( 43.02 ) ]
 
   ]
 
@@ -1123,7 +1141,7 @@ to-report on-feeding-tree?
       print distance tree_target ; for debugging
       ifelse distance tree_target < 0.8 * step_len_travel [
 
-;        print "HERE ***************"
+        print "HERE ***************"
 
         set tree_current tree_target
 
@@ -2078,11 +2096,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2092,10 +2110,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -2349,7 +2367,7 @@ energy-loss-resting
 energy-loss-resting
 -10
 0
--2.5
+-6.0
 0.1
 1
 NIL
@@ -2402,7 +2420,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+1
 
 CHOOSER
 984
@@ -2648,7 +2666,7 @@ SWITCH
 258
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -3201,7 +3219,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 247
@@ -3332,7 +3350,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-50.0
+43.02
 5
 1
 NIL
@@ -3347,7 +3365,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+3.089
 0.1
 1
 NIL
@@ -3362,7 +3380,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+3.931
 0.1
 1
 NIL
@@ -3377,7 +3395,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-50.0
+17.85
 1
 1
 NIL
