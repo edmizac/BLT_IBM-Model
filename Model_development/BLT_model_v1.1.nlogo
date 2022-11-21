@@ -871,10 +871,10 @@ to move-monkeys
 
           ifelse random (2 * duration) < action-time [ ; action time for other than feeding
             ; set ld_tree_target -1  ;; commented out by Ronnald on 14th of July ;; has to be set to -1 otherwise tamarins will come back in the next ld travel cycle
-            print " *********** 2"
+;            print " *********** 2"
             frugivory
           ][
-            print " *********** 1"
+;            print " *********** 1"
             set action-time action-time + 1
             last-action-again
           ]
@@ -1031,15 +1031,15 @@ to frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
       ifelse random (2 * species_time ) > frugivory-time [
-        print "I'm feeding!" ; for debugging
+;        print "I'm feeding!" ; for debugging
         feeding
       ][
         set tree_current -1
-        print "time over -- New feeding tree" ; for debugging
+;        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-      print "New feeding tree" ; for debugging
+;      print "New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1048,15 +1048,15 @@ to frugivory
     set travelmodelist lput 2 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
       ifelse random (2 * species_time ) > frugivory-time [
-        print "I'm feeding!" ; for debugging
+;        print "I'm feeding!" ; for debugging
         feeding
       ][
         set tree_current -1
-        print "time over -- New feeding tree" ; for debugging
+;        print "time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-      print "New long distance feeding tree" ; for debugging
+;      print "New long distance feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1330,10 +1330,10 @@ to to-feeding-tree
         if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * travel_speed [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
           forage
           ;; RANDOM movement while foraging:
-          if random-angle? = TRUE  AND distance tree_target > 0.8 [
+          if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
             rt ( random max-random-angle * 0.7 ) - ( max-random-angle * 0.7 )  ; feeding is less directed than travel
           ]
-          if random-angle? = TRUE  AND distance tree_target > 0.8 [
+          if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
             rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
@@ -1344,7 +1344,7 @@ to to-feeding-tree
 
       ][
 
-        if random-angle? = TRUE  AND distance tree_target > 0.8 [
+        if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
           rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
@@ -1589,7 +1589,10 @@ to sleeping
       move-to tree_target
       set x_UTM [ x_UTM ] of tree_target
       set y_UTM [ y_UTM ] of tree_target
-;      setxy ( [ xcor] of tree_target + 0.01 ) ( [ ycor ] of tree_target + 0.01 ) ; use set timestep 108 to test this
+      ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
+      ; use set timestep 108 to test this
+      set xcor [xcor] of tree_target + 0.01
+      set ycor [ycor] of tree_target + 0.01
 
       set tree_current tree_target
       set tree_target -1
