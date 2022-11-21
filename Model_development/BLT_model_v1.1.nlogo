@@ -836,11 +836,12 @@ to move-monkeys
 
   ;; BLT ROUTINE
 
-    if timestep = 0
-        [ set tree_current -1
-          set DPL 0 ; set daily path length to 0 every day
-          set going-sleeping? FALSE
-          remove_trees_surrounding ; to avoid feeding in the closest tree
+    if timestep = 0 [
+      set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
+      set tree_current -1
+      set DPL 0 ; set daily path length to 0 every day
+      set going-sleeping? FALSE
+      remove_trees_surrounding ; to avoid feeding in the closest tree
     ]
 
     if timestep = 1 [
@@ -2196,7 +2197,7 @@ energy-from-fruits
 energy-from-fruits
 0
 30
-4.0
+5.0
 1
 1
 NIL
@@ -2305,7 +2306,7 @@ energy-loss-traveling
 energy-loss-traveling
 -10
 0
--2.0
+-3.0
 0.1
 1
 NIL
