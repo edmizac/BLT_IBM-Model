@@ -1,8 +1,9 @@
 ; ==== Black lion tamarin model ============
-; Eduardo Zanette & Ronald Bialozyt
+; Eduardo Zanette & Ronald Bialozyt. Nov. 2022
 ; Two travel modes: long-distance (target selected when energy > lvl 2 and travels to this direction up to when energy < lvl 1) and short-distance (when energy < lvl 1)
-; Random angle at each step (random-angle? switch)
-; Phenology values (specific energy and species-time values on and off by switcher phenology-on? Stil need to add phenology cycles though)
+; Parameterized step model: step length and turning angles
+; Parameterized p_foraging_while_traveling: % foraging / ( %foraging + %traveling)
+; Parameterized feeding-bout: tree species-specific energy_species and species_time values on and off by switcher feedingbout-on? Stil need to add phenology cycles though.
 ; ------------------------------------------------
 
 extensions [ gis r palette pathdir] ; using the GIS extension of NetLogo
@@ -515,18 +516,18 @@ to setup-monkeys
 
     ;option 3 (= Data/Parameter-table.csv)
 ; travel
-if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_forage ( 23.43 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
-if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_forage ( 25.44 / 10 ) ]
-if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_forage ( 25.20 / 10 ) ]
-if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_forage ( 25.30 / 10 ) ]
+if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_travel ( 23.43 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
+if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_travel ( 25.44 / 10 ) ]
+if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_travel ( 25.20 / 10 ) ]
+if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_travel ( 25.30 / 10 ) ]
 
-if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_forage ( 32.37 / 10 ) ]
-if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_forage ( 35.97 / 10 ) ]
+if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_travel ( 32.37 / 10 ) ]
+if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_travel ( 35.97 / 10 ) ]
 
-if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_forage ( 17.94 / 10 )  ]
-if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_forage ( 17.49 / 10 )  ]
+if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_travel ( 17.94 / 10 )  ]
+if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_travel ( 17.49 / 10 )  ]
 
-if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_forage ( 39.31 / 10 ) ]
+if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_travel ( 39.31 / 10 ) ]
 
 ; foraging
 if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set step_len_forage ( 14.06 / 10 ) ]  ; ( BLT mean velocity / patch resolution)
@@ -2647,7 +2648,7 @@ SWITCH
 258
 print-step?
 print-step?
-1
+0
 1
 -1000
 
@@ -3361,7 +3362,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.0
+2.343
 0.1
 1
 NIL
