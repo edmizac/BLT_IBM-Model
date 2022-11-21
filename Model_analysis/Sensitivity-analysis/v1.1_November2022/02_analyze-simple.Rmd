@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library("here")
 library("nlrx")
 library("ggplot2")
+library("dplyr")
+library("readr")
 
 
 ```
@@ -23,20 +25,30 @@ trees_to_dfs <- list.files(pathfiles, pattern = ".csv")
 unwanted <- list.files(pathfiles, pattern = "all.csv")
 trees_to_dfs <- base::setdiff(trees_to_dfs, unwanted) #https://stackoverflow.com/questions/31590730/list-files-in-r-that-do-not-match-a-pattern
 
-i <- 1
-for (tf in trees_to_dfs) {
+# i <- 20
+# for (tf in trees_to_dfs) {
   
-  tf <- trees_to_dfs[i]
-  tf_csv <- paste0(pathfiles, "/", tf)
+  # tf <- trees_to_dfs[i]
+  # tf_csv <- paste0(pathfiles, "/", tf)
+  # csv <- read_csv(tf_csv)
   
-  if (i == 1) {
-    trees <- readr::read_csv(tf_csv)
-  }
+  tf_csv <- paste0(pathfiles, "/", trees_to_dfs)
   
-  trees <- dplyr::bind_rows(trees, trees)
+  trees <- trees_to_dfs %>%
+    purrr::map_df(~read_csv(paste0(pathfiles, "/", .), col_types = cols(.default = "?", id_day_all = "c"))) %>%
+    mutate(species = case_when(
+      
+    ))
+    dplyr::select(-c("id_day_all", "sp"))
   
-  i <- i + 1
-}
+  # if (i == 1) {
+  #   csv1 <- readr::read_csv(tf_csv)
+  # }
+  # 
+  # trees <- dplyr::bind_rows(trees, csv1)
+  
+  # i <- i + 1
+# }
 
 ```
 
