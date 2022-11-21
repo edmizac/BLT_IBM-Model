@@ -12,8 +12,6 @@ extensions [ gis r palette pathdir] ; using the GIS extension of NetLogo
 turtles-own [
   x_UTM y_UTM
   X_coords Y_coords ; X and Y list of coordinates (x_UTM and y_UTM) for home range calculation with the r extension in the end of each run (days = n_days)
-
-
 ]
 
 ; trees
