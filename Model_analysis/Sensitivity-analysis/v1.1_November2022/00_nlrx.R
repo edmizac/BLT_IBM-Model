@@ -132,8 +132,8 @@ for (i in i:nrow(param.table)) {
   no_days_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
-    dplyr::select(ndays) %>% 
-    pull() + 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
+    dplyr::select(ndays) # %>% 
+    # pull() + 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
   
   simultime_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
@@ -166,18 +166,21 @@ nl@experiment <- experiment(expname = expname,
                             metrics.turtles = list("monkeys" = c(#"x_UTM", "y_UTM",
                                                                  # "xcor", "ycor",
                                                                  # "behavior",
-                                                                 "energy", 
-                                                                 "DPL", 
-                                                                 "KDE_values"
+                                                                 "X_coords", "Y_coords", # to plot the routes without running another nlrx experiment
+                                                                 "energy", # final energy
+                                                                 "DPL_d", #DPL is set to 0 everyday 
+                                                                 "KDE_values", # KDE home range size values calculated by the r extension and amt package
                                                                  # ""
                                                                  #"travel_mode "
                                                                  ),
                                                    "feeding-trees" = c(
+                                                     "x_UTM", "y_UTM",
                                                      "id-tree",
                                                      "visitations"
                                                     ),
                                                    
                                                    "sleeping-trees" = c(
+                                                     "x_UTM", "y_UTM",
                                                      "id-tree",
                                                      "visitations"
                                                    ),

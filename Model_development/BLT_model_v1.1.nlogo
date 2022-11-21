@@ -887,6 +887,7 @@ to move-monkeys
     if timestep = 0 [
       ;set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
       set tree_current -1
+      set DPL_d lput DPL DPL_d
       set DPL 0 ; set daily path length to 0 every day
       set going-sleeping? FALSE
       remove_trees_surrounding ; to avoid feeding in the closest tree
