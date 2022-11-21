@@ -1080,7 +1080,7 @@ to-report on-feeding-tree?
 
         set tree_current tree_target
 
-        set dist-traveled distance tree_target
+        set dist-traveled dist-traveled + distance tree_target
         move-to tree_target
 
         ; make UTM of tamarins match UTM of trees (like empirical data collection):
@@ -1131,7 +1131,7 @@ to-report on-feeding-tree?
 
         set tree_current ld_tree_target
 
-        set dist-traveled distance tree_target
+        set dist-traveled dist-traveled + distance tree_target
         move-to tree_target
 
         set x_UTM [ x_UTM ] of tree_current
@@ -1596,7 +1596,7 @@ to sleeping
 
     if distance tree_target < 2 * travel_speed * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
 
-      set dist-traveled distance tree_target
+      set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
       set x_UTM [ x_UTM ] of tree_target
       set y_UTM [ y_UTM ] of tree_target
@@ -2349,7 +2349,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-6
+5
 
 CHOOSER
 984
@@ -2796,7 +2796,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.25
+1.0
 0.05
 1
 NIL
