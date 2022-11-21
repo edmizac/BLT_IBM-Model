@@ -689,6 +689,7 @@ to step ; FOR DEBUG PURPOSES ONLY
       ]
       type "DPL_d: " print DPL_d
       type "DPL (m): " print DPL * 10
+      type "dist-traveled: " print dist-traveled
 ;      ifelse travel_mode = "short_distance" [
 ;        ; print distance tree_target
 ;      ][
@@ -804,7 +805,7 @@ to move-monkeys
 
   ;; BLT ROUTINE
 
-    if timestep = 1
+    if timestep = 0
         [ set tree_current -1
           set DPL 0 ; set daily path length to 0 every day
           set going-sleeping? FALSE
@@ -952,7 +953,7 @@ end
 
 to avoid-full-matrix
 
-;  print "I'm in the middle of the sugarcane!"
+  print "I'm in the middle of the sugarcane!"
   ;    set color "red"
 
   ; choose closest patch within radius that is not matrix
@@ -974,7 +975,7 @@ end
 
 to avoid-some-matrix
 ;  if ( any? front_patches [habitat = "matrix"] ) [
-;    print "there's some matrix in front of me!"
+    print "there's some matrix in front of me!"
 ;    set color orange
 
     let d tree_target_mem ; d is a local variable and tree_target_mem is a monkey variable; the patch_avoid_matrix can't be set because it is within the patch context and patche can't access monkey variables
@@ -987,7 +988,7 @@ to avoid-some-matrix
       set patch_avoid_matrix one-of ( ( (candidate_patches ) with [ habitat != "matrix"] ) with-min [distance d] )
 
     ][
-      ask candidate_patches [ set pcolor green ]
+      ask candidate_patches [ set pcolor green + 4 ]
       ;    type "CANDIDATE PATCHES: " print candidate_patches
       ;    type "distance of patches to monkey target: " ask candidate_patches [ print distance d ]
 
@@ -1071,12 +1072,16 @@ to-report on-feeding-tree?
 
   if travel_mode = "short_distance" [   ;; short distance frugivory
     ifelse action = "travel" OR action = "forage" AND tree_target != -1 [
-      type "on-feeding-tree? reporter distance to target : " print distance tree_target ; for debugging
+;      type "on-feeding-tree? reporter distance to target : "
+      print distance tree_target ; for debugging
       ifelse distance tree_target < 0.8 * travel_speed [
 
 ;        print "HERE ***************"
 
         set tree_current tree_target
+
+        set dist-traveled distance tree_target
+        move-to tree_target
 
         ; make UTM of tamarins match UTM of trees (like empirical data collection):
         set x_UTM [ x_UTM ] of tree_current
@@ -1104,7 +1109,7 @@ to-report on-feeding-tree?
         report false
       ]
     ][
-      print "Action != travel OR tree_target = -1" ; for debugging
+;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
         print "ON tree"
         report true
@@ -1119,11 +1124,15 @@ to-report on-feeding-tree?
   if travel_mode = "long_distance" [    ;; long distance frugivory
 
     ifelse action = "travel" OR action = "forage" AND ld_tree_target != -1 [
-      type "on-feeding-tree? reporter distance to target : " print distance ld_tree_target ; for debugging
+;      type "on-feeding-tree? reporter distance to target : "
+      print distance ld_tree_target ; for debugging
       ifelse distance ld_tree_target < 0.8 * travel_speed [
         print "distance to ld_tree_target is < 80%"
 
         set tree_current ld_tree_target
+
+        set dist-traveled distance tree_target
+        move-to tree_target
 
         set x_UTM [ x_UTM ] of tree_current
         set y_UTM [ y_UTM ] of tree_current
@@ -1145,6 +1154,7 @@ to-report on-feeding-tree?
         report false
       ]
     ][
+;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
         print "ON tree"
         report true
@@ -1278,7 +1288,7 @@ to to-feeding-tree
           forage
           ;; RANDOM movement while foraging:
           if random-angle? = TRUE  AND distance tree_target > 0.8 [
-            rt ( random max-random-angle * 0.7 ) - ( max-random-angle * 0.7 )  ; feeding is less directed than travel
+            rt ( random max-random-angle * 0.7 ) - ( random max-random-angle * 0.7 )  ; feeding is less directed than travel
           ]
           travel
           set action "travel"
@@ -1289,7 +1299,7 @@ to to-feeding-tree
       ][
 
         if random-angle? = TRUE  AND distance tree_target > 0.8 [
-          rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+          rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
         set action "travel"
@@ -1299,7 +1309,7 @@ to to-feeding-tree
       ]
     ][
       if random-angle? = TRUE  AND distance tree_target > 0.8 [
-        rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+        rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
       ]
       travel
       set action "travel"
@@ -1331,10 +1341,10 @@ to to-feeding-tree
           forage
           ;; RANDOM movement while foraging:
           if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
-            rt ( random max-random-angle * 0.7 ) - ( max-random-angle * 0.7 )  ; feeding is less directed than travel
+            rt ( random max-random-angle * 0.7 ) - ( random max-random-angle * 0.7 )  ; feeding is less directed than travel
           ]
           if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
-            rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+            rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
           set action "travel"
@@ -1345,7 +1355,7 @@ to to-feeding-tree
       ][
 
         if random-angle? = TRUE  AND distance ld_tree_target > 0.8 [
-          rt ( random max-random-angle / 2 ) - ( max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
+          rt ( random max-random-angle / 2 ) - ( random max-random-angle / 2 )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
         set action "travel"
@@ -1586,6 +1596,7 @@ to sleeping
 
     if distance tree_target < 2 * travel_speed * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
 
+      set dist-traveled distance tree_target
       move-to tree_target
       set x_UTM [ x_UTM ] of tree_target
       set y_UTM [ y_UTM ] of tree_target
@@ -1625,7 +1636,7 @@ to sleeping
 
     ;; RANDOM movement while traveling:
     if random-angle? = TRUE  AND distance tree_target > 1.5 [
-      rt ( random max-random-angle / 3 ) - ( max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
+      rt ( random max-random-angle / 3 ) - ( random max-random-angle / 3 ) ; tamarins show more directed behavior when heading to sleeping sites, so here we divide by 3
       ]
 
     ;-------------------- = travel
@@ -2338,7 +2349,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-7
+6
 
 CHOOSER
 984
@@ -2370,7 +2381,7 @@ step_forget
 step_forget
 0
 1000
-102.0
+30.0
 1
 1
 NIL
@@ -2785,7 +2796,7 @@ p-foraging-while-traveling
 p-foraging-while-traveling
 0
 1
-0.8
+0.25
 0.05
 1
 NIL
