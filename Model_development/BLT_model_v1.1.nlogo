@@ -1783,7 +1783,10 @@ to sleeping
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 
+
       set DPL_d lput ( precision DPL 2 ) DPL_d
+      let a "_" ; to make it possible to analyze on nlrx
+      set DPL_d lput a DPL_d
       set DPL 0 ; set daily path length to 0 every day
 
       output-type "*simulation-time* "
@@ -2098,7 +2101,18 @@ to calc-homerange
   r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
 ;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
   r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
-  r:eval "db_nest <- db_nest %>% mutate(area = area / 10000)"
+  r:eval "db_nest <- db_nest %>% mutate(area = area / 10000)" ; values in ha
+
+  ; for outputting on nlrx:
+  ; home range
+  r:eval "db_nest$area <- paste0(db_nest$area, '_')"
+  ; coordinates
+;  r:eval "db$X <- paste0(db$X, '_')"
+;  r:eval "db$Y <- paste0(db$Y, '_')"
+;  r:eval "db$id <- paste(db$id, '_')"
+
+;  print "db: "
+;  show r:get "db"
 
   print "db_nest: "
   show r:get "db_nest"
@@ -2403,7 +2417,7 @@ INPUTBOX
 601
 82
 no_days
-6.0
+5.0
 1
 0
 Number
