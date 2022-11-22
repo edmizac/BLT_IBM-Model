@@ -43,8 +43,6 @@ suz_ylim_set = c(7480800, 7481600) # 7480990,
 
 
 # Plots
-theme_set(theme_bw(base_size = 35))
-
 simulated_shapes <- c("foraging" = 1,
                       "frugivory" = 19, 
                       "resting" = 1, 
@@ -61,63 +59,212 @@ simulated_colors <- c("foraging" = "magenta",
 load(here("Data", "06_sf-plots.RData"))
 
 
+# ggplot theme
+theme_set(theme_bw(base_size = 15))
 
+db <- db1
 
 
 ## Plot example runs -------------------------
 
 # 1) Guareí
-rseed <- db$random_seed[1]
 group <- "Guareí"
-breed <- "seeds"
+rseed <- db %>% 
+  dplyr::filter(study_area == group) %>% 
+  dplyr::select(random_seed) %>%
+  pull(1) %>% 
+  sample(size = 1)
+breed_ <- "seeds"
 
 
 db_filt <- db %>%
   dplyr::filter(
     study_area == group &
-      breed == breed &
+      breed == breed_ &
       random_seed == rseed
   )
 
 # gua.p1  
 gua.p1 <- gua.sf +
-  geom_point(data = db_filt, aes(x = x_UTM, y = y_UTM, color = species,
+  geom_point(data = subset(db_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
+             aes(x = x, y = y, color = species,
                                  size = SDD
                                  # shape = disp_day
                                  ),
                                  
                                   alpha = 0.2) +
-  scale_shape_manual(17) +
-  ggtitle("Simulated seed dispersal coordinates")
+  # scale_shape_manual(17) +
+  ggtitle(paste0("Simulated seed dispersal coordinates", 
+                 " (", unique(db_filt$feeding_trees_scenario), ")")
+  )
 
 gua.p1
 
 # gua.p2
+# target <- c("feeding-trees", "sleeping-trees")
 trees.gua <- db %>% 
   dplyr::filter(
     study_area == group &
-      breed == "feeding-trees" &
+      breed == "feeding-trees" | breed == "sleeping-trees" &
+      # breed %in% target &
+      random_seed == rseed
+  )
+# trees.gua$breed %>% as.factor %>%  levels()
+
+gua.sf + 
+  geom_point(data = subset(db_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
+             aes(x = x, y = y, color = species,
+                 size = SDD
+                 # shape = disp_day
+             ),
+             
+             alpha = 0.2) +
+  # scale_shape_manual(17) +
+  ggtitle(paste0("Simulated seed dispersal coordinates", 
+                 " (", unique(db_filt$feeding_trees_scenario), ")")
+  ) +
+  
+  geom_point(data = trees.gua, # they don't disperse Syagrus (this has to be corrected in the model)
+             aes(x = x, y = y, #group = breed,
+                 # size = breed,
+                 shape = breed
+             ),
+             
+             alpha = 0.2) +
+  scale_shape_manual(values = c(1, 12))
+  # scale_size_manual(values = c(1, 3))
+  
+
+  # gua.p2
+# 
+# geom_point(data = sleeping_trees_gua,
+#            aes(x = x_UTM, y = y_UTM, color = species))
+
+# 2) Santa Maria
+group <- "Santa Maria"
+rseed <- db %>% 
+  dplyr::filter(study_area == group) %>% 
+  dplyr::select(random_seed) %>%
+  pull(1) %>% 
+  sample(size = 1)
+breed_ <- "seeds"
+
+
+db_filt <- db %>%
+  dplyr::filter(
+    study_area == group &
+      breed == breed_ &
       random_seed == rseed
   )
 
-gua.sf +
-  # geom_point(data = db_filt, aes(x = x_UTM, y = y_UTM, color = species,
-  #                                size = SDD
-  #                                # shape = disp_day
-  # ),
-  # 
-  # alpha = 0.2) +
-  # # scale_shape_manual(17) +
-  # ggtitle("Simulated seed dispersal coordinates") +
-  # 
-  geom_point(data = trees.gua,
-             aes(x = x_UTM, y = y_UTM, color = species)) +
-  scale_shape_manual(values = c(17))
+# gua.p1  
+sma.p1 <- sma.sf +
+  geom_point(data = subset(db_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
+             aes(x = x, y = y, color = species,
+                 size = SDD
+                 # shape = disp_day
+             ),
+             
+             alpha = 0.2) +
+  # scale_shape_manual(17) +
+  ggtitle(paste0("Simulated seed dispersal coordinates", 
+                 " (", unique(db_filt$feeding_trees_scenario), ")")
+  )
 
-gua.p2
+sma.p1
 
-geom_point(data = sleeping_trees_gua,
-           aes(x = x_UTM, y = y_UTM, color = species))
+# sma.p2
+# target <- c("feeding-trees", "sleeping-trees")
+trees.sma <- db %>% 
+  dplyr::filter(
+    study_area == group &
+      breed == "feeding-trees" | breed == "sleeping-trees" &
+      # breed %in% target &
+      random_seed == rseed
+  )
+# trees.sma$breed %>% as.factor %>%  levels()
+
+sma.sf + 
+  geom_point(data = subset(db_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
+             aes(x = x, y = y, color = species,
+                 size = SDD
+                 # shape = disp_day
+             ),
+             
+             alpha = 0.2) +
+  # scale_shape_manual(17) +
+  ggtitle(paste0("Simulated seed dispersal coordinates", 
+                 " (", unique(db_filt$feeding_trees_scenario), ")")
+  ) +
+  
+  geom_point(data = trees.sma, # they don't disperse Syagrus (this has to be corrected in the model)
+             aes(x = x, y = y, #group = breed,
+                 # size = breed,
+                 shape = breed
+             ),
+             
+             alpha = 0.2) +
+  scale_shape_manual(values = c(1, 12))
+# scale_size_manual(values = c(1, 3))
+
+
+
+## SDD -------------------------
+rm(group)
+db <- db %>% 
+  rename(group= study_area,
+         month = feeding_trees_scenario)
+db_sdd <- db %>% 
+  dplyr::filter(breed == "seeds") %>% 
+  group_by(group, random_seed)
+# db_sdd <- db_sdd %>% 
+#   filter(SDD > 0)
+db_sdd <- db_sdd %>%
+  dplyr::filter(disp_day == "sameday") # next_day SDD is all 0 (check model)
+
+
+## Density Option 1: by day of dispersal
+# By group
+
+db_sdd %>% ggplot(
+  aes(x = SDD, fill = group, group = group)
+) +
+  geom_density(alpha = 0.4) +
+  xlab("SDD (in meters)") +
+  facet_wrap(~disp_day, nrow = 2)
+
+# Save plot
+# ggsave(paste0(path, 'SDD_disp_day_By-group_density_sim.png'), height = 3.5, width = 6)
+
+## Boxplot
+# By group
+db_sdd %>%
+  ggplot() +
+  aes(x = group, y = SDD, fill = group) +
+  geom_violin() +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
+  theme(axis.title.x = element_blank()) +
+  facet_wrap(~disp_day, nrow = 2) +
+  ylab("SDD (m)") +
+  ylim(0, 1000)
+
+# Save plot
+# ggsave(paste0(path, 'SDD_disp_day_By-group_violin.png'), height = 2.5, width = 7)
+
+
+db_sdd %>% ggplot(
+  aes(x = group, y = SDD, color = month)
+) +
+  geom_boxplot() +
+  geom_point(
+    position = position_jitterdodge(jitter.width = .05) # only way of dodging the points and jitter it
+  ) +
+  ylab("SDD (in meters)") +
+  # facet_wrap(~disp_day, nrow = 2) +
+  scale_color_viridis_d()
+
+# Save plot
+ggsave(paste0(path, 'SDD_disp_day_By-month_boxplot.png'), height = 2.5, width = 7)
 
 
 

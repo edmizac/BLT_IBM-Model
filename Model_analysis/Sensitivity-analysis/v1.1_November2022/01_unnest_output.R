@@ -3,16 +3,18 @@ library("nlrx")
 library("ggplot2")
 library("dplyr")
 library("stringr")
+library("stringi")
 library("vctrs")
+library("nlrx")
 
 
 path <- here("Model_analysis", "Sensitivity-analysis",
              "v1.1_November2022", "temp")
 
 nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
-                    "v1.1_November2022", "temp", "v1.1_Taquara_Jan_simple-816064956_tempRDS.Rdata"))
+                    "v1.1_November2022", "temp", "v1.1_Taquara_Jan_simple1199731059_tempRDS.Rdata"))
                     # "v1.1_November2022", "temp", "v1.1_Guareí_Aug_simple33642352_tempRDS.Rdata"))
-db  <-  unnest_simoutput(nl)
+db1  <-  unnest_simoutput(nl)
 
 
 
@@ -51,7 +53,7 @@ for (f in nls_to_df) {
     db <- unnest_simoutput(nl_file)
   }
   
-  db <- dplyr::left_join(db, unnest_simoutput(nl_file))
+  db <- dplyr::bind_rows(db, unnest_simoutput(nl_file))
   
   i <- i + 1
 }
@@ -63,8 +65,15 @@ db %>% str()
 
 db$KDE_values
 
-db <- db %>% 
-  # dplyr::rename_all(~str_replace_all(., c("-" = "_", "\\s+" = "_"))) %>% # Remove - and space characters.
+db$`random-seed`
+
+# db1 <- db %>% dplyr::filter(breed == "seeds" & `random-seed` == "-1934277811" )
+# db1$x_UTM
+# db1$x_UTM.x
+# db1$x_UTM.y
+
+db1 <- db %>% 
+  dplyr::rename_all(~str_replace_all(., c("-" = "_", "\\s+" = "_"))) %>% # Remove - and space characters.
   mutate(species = case_when(species == "[Abutaselloana]" ~ "Abuta selloana",             
                              species == "[Allophylusedulis]" ~ "Allophylus edulis",          
                              species == "[Campomanesiaxanthocarpa]" ~ "Campomanesia xanthocarpa",   
@@ -106,28 +115,28 @@ db <- db %>%
     SDD = SDD * 10  # SDD is in patches and 1 patch = 10 m
   )
 
-db <- db %>% 
-  tidyr::unite(x_UTM, x_UTM.x, x_UTM.y, remove = TRUE, na.rm = TRUE) %>% 
-  tidyr::unite(y_UTM, y_UTM.x, y_UTM.y, remove = TRUE, na.rm = TRUE)  %>% 
-  tidyr::unite(visitations.x, visitations.y, remove = TRUE, na.rm = TRUE)  %>% 
-  tidyr::unite(id_tree.x, id_tree.y, remove = TRUE, na.rm = TRUE)  %>% 
+
+db1 <- db1 %>% 
+  tidyr::unite(x_UTM, x_UTM.x, x_UTM.y, col = "x", remove = TRUE, na.rm = TRUE) %>% 
+  tidyr::unite(y_UTM, y_UTM.x, y_UTM.y, col = "y", remove = TRUE, na.rm = TRUE)  %>% 
+  tidyr::unite(visitations.x, visitations.y, col = "visitations", remove = TRUE, na.rm = TRUE)  %>% 
+  tidyr::unite(id_tree.x, id_tree.y, col = "id_tree", remove = TRUE, na.rm = TRUE) %>% 
   
-  # mutate(x = case_when(is.na(x_UTM) ~ x_UTM.x
-  #                      TRUE  ~ x_UTM))
-  
-  dplyr::rename(
-    x = x_UTM,
-    y = y_UTM,
-    visitations = visitations.x,
-    id_tree = id_tree.x
-  ) %>% 
   
   dplyr::select(-c("breed.x", "breed.y")) %>% 
-  dplyr::select(-c("USER", `feedingbouton?`, `step_model_param?`, `gtt_param?`, `p_forage_param?`))
+  dplyr::select(-c("USER", `feedingbout_on?`, `step_model_param?`, `gtt_param?`, `p_forage_param?`))
 
+
+db1 %>% str()
+db1 <- db1 %>% 
+  mutate(
+    x = as.numeric(x),
+    y = as.numeric(y)
+    
+  )
 
 # Write csv
-# db %>%
+# db1 %>%
 #   write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
 #             row.names = FALSE)
 

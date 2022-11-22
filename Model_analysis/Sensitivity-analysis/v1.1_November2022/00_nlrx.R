@@ -156,7 +156,7 @@ nl@experiment <- experiment(expname = expname,
                             metrics.turtles = list("monkeys" = c(#"x_UTM", "y_UTM",
                                                                  # "xcor", "ycor",
                                                                  # "behavior",
-                                                                 "X_coords", "Y_coords", # to plot the routes without running another nlrx experiment
+                                                                 # "X_coords", "Y_coords", # to plot the routes without running another nlrx experiment
                                                                  "energy", # final energy
                                                                  "DPL_d", #DPL is set to 0 everyday 
                                                                  "KDE_values" # KDE home range size values calculated by the r extension and amt package
@@ -166,12 +166,14 @@ nl@experiment <- experiment(expname = expname,
                                                    
                                                    "feeding-trees" = c(
                                                      "x_UTM", "y_UTM",
+                                                     "species",
                                                      "id-tree",
                                                      "visitations"
                                                     ),
                                                    
                                                    "sleeping-trees" = c(
                                                      "x_UTM", "y_UTM",
+                                                     "species",
                                                      "id-tree",
                                                      "visitations"
                                                    ),
