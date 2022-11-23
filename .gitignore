@@ -3,11 +3,12 @@
 .RData
 .Ruserdata
 .png
-
+~*
+*~
 
 # rmd related:
 *.log
-*.tex
+# *.tex
 
 # GIS related:
 .cpg
@@ -24,6 +25,7 @@
 # Folders:
 /Data/Shapefiles/*
 /Data/Movement/Trees-Guarei/*
+/Data/Trees-Guarei/*
 !/Data/Movement/Trees-Guarei/Tree-points-unique.R
 /Data/Movement/Resource-trees/*
 !*/Tree-points-unique.R
