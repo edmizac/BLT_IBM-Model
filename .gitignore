@@ -3,16 +3,65 @@
 .RData
 .Ruserdata
 .png
+~*
+*~
 
+# rmd related:
+*.log
+# *.tex
+
+# GIS related:
 .cpg
 .qpj
 .shx
 .dbf
 .prj
 .shp
+.asc
+
+# drawio related
+.bkp
 
 # Folders:
-/Data
+/Data/Shapefiles/*
+/Data/Movement/Trees-Guarei/*
+/Data/Trees-Guarei/*
+!/Data/Movement/Trees-Guarei/Tree-points-unique.R
+/Data/Movement/Resource-trees/*
+!*/Tree-points-unique.R
+!*/Tree-points-to-shapefile.R
+/Model_development/Model-cleaning/runtime
+/Model_development/gis-extension/
+/Documentation/2022-05-12_Talk-EcoMod/
+Documentation/Brazilian_Congress_of_Primatology/
+
+# Specific files in specific folders:
+/Model_analysis/Sensitivity-analysis/**.csv
+/Model_analysis/Sensitivity-analysis/temp/
+/Model_analysis/Sensitivity-analysis/**.rds
+/Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/HR_values_FF_2022-08-06d.csv
+/Model_analysis/Sensitivity-analysis/v1.1_August2022/**.rds
+/Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/**.rds
+
+/Model_analysis/Sensitivity-analysis/v1.1_November2022/temp/**
+/Model_analysis/Sensitivity-analysis/v1.1_November2022/**.rds
+
+
+Data/Movement/Resource-trees/**.dbf
+Data/Movement/Resource-trees/**.prj
+Data/Movement/Resource-trees/**.shp
+Data/Movement/Resource-trees/**.shx
+
+Data/Seed_dispersal/Curated/**.png
+Data/Seed_dispersal/Curated/Param_siminputrow/**.png
+Data/Seed_dispersal/Curated/Param_all-data/**.png
+Data/Seed_dispersal/Curated/Validation/**.png
+
+Data/Movement/Curated/**.png
+Data/Movement/Curated/Param_siminputrow/**.png
+Data/Movement/Curated/Param_all-data/**.png
+Data/Movement/Curated/Validation/**.png
+
 
 # Temporary files
 **/runtime
@@ -20,6 +69,6 @@ runtime/
 **.tmp.**
 /locations_*
 
-Model_development/Model-cleaning/runtime
-Model_development/Model-cleaning/runtime
-Model_development/Model-cleaning/runtime
+
+
+

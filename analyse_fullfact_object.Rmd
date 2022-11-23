@@ -1,0 +1,142 @@
+---
+title: "Analysis full factorial nlrx output of BLT simumlation"
+author: "Ronald Bialozyt"
+date: "4th August 2022"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+library("data.table")
+library("dplyr")
+library("ggplot2")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r sim_out, eval=FALSE}
+nl.out <- readRDS(paste0("Model_analysis/FullFactorial-analysis/"
+                       , "morris_2022-08-04_phenology-off_small.rds"))
+sim_out <- nl.out@simdesign@simoutput
+monkeys <- data.table::rbindlist(sim_out$metrics.monkeys)
+monkeys$agent <- NULL
+monkeys$dist_traveled <- monkeys$`dist-traveled` * 28.29
+monkeys$`dist-traveled` <- NULL
+sim_out$metrics.monkeys <- NULL
+sim_out <- data.table::data.table(sim_out)
+names(sim_out) <- c("run_nr", "step_forget", "visual"
+                  , "p_foraging", "duration", "random_seed"
+                  , "step", "timestep", "day", "sim_row")
+dt_bs <- cbind(sim_out, monkeys)
+rm(sim_out, monkeys, nl.out)
+runs <- nrow(dt_bs[ unique(sim_row) ])
+```
+
+There are `r runs` runs using the combination of the values of 
+`r names(dt_bs)[2:6]`.
+
+```{r bs_table, results='asis'}
+val_step_forget <- sort(unique(dt_bs$step_forget))
+val_p_foraging  <- sort(unique(dt_bs$p_foraging))
+val_duration    <- sort(unique(dt_bs$duration))
+val_visual      <- sort(unique(dt_bs$visual))
+val_trees_reset <- sort(unique(dt_bs$trees_reset))
+val_random_seed <- sort(unique(dt_bs$random_seed))
+
+tt <- cbind("step_forget", paste(sprintf("%4.2f", val_step_forget)
+                               , collapse = ", "))
+tt <- rbind(tt, cbind("p_foraging", paste(sprintf("%4.2f", val_p_foraging)
+                                        , collapse = ", ")))
+tt <- rbind(tt, cbind("duration",   paste(sprintf("%4.2f", val_duration)
+                                        , collapse = ", ")))
+tt <- rbind(tt, cbind("visual",     paste(sprintf("%4.2f", val_visual)
+                                        , collapse = ", ")))
+tt <- rbind(tt, cbind("step_forget", paste(sprintf("%4.2f", val_step_forget)
+                                         , collapse = ", ")))
+tt <- as.data.frame(tt)
+names(tt) <- c("Parameter", "Values")
+print(xtable::xtable(tt, caption = paste("The parameters altered in the behavior"
+                                       , "space runs and their corresponding values."))
+      , digits = c(0)
+      , caption.placement = "top"
+      , booktabs = TRUE)
+```
+```{r combinations}
+run_comb <- unique(dt_bs[ , .(step_forget, visual, trees_reset, p_foraging, duration)])
+setkey(run_comb, cols = "step_forget", "visual", "trees_reset", "p_foraging"
+                      , "duration")
+run_comb
+```
+```{r xy_plot, fig.cap="Location points of tamarin during on simulation"}
+dats <- dt_bs[step_forget == val_step_forget[1] & sim_row == 1 & day == 1 &
+             random_seed == -1443516878, .(x_UTM, y_UTM), ]
+plot(dats
+     , pch = 19, cex = 0.5
+     , col = "red" 
+     , type = "p"
+     , main = paste(nrow(dats), "points")) 
+lines(dats
+     , col = "green"
+     , type = "l"
+     ) 
+```
+
+
+
+```{r bs_step_forget, fig.cap="Boxplot according to 'step_forget'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ 
+    p_foraging == val_p_foraging[1]
+    & duration == val_duration[1]
+    & visual == val_visual[1]
+    , sum(dist_traveled) , by = .(step_forget, sim_row, random_seed, day)]
+tt |> group_by(step_forget) |> rename(distance = V1) |> 
+ggplot2::ggplot( aes(x = step_forget, y = distance, group = step_forget)) + geom_boxplot(width=20)
+
+```
+
+```{r p_foraging, fig.cap="Boxplot according to 'p_foraging'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ step_forget == val_step_forget[1]
+#    p_foraging == val_p_foraging[1]
+    & duration == val_duration[1]
+    & visual == val_visual[1]
+             , sum(dist_traveled) , by = .(p_foraging, sim_row, random_seed, day)]
+tt <- tt %>% group_by(p_foraging) %>% rename(distance = V1)
+ggplot2::ggplot(tt, aes(x = p_foraging, y = distance, group = p_foraging)) + geom_boxplot(width=20)
+
+```
+
+```{r bs_duration, fig.cap="Boxplot according to 'duration'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ step_forget == val_step_forget[1]
+    & p_foraging == val_p_foraging[1]
+#    & duration == val_duration[1]
+    & visual == val_visual[1]
+             , sum(dist_traveled) , by = .(duration, sim_row, random_seed, day)]
+tt %>% group_by(duration) %>% rename(distance = V1) %>% 
+ggplot2::ggplot( aes(x = duration, y = distance, group = duration)) + geom_boxplot(width=20)
+
+```
+
+```{r bs_visual, fig.cap="Boxplot according to 'visual'."}
+# dt_sf_long <- data.table::melt(dt_bs_sf, id=2:6, measure = "dist_traveled")
+tt <- dt_bs[ step_forget == val_step_forget[1]
+    & p_foraging == val_p_foraging[1]
+    & duration == val_duration[1]
+#    & visual == val_visual[1]
+             , sum(dist_traveled) , by = .(visual, sim_row, random_seed, day)]
+tt %>% group_by(visual) %>% rename(distance = V1) %>% 
+ggplot2::ggplot( aes(x = visual, y = distance, group = visual)) + 
+  geom_boxplot(width=20)
+
+```
+
