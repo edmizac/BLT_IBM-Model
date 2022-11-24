@@ -71,6 +71,12 @@ monkeys-own [
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
   KDE_values ; output of amt package in calc-homerange
 
+  ; activity budget
+  p_feeding
+  p_foraging
+  p_traveling
+  p_resting
+
 ]
 
 breed [blobs blob]
@@ -445,6 +451,12 @@ to setup-monkeys
     ; for the behaviorsequence plot
     set behaviorsequence []
 
+    ; activity budget:
+    set p_feeding 0
+    set p_foraging 0
+    set p_traveling 0
+    set p_resting 0
+
     ; for home range calculation with the r extension
     set Name word "BLT_" ( [who] of self )
     set X_coords ( list x_UTM )
@@ -687,6 +699,11 @@ to go
       output-print "calculating home range with r extension"
       calc-homerange
       output-print "home range calculation with r extension finished"
+
+      output-print "calculating activity budget"
+      calc-activity-budget
+      output-print "calculating activity budget finished"
+
       stop
     ]
   ]
@@ -2143,8 +2160,72 @@ to calc-homerange
 ;  print "db: "
 ;  show r:get "db"
 
+end
+
+
+to calc-activity-budget
+;  foreach ( freq_map behaviorsequence ) [
+;    x -> print first x print last x
+;  ]
+
+;  print freq_map behaviorsequence
+  let activity-values freq_map behaviorsequence
+;  print sublist activity-values 0 4 ; same as print activity-values
+
+  let activity-values-ordered sort-by [[list1 list2] -> first list1 < first list2] activity-values
+
+  ;debugging:
+;  print activity-values-ordered
+;  print item 0 activity-values-ordered
+;  print item 1 activity-values-ordered
+;  print item 2 activity-values-ordered
+;  print item 3 activity-values-ordered
+
+  let p_fee item 0 activity-values-ordered
+  let p_for item 1 activity-values-ordered
+  let p_tra item 2 activity-values-ordered
+  let p_res item 3 activity-values-ordered
+
+
+  ask monkeys [
+    set p_feeding item 1 p_fee
+    set p_foraging item 1 p_for
+    set p_traveling item 1 p_tra
+    set p_resting item 1 p_res
+
+    ;debugging:
+      type "p_feeding = " print item 1 p_fee
+      type "p_foraging = " print item 1 p_for
+      type "p_traveling = "  print item 1 p_tra
+      type "p_resting = " print item 1 p_res
+;    type "Total activity budget = " print ( p_feeding + p_foraging + p_traveling + p_resting )
+
+  ]
+
+  ; for some reason the following code indexing does not work:
+;;  print item 0 item 0 activity-values-ordered
+;  print item 1 item 1 activity-values-ordered
+;  print item 2 item 1 activity-values-ordered
+;  print item 3 item 1 activity-values-ordered
+
+
+;  ask monkeys [
+  ; activity budget:
+;    set p_feeding item 0 item 1 activity-values-ordered
+;    set p_foraging item 1 item 1 activity-values-ordered
+;    set p_traveling item 2 item 1 activity-values-ordered
+;    set p_resting item 3 item 1 activity-values-ordered
+
+;    type "activity 1 - %feeding =" print p_feeding
+;    type "activity 2 - %foraging = " print p_foraging
+;    type "activity 3 - %travel = " print p_traveling
+;    type "activity 4 - %resting  = " print  p_resting
+;  ]
+
 
 end
+
+
 ;-----------------------------------------------------------------
 ; end of commands ================================================
 ;-----------------------------------------------------------------
@@ -2181,8 +2262,14 @@ to-report freq_map [ list_ ]
   ; get counts of each unique value
   let counts map [ i -> freq i list_ ] uniques
 
+;;   debugging
+;  let a ( map [ [ x y ] -> list x ( y / len ) ] uniques counts )
+;  print a
+
   ; report an xy pair for each unique value / proportion
   report ( map [ [ x y ] -> list x ( y / len ) ] uniques counts )
+
+
 end
 
 ;;; --------------------------------- ;;;
