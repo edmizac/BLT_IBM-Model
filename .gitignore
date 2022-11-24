@@ -64,6 +64,7 @@ Data/Movement/Curated/Param_siminputrow/**.png
 Data/Movement/Curated/Param_all-data/**.png
 Data/Movement/Curated/Validation/**.png
 
+Model_analysis/Sensitivity-analysis/v1.1_August2022/**.text
 
 # Temporary files
 **/runtime
