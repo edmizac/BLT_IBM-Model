@@ -189,12 +189,67 @@ db <- db %>%
 
 # For a specific group:
 # a1 <- db %>% filter(id == "GuaSim_19") %>% # agente morreu na maioria das primeiras runs
-a1 <- db %>% filter(id == "GuaSim_1150") %>%
-  make_track(.x=x, .y=y, id = id, crs = our_crs)
+a <- db %>% filter(id == "GuaSim_1150") 
+a <- db %>% filter(id == "GuaSim_5513") 
 
-a1
+# saveRDS(a, here("Model_analysis",  "Hr_NetLogo.rds"))
+
+a1 <- a %>%
+  make_track(.x=x, .y=y, id = id, crs = our_crs) %>% nest(data = -c(id))
+
+
+# Testing NetLogo code calc-homerange:
+db_nest <- a1 %>% 
+  mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), 
+          KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) 
+          )
+
+db_nest <- db_nest %>%  
+  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')
+
+db_nest <- db_nest %>% 
+  mutate(hr_area = map(hr, hr_area)) %>%
+  unnest(cols = hr_area)
+
+db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))
+
+db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)
+
+KDE95 <- db_nest %>% 
+  dplyr::filter(KDE_value == "KDE95") %>%  
+  dplyr::select(hr_area_ha) %>% 
+  unlist() %>% as.vector() %>% round(2)
+
+KDE50 <- db_nest %>% 
+  dplyr::filter(KDE_value == "KDE50") %>%  
+  dplyr::select(hr_area_ha) %>% 
+  unlist()  %>% as.vector() %>%  round(2)
+
+
+db_nest[ 1 , ]
+
+
+straight1 <- a1 %>%
+  amt::straightness()
+
+
 kde1 <- a1 %>%
-  hr_kde(levels = c(0.3, 0.95))
+    hr_kde(.,levels = 0.5)
+
+kde1 <- a1 %>%
+    hr_kde(levels = 0.95)
+
+# a1 %>% steps_by_burst(.)
+
+mov1 <- a1 %>%
+  mutate(
+    DPL = tot_dist(.),
+    step_length = step_lengths(.),
+    turn_ang = direction_rel(.),
+    MSD = msd(.),
+    straightness = straightness(.),
+    sinuosity = sinuosity(.)
+  )
 
 kde1$h
 kde1$estimator
@@ -210,7 +265,7 @@ hr_area(kde1) %>%
 
 # For all groups (require dplyr::nest())
 db_nest <- db %>%
-  dplyr::filter(between(siminputrow, 50, 52)) %>%  # in case you want to subset some data first
+  dplyr::filter(between(siminputrow, 50, 51)) %>%  # in case you want to subset some data first
   make_track(.x=x, .y=y, id = id, crs = our_crs) %>% 
   nest(data = -c(id)) # group only by id or use: nest(data = c(x_, y_, t_, var1))
 
@@ -242,8 +297,12 @@ db_nest2 <- db_nest2 %>%
 
 # Merge HR to db and save
 db <- left_join(db, db_nest2)
+# db <- left_join(db_nest2, db)
 db <- db %>% 
   mutate(hr_area_ha = area / 10000)
+
+a <- db %>% 
+  select(id, random_seed, KDE_value, hr_area_ha)
 
 # # I only calculated KDE95, so I'll simplify the collums
 # db <- db %>% 

@@ -70,6 +70,8 @@ monkeys-own [
 
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
   KDE_values ; output of amt package in calc-homerange
+  KDE_95
+  KDE_50
 
   ; activity budget
   p_feeding
@@ -459,8 +461,8 @@ to setup-monkeys
 
     ; for home range calculation with the r extension
     set Name word "BLT_" ( [who] of self )
-    set X_coords ( list x_UTM )
-    set Y_coords ( list y_UTM )
+    set X_coords [] ;( list x_UTM )
+    set Y_coords [] ;( list y_UTM )
 
     ;;    set shape "banana"
 ;    set shape "mlp-2"
@@ -704,6 +706,10 @@ to go
       calc-activity-budget
       output-print "calculating activity budget finished"
 
+      output-print "calculating other movement metrics"
+      calc-movement-metrics
+      output-print "calculating movement metrics finished"
+
       stop
     ]
   ]
@@ -886,8 +892,8 @@ to move-monkeys
 
     if energy < 1 [ die ]
 
-    set x_UTM (item 0 gis:envelope-of self)
-    set y_UTM (item 2 gis:envelope-of self)
+;    set x_UTM (item 0 gis:envelope-of self)
+;    set y_UTM (item 2 gis:envelope-of self)
 
     ; for home range calculation with r extension:
     set X_coords lput x_UTM X_coords
@@ -2107,6 +2113,7 @@ to calc-homerange
     (r:putdataframe "turtle" "X" X_coords "Y" Y_coords)
     r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
     r:eval "turtles <- rbind(turtles, turtle)"
+    type "turtles data frame: " print r:get "turtles"
   ]
 
   ;; split the data.frame into coordinates and factor variable
@@ -2127,11 +2134,11 @@ to calc-homerange
   r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
 ;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
   r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
-  r:eval "db_nest <- db_nest %>% mutate(area = area / 10000)" ; values in ha
+;  r:eval "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)" ; values in ha
 
   ; for outputting on nlrx:
   ; home range
-  r:eval "db_nest$area <- paste0(db_nest$area, '_')"
+;  r:eval "db_nest$hr_area_ha <- paste0(db_nest$hr_area_ha, '_')"
   ; coordinates
 ;  r:eval "db$X <- paste0(db$X, '_')"
 ;  r:eval "db$Y <- paste0(db$Y, '_')"
@@ -2143,11 +2150,18 @@ to calc-homerange
   print "db_nest: "
   show r:get "db_nest"
 
-  r:gc
+;  r:gc
 
   ; get hr values to agent variable
   ask monkeys [
-   set KDE_values item 3 r:get "db_nest"
+    set KDE_95 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+    set KDE_50 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE50') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+
+;    type "KDE_95: " print round KDE_95
+;    type "KDE_50: " print round KDE_50
+
+    type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
+    type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
   ]
 
 
@@ -2221,6 +2235,13 @@ to calc-activity-budget
 ;    type "activity 3 - %travel = " print p_traveling
 ;    type "activity 4 - %resting  = " print  p_resting
 ;  ]
+
+end
+
+
+to calc-movement-metrics
+
+
 
 
 end
@@ -2301,11 +2322,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-627
-430
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2315,10 +2336,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--101
-101
--68
-68
+-129
+129
+-93
+93
 0
 0
 1
@@ -2625,7 +2646,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-4
+1
 
 CHOOSER
 984
@@ -2657,7 +2678,7 @@ step_forget
 step_forget
 0
 200
-40.0
+82.0
 1
 1
 NIL
@@ -3057,7 +3078,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.61
+0.21
 0.05
 1
 NIL
@@ -3424,7 +3445,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-1
+2
 
 BUTTON
 247
@@ -3555,7 +3576,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-63.0
+43.02
 5
 1
 NIL
@@ -3570,7 +3591,7 @@ step_len_forage
 step_len_forage
 0
 20
-2.13
+3.089
 0.1
 1
 NIL
@@ -3585,7 +3606,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.597
+3.931
 0.1
 1
 NIL
@@ -3600,7 +3621,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-58.76
+17.85
 1
 1
 NIL
