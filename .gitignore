@@ -41,6 +41,7 @@
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/temp/**
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/**.rds
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/**.RData
+/Model_analysis/Sensitivity-analysis/v1.1_November2022/**.png
 
 
 Data/Movement/Resource-trees/**.dbf
@@ -68,3 +69,5 @@ runtime/
 
 
 
+Model_analysis/Sensitivity-analysis/v1.1_November2022/tempSDD_disp_day_By-group_density_sim.png
+Model_analysis/Sensitivity-analysis/v1.1_November2022/tempSDD_disp_day_By-group_violin.png

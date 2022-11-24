@@ -268,3 +268,210 @@ ggsave(paste0(path, 'SDD_disp_day_By-month_boxplot.png'), height = 2.5, width = 
 
 
 
+
+  ylim(0, 1000) +
+  facet_wrap(~disp_day, nrow = 2) +
+  scale_color_viridis_d()
+
+# Save plot
+# ggsave(paste0(path, 'SDD_disp_day_By-month_boxplot.png'), height = 2.5, width = 7)
+
+
+
+
+## DPL -------------------------
+db_mv <- db %>% 
+  dplyr::filter(breed == "monkeys") %>% 
+  group_by(group, random_seed)
+
+a <- db_mv$DPL_d %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
+a <- a %>% str_split(pattern = "_") #, simplify = TRUE)
+# a <- a %>% str_split(pattern = "_", simplify = TRUE)
+
+a <- a %>% map(as.numeric)
+
+
+db_mv$DPL_d <- a
+teste <- db_mv %>% tidyr::nest(data="DPL_d") %>% unnest("data")
+
+spec <- db_mv %>% build_longer_spec(
+  cols = DPL_d,
+  names_to = "DPL_id",
+  values_to = "DPL"
+)
+teste <-  pivot_longer_spec(db_mv, spec)
+teste$data
+
+
+# db_mv %>% pivot_longer(db_mv)
+
+db_mv %>% group_nest() %>% 
+  unnest_longer(data)
+
+db_mv_DPL  <- db_mv %>% unnest_legacy()
+
+# db_mv %>% saveRDS(paste0(path, "/", "Camila.RDS"))
+# readRDS("Camila.RDS")
+
+
+# aa %>% map_int(as.numeric)
+# a %>% map_dbl(as.numeric)
+# 
+# a %>% str()
+# 
+# c <- a
+# a <- a %>% as.numeric()
+# length(a)
+# db_mv$DPL_d %>% length()  
+# 
+# b <- a %>% str_remove(., "[[:digit:]].,")
+# a <- a %>% str_split(pattern = "[[:digit:]].,", simplify = TRUE)
+# 
+# 
+# c <- lapply( c, function(x) trimws( unlist ( strsplit( x, ",") ) ) )
+# 
+# db_mv$c <- c
+# 
+# purrr::map_int()
+# 
+# 
+# db_mv$DPL_d <- db_mv$DPL_d %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
+# db_mv$DPL_d <- db_mv$DPL_d %>% str_split(pattern = "_") #, simplify = TRUE)
+# # db_mv$DPL_d <- db_mv$DPL_d%>% map(as.numeric)
+# 
+# db_mv$DPL_d
+# 
+# teste <- db_mv
+# # teste$DPL_d <- lapply(db_mv$DPL_d, function(x) trimws( unlist ( strsplit( x, ",") ) ) )
+# teste$DPL_d <- as.numeric(str_extract_all(teste$DPL_d, "[0-9.]+")[[1]])
+#   #map(as.numeric)
+# teste$DPL_d
+# 
+# 
+# teste$DPL_d %>% map(~ str_extract_all(., "[0-9.]+")[[1]]) %>% 
+#   as.numeric()
+# 
+# 
+# 
+# library(purrr)
+# library(repurrrsive)
+# 
+# got_chars[1:3]
+# 
+# tibble::tibble(
+#   # name = map_chr(db_mv$DPL_d, "name"),
+#   id = map_dbl(db_mv, "DPL_d")
+# )
+# got_chars[[5]]["id"]
+
+db_mv_DPL <- db_mv_DPL %>% 
+  rename(DPL = DPL_d) %>%
+  mutate(DPL = 10 * DPL)
+
+db_mv_DPL %>% 
+  ggplot(aes(x = group, y = DPL, color = month)) +
+  geom_boxplot() +
+  guides(fill=FALSE) +
+  ylab("DPL (m)") +
+  ylim(c(0,5000)) +
+  scale_colour_viridis_d()
+
+# Save plot
+# ggsave(paste0(path, 'DPL_By-month_boxplot.png'), height = 5, width = 7)
+
+
+
+
+## Home range -------------------------
+db_mv <- db %>% 
+  dplyr::filter(breed == "monkeys") %>% 
+  group_by(group, random_seed) %>% 
+  dplyr::select(-"DPL_d")
+  
+
+
+a <- db_mv$KDE_values %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
+a <- a %>% str_split(pattern = "_") #, simplify = TRUE)
+# a <- a %>% str_split(pattern = "_", simplify = TRUE)
+
+a <- a %>% map(as.numeric)
+
+
+db_mv$KDE_values <- a
+# teste <- db_mv %>% tidyr::nest(data="KDE_values") %>% unnest("data")
+
+
+
+db_mv %>% group_nest() %>% 
+  unnest_longer(data)
+
+db_mv_HR  <- db_mv %>% unnest_legacy()
+
+KDE_levels <- rep(c("KDE95", "KDE50", "drop"), nrow(db_mv))
+db_mv_HR$KDE_levels  <- KDE_levels 
+
+db_mv_HR %>% str()
+
+db_mv_HR$KDE_levels  <-  as.factor(db_mv_HR$KDE_levels)
+
+
+db_mv_HR <- db_mv_HR %>% 
+  filter(KDE_levels != 'drop') %>% 
+  pivot_wider(names_from = "KDE_levels", values_from = "KDE_values",
+              values_fn = "list")
+
+# line 1 is still nested
+# db_mv_HR <- db_mv_HR %>% 
+#   dplyr::filter(row_number()==1) %>% 
+#   as_tibble()
+db_mv_HR <- db_mv_HR[-1, ]
+
+
+db_mv_HR %>% str()
+
+# Divide HR by 10000 (ha)
+db_mv_HR <- db_mv_HR %>% 
+  # unlist as numeric
+  mutate(
+    KDE95 = unlist(KDE95),
+    KDE50 = unlist(KDE50)
+  ) %>% 
+  
+  mutate(
+    KDE95 = KDE95 / 100000,
+    KDE50 = KDE50 / 100000
+    )
+  
+  db_mv_HR$KDE50 %>% str()
+
+# KDE 95
+db_mv_HR %>% 
+  ggplot(aes(x = group, y = KDE95, color = month)) +
+  geom_boxplot() +
+  guides(fill=FALSE) +
+  ylim(0, 350) +
+  ylab("Area (ha)") +
+  ggtitle("KDE 95% (Home range)") +
+  scale_colour_viridis_d()
+# geom_jitter(width = 0.15) +
+# annotate("text", x=2, y=5000, label= paste0("Mean ± sd = ", round(avg_dist, 2), " ± ", round(sd_dist, 2)))
+
+# ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
+#                        "HomeRangeKDE95-speedval.png"),
+#        dpi = 300, width = 30, height = 20, units = "cm")
+
+# KDE 50
+db_mv_HR %>% 
+  ggplot(aes(x = group, y = KDE50, color = month)) +
+  geom_boxplot() +
+  guides(fill=FALSE) +
+  ylim(0, 350) +
+  ylab("Area (ha)") +
+  ggtitle("KDE 50% (Core area)") +
+  scale_colour_viridis_d()
+# geom_jitter(width = 0.15) +
+# annotate("text", x=2, y=5000, label= paste0("Mean ± sd = ", round(avg_dist, 2), " ± ", round(sd_dist, 2)))
+
+# ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
+#                        "HomeRangeKDE95-speedval.png"),
+#        dpi = 300, width = 30, height = 20, units = "cm")
