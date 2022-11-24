@@ -1686,8 +1686,8 @@ to defecation
         set SDD distance ( feeding-tree loc_who ) ;with [id-tree] = mother-tree]
         set label ""
         set shape "plant"
-        set size 0.45
-        set color 1
+        set size 1.45
+        set color 4
       ]
     ]
   ]
@@ -1707,12 +1707,21 @@ to morning-defecation
       set species [species] of feeding-trees with [ who = x ]
       set id-seed who
       set disp-day "next day"
+;      let loc_who [who] of feeding-trees with [ who = x ] ; this does not work becuse there are duplicated agents (more than one feeding-tree with id-tree = "AMf043"), thus this returns a list
+;      print loc_who
+;      set SDD distance feeding-trees with [ loc_who = x ]
+      set SDD distance ( feeding-tree x )
+      ; testing if the SDD is correct (print on command center):
+      ; ask feeding-trees with [ id-tree = "AMf167" ] [ set color pink ]
+      ; ask seed 105 [ print distance feeding-tree 27  ]
       set label ""
       set shape "plant"
       set size 1
       set color 1
     ]
   ]
+
+  ; make lists empty as they were all defecated:
   set seed_ate_list []
   set seed_mem_list []
   set seed_add_list []
@@ -2205,11 +2214,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+627
+430
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2219,10 +2228,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-101
+101
+-68
+68
 0
 0
 1
@@ -2529,7 +2538,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+4
 
 CHOOSER
 984
@@ -2961,7 +2970,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.61
 0.05
 1
 NIL
@@ -3328,7 +3337,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+1
 
 BUTTON
 247
@@ -3459,7 +3468,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+63.0
 5
 1
 NIL
@@ -3474,7 +3483,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+2.13
 0.1
 1
 NIL
@@ -3489,7 +3498,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+3.597
 0.1
 1
 NIL
@@ -3504,7 +3513,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+58.76
 1
 1
 NIL
