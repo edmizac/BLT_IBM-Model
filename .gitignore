@@ -49,6 +49,12 @@
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/**.png
 
 
+/Model_analysis/Genetic-analysis/**.csv
+/Model_analysis/Genetic-analysis/**.png
+/Model_analysis/Genetic-analysis/temp/
+
+
+
 Data/Movement/Resource-trees/**.dbf
 Data/Movement/Resource-trees/**.prj
 Data/Movement/Resource-trees/**.shp
