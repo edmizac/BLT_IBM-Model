@@ -26,7 +26,7 @@ library("readxl")
 # library("sf")
 library("sp")
 library("adehabitatLT")
-# library("circular")
+library("circular")
 
 
 # Read data (filtered by siminputrow on CurateData.R)
@@ -123,10 +123,10 @@ dat.mv.summary <- dat.all.ltraj.df %>%
     step_len_median = median(dist, na.rm = TRUE),
     step_len_mean = mean(dist, na.rm = TRUE),
     step_len_sd = sd(dist, na.rm = TRUE),
-    rel_angle_mean = mean(circular(rel.angle.degree, type="angles", units="degrees",
+    rel_angle_mean = mean(circular(rel.angle, type="angles", units="degrees",
                                              modulo="pi", template='geographics'),
                                     na.rm = TRUE),
-    rel_angle_sd = sd(circular(rel.angle.degree, type="angles", units="degrees",
+    rel_angle_sd = sd(circular(rel.angle, type="angles", units="degrees",
                                  modulo="pi", template='geographics'),
                         na.rm = TRUE),
     # Although the mean is output in degreees, sd is not # https://stackoverflow.com/questions/55870751/is-the-standard-deviation-in-the-circular-package-in-r-correct
@@ -134,11 +134,11 @@ dat.mv.summary <- dat.all.ltraj.df %>%
     
     # Max angle quantiles
     max_random_angle_95q = quantile(
-      Mod(rel.angle.degree), 
+      Mod(rel.angle), 
       0.95, na.rm = TRUE
     ),
     max_random_angle_75q = quantile(
-      Mod(rel.angle.degree), 
+      Mod(rel.angle), 
       0.75, na.rm = TRUE
     )
   )
@@ -233,3 +233,9 @@ siminputmatrix_mov <- left_join(siminputmatrix_mov, dat.ab.summary.p_travel)
 # siminputmatrix_mov %>%
 #   write.csv(here("Data", "Movement", "Curated", "Param_siminputrow", "Siminputrow_parameters_movement.csv"),
 #             row.names = FALSE)
+
+
+
+## Variables for Valiadation table (necessary for ga analysis) -------------------
+
+
