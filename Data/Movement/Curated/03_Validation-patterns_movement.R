@@ -24,7 +24,9 @@
 
 ## Options -------------------------
 # (plotting, memory limit, decimal digits)
-# 
+
+# ggplot theme
+theme_set(theme_bw(base_size = 15))
 
 ## Packages -------------------------
 library("here")
@@ -45,11 +47,19 @@ library("amt")
 #   mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
 
 
-# Read siminputrow movement data
+# Read siminputrow movement data and define levels
 dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_siminputrow.csv"),
             #row.names = FALSE
             ) %>% 
-  mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
+  mutate(group = recode(group, "Guarei" = "Guareí")) %>%  # to match all other datasets
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Mar", "Apr", "May", 
+                                         "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(
+    datetime = ymd_hms(datetime),
+    date = lubridate::date(datetime)
+    )
+
 
 
 # Summarize activity budget -------------------------
@@ -120,7 +130,8 @@ dat.all.mv.tr <- dat.all.mv %>%
   mutate(
     id = paste0(group, " - ", id_month)
   ) %>% 
-  make_track(.x=x, .y=y, id = id, crs = our_crs) %>% nest(data = -c(id))
+  make_track(.x=x, .y=y, id = id, crs = our_crs, all_cols = TRUE) %>% 
+  nest(data = -c(id, group, id_month))
 
 hrvalues <- dat.all.mv.tr %>% 
   mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), 
@@ -145,6 +156,61 @@ hrvalues <- hrvalues %>% mutate(hr_area_ha = area / 10000)
 
 
 
+# Plot home range -------------------------
+
+# Define factor order
+
+# KDE 95
+hrvalues %>% 
+  dplyr::filter(KDE_value == "KDE95") %>%
+  group_by(group, id_month) %>%
+  # facet_wrap(~KDE_value) +
+  ggplot(aes(x = group, y = hr_area_ha, color = id_month)) +
+  geom_boxplot() +
+  guides(fill=FALSE) +
+  ylim(0, 350) +
+  ylab("Area (ha)") +
+  # xlab("Group - month") + 
+  theme(axis.title.x=element_blank()) +
+  ggtitle("KDE 95% (Home range)") +
+  scale_colour_viridis_d()
+# geom_jitter(width = 0.15) +
+# annotate("text", x=2, y=5000, label= paste0("Mean ± sd = ", round(avg_dist, 2), " ± ", round(sd_dist, 2)))
+
+# ggsave(filename = here("Data", "Movement", "Curated", "Validation",
+#                        "Siminputrow_HomeRange_KDE95.png"),
+#        dpi = 300, width = 15, height = 10 , units = "cm")
+
+# KDE50
+hrvalues %>% 
+  dplyr::filter(KDE_value == "KDE50") %>%
+  group_by(group, id_month) %>%
+  # facet_wrap(~KDE_value) +
+  ggplot(aes(x = group, y = hr_area_ha, color = id_month)) +
+  geom_boxplot() +
+  # geom_point() +
+  guides(fill=FALSE) +
+  ylim(0, 350) +
+  ylab("Area (ha)") +
+  # xlab("Group - month") +
+  theme(axis.title.x=element_blank()) +
+  ggtitle("KDE 50% (Core area)") +
+  scale_colour_viridis_d()
+# geom_jitter(width = 0.15) +
+# annotate("text", x=2, y=5000, label= paste0("Mean ± sd = ", round(avg_dist, 2), " ± ", round(sd_dist, 2)))
+
+ggsave(filename = here("Data", "Movement", "Curated", "Validation",
+                       "Siminputrow_HomeRange_KDE50.png"),
+       dpi = 300, width = 15, height = 10, units = "cm")
+
+
+
+
 # Other parameters not initially assessed -------------------------
 # (R2n = Square displacement)
+
+
+
+
+
 
