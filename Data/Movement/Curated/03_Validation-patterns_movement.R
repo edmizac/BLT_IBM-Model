@@ -48,7 +48,8 @@ library("amt")
 
 
 # Read siminputrow movement data and define levels
-dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_siminputrow.csv"),
+dat.all.mv <- read.csv(here("Data", "Movement", "Curated", 
+                            "Siminputrow_movement-data.csv") #"BLT_groups_data_siminputrow.csv"),
             #row.names = FALSE
             ) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) %>%  # to match all other datasets
@@ -103,7 +104,7 @@ dat.ab.summary <- dat.ab.summary.day %>%
 
 
 # Summarize DPL -------------------------
-dat.dpl.summary <- dat.all.mv %>% group_by(group, id_month, date) %>% 
+dat.dpl.summary <- dat.all.ltraj.df %>% group_by(group, id_month, date) %>% 
   summarise(
     DPL = sum(dist, na.rm = TRUE)
   )
@@ -118,7 +119,7 @@ dat.dpl.summary.mo <- dat.dpl.summary %>% group_by(group, id_month) %>%
     DPL_mean = mean(DPL, na.rm = TRUE)
   )
 # # Write csv
-# dat.dpl.summary %>%
+# dat.dpl.summary.mo %>%
 #   write.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_DPL_by-month.csv"),
 #             row.names = FALSE)
 
