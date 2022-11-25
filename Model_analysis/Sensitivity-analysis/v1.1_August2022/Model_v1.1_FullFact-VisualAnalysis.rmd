@@ -64,6 +64,7 @@ library("sf")
 library("adehabitatHR")
 library("circular")
 library("nlrx")
+library("lubridate")
 library("amt", quietly = TRUE)
 
 # GIS
@@ -91,11 +92,11 @@ theme_set(theme_bw(base_size = 10))
 ### Read and clean
 ```{r Read data, warning=FALSE}
 # Read data from experiments
-nl_off_s <- readRDS(here("Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/", "morris_2022-08-04_phenology-off_small.rds"))
-data_off_s <- unnest_simoutput(nl_off_s) ; rm(nl_off_s)
-
-data_off_s <- data_off_s %>% 
-  mutate(feedingbout = "Feeding bout off")
+# nl_off_s <- readRDS(here("Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/", "morris_2022-08-04_phenology-off_small.rds"))
+# data_off_s <- unnest_simoutput(nl_off_s) ; rm(nl_off_s)
+# 
+# data_off_s <- data_off_s %>% 
+#   mutate(feedingbout = "Feeding bout off")
 
 nl_on_s <- readRDS(here("Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/", "morris_2022-08-04_phenology-on_small.rds"))
 data_on_s <- unnest_simoutput(nl_on_s) ; rm(nl_on_s)
@@ -105,7 +106,8 @@ data_on_s <- data_on_s %>%
   mutate(feedingbout = "Feeding bout on")
 
 # Bind all together
-db <- bind_rows(data_on_s, data_off_s)
+# db <- bind_rows(data_on_s, data_off_s)
+db <- data_on_s                       
 rm(data_on_s); rm(data_off_s)
 
 # Last cleaning:
@@ -189,7 +191,7 @@ db <- db %>%
 
 # For a specific group:
 # a1 <- db %>% filter(id == "GuaSim_19") %>% # agente morreu na maioria das primeiras runs
-a <- db %>% filter(id == "GuaSim_1150") 
+a <- db %>% filter(id == "GuaSim_1150" | id == "GuaSim_5513") 
 a <- db %>% filter(id == "GuaSim_5513") 
 
 # saveRDS(a, here("Model_analysis",  "Hr_NetLogo.rds"))
@@ -254,14 +256,26 @@ hr_area(kde1) %>%
 #AKDE
 a2 <- a %>%
   mutate(
+    id = as.factor(id),
     mins = timestep * 5,
     mins = as.period(mins, unit = "minutes"),
     mins = seconds_to_period(mins),
     mins = hms::hms(mins),
     datetime = paste(Sys.Date(), mins),
+    # datetime = case_when(levels(id) == 1)
     datetime = ymd_hms(datetime, tz = "America/Sao_Paulo")
   )
 
+lv <- a2$id %>% levels()
+
+lv [1]
+
+levels(a2$id)
+
+a2$id <- as.integer(a2$id)
+a2$id
+  
+  
 a2 %>% str()
     
 
@@ -271,7 +285,8 @@ a2 <- a2 %>%
 db_nest_a2 <- a2 %>% 
   mutate( 
     AKDE95 = amt::map(data, ~ hr_akde(., fit_ctmm(., "auto"))),
-    KDE95 = amt::map(data, ~ hr_kde(., level = 0.95))
+    KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)),
+    KDE50 = amt::map(data, ~ hr_kde(., level = 0.95))
   )
 
 # db_nest_a2$KDE95
