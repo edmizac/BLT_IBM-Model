@@ -235,7 +235,3 @@ siminputmatrix_mov <- left_join(siminputmatrix_mov, dat.ab.summary.p_travel)
 #             row.names = FALSE)
 
 
-
-## Variables for Valiadation table (necessary for ga analysis) -------------------
-
-
