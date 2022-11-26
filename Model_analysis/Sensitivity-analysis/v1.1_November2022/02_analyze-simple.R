@@ -22,6 +22,7 @@ library("readr")
 library("ggplot2")
 library("ggspatial")
 library("sf")
+library("purrr")
 
 path <- here("Model_analysis", "Sensitivity-analysis",
              "v1.1_November2022", "temp")
@@ -68,7 +69,7 @@ db <- db1
 ## Plot example runs -------------------------
 
 # 1) Guareí
-group <- "Guareí"
+group <- "Taquara" # "Guareí"
 rseed <- db %>% 
   dplyr::filter(study_area == group) %>% 
   dplyr::select(random_seed) %>%
@@ -141,7 +142,7 @@ gua.sf +
 #            aes(x = x_UTM, y = y_UTM, color = species))
 
 # 2) Santa Maria
-group <- "Santa Maria"
+group <- "Taquara"#; "Santa Maria"
 rseed <- db %>% 
   dplyr::filter(study_area == group) %>% 
   dplyr::select(random_seed) %>%
@@ -280,35 +281,34 @@ ggsave(paste0(path, 'SDD_disp_day_By-month_boxplot.png'), height = 2.5, width = 
 
 
 ## DPL -------------------------
+  db <- db1
 db_mv <- db %>% 
-  dplyr::filter(breed == "monkeys") %>% 
-  group_by(group, random_seed)
+dplyr::filter(breed == "monkeys") %>% 
+  # group_by(group, random_seed)
+  group_by(study_area, `random-seed`)
 
 a <- db_mv$DPL_d %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
 a <- a %>% str_split(pattern = "_") #, simplify = TRUE)
 # a <- a %>% str_split(pattern = "_", simplify = TRUE)
 
+a %>% str()
 a <- a %>% map(as.numeric)
+a <- a %>% map(round, 2)
+a <- a %>% map_dbl(mean, na.rm=TRUE)
+
+# a %>% str()
+
+db_mv$DPL_mean <- a #%>% round(., 2)
 
 
-db_mv$DPL_d <- a
-teste <- db_mv %>% tidyr::nest(data="DPL_d") %>% unnest("data")
-
-spec <- db_mv %>% build_longer_spec(
-  cols = DPL_d,
-  names_to = "DPL_id",
-  values_to = "DPL"
-)
-teste <-  pivot_longer_spec(db_mv, spec)
-teste$data
+# db_mv %>% str()
 
 
-# db_mv %>% pivot_longer(db_mv)
 
-db_mv %>% group_nest() %>% 
-  unnest_longer(data)
-
-db_mv_DPL  <- db_mv %>% unnest_legacy()
+# db_mv %>% group_nest() %>% 
+#   unnest_longer(data)
+# 
+# db_mv_DPL  <- db_mv %>% unnest_legacy()
 
 # db_mv %>% saveRDS(paste0(path, "/", "Camila.RDS"))
 # readRDS("Camila.RDS")

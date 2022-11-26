@@ -120,10 +120,10 @@ db1 <- db1 %>%
   tidyr::unite(x_UTM, x_UTM.x, x_UTM.y, col = "x", remove = TRUE, na.rm = TRUE) %>% 
   tidyr::unite(y_UTM, y_UTM.x, y_UTM.y, col = "y", remove = TRUE, na.rm = TRUE)  %>% 
   tidyr::unite(visitations.x, visitations.y, col = "visitations", remove = TRUE, na.rm = TRUE)  %>% 
-  tidyr::unite(id_tree.x, id_tree.y, col = "id_tree", remove = TRUE, na.rm = TRUE) %>% 
+  # tidyr::unite(id_tree.x, id_tree.y, col = "id_tree", remove = TRUE, na.rm = TRUE) %>% 
   
   
-  dplyr::select(-c("breed.x", "breed.y")) %>% 
+  # dplyr::select(-c("breed.x", "breed.y")) %>% 
   dplyr::select(-c("USER", `feedingbout_on?`, `step_model_param?`, `gtt_param?`, `p_forage_param?`))
 
 

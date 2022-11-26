@@ -36,6 +36,13 @@ if(Sys.getenv("JAVA_HOME") == "") {
 ## ---------------------------
 
 
+# Empirical data for criteval function:
+variable.table <- read.csv(here("Data", "Validation-table.csv"),
+                           sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+
+
+
 # Step 1: Create nl object
 if(Sys.info()[["nodename"]] == "simul02") {
   netlogopath <- file.path("/home/rbialozyt/Software/NetLogo 6.2.0")
@@ -68,40 +75,13 @@ nlogo_model_param
 ## Step 2: Attach an experiment   -------------------------
 expname <- "GA_algorithm"
 
-
-# Empirical data for criteval function:
-variable.table <- read.csv(here("Data", "Validation_table.csv"),
-                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
-
-
 step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
 gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
 p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
 feedingbout <- "false" # previous sensitivity analysis showed that this does not matter, at least for Guareí
 
 
-# Create evaluation criteria function
-critfun <- function(nl) {
-  # extract values
-  db <- unnest_simoutput(nl)
-  
-  
-  visit_count <- db$
-  energy <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("energy") %>% unlist() %>% as.vector()
-  DPL_mean <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("DPL_d") %>% unlist() %>% as.vector() %>% mean()
-  KDE95 <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("KDE95") %>% unlist() %>% as.vector()
-  KDE50 <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("KDE50") %>% unlist() %>% as.vector()
-  p_feeding <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("p_feeding") %>% unlist() %>% as.vector()
-  p_foraging <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("p_foraging") %>% unlist() %>% as.vector()
-  p_traveling <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("p_traveling") %>% unlist() %>% as.vector()
-  p_resting <- db %>% dplyr::filter(breed == "monkeys") %>% dplyr:select("p_resting") %>% unlist() %>% as.vector()
-  
-  crit <- lsm$value
-  return(crit)
-}
-
-# Attach to nl experiment
+# Attach to nl object
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
                             repetition = 1, # number of repetitions with the same seed (use repetition = 1)
@@ -219,7 +199,49 @@ nl@experiment <- experiment(expname = expname,
 )
 
 
+## Create evaluation criteria function -------------------------
+
+# Example nl object:
+nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
+                   "v1.1_November2022", "temp", "v1.1_Taquara_Jan_simple1199731059_tempRDS.Rdata"))
+
+critfun <- function(nl) {
+  # extract values
+  db <- unnest_simoutput(nl)
+  
+  db <- db %>% 
+    dplyr::filter(breed == "monkeys")
+  
+  energy <- db %>%  dplyr::select("energy") %>% unlist() %>% as.vector()
+  
+  KDE95 <- db %>%  dplyr::select("KDE95") %>% unlist() %>% as.vector()
+  KDE50 <- db %>%  dplyr::select("KDE50") %>% unlist() %>% as.vector()
+  p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist() %>% as.vector()
+  p_foraging <- db %>%  dplyr::select("p_foraging") %>% unlist() %>% as.vector()
+  p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>% as.vector()
+  p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>% as.vector()
+  
+  DPL_mean <- db$DPL_d
+  DPL_mean <- DPL_mean %>%
+    str_replace_all(., c("\\[" = "", "\\]" = "")) %>%
+    str_split(pattern = "_") %>%  #, simplify = TRUE) %>%
+    purrr::map(as.numeric, na.rm = TRUE) %>% 
+    # purrr::map(round, 2) %>%
+    map_dbl(mean, na.rm=TRUE)
+  db$DPL_mean <- DPL_mean
+  
+  
+  visit_count <- db$visits
+  
+  crit <- lsm$value
+  return(crit)
+}
+
+  
+
+
 ## Step 3: Attach a simulation design   -------------------------
+
 nl@simdesign <- simdesign_GenSA(nl, 
                                 evalcrit = 1, 
                                 nseeds = 1, 
