@@ -37,7 +37,7 @@ if(Sys.getenv("JAVA_HOME") == "") {
 
 
 # Empirical data for criteval function:
-variable.table <- read.csv(here("Data", "Validation-table.csv"),
+values_ga <- read.csv(here("Data", "Validation-table.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
 
@@ -127,21 +127,21 @@ nl@experiment <- experiment(expname = expname,
                               "energy-from-prey" = 4,
                               "energy-loss-traveling" = -1.6,
                               "energy-loss-foraging" = -2,
-                              "energy-loss-resting" = -1.9
+                              "energy-loss-resting" = -1.9,
                               
                               
                               # Seed dispersal
-                              # "gut_transit_time_val" = 15,
+                              # "gut_transit_time_val" = 15, # this won't be optimized as it is an emerging pattern
                               
                               
                               # movement
-                              # "travel_speed_val" = list(values=seq(0.3, 1, by = 0.1))  # only when step-model-param? = 'false'
-                              # "foraging_speed_val" = list(min= 0, max = 1, step = 2)   # only when step-model-param? = 'false'
-                              # "duration" = list(min=0, max = 10, step = 2),
+                              # "travel_speed_val" = list(min= 0, max = 1)  # only when step-model-param? = 'false'
+                              # "foraging_speed_val" = list(min= 0, max = 1)   # only when step-model-param? = 'false'
+                              # "duration" = list(min=0, max = 10),
                               
                               # memory
-                              # "step_forget" = list(min=0, max = 150, step = 10, qfun="qunif")
-                              # "visual" = list(min=0, max = 3, step = 1)
+                              "step_forget" = list(min=3, max = 150)
+                              # "visual" = list(min=0, max = 3)
                               
                               # others
                               # 'species_time_val' = list(min = 1, max = 6, step = 2)
@@ -149,9 +149,8 @@ nl@experiment <- experiment(expname = expname,
                             
                             constants = list(
                               
-                              ### "true" for output related stuff
-                              # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
-                              # "output-print?" = "false", #true to output in the console
+                              "study_area" = "\"Taquara\"",           # we are optimizing with Taquara as it is the most natural condition
+                              "feeding-trees-scenario" = "\"Jan\"",   # we are optimizing with Taquara as it is the most natural condition
                               "USER" = "\"Eduardo\"",
                               'feedingbout-on?' = feedingbout,        # uses empirical values of time spent feeding on each tree species or a random one
                               "step-model-param?" = step_model_param, # uses observed mean step length and 75q turning angles
@@ -201,21 +200,49 @@ nl@experiment <- experiment(expname = expname,
 
 ## Create evaluation criteria function -------------------------
 
-# Example nl object:
-nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
-                   "v1.1_November2022", "temp", "v1.1_Taquara_Jan_simple1199731059_tempRDS.Rdata"))
-
 critfun <- function(nl) {
-  # extract values
+  
+  # get optimized (observed) values
+  KDE95_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::select(KDE95) %>% unlist() %>% as.vector()
+  KDE50_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::select(KDE50) %>% unlist() %>% as.vector()
+  
+  p_feeding_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% as.vector()
+  p_foraging_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% as.vector()
+  p_traveling_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% as.vector()
+  p_resting_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::select("Resting_perc_behavior_mean") %>% unlist() %>% as.vector()
+  # obs: they don't sum up to 1
+  p_feeding_obs + p_foraging_obs + p_traveling_obs + p_resting_obs
+  
+  # tamarins visit all the observed trees, but they don't usually visit all of them in the model (might be related to memory)
+  visits_obs <- read.csv(here("Data", "Parameter_table.csv"),
+                         sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+    dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) %>% # only to match those of the NetLogo model
+    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::select(n_trees_Frugivory) %>% unlist() %>% as.vector()
+  
+  
+  # extract values from run from example nl object:
+  nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
+                     "v1.1_November2022", "temp", "v1.1_Taquara_Jan_simple1199731059_tempRDS.Rdata"))
+  
   db <- unnest_simoutput(nl)
   
   db <- db %>% 
     dplyr::filter(breed == "monkeys")
   
   energy <- db %>%  dplyr::select("energy") %>% unlist() %>% as.vector()
+  energy_obs <- db %>%  dplyr::select(`start-energy`) %>% unlist() %>% as.vector()
   
   KDE95 <- db %>%  dplyr::select("KDE95") %>% unlist() %>% as.vector()
   KDE50 <- db %>%  dplyr::select("KDE50") %>% unlist() %>% as.vector()
+  
+  
   p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist() %>% as.vector()
   p_foraging <- db %>%  dplyr::select("p_foraging") %>% unlist() %>% as.vector()
   p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>% as.vector()
@@ -232,6 +259,13 @@ critfun <- function(nl) {
   
   
   visit_count <- db$visits
+  
+  
+  # calc differences
+  en <- energy - energy_obs
+  hr <- KDE95 - KDE95_obs
+  ca <- KDE50 - KDE50_obs
+  dp <- XXX - DPL_obs
   
   crit <- lsm$value
   return(crit)
