@@ -1,0 +1,41 @@
+"group","id_month","disp_day","defecation_events","nseeds_mean","nseeds_sd","mean_GTT_timesteps","sd_GTT_timesteps"
+"Suzano","Feb","next day",4,3,0,203.5,2.38
+"Suzano","Feb","same day",18,14.11,31.27,27.56,12.23
+"Suzano","Apr","next day",3,36.67,54.86,204,9.85
+"Suzano","Apr","same day",7,32.29,46.29,23,5.69
+"Suzano","Sep","next day",5,4.8,1.92,193,8.43
+"Suzano","Sep","same day",19,20.42,35.43,26.47,9.48
+"Suzano","Dec","next day",4,6.25,0.96,189,12.83
+"Suzano","Dec","same day",28,13.25,12.81,21.29,8.79
+"Guareí","Apr","next day",25,3.88,2.11,199.74,17.73
+"Guareí","Apr","same day",96,3.85,2.66,16.79,9.39
+"Guareí","May","next day",19,3.37,2.19,182.71,6.07
+"Guareí","May","same day",65,5.77,3.53,17.49,11.01
+"Guareí","Jun","next day",56,4.5,4.4,201.68,18.02
+"Guareí","Jun","same day",76,4.18,2.33,17.54,10.47
+"Guareí","Jul","next day",21,7.62,7.76,196.12,6.35
+"Guareí","Jul","same day",39,6.05,5.15,13.07,5.86
+"Guareí","Aug","next day",18,5.33,3.68,189.94,16.99
+"Guareí","Aug","same day",59,4.9,4.66,19.2,9.09
+"Santa Maria","Mar","next day",2,3,0,205.4,1.98
+"Santa Maria","Mar","same day",5,5.2,2.05,15.52,12.17
+"Santa Maria","May","next day",5,3.6,1.67,246.84,41.06
+"Santa Maria","May","same day",16,24.81,27.64,13.74,13.3
+"Santa Maria","Jun","next day",8,5.75,3.06,200.35,14.26
+"Santa Maria","Jun","same day",5,2.2,0.84,22.44,8.03
+"Santa Maria","Aug","next day",2,27,0,184.2,0
+"Santa Maria","Aug","same day",5,6.2,2.77,5.72,2.4
+"Santa Maria","Sep","next day",6,444,644.83,199.4,42.54
+"Santa Maria","Sep","same day",15,397.6,293.87,47.41,24.69
+"Taquara","Jan","next day",2,19,14.14,156.5,6.36
+"Taquara","Jan","same day",51,14.61,22.72,16.25,7.08
+"Taquara","Mar","same day",20,14.95,12.64,12.15,4.73
+"Taquara","May","next day",3,3.67,0.58,149,0
+"Taquara","May","same day",14,67.29,45.55,13.64,5.42
+"Taquara","Jul","same day",16,7.06,3.45,20.56,5.1
+"Taquara","Sep","next day",2,10,8.49,196.5,2.12
+"Taquara","Sep","same day",19,7.89,2.83,18.95,4.02
+"Taquara","Nov","next day",3,6.67,2.31,196,0
+"Taquara","Nov","same day",11,8.18,6.35,21.36,5.37
+"Taquara","Dec2017","same day",3,2,1,8.33,0.58
+"Taquara","Dec2018","same day",6,9.17,1.17,27.67,7.87
