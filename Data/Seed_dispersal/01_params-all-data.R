@@ -99,7 +99,7 @@ dat.all.summary.month <- dat.all %>%
 
 ## Write csv
 # dat.all.summary.month %>%
-#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_by-month.csv"),
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_GTT_by-month.csv"),
 #             row.names = FALSE)
 
 

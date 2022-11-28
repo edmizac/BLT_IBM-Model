@@ -67,6 +67,7 @@ monkeys-own [
   seed_ate_list   ; list of trees they fed on ([who] of tree_current)
   seed_mem_list   ; list of timesteps since the tamarin ate the seed
   seed_add_list   ; helper list to increase the mem list by 1 each time step
+  seed_gtt_list   ; list of timesteps that each seed will take to be defecated
 
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
   KDE_values ; output of amt package in calc-homerange
@@ -504,8 +505,9 @@ to setup-monkeys
     set seed_ate_list []
     set seed_mem_list []
     set seed_add_list []
-    set travelmodelist []
+    set seed_gtt_list []
 
+    set travelmodelist []
     set DPL_d []
 
     ; fill the potential feeding tree list
@@ -914,7 +916,7 @@ to move-monkeys
       remove_trees_surrounding ; to avoid feeding in the closest tree
     ]
 
-    if timestep = 1 [
+    if timestep = random 2 [ ; morning-defecation can happen a few timesteps after waking up (check Param-table.csv)
       morning-defecation
     ]
 
@@ -1311,10 +1313,30 @@ to feeding
     remove_trees_surrounding
   ]
 
+
   ; consume seeds:
   set seed_ate_list lput [who] of tree_current seed_ate_list
   set seed_mem_list lput 0 seed_mem_list
   set seed_add_list lput 1 seed_add_list
+
+
+  ; if the model has parameterized gtt, add also the gtt for each seed based on empirical gtt distribution to the seed_gtt_list
+  if ( gtt-param? = TRUE ) [
+    ; if you want parameterized gtt values (using values on Data/Param-table.csv)
+    if study_area = "Guareí" AND feeding-trees-scenario = "May"  [ set seed_gtt_list lput random-poisson 13 seed_gtt_list ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"  [ set seed_gtt_list lput random-poisson 18 seed_gtt_list ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"  [ set seed_gtt_list lput random-poisson 17 seed_gtt_list ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"  [ set seed_gtt_list lput random-poisson 19 seed_gtt_list ]
+
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"  [ set seed_gtt_list lput random-poisson 16.6 seed_gtt_list ] ;this value is not empirical, it is estimated
+    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"  [ set seed_gtt_list lput random-poisson 16 seed_gtt_list ]
+
+    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"  [ set seed_gtt_list lput random-poisson 26 seed_gtt_list ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"  [ set seed_gtt_list lput random-poisson 21 seed_gtt_list ]
+
+    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"  [ set seed_gtt_list lput random-poisson 16 seed_gtt_list ]
+  ]
+
 end
 
 ;-----------------------------------------
@@ -1691,37 +1713,107 @@ end
 ; Defecation commands
 ;---------------------------------------------------------------------------------------------
 to defecation
-  if timestep < simulation-time * 85 / 100 [ ; 10% of the simulation-time (check parameterization);   Mayara's model: 84 is for 7 hours after waking up (after 3pm)
+  ifelse ( timestep < simulation-time * 90 / 100 ) [ ; if the time is below 90% of the simulation-time, seeds should be defecated (check parameterization);   Mayara's model: 84 timesteps is for 7 hours after waking up (after 3pm)
 
     ; testing if the monkey defecates the seeds AND put the seeds to the seeds' agent list
-    if member? gut_transit_time seed_mem_list [                            ; if the timestep since consumed (seed_mem_list) is equal to gut_transit_time ...
-      let loc_index position gut_transit_time seed_mem_list                ;
-      let loc_who item loc_index seed_ate_list                             ; take the who number of the consumed seed based on the seed_mem_lit and save it in an index
-      set seed_ate_list remove-item 0 seed_ate_list                        ; remove the first seed from the seed_ate_list
-      set seed_add_list remove-item 0 seed_add_list                        ; do the same for the helper list (seed_add_list)
-      set seed_mem_list remove gut_transit_time seed_mem_list              ; remove the gut_transit_time item from the seed_mem_list
-      hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
-        setxy xcor ycor
-        set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
-        set species [species] of feeding-trees with [ who = loc_who ]
-        set id-seed who
-        set disp-day "same day"
-        set SDD distance ( feeding-tree loc_who ) ;with [id-tree] = mother-tree]
-        set label ""
-        set shape "plant"
-        set size 1.45
-        set color 4
+
+    ifelse ( gtt-param? = TRUE ) [
+
+      foreach seed_gtt_list [ x ->                        ; based on the gtt list
+
+        let loc_index_gtt position x seed_gtt_list            ; get the position of x in the seed_gtt_list
+        let loc_index_mem item loc_index_gtt seed_mem_list    ; get the position of x in the seed_mem_list (it has to be the same position in both lists)
+        let loc_who_gtt item loc_index_gtt seed_ate_list      ; get the who number of x
+
+        ;debugging
+        ;        type "gtt done = " print x
+        ;        type "loc_index_gtt = " print loc_index_gtt
+        ;        type "loc_who_gtt = " print loc_who_gtt
+        ;        print " - "
+
+
+        if ( loc_index_mem = x) [                             ; if the atributed gtt to each seed (x) is equal to the time passed since consumption (seed_mem_list) in its position
+
+          ;debugging:
+;          print "LISTS MATCH, DEFECATION SHUOLD OCCUR NOW"
+
+          set seed_ate_list remove-item loc_index_gtt seed_ate_list
+          set seed_add_list remove-item loc_index_gtt seed_add_list
+          set seed_mem_list remove-item loc_index_gtt seed_mem_list
+          set seed_gtt_list remove-item loc_index_gtt seed_gtt_list
+
+          hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
+            setxy xcor ycor
+            set mother-tree [id-tree] of feeding-trees with [ who = loc_who_gtt ]
+            set species [species] of feeding-trees with [ who = loc_who_gtt ]
+            set id-seed who
+            set disp-day "same day"
+            set SDD distance ( feeding-tree loc_who_gtt ) ;with [id-tree] = mother-tree]
+            set label ""
+            set shape "plant"
+            set size 1.45
+            set color 4
+          ]
+
+        ]
+
+        ;debugging
+;        print " ==================================== "
+;        type "gtt done = " print x
+;        type "loc_index_gtt = " print loc_index_gtt
+;        type "loc_who_gtt = " print loc_who_gtt
+;        print " - "
+
       ]
+
+
+
+
+
+      ; this has to happen independently of the timestep
+      set seed_mem_list (map + seed_add_list seed_mem_list)
+
+    ][
+
+      if member? gut_transit_time seed_mem_list [                            ; if the timestep since consumed (seed_mem_list) is equal to gut_transit_time ...
+        let loc_index position gut_transit_time seed_mem_list                ;
+        let loc_who item loc_index seed_ate_list                             ; take the who number of the consumed seed based on the seed_mem_lit and save it in an index
+        set seed_ate_list remove-item 0 seed_ate_list                        ; remove the first seed from the seed_ate_list
+        set seed_add_list remove-item 0 seed_add_list                        ; do the same for the helper list (seed_add_list)
+        set seed_mem_list remove gut_transit_time seed_mem_list              ; remove the gut_transit_time item from the seed_mem_list
+        hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
+          setxy xcor ycor
+          set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
+          set species [species] of feeding-trees with [ who = loc_who ]
+          set id-seed who
+          set disp-day "same day"
+          set SDD distance ( feeding-tree loc_who ) ;with [id-tree] = mother-tree]
+          set label ""
+          set shape "plant"
+          set size 1.45
+          set color 4
+        ]
+      ]
+      ; this has to happen independently of the timestep
+      set seed_mem_list (map + seed_add_list seed_mem_list)
+
     ]
+
+  ][ ; otherwise, seeds will be kept to morning-defecation
+    ; this has to happen independently of the timestep
+      set seed_mem_list (map + seed_add_list seed_mem_list)
   ]
 
-  set seed_mem_list (map + seed_add_list seed_mem_list)
+
 
 end
 
 ;----------------------------------------------------
 
 to morning-defecation
+
+  ;debugging:
+  type "MORNING-DEFECATION step: " print timestep
 
   foreach seed_ate_list [
     x ->  hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
@@ -1748,6 +1840,7 @@ to morning-defecation
   set seed_ate_list []
   set seed_mem_list []
   set seed_add_list []
+  if gtt-param? = TRUE [ set seed_gtt_list [] ]
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -2322,11 +2415,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+501
+406
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2336,10 +2429,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -2534,7 +2627,7 @@ INPUTBOX
 601
 82
 no_days
-6.0
+1.0
 1
 0
 Number
@@ -2646,7 +2739,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+5
 
 CHOOSER
 984
@@ -2713,7 +2806,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+17.0
 1
 1
 NIL
@@ -3078,7 +3171,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.36
 0.05
 1
 NIL
@@ -3325,7 +3418,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-2.0
+5.0
 1
 1
 NIL
@@ -3445,7 +3538,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 247
@@ -3576,7 +3669,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+68.98
 5
 1
 NIL
@@ -3591,7 +3684,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.4060000000000001
 0.1
 1
 NIL
@@ -3606,7 +3699,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.343
 0.1
 1
 NIL
@@ -3621,7 +3714,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+67.86
 1
 1
 NIL
