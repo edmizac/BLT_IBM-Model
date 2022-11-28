@@ -16,7 +16,7 @@ turtles-own [
 
 ; trees
 breed [feeding-trees feeding-tree]
-feeding-trees-own [ species id-tree visitations ] ; feeding trees have species and id code and a visited counter
+feeding-trees-own [ species id-tree visitations dist-to-homerange-center] ; feeding trees have species and id code and a visited counter
 
 breed [sleeping-trees sleeping-tree]
 sleeping-trees-own [ species id-tree visitations ]
@@ -28,7 +28,7 @@ breed [legend-trees legend-tree] ; to set up a legend with the color of trees
 
 breed [seeds seed]
 seeds-own [
-  id-seed species mother-tree
+  id-seed species mother-tree mother-tree-who
   disp-day
   SDD
 ]
@@ -58,6 +58,10 @@ monkeys-own [
   straight-line-to-target? ; if there is matrix in front of the tamarin in straight line
   travelmodelist  ; list to make travel mode histogram
   tree_current    ; old_tree
+
+  homerange-center ; center of home range
+  candidate_ld_targets ; list of possible ld targets
+  candidate_ld_dists   ; list of distances of possible ld targets to homerange-center
 
   tree_pot_list   ; list of all feeding trees in homerange for that tamarin
   tree_ate_list   ; list of trees the tamarins did eat
@@ -106,6 +110,10 @@ globals [
   forest_set
   matrix_set
   border_patches
+
+  ;; for homerange-center
+  position-all-trees-x-list
+  position-all-trees-y-list
 
 
   ;; INPUT ;;
@@ -483,6 +491,17 @@ to setup-monkeys
 
     set x_UTM (item 0 gis:envelope-of self)
     set y_UTM (item 2 gis:envelope-of self)
+
+    ; for selecting ld_trees not randomly, but those that are distant from the home range center (this is a territoriality factor/influence)
+;    let dist-all-trees
+    set position-all-trees-x-list ( [xcor] of feeding-trees )
+    set position-all-trees-y-list ( [ycor] of feeding-trees )
+
+;        print position-all-trees-y-list
+
+    set homerange-center patch (mean position-all-trees-x-list) (mean position-all-trees-y-list)
+    ask homerange-center [ set pcolor red ask patches in-radius 3 [ set pcolor red ]  ]
+    ask feeding-trees [ set dist-to-homerange-center distance [ homerange-center ] of myself ]
 
     set travel_mode "short_distance"
     set tree_target -1
@@ -902,6 +921,7 @@ to move-monkeys
     set Y_coords lput y_UTM Y_coords
 
 
+
     ; Avoid matrix (for other implementations, check v1.1_matrix-avoidance branch):
 ;    avoid-matrix
 
@@ -1180,7 +1200,7 @@ to-report on-feeding-tree?
     ifelse action = "travel" OR action = "forage" AND tree_target != -1 [
 ;      type "on-feeding-tree? reporter distance to target : "
 ;      print distance tree_target ; for debugging
-      ifelse distance tree_target < 0.8 * step_len_travel [
+      ifelse distance tree_target <  step_len_travel [
 
 ;        print "HERE ***************"
 
@@ -1445,21 +1465,21 @@ to to-feeding-tree
 
         ifelse ( random-float 1 < p_foraging_while_traveling ) [
 
-          if tree_target != -1 AND distance tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+          if tree_target != -1 AND distance tree_target > step_len_forage [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
             forage
+            set action "forage"
+            set behavior "forage"
             ;; RANDOM movement while foraging:
-            if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+            if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [
               rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
             ]
-            travel
-            set action "travel"
-            set behavior "travel"
+            travel ; because the travel procedure has an option for forage type of travel
             set behaviorsequence lput 3 behaviorsequence
           ]
 
         ][
 
-          if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+          if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [
             rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q)  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
@@ -1469,7 +1489,7 @@ to to-feeding-tree
 
         ]
       ][
-        if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+        if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [ ; keep step_len_travel here as it represents the real movement capacity when tamarins are arriving at a tree
           rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
@@ -1531,19 +1551,16 @@ to to-feeding-tree
 
         ifelse ( random-float 1 < p_foraging_while_traveling ) [
 
-          if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+          if ld_tree_target != -1 AND distance ld_tree_target > step_len_forage [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
             forage
+            set action "forage"
+            set behavior "forage"
             ;; RANDOM movement while foraging:
-            if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+            if step-model-param? = TRUE  AND distance ld_tree_target > 1.5 * step_len_travel [ ; keep step_len_travel here as it represents the real movement capacity when tamarins are arriving at a tree
               rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
             ]
-            if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
-              rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
-            ]
-            travel
-            set action "travel"
-            set behavior "travel"
-            set behaviorsequence lput 3 behaviorsequence
+            travel ; because the travel procedure has an option for forage type of travel
+            set behaviorsequence lput 2 behaviorsequence
           ]
 
         ][
@@ -1589,7 +1606,7 @@ end
 to search-feeding-tree
 
 
-;  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
+  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
   if travel_mode = "short_distance" [
     let let_pot_list tree_pot_list
@@ -1602,7 +1619,21 @@ to search-feeding-tree
 
   if travel_mode = "long_distance" [
     let let_pot_list tree_pot_list
-    set ld_tree_target one-of feeding-trees with [member? who let_pot_list] ;; RANDOM TREE
+     ;; RANDOM TREE
+;    set ld_tree_target one-of feeding-trees with [member? who let_pot_list]
+
+    ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
+    set candidate_ld_targets feeding-trees with [member? who let_pot_list]
+;    print candidate_ld_targets
+    if count candidate_ld_targets <= 10 [ enhance_memory_list ] ; if available trees are few, enhance memory list
+    set candidate_ld_targets max-n-of 10 candidate_ld_targets [dist-to-homerange-center]
+;    print candidate_ld_targets
+    ask candidate_ld_targets [ set color yellow ]
+;    set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] WORKS
+    set ld_tree_target one-of candidate_ld_targets
+;    print ld_tree_target
+;    print distance ld_tree_target
+
     set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
     ask tree_target [ set color blue ]    ; make long distance target blue
 
@@ -1723,7 +1754,7 @@ to defecation
 
         let loc_index_gtt position x seed_gtt_list            ; get the position of x in the seed_gtt_list
         let loc_index_mem item loc_index_gtt seed_mem_list    ; get the position of x in the seed_mem_list (it has to be the same position in both lists)
-        let loc_who_gtt item loc_index_gtt seed_ate_list      ; get the who number of x
+        let loc_who item loc_index_gtt seed_ate_list      ; get the who number of x
 
         ;debugging
         ;        type "gtt done = " print x
@@ -1744,11 +1775,13 @@ to defecation
 
           hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
             setxy xcor ycor
-            set mother-tree [id-tree] of feeding-trees with [ who = loc_who_gtt ]
-            set species [species] of feeding-trees with [ who = loc_who_gtt ]
+            set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
+;            set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
+            set species [species] of feeding-trees with [ who = loc_who ]
             set id-seed who
             set disp-day "same day"
-            set SDD distance ( feeding-tree loc_who_gtt ) ;with [id-tree] = mother-tree]
+            set SDD distance ( feeding-tree loc_who ) * patch-scale ;with [id-tree] = mother-tree]
+;            type "your mother tree is: " print feeding-tree loc_who
             set label ""
             set shape "plant"
             set size 1.45
@@ -1778,21 +1811,25 @@ to defecation
       if member? gut_transit_time seed_mem_list [                            ; if the timestep since consumed (seed_mem_list) is equal to gut_transit_time ...
         let loc_index position gut_transit_time seed_mem_list                ;
         let loc_who item loc_index seed_ate_list                             ; take the who number of the consumed seed based on the seed_mem_lit and save it in an index
-        set seed_ate_list remove-item 0 seed_ate_list                        ; remove the first seed from the seed_ate_list
-        set seed_add_list remove-item 0 seed_add_list                        ; do the same for the helper list (seed_add_list)
-        set seed_mem_list remove gut_transit_time seed_mem_list              ; remove the gut_transit_time item from the seed_mem_list
+
+
         hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
           setxy xcor ycor
           set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
+;          set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
           set species [species] of feeding-trees with [ who = loc_who ]
           set id-seed who
           set disp-day "same day"
-          set SDD distance ( feeding-tree loc_who ) ;with [id-tree] = mother-tree]
+          set SDD distance ( feeding-tree loc_who ) * patch-scale ;with [id-tree] = mother-tree]
+;          type "your mother tree is: " print feeding-tree loc_who
           set label ""
           set shape "plant"
           set size 1.45
           set color 4
         ]
+        set seed_ate_list remove-item 0 seed_ate_list                        ; remove the first seed from the seed_ate_list
+        set seed_add_list remove-item 0 seed_add_list                        ; do the same for the helper list (seed_add_list)
+        set seed_mem_list remove gut_transit_time seed_mem_list              ; remove the gut_transit_time item from the seed_mem_list
       ]
       ; this has to happen independently of the timestep
       set seed_mem_list (map + seed_add_list seed_mem_list)
@@ -1819,13 +1856,14 @@ to morning-defecation
     x ->  hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
       setxy xcor ycor
       set mother-tree [id-tree] of feeding-trees with [ who = x ]
+;      set mother-tree-who [who] of feeding-trees with [ who = loc_who ] ; loc_who has to be redefined
       set species [species] of feeding-trees with [ who = x ]
       set id-seed who
       set disp-day "next day"
 ;      let loc_who [who] of feeding-trees with [ who = x ] ; this does not work becuse there are duplicated agents (more than one feeding-tree with id-tree = "AMf043"), thus this returns a list
 ;      print loc_who
 ;      set SDD distance feeding-trees with [ loc_who = x ]
-      set SDD distance ( feeding-tree x )
+      set SDD distance ( feeding-tree x ) * patch-scale
       ; testing if the SDD is correct (print on command center):
       ; ask feeding-trees with [ id-tree = "AMf167" ] [ set color pink ]
       ; ask seed 105 [ print distance feeding-tree 27  ]
@@ -1880,7 +1918,7 @@ to sleeping
 ;    set straight-line-to-target? TRUE
 
 
-    if distance tree_target < 2 * step_len_travel * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
+    if distance tree_target < 2 * step_len_travel  [ ; travel speed basically doubles when tamrarins are going to the sleeping site
 
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
@@ -2415,11 +2453,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2429,10 +2467,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -2547,7 +2585,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-120.0
+118.0
 1
 1
 NIL
@@ -2627,7 +2665,7 @@ INPUTBOX
 601
 82
 no_days
-1.0
+6.0
 1
 0
 Number
@@ -2656,7 +2694,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--15.0
+-10.0
 1
 1
 NIL
@@ -2739,7 +2777,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+1
 
 CHOOSER
 984
@@ -2771,7 +2809,7 @@ step_forget
 step_forget
 0
 200
-82.0
+147.0
 1
 1
 NIL
@@ -2806,7 +2844,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-17.0
+16.0
 1
 1
 NIL
@@ -3171,7 +3209,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.21
 0.05
 1
 NIL
@@ -3307,7 +3345,7 @@ NIL
 T
 OBSERVER
 NIL
-NIL
+L
 NIL
 NIL
 1
@@ -3538,7 +3576,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 247
@@ -3669,7 +3707,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+43.02
 5
 1
 NIL
@@ -3684,7 +3722,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+3.089
 0.1
 1
 NIL
@@ -3699,7 +3737,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+3.931
 0.1
 1
 NIL
@@ -3714,7 +3752,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+17.85
 1
 1
 NIL
@@ -3763,7 +3801,7 @@ SWITCH
 649
 gtt-param?
 gtt-param?
-0
+1
 1
 -1000
 
