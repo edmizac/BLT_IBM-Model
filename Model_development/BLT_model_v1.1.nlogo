@@ -16,7 +16,7 @@ turtles-own [
 
 ; trees
 breed [feeding-trees feeding-tree]
-feeding-trees-own [ species id-tree visitations ] ; feeding trees have species and id code and a visited counter
+feeding-trees-own [ species id-tree visitations dist-to-homerange-center] ; feeding trees have species and id code and a visited counter
 
 breed [sleeping-trees sleeping-tree]
 sleeping-trees-own [ species id-tree visitations ]
@@ -58,6 +58,10 @@ monkeys-own [
   straight-line-to-target? ; if there is matrix in front of the tamarin in straight line
   travelmodelist  ; list to make travel mode histogram
   tree_current    ; old_tree
+
+  homerange-center ; center of home range
+  candidate_ld_targets ; list of possible ld targets
+  candidate_ld_dists   ; list of distances of possible ld targets to homerange-center
 
   tree_pot_list   ; list of all feeding trees in homerange for that tamarin
   tree_ate_list   ; list of trees the tamarins did eat
@@ -106,6 +110,10 @@ globals [
   forest_set
   matrix_set
   border_patches
+
+  ;; for homerange-center
+  position-all-trees-x-list
+  position-all-trees-y-list
 
 
   ;; INPUT ;;
@@ -483,6 +491,17 @@ to setup-monkeys
 
     set x_UTM (item 0 gis:envelope-of self)
     set y_UTM (item 2 gis:envelope-of self)
+
+    ; for selecting ld_trees not randomly, but those that are distant from the home range center (this is a territoriality factor/influence)
+;    let dist-all-trees
+    set position-all-trees-x-list ( [xcor] of feeding-trees )
+    set position-all-trees-y-list ( [ycor] of feeding-trees )
+
+;        print position-all-trees-y-list
+
+    set homerange-center patch (mean position-all-trees-x-list) (mean position-all-trees-y-list)
+    ask homerange-center [ set pcolor red ask patches in-radius 3 [ set pcolor red ]  ]
+    ask feeding-trees [ set dist-to-homerange-center distance [ homerange-center ] of myself ]
 
     set travel_mode "short_distance"
     set tree_target -1
@@ -900,6 +919,7 @@ to move-monkeys
     ; for home range calculation with r extension:
     set X_coords lput x_UTM X_coords
     set Y_coords lput y_UTM Y_coords
+
 
 
     ; Avoid matrix (for other implementations, check v1.1_matrix-avoidance branch):
@@ -1599,7 +1619,21 @@ to search-feeding-tree
 
   if travel_mode = "long_distance" [
     let let_pot_list tree_pot_list
-    set ld_tree_target one-of feeding-trees with [member? who let_pot_list] ;; RANDOM TREE
+     ;; RANDOM TREE
+;    set ld_tree_target one-of feeding-trees with [member? who let_pot_list]
+
+    ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
+    set candidate_ld_targets feeding-trees with [member? who let_pot_list]
+;    print candidate_ld_targets
+    if count candidate_ld_targets <= 10 [ enhance_memory_list ] ; if available trees are few, enhance memory list
+    set candidate_ld_targets max-n-of 10 candidate_ld_targets [dist-to-homerange-center]
+;    print candidate_ld_targets
+    ask candidate_ld_targets [ set color yellow ]
+;    set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] WORKS
+    set ld_tree_target one-of candidate_ld_targets
+;    print ld_tree_target
+;    print distance ld_tree_target
+
     set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
     ask tree_target [ set color blue ]    ; make long distance target blue
 
@@ -2419,11 +2453,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2433,10 +2467,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -2551,7 +2585,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-120.0
+118.0
 1
 1
 NIL
@@ -2631,7 +2665,7 @@ INPUTBOX
 601
 82
 no_days
-1.0
+6.0
 1
 0
 Number
@@ -2660,7 +2694,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--15.0
+-10.0
 1
 1
 NIL
@@ -2743,7 +2777,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-6
+1
 
 CHOOSER
 984
@@ -2775,7 +2809,7 @@ step_forget
 step_forget
 0
 200
-82.0
+147.0
 1
 1
 NIL
@@ -2810,7 +2844,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-18.0
+16.0
 1
 1
 NIL
@@ -2989,7 +3023,7 @@ SWITCH
 258
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -3175,7 +3209,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.47
+0.21
 0.05
 1
 NIL
@@ -3311,7 +3345,7 @@ NIL
 T
 OBSERVER
 NIL
-NIL
+L
 NIL
 NIL
 1
@@ -3542,7 +3576,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 247
@@ -3673,7 +3707,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-78.99
+43.02
 5
 1
 NIL
@@ -3688,7 +3722,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.214
+3.089
 0.1
 1
 NIL
@@ -3703,7 +3737,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.544
+3.931
 0.1
 1
 NIL
@@ -3718,7 +3752,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-75.63
+17.85
 1
 1
 NIL
