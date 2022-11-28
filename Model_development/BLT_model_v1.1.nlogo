@@ -916,7 +916,7 @@ to move-monkeys
       remove_trees_surrounding ; to avoid feeding in the closest tree
     ]
 
-    if timestep = 1 [
+    if timestep = random 2 [ ; morning-defecation can happen a few timesteps after waking up (check Param-table.csv)
       morning-defecation
     ]
 
@@ -1713,45 +1713,57 @@ end
 ; Defecation commands
 ;---------------------------------------------------------------------------------------------
 to defecation
-  ifelse ( timestep < simulation-time * 90 / 100 ) [ ; 10% of the simulation-time (check parameterization);   Mayara's model: 84 timesteps is for 7 hours after waking up (after 3pm)
+  ifelse ( timestep < simulation-time * 90 / 100 ) [ ; if the time is below 90% of the simulation-time, seeds should be defecated (check parameterization);   Mayara's model: 84 timesteps is for 7 hours after waking up (after 3pm)
 
     ; testing if the monkey defecates the seeds AND put the seeds to the seeds' agent list
 
     ifelse ( gtt-param? = TRUE ) [
 
-      foreach seed_gtt_list [ x ->
+      foreach seed_gtt_list [ x ->                        ; based on the gtt list
 
-;        if member? x seed_mem_list [                        ; if the atributed gtt to each seed (x) is in the seed_mem_list
+        let loc_index_gtt position x seed_gtt_list            ; get the position of x in the seed_gtt_list
+        let loc_index_mem item loc_index_gtt seed_mem_list    ; get the position of x in the seed_mem_list (it has to be the same position in both lists)
+        let loc_who_gtt item loc_index_gtt seed_ate_list      ; get the who number of x
 
-          let loc_index_gtt position x seed_gtt_list                ; get its position in the seed_gtt_list
-          let loc_index_mem position loc_index_gtt seed_mem_list    ; get its position in the seed_mem_list (it has to be equal)
-
-;          let loc_who_mem item loc_index_mem seed_ate_list          ; get the id (who) of the seed according to its position
-;          let loc_who_gtt item loc_index_gtt seed_ate_list          ; get the id (who) of the seed according to its position
-
-        type "gtt done = " print x
-        type "loc_index_mem = " print loc_index_mem
-        type "loc_index_gtt = " print loc_index_gtt
+        ;debugging
+        ;        type "gtt done = " print x
+        ;        type "loc_index_gtt = " print loc_index_gtt
+        ;        type "loc_who_gtt = " print loc_who_gtt
+        ;        print " - "
 
 
-        if member? x seed_mem_list [
+        if ( loc_index_mem = x) [                             ; if the atributed gtt to each seed (x) is equal to the time passed since consumption (seed_mem_list) in its position
+
+          ;debugging:
+;          print "LISTS MATCH, DEFECATION SHUOLD OCCUR NOW"
 
           set seed_ate_list remove-item loc_index_gtt seed_ate_list
           set seed_add_list remove-item loc_index_gtt seed_add_list
+          set seed_mem_list remove-item loc_index_gtt seed_mem_list
+          set seed_gtt_list remove-item loc_index_gtt seed_gtt_list
 
-          set seed_mem_list remove loc_index_gtt seed_mem_list
-          set seed_gtt_list remove loc_index_gtt seed_gtt_list
-
-          print " ==================================== "
-
-;         type "gtt done = " print x
-;          type "loc_index_mem = " print loc_index_mem
-;          type "loc_index_gtt = " print loc_index_gtt
-
-;          type "loc_who_mem = " print loc_who_mem
-;          type "loc_who_gtt = " print loc_who_gtt
+          hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
+            setxy xcor ycor
+            set mother-tree [id-tree] of feeding-trees with [ who = loc_who_gtt ]
+            set species [species] of feeding-trees with [ who = loc_who_gtt ]
+            set id-seed who
+            set disp-day "same day"
+            set SDD distance ( feeding-tree loc_who_gtt ) ;with [id-tree] = mother-tree]
+            set label ""
+            set shape "plant"
+            set size 1.45
+            set color 4
+          ]
 
         ]
+
+        ;debugging
+;        print " ==================================== "
+;        type "gtt done = " print x
+;        type "loc_index_gtt = " print loc_index_gtt
+;        type "loc_who_gtt = " print loc_who_gtt
+;        print " - "
+
       ]
 
 
@@ -1787,7 +1799,7 @@ to defecation
 
     ]
 
-  ][
+  ][ ; otherwise, seeds will be kept to morning-defecation
     ; this has to happen independently of the timestep
       set seed_mem_list (map + seed_add_list seed_mem_list)
   ]
@@ -1799,6 +1811,9 @@ end
 ;----------------------------------------------------
 
 to morning-defecation
+
+  ;debugging:
+  type "MORNING-DEFECATION step: " print timestep
 
   foreach seed_ate_list [
     x ->  hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
@@ -1825,6 +1840,7 @@ to morning-defecation
   set seed_ate_list []
   set seed_mem_list []
   set seed_add_list []
+  if gtt-param? = TRUE [ set seed_gtt_list [] ]
 end
 
 ;---------------------------------------------------------------------------------------------
@@ -3402,7 +3418,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-2.0
+5.0
 1
 1
 NIL
