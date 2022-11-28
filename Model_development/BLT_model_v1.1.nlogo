@@ -1320,8 +1320,8 @@ to feeding
   set seed_add_list lput 1 seed_add_list
 
 
-  ; define gtt for each seed based on gtt distribution
-  ifelse ( gtt-param? = TRUE ) [
+  ; if the model has parameterized gtt, add also the gtt for each seed based on empirical gtt distribution to the seed_gtt_list
+  if ( gtt-param? = TRUE ) [
     ; if you want parameterized gtt values (using values on Data/Param-table.csv)
     if study_area = "Guareí" AND feeding-trees-scenario = "May"  [ set seed_gtt_list lput random-poisson 13 seed_gtt_list ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"  [ set seed_gtt_list lput random-poisson 18 seed_gtt_list ]
@@ -1335,12 +1335,8 @@ to feeding
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"  [ set seed_gtt_list lput random-poisson 21 seed_gtt_list ]
 
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"  [ set seed_gtt_list lput random-poisson 16 seed_gtt_list ]
-
-  ][
-    ; otherwise it will use the interface value and seed_mem_list only
-;    set seed_gtt_list gut_transit_time seed_gtt_list
-
   ]
+
 end
 
 ;-----------------------------------------
@@ -1725,19 +1721,35 @@ to defecation
 
       foreach seed_gtt_list [ x ->
 
+;        if member? x seed_mem_list [                        ; if the atributed gtt to each seed (x) is in the seed_mem_list
+
+          let loc_index_gtt position x seed_gtt_list                ; get its position in the seed_gtt_list
+          let loc_index_mem position loc_index_gtt seed_mem_list    ; get its position in the seed_mem_list (it has to be equal)
+
+;          let loc_who_mem item loc_index_mem seed_ate_list          ; get the id (who) of the seed according to its position
+;          let loc_who_gtt item loc_index_gtt seed_ate_list          ; get the id (who) of the seed according to its position
+
+        type "gtt done = " print x
+        type "loc_index_mem = " print loc_index_mem
+        type "loc_index_gtt = " print loc_index_gtt
+
+
         if member? x seed_mem_list [
 
-          let loc_index position x seed_gtt_list
-          let loc_who item loc_index seed_ate_list
+          set seed_ate_list remove-item loc_index_gtt seed_ate_list
+          set seed_add_list remove-item loc_index_gtt seed_add_list
 
-          set seed_ate_list remove-item 0 seed_ate_list
-          set seed_add_list remove-item 0 seed_add_list
-          set seed_mem_list remove x seed_mem_list
-          set seed_gtt_list remove x seed_gtt_list
+          set seed_mem_list remove loc_index_gtt seed_mem_list
+          set seed_gtt_list remove loc_index_gtt seed_gtt_list
 
-        print x
-        type "loc_index = " print loc_index
-        type "loc_who = " print loc_who
+          print " ==================================== "
+
+;         type "gtt done = " print x
+;          type "loc_index_mem = " print loc_index_mem
+;          type "loc_index_gtt = " print loc_index_gtt
+
+;          type "loc_who_mem = " print loc_who_mem
+;          type "loc_who_gtt = " print loc_who_gtt
 
         ]
       ]
@@ -1746,7 +1758,8 @@ to defecation
 
 
 
-
+      ; this has to happen independently of the timestep
+      set seed_mem_list (map + seed_add_list seed_mem_list)
 
     ][
 
@@ -1769,17 +1782,16 @@ to defecation
           set color 4
         ]
       ]
-
+      ; this has to happen independently of the timestep
+      set seed_mem_list (map + seed_add_list seed_mem_list)
 
     ]
 
   ][
-
-    ;?????
-
-  ]
     ; this has to happen independently of the timestep
       set seed_mem_list (map + seed_add_list seed_mem_list)
+  ]
+
 
 
 end
@@ -2599,7 +2611,7 @@ INPUTBOX
 601
 82
 no_days
-6.0
+1.0
 1
 0
 Number
