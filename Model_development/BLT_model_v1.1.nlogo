@@ -28,7 +28,7 @@ breed [legend-trees legend-tree] ; to set up a legend with the color of trees
 
 breed [seeds seed]
 seeds-own [
-  id-seed species mother-tree
+  id-seed species mother-tree mother-tree-who
   disp-day
   SDD
 ]
@@ -1723,7 +1723,7 @@ to defecation
 
         let loc_index_gtt position x seed_gtt_list            ; get the position of x in the seed_gtt_list
         let loc_index_mem item loc_index_gtt seed_mem_list    ; get the position of x in the seed_mem_list (it has to be the same position in both lists)
-        let loc_who_gtt item loc_index_gtt seed_ate_list      ; get the who number of x
+        let loc_who item loc_index_gtt seed_ate_list      ; get the who number of x
 
         ;debugging
         ;        type "gtt done = " print x
@@ -1744,11 +1744,13 @@ to defecation
 
           hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
             setxy xcor ycor
-            set mother-tree [id-tree] of feeding-trees with [ who = loc_who_gtt ]
-            set species [species] of feeding-trees with [ who = loc_who_gtt ]
+            set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
+;            set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
+            set species [species] of feeding-trees with [ who = loc_who ]
             set id-seed who
             set disp-day "same day"
-            set SDD distance ( feeding-tree loc_who_gtt ) ;with [id-tree] = mother-tree]
+            set SDD distance ( feeding-tree loc_who ) * patch-scale ;with [id-tree] = mother-tree]
+            type "your mother tree is: " print feeding-tree loc_who
             set label ""
             set shape "plant"
             set size 1.45
@@ -1778,21 +1780,25 @@ to defecation
       if member? gut_transit_time seed_mem_list [                            ; if the timestep since consumed (seed_mem_list) is equal to gut_transit_time ...
         let loc_index position gut_transit_time seed_mem_list                ;
         let loc_who item loc_index seed_ate_list                             ; take the who number of the consumed seed based on the seed_mem_lit and save it in an index
-        set seed_ate_list remove-item 0 seed_ate_list                        ; remove the first seed from the seed_ate_list
-        set seed_add_list remove-item 0 seed_add_list                        ; do the same for the helper list (seed_add_list)
-        set seed_mem_list remove gut_transit_time seed_mem_list              ; remove the gut_transit_time item from the seed_mem_list
+
+
         hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
           setxy xcor ycor
           set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
+;          set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
           set species [species] of feeding-trees with [ who = loc_who ]
           set id-seed who
           set disp-day "same day"
-          set SDD distance ( feeding-tree loc_who ) ;with [id-tree] = mother-tree]
+          set SDD distance ( feeding-tree loc_who ) * patch-scale ;with [id-tree] = mother-tree]
+          type "your mother tree is: " print feeding-tree loc_who
           set label ""
           set shape "plant"
           set size 1.45
           set color 4
         ]
+        set seed_ate_list remove-item 0 seed_ate_list                        ; remove the first seed from the seed_ate_list
+        set seed_add_list remove-item 0 seed_add_list                        ; do the same for the helper list (seed_add_list)
+        set seed_mem_list remove gut_transit_time seed_mem_list              ; remove the gut_transit_time item from the seed_mem_list
       ]
       ; this has to happen independently of the timestep
       set seed_mem_list (map + seed_add_list seed_mem_list)
@@ -1819,13 +1825,14 @@ to morning-defecation
     x ->  hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
       setxy xcor ycor
       set mother-tree [id-tree] of feeding-trees with [ who = x ]
+;      set mother-tree-who [who] of feeding-trees with [ who = loc_who ] ; loc_who has to be redefined
       set species [species] of feeding-trees with [ who = x ]
       set id-seed who
       set disp-day "next day"
 ;      let loc_who [who] of feeding-trees with [ who = x ] ; this does not work becuse there are duplicated agents (more than one feeding-tree with id-tree = "AMf043"), thus this returns a list
 ;      print loc_who
 ;      set SDD distance feeding-trees with [ loc_who = x ]
-      set SDD distance ( feeding-tree x )
+      set SDD distance ( feeding-tree x ) * patch-scale
       ; testing if the SDD is correct (print on command center):
       ; ask feeding-trees with [ id-tree = "AMf167" ] [ set color pink ]
       ; ask seed 105 [ print distance feeding-tree 27  ]
@@ -2739,7 +2746,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+6
 
 CHOOSER
 984
@@ -2806,7 +2813,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-17.0
+18.0
 1
 1
 NIL
@@ -3171,7 +3178,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.47
 0.05
 1
 NIL
@@ -3669,7 +3676,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+78.99
 5
 1
 NIL
@@ -3684,7 +3691,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+1.214
 0.1
 1
 NIL
@@ -3699,7 +3706,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+2.544
 0.1
 1
 NIL
@@ -3714,7 +3721,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+75.63
 1
 1
 NIL
@@ -3763,7 +3770,7 @@ SWITCH
 649
 gtt-param?
 gtt-param?
-0
+1
 1
 -1000
 
