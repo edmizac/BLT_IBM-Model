@@ -1447,13 +1447,13 @@ to to-feeding-tree
 
           if tree_target != -1 AND distance tree_target > step_len_forage [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
             forage
+            set action "forage"
+            set behavior "forage"
             ;; RANDOM movement while foraging:
-            if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_forage [
+            if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [
               rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
             ]
-            travel
-            set action "travel"
-            set behavior "travel"
+            travel ; because the travel procedure has an option for forage type of travel
             set behaviorsequence lput 3 behaviorsequence
           ]
 
@@ -1469,7 +1469,7 @@ to to-feeding-tree
 
         ]
       ][
-        if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [
+        if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [ ; keep step_len_travel here as it represents the real movement capacity when tamarins are arriving at a tree
           rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
@@ -1533,14 +1533,14 @@ to to-feeding-tree
 
           if ld_tree_target != -1 AND distance ld_tree_target > step_len_forage [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
             forage
+            set action "forage"
+            set behavior "forage"
             ;; RANDOM movement while foraging:
-            if step-model-param? = TRUE  AND distance ld_tree_target > 1.5 * step_len_forage [
+            if step-model-param? = TRUE  AND distance ld_tree_target > 1.5 * step_len_travel [ ; keep step_len_travel here as it represents the real movement capacity when tamarins are arriving at a tree
               rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
             ]
-            travel
-            set action "travel"
-            set behavior "travel"
-            set behaviorsequence lput 3 behaviorsequence
+            travel ; because the travel procedure has an option for forage type of travel
+            set behaviorsequence lput 2 behaviorsequence
           ]
 
         ][
@@ -1586,7 +1586,7 @@ end
 to search-feeding-tree
 
 
-;  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
+  ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
   if travel_mode = "short_distance" [
     let let_pot_list tree_pot_list
