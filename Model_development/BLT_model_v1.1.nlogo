@@ -73,6 +73,7 @@ monkeys-own [
   seed_add_list   ; helper list to increase the mem list by 1 each time step
   seed_gtt_list   ; list of timesteps that each seed will take to be defecated
 
+  ; OUPUT MONKEY VARIABLES
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
   KDE_values ; output of amt package in calc-homerange
   KDE_95
@@ -83,6 +84,17 @@ monkeys-own [
   p_foraging
   p_traveling
   p_resting
+
+  ; movement patterns
+  step_length_mean
+  step_length_sd
+  turn_ang_mean
+  turn_ang_sd
+
+  MSD
+  intensity_use
+  straightness
+  sinuosity
 
 ]
 
@@ -2239,6 +2251,7 @@ to calc-homerange
   r:eval "library(dplyr)"
   r:eval "library(tidyr)"
   r:eval "library(amt)"
+  r:eval "library(circular)"
 
   ;; create an empty data.frame"
   r:eval "turtles <- data.frame()"
@@ -2262,7 +2275,7 @@ to calc-homerange
   ;; calculate homerange (amt package)
   r:eval "db <- cbind(xy, id)"
   ;  show r:get "db"
-  r:eval "db_nest <- db %>%  make_track(.x=Y, .y=X, id = id) %>% nest(data = -c(id))"
+  r:eval "db_nest <- db %>% make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs') %>% nest(data = -c(id))"
   ;  show r:get "db_nest"
   ; calculate HR metrics for every list (=id = run) using map()
   r:eval "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
@@ -2283,12 +2296,13 @@ to calc-homerange
 ;  print "db: "
 ;  show r:get "db"
 
-  print "db_nest: "
-  show r:get "db_nest"
+;  print "db_nest: "
+;  show r:get "db_nest"
 
-;  r:gc
+  r:gc
 
   ; get hr values to agent variable
+  print " ------------- Home range size ------------------ "
   ask monkeys [
     set KDE_95 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
     set KDE_50 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE50') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
@@ -2309,6 +2323,37 @@ to calc-homerange
 ;  r:eval "db <- db %>%    select(-c(KDE_value, area))"
 ;  print "db: "
 ;  show r:get "db"
+
+  ; calculating other movement metrics
+  r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+  r:eval "mov1 <- db_metr %>% mutate( step_length = step_lengths(.), turn_ang = direction_rel(.) )"
+  print " ------------- Step lengths/Turning angles ------------------ "
+;  print r:get "colnames(mov1)"
+;  print r:get "mov1"
+  r:eval "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE), step_length_sd = sd(step_length, na.rm = TRUE), turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE), turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
+  print r:get "colnames(mov1)"
+  print r:get "mov1"
+
+  ask monkeys [
+    set step_length_mean r:get "mov1 %>% dplyr::select(step_length_mean) %>%  unlist() %>% as.vector()"
+    set step_length_sd r:get "mov1 %>% dplyr::select(step_length_sd) %>%  unlist() %>% as.vector()"
+    set turn_ang_mean r:get "mov1 %>% dplyr::select(turn_ang_mean) %>%  unlist() %>% as.vector()"
+    set turn_ang_sd r:get "mov1 %>% dplyr::select(turn_ang_sd) %>%  unlist() %>% as.vector()"
+  ]
+
+
+  r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+  r:eval "db_metr <- db_metr %>% summarise( MSD = msd(.),  intensity_use = intensity_use(.), straightness = straightness(.), sinuosity = sinuosity(.) )"
+  print " ------------- Other movement metrics ------------------ "
+  print r:get "colnames(db_metr)"
+  print r:get "db_metr"
+
+  ask monkeys [
+    set MSD r:get "db_metr %>% dplyr::select(MSD) %>%  unlist() %>% as.vector()"
+    set intensity_use r:get "db_metr %>% dplyr::select(intensity_use) %>%  unlist() %>% as.vector()"
+    set straightness r:get "db_metr %>% dplyr::select(straightness) %>%  unlist() %>% as.vector()"
+    set sinuosity r:get "db_metr %>% dplyr::select(sinuosity) %>%  unlist() %>% as.vector()"
+]
 
 end
 
@@ -2337,6 +2382,7 @@ to calc-activity-budget
   let p_res item 3 activity-values-ordered
 
 
+  print " ------------- Activity budgets ------------------ "
   ask monkeys [
     set p_feeding item 1 p_fee
     set p_foraging item 1 p_for
@@ -2458,11 +2504,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
-370
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2472,10 +2518,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-129
+129
+-93
+93
 0
 0
 1
@@ -2782,7 +2828,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-9
+1
 
 CHOOSER
 984
@@ -2849,7 +2895,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-26.0
+16.0
 1
 1
 NIL
@@ -3214,7 +3260,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.31
+0.21
 0.05
 1
 NIL
@@ -3581,7 +3627,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-3
+2
 
 BUTTON
 247
@@ -3712,7 +3758,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-55.92
+43.02
 5
 1
 NIL
@@ -3727,7 +3773,7 @@ step_len_forage
 step_len_forage
 0
 20
-0.751
+3.089
 0.1
 1
 NIL
@@ -3742,7 +3788,7 @@ step_len_travel
 step_len_travel
 0
 20
-1.794
+3.931
 0.1
 1
 NIL
@@ -3757,7 +3803,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-63.61
+17.85
 1
 1
 NIL

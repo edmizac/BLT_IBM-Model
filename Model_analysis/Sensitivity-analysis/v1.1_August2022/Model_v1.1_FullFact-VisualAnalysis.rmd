@@ -305,21 +305,39 @@ db_nest_a2 <- db_nest_a2 %>% mutate(hr_area_ha = area / 10000)
 
 
 # Other travel patterns
+a1 <- a %>%
+  make_track(.x=x, .y=y, id = id, crs = our_crs, all_cols = TRUE) #%>% nest(data = -c(id))
+
 
 straight1 <- a1 %>%
+  # group_by(id) %>% 
   amt::straightness()
 
 # a1 %>% steps_by_burst(.)
 
 mov1 <- a1 %>%
-  mutate(
-    DPL = tot_dist(.),
-    step_length = step_lengths(.),
-    turn_ang = direction_rel(.),
+  summarise(
+    # DPL = tot_dist(.), # nao parece certo
     MSD = msd(.),
+    intensity_use = intensity_use(.),
     straightness = straightness(.),
     sinuosity = sinuosity(.)
   )
+
+mov2 <- a1 %>% 
+  mutate(
+    step_length = step_lengths(.),
+    turn_ang = direction_rel(.)
+  )
+
+mov2 <- mov2 %>% 
+  summarise(
+    step_length_mean = mean(step_length, na.rm = TRUE),
+    step_length_sd = sd(step_length, na.rm = TRUE),
+    turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE),
+    turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE)
+  
+)
 
 
 
