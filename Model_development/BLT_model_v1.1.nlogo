@@ -1180,7 +1180,7 @@ to-report on-feeding-tree?
     ifelse action = "travel" OR action = "forage" AND tree_target != -1 [
 ;      type "on-feeding-tree? reporter distance to target : "
 ;      print distance tree_target ; for debugging
-      ifelse distance tree_target < 0.8 * step_len_travel [
+      ifelse distance tree_target <  step_len_travel [
 
 ;        print "HERE ***************"
 
@@ -1445,10 +1445,10 @@ to to-feeding-tree
 
         ifelse ( random-float 1 < p_foraging_while_traveling ) [
 
-          if tree_target != -1 AND distance tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+          if tree_target != -1 AND distance tree_target > step_len_forage [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
             forage
             ;; RANDOM movement while foraging:
-            if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+            if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_forage [
               rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
             ]
             travel
@@ -1459,7 +1459,7 @@ to to-feeding-tree
 
         ][
 
-          if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+          if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [
             rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q)  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
@@ -1469,7 +1469,7 @@ to to-feeding-tree
 
         ]
       ][
-        if step-model-param? = TRUE  AND distance tree_target > 0.8 [
+        if step-model-param? = TRUE  AND distance tree_target > 1.5 * step_len_travel [
           rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
         ]
         travel
@@ -1531,14 +1531,11 @@ to to-feeding-tree
 
         ifelse ( random-float 1 < p_foraging_while_traveling ) [
 
-          if ld_tree_target != -1 AND distance ld_tree_target > 0.8 * step_len_travel [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
+          if ld_tree_target != -1 AND distance ld_tree_target > step_len_forage [ ; otherwise it migh forage for 3 sequential steps while arriving in the feeding tree
             forage
             ;; RANDOM movement while foraging:
-            if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+            if step-model-param? = TRUE  AND distance ld_tree_target > 1.5 * step_len_forage [
               rt ( random max_rel_ang_forage_75q ) - ( random max_rel_ang_forage_75q )  ; feeding is less directed than travel
-            ]
-            if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
-              rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
             ]
             travel
             set action "travel"
@@ -1750,7 +1747,7 @@ to defecation
             set id-seed who
             set disp-day "same day"
             set SDD distance ( feeding-tree loc_who ) * patch-scale ;with [id-tree] = mother-tree]
-            type "your mother tree is: " print feeding-tree loc_who
+;            type "your mother tree is: " print feeding-tree loc_who
             set label ""
             set shape "plant"
             set size 1.45
@@ -1790,7 +1787,7 @@ to defecation
           set id-seed who
           set disp-day "same day"
           set SDD distance ( feeding-tree loc_who ) * patch-scale ;with [id-tree] = mother-tree]
-          type "your mother tree is: " print feeding-tree loc_who
+;          type "your mother tree is: " print feeding-tree loc_who
           set label ""
           set shape "plant"
           set size 1.45
@@ -1887,7 +1884,7 @@ to sleeping
 ;    set straight-line-to-target? TRUE
 
 
-    if distance tree_target < 2 * step_len_travel * 0.8 [ ; travel speed basically doubles when tamrarins are going to the sleeping site
+    if distance tree_target < 2 * step_len_travel  [ ; travel speed basically doubles when tamrarins are going to the sleeping site
 
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
@@ -2992,7 +2989,7 @@ SWITCH
 258
 print-step?
 print-step?
-1
+0
 1
 -1000
 
