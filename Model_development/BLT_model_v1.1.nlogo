@@ -1619,20 +1619,25 @@ to search-feeding-tree
 
   if travel_mode = "long_distance" [
     let let_pot_list tree_pot_list
-     ;; RANDOM TREE
-;    set ld_tree_target one-of feeding-trees with [member? who let_pot_list]
 
-    ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
-    set candidate_ld_targets feeding-trees with [member? who let_pot_list]
-;    print candidate_ld_targets
-    if count candidate_ld_targets <= 10 [ enhance_memory_list ] ; if available trees are few, enhance memory list
-    set candidate_ld_targets max-n-of 10 candidate_ld_targets [dist-to-homerange-center]
-;    print candidate_ld_targets
-    ask candidate_ld_targets [ set color yellow ]
-;    set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] WORKS
-    set ld_tree_target one-of candidate_ld_targets
-;    print ld_tree_target
-;    print distance ld_tree_target
+    if ld-target-random? = TRUE [
+      ;; RANDOM TREE
+      set ld_tree_target one-of feeding-trees with [member? who let_pot_list]
+    ]
+
+    if ld-target-random? = FALSE [
+      ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
+      set candidate_ld_targets feeding-trees with [member? who let_pot_list]
+      ;    print candidate_ld_targets
+      while [ count candidate_ld_targets <= n_disputed_trees ] [ enhance_memory_list ] ; if available trees are few, enhance memory list
+      set candidate_ld_targets max-n-of n_disputed_trees candidate_ld_targets [dist-to-homerange-center]
+      ;    print candidate_ld_targets
+      ask candidate_ld_targets [ set color yellow ]
+      ;    set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] WORKS
+      set ld_tree_target one-of candidate_ld_targets
+      ;    print ld_tree_target
+      ;    print distance ld_tree_target
+    ]
 
     set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
     ask tree_target [ set color blue ]    ; make long distance target blue
@@ -2453,11 +2458,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+459
+370
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2467,10 +2472,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-73
+73
+-58
+58
 0
 0
 1
@@ -2585,7 +2590,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-118.0
+105.0
 1
 1
 NIL
@@ -2665,7 +2670,7 @@ INPUTBOX
 601
 82
 no_days
-6.0
+3.0
 1
 0
 Number
@@ -2777,7 +2782,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+9
 
 CHOOSER
 984
@@ -2844,7 +2849,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+26.0
 1
 1
 NIL
@@ -2861,10 +2866,10 @@ TEXTBOX
 1
 
 TEXTBOX
-753
-495
-893
-531
+748
+593
+888
+629
 5. feeding bout
 14
 15.0
@@ -3087,10 +3092,10 @@ NIL
 1
 
 SLIDER
-726
-642
-871
-675
+721
+740
+866
+773
 duration
 duration
 0
@@ -3132,7 +3137,7 @@ TEXTBOX
 313
 875
 338
-How many timesteps BLTs take to forget a tree:
+How many timesteps BLTs take to reconsider revisiting a tree:
 10
 0.0
 1
@@ -3209,17 +3214,17 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.31
 0.05
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-732
-676
-882
-699
+727
+774
+877
+797
 max timesteps repeating same behavior (other than feeding)
 9
 0.0
@@ -3369,10 +3374,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 SWITCH
-727
-516
-874
-549
+722
+614
+869
+647
 feedingbout-on?
 feedingbout-on?
 1
@@ -3449,9 +3454,9 @@ NIL
 
 SLIDER
 715
-428
+433
 879
-461
+466
 prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
@@ -3463,20 +3468,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-716
-464
-866
-482
-don't choose 1
+712
+422
+862
+440
+don't choose 1:
 9
 0.0
 1
 
 TEXTBOX
-728
-552
-878
-574
+723
+650
+873
+672
 energy and time spent feeding for each tree species. If not:
 9
 0.0
@@ -3576,7 +3581,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+3
 
 BUTTON
 247
@@ -3707,7 +3712,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+55.92
 5
 1
 NIL
@@ -3722,7 +3727,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+0.751
 0.1
 1
 NIL
@@ -3737,7 +3742,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+1.794
 0.1
 1
 NIL
@@ -3752,17 +3757,17 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+63.61
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-726
-578
-874
-611
+721
+676
+869
+709
 species_time
 species_time
 1
@@ -3774,10 +3779,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-744
-615
-868
-644
+739
+713
+863
+742
 max timesteps feeding on the same tree species
 10
 0.0
@@ -3824,6 +3829,42 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [SDD] of seeds"
 "pen-1" 1.0 0 -14070903 true "" "plot min [SDD] of seeds"
 "pen-2" 1.0 0 -2674135 true "" "plot max [SDD] of seeds"
+
+SLIDER
+713
+539
+885
+572
+n_disputed_trees
+n_disputed_trees
+1
+20
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+709
+515
+859
+537
+random or border ld trees\ndepends on n feeding-trees:
+9
+0.0
+1
+
+SWITCH
+725
+484
+863
+517
+ld-target-random?
+ld-target-random?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
