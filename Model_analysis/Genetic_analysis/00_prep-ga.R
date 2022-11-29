@@ -116,7 +116,7 @@ nl@experiment <- experiment(expname = expname,
                                                   # a similar variable (movement rate, MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
                               # "straightness",     # path twisting is a good predictor of SDD (http://doi.wiley.com/10.1002/ajp.22659), but straightness and sinuosity are slightlty different
                               "sinuosity"         # this I don't know which of them we should look at, but it seems that it is better (and dimensionless) than straightness, so I vote for this one instead of straightness: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
-                            ),
+                            ), 
 
                             ), # "who" "color"
                             variables = list(
