@@ -111,11 +111,12 @@ nl@experiment <- experiment(expname = expname,
                               "turn_ang_sd",          # this one might be interesting though
                               
                               # additional movement variables
-                              "MSD",              # other modelling studies have used this one: https://doi.org/10.3390/ani12182412.
-                              "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
-                                                  # a similar variable (movement rate, MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
-                              # "straightness",     # path twisting is a good predictor of SDD (http://doi.wiley.com/10.1002/ajp.22659), but straightness and sinuosity are slightlty different
-                              "sinuosity"         # this I don't know which of them we should look at, but it seems that it is better (and dimensionless) than straightness, so I vote for this one instead of straightness: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
+                              "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                              # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
+                              # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
+                              "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                              # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                              # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                             ), 
 
                             ), # "who" "color"
@@ -210,32 +211,52 @@ nl@experiment <- experiment(expname = expname,
 
 ## Create evaluation criteria function -------------------------
 
+# get optimized (observed) values
+KDE95_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select(KDE95) %>% unlist() %>% as.vector()
+KDE50_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select(KDE50) %>% unlist() %>% as.vector()
+
+p_feeding_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% as.vector()
+p_foraging_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% as.vector()
+p_traveling_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% as.vector()
+p_resting_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select("Resting_perc_behavior_mean") %>% unlist() %>% as.vector()
+# obs: they don't sum up to 1
+p_feeding_obs + p_foraging_obs + p_traveling_obs + p_resting_obs
+
+# Still have to calculate them from empirical data
+# MR_obs <- values_ga %>% 
+# PT_obs <- values_ga %>% 
+
+# tamarins visit all the observed trees, but they don't usually visit all of them in the model (might be related to memory)
+param_table <- read.csv(here("Data", "Parameter_table.csv"),
+                       sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+
+visits_obs <- param_table %>% 
+  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select(n_trees_Frugivory) %>% unlist() %>% as.vector()
+
+# # Still have to calculate them from empirical data
+# step_length_mean_obs <- param_table %>% 
+#   dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+#   dplyr::select(step_length_mean_obs) %>% unlist() %>% as.vector()
+# 
+# step_length_sd <- param_table %>% 
+#   dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+#   dplyr::select(step_length_sd) %>% unlist() %>% as.vector()
+# 
+# turn_ang_sd <- param_table %>% 
+#   dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+#   dplyr::select(turn_ang_sd) %>% unlist() %>% as.vector()
+
+
+# Create critfun (fitness function)
 critfun <- function(nl) {
-  
-  # get optimized (observed) values
-  KDE95_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-    dplyr::select(KDE95) %>% unlist() %>% as.vector()
-  KDE50_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-    dplyr::select(KDE50) %>% unlist() %>% as.vector()
-  
-  p_feeding_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-    dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% as.vector()
-  p_foraging_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-    dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% as.vector()
-  p_traveling_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-    dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% as.vector()
-  p_resting_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-    dplyr::select("Resting_perc_behavior_mean") %>% unlist() %>% as.vector()
-  # obs: they don't sum up to 1
-  p_feeding_obs + p_foraging_obs + p_traveling_obs + p_resting_obs
-  
-  # tamarins visit all the observed trees, but they don't usually visit all of them in the model (might be related to memory)
-  visits_obs <- read.csv(here("Data", "Parameter_table.csv"),
-                         sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-    dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) %>% # only to match those of the NetLogo model
-    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-    dplyr::select(n_trees_Frugivory) %>% unlist() %>% as.vector()
-  
   
   # extract values from run from example nl object:
   nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
@@ -246,11 +267,13 @@ critfun <- function(nl) {
   db <- db %>% 
     dplyr::filter(breed == "monkeys")
   
-  energy <- db %>%  dplyr::select("energy") %>% unlist() %>% as.vector()
-  energy_obs <- db %>%  dplyr::select(`start-energy`) %>% unlist() %>% as.vector()
+  visits <- "count feeding-trees with [visitations > 0] / count feeding trees"
   
-  KDE95 <- db %>%  dplyr::select("KDE95") %>% unlist() %>% as.vector()
-  KDE50 <- db %>%  dplyr::select("KDE50") %>% unlist() %>% as.vector()
+  energy <- db %>%  dplyr::select("energy") %>% unlist() %>% as.vector()
+  energy_obs <- db %>%  dplyr::select(`start-energy`) %>% unlist() %>% as.vector() # we don't have observed energy values so we will use the start energy
+  
+  KDE95 <- db %>%  dplyr::select("KDE_95") %>% unlist() %>% as.vector()
+  KDE50 <- db %>%  dplyr::select("KDE_50") %>% unlist() %>% as.vector()
   
   
   p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist() %>% as.vector()
@@ -276,6 +299,17 @@ critfun <- function(nl) {
   hr <- KDE95 - KDE95_obs
   ca <- KDE50 - KDE50_obs
   dp <- XXX - DPL_obs
+  
+  # normalize them (min-max)
+  en_min <- min(en) 
+  en_max <- max(en) 
+  hr <- min(hr) 
+  hr <- max(hr)
+  # ca <- 
+  # dp <- 
+  
+  # or put all into a dataframe and use custom_fitness() function
+  
   
   crit <- lsm$value
   return(crit)
