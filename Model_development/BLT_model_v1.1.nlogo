@@ -2290,7 +2290,7 @@ to calc-homerange
   ;  show r:get "db_nest"
   ; calculate HR metrics for every list (=id = run) using map()
   r:eval "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
-  r:eval "db_nest <- db_nest %>%  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
+  r:eval "db_nest <- db_nest %>%  dplyr::select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
   r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
 ;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
   r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
@@ -2444,33 +2444,42 @@ to calc-seed-aggregation
   r:eval "library(spatstat)"
   r:eval "library(maptools)"
   r:eval "library(sf)"
+  r:eval "library(adehabitatHR)"
 
   ;; send agent variables into an R data-frame
     (r:putagentdf  "seeds" seeds "who" "x_UTM" "y_UTM")
-    print r:get "colnames(seeds)"
-    print r:get "seeds"
+;    print r:get "colnames(seeds)"
+;    print r:get "seeds"
 
     ; load the poligon (.shp) to determine the window (owin) ;; IDEALLY SHOULD BE THE MCP OF THE GROUP
-  if study_area = "Guareí" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ]
-  if study_area = "Suzano" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ]
-  if study_area = "Taquara" [ set limitsOwin      "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ]
-  if study_area = "Santa Maria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
+;  if study_area = "Guareí" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ]
+;  if study_area = "Suzano" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ]
+;  if study_area = "Taquara" [ set limitsOwin      "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ]
+;  if study_area = "Santa Maria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
+;  r:put "limitsOwin" limitsOwin
+;  print r:get "limitsOwin"
+;  r:eval "limitsOwin) <- sf::st_read(limitsOwin)"
+;  r:eval "limitsOwin <- as.owin(limitsOwin))"
 
-  r:put "limitsOwin" limitsOwin
-  print r:get "limitsOwin"
+  ;; use feeding-tree locations as owin (MCP)
+  (r:putagentdf "trees" feeding-trees "who" "x_UTM" "y_UTM")
+  r:eval "xy <- SpatialPoints(trees[ , 2:3])"
+  r:eval "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+  r:eval "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
+  r:eval "limitsOwin <- as.owin(limitsOwin)"
 
-  r:eval "shape <- sf::st_read(limitsOwin)"
-  r:eval "limitsOwin <- as.owin(shape)"
-  r:eval "sim <- ppp(seeds[,2], seeds[,3], window=limitsOwin)"
- ; print r:get "colnames(obs)" ; ppp objects do not have colnames
-  print r:get "sim"
+  ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
+  r:eval "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
+  r:eval "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+ ; print r:get "colnames(sim)" ; ppp objects do not have colnames
+;  print r:get "sim"
 
   print " ------------- Seed/defecation aggregation ------------------ "
   ;; calc R index (Clark-Evans test)
   r:eval "sim.clark <- clarkevans.test(sim,correction = 'cdf', alternative=c('two.sided'))"
 
   ;; calc Nearest Neighbor distance
-  r:eval "NN_seeds <- max(nndist(sim))"
+  r:eval "NN_seeds <- mean(nndist(sim))"
 
     set R_seeds r:get "sim.clark$statistic"
     set R_seeds_p r:get "sim.clark$p.value"
@@ -2478,9 +2487,9 @@ to calc-seed-aggregation
 
     type "R index = " print R_seeds
     type "R index p-value  = " print R_seeds_p
-    type "Nearest neighbor distance = " type R_seeds print " meters"
+    type "Nearest neighbor distance = " type NN_seeds print " meters"
 
-  ask seeds [ set size 5 set color magenta ]
+  ask seeds [ set size 3 set color magenta ]
 
 end
 
@@ -2561,11 +2570,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+459
+370
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2575,10 +2584,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-73
+73
+-58
+58
 0
 0
 1
@@ -2885,7 +2894,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+12
 
 CHOOSER
 984
@@ -2952,7 +2961,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+21.0
 1
 1
 NIL
@@ -3684,7 +3693,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+3
 
 BUTTON
 247
@@ -3815,7 +3824,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+51.2
 5
 1
 NIL
@@ -3830,7 +3839,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+0.883
 0.1
 1
 NIL
@@ -3845,7 +3854,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+1.7489999999999999
 0.1
 1
 NIL
@@ -3860,7 +3869,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+47.53
 1
 1
 NIL
@@ -3965,7 +3974,7 @@ SWITCH
 517
 ld-target-random?
 ld-target-random?
-1
+0
 1
 -1000
 
