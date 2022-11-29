@@ -42,6 +42,7 @@ monkeys-own [
   frugivory-time  ; how long you consume the same species (= feeding bout)
   going-sleeping? ; if timestep > 108 and tamarins are going to sl
   behavior        ; as in activity budget data tables
+  dist-traveled   ; distance traveled this time step (= step length)
   steps-moved     ; number of steps taken
   travel_mode     ; if it is short or long distance travel
   tree_target     ; target tree (short distance, but = long distance in this travel mode)
@@ -70,15 +71,12 @@ monkeys-own [
   seed_add_list   ; helper list to increase the mem list by 1 each time step
   seed_gtt_list   ; list of timesteps that each seed will take to be defecated
 
-  ; OUPUT MONKEY VARIABLES
-  DPL             ; daily path length
-  DPL_d           ; list with values of DPL for the DPL plot
-  dist-traveled   ; distance traveled this time step (= step length)
 
+  ; OUPUT MONKEY VARIABLES
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
-  KDE_values ; output of amt package in calc-homerange
-  KDE_95
-  KDE_50
+;  KDE_values ; not being used anymore
+  KDE_95         ; output of amt package in calc-homerange
+  KDE_50         ; output of amt package in calc-homerange
 
   ; activity budget
   p_feeding
@@ -92,13 +90,24 @@ monkeys-own [
   turn_ang_mean
   turn_ang_sd
 
+  ; calculated in the sleeping procedure (because it becomes 0 everyday)
+  DPL             ; daily path length. It is a daily value, but it become the average in the end of the run
+  DPL_d           ; list with values of DPL for the DPL plot
+
+  MR              ; movement rate (as in Fuzessy et al. 2017)
+  MR_d            ; list of movement rate values (~ DPL_d)
+
+
+  ; aditional metrics
+  PT              ; average path twisting (as in Fuzessy et al. 2017)
+  PT_d            ; list of path twisting values (~ DPL_d)
+
   MSD             ; from amt
   intensity_use   ; from amt
   straightness    ; from amt
   sinuosity       ; from amt
 
-  MR              ; movement rate (from Fuzessy et al. 2017)
-  MR_d            ; list of movement rate values (~ DPL_d)
+
 
 ]
 
@@ -552,6 +561,7 @@ to setup-monkeys
     set travelmodelist []
     set DPL_d []
     set MR_d []
+    set PT_d []
 
     ; fill the potential feeding tree list
     let let_pot_list []
@@ -1980,24 +1990,25 @@ to sleeping
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 
       ; calc MR and DPL
-      let a "_" ; to make it possible to analyze on nlrx
+;      let a "_" ; to make it possible to analyze on nlrx
       set DPL DPL * patch-scale ; (same as multiplying by 10 m)
       set DPL_d lput ( precision DPL 2 ) DPL_d
-      set DPL_d lput a DPL_d
+;      set DPL_d lput a DPL_d
 
       set MR ( DPL / (timestep * 5) )  ; MR as calculated in Fuzessy et al. 2017
       set MR_d lput ( precision MR 2 ) MR_d
-      set MR_d lput a MR_d
+;      set MR_d lput a MR_d
 
       ; debugging:
       type "MR = " print MR
       type "DPL = " print DPL
       type "timesteps = " print timestep * 5
 
-      ; reset values
-      set DPL 0 ; set daily path length to 0 every day
-      set MR 0 ; set daily path length to 0 every day
-
+      ; reset values everyday, except the last one (otherwise PT can't be calculated)
+      if day != no_days [
+        set DPL 0
+        set MR 0
+      ]
 
       output-type "*simulation-time* "
       output-type ticks
@@ -2383,7 +2394,60 @@ to calc-homerange
     set intensity_use r:get "db_metr %>% dplyr::select(intensity_use) %>%  unlist() %>% as.vector()"
     set straightness r:get "db_metr %>% dplyr::select(straightness) %>%  unlist() %>% as.vector()"
     set sinuosity r:get "db_metr %>% dplyr::select(sinuosity) %>%  unlist() %>% as.vector()"
-]
+  ]
+
+  ; calculating PT
+  ask monkeys [
+    let aux-list []
+    foreach DPL_d [
+      x -> ;print x
+      set aux-list lput (x ^ 2) aux-list
+     print aux-list
+    ]
+
+    foreach aux-list [
+     x -> set PT_d lput (x / KDE_95) PT_d
+     print PT_d
+    ]
+
+    set PT mean (PT_d)
+    set PT precision PT 4
+    set DPL mean (DPL_d)
+    set DPL precision PT 4
+
+    ;round also other outputs
+    set KDE_95 precision KDE_95 4
+    set KDE_50 precision KDE_50 4
+    set p_feeding precision p_feeding 4
+    set p_foraging precision p_foraging 4
+    set p_traveling precision p_traveling 4
+    set p_resting precision p_resting 4
+
+    set MR precision MR 4
+    set step_length_mean precision step_length_mean 4
+    set step_length_sd precision step_length_sd 4
+    set turn_ang_mean precision turn_ang_mean 4
+    set turn_ang_sd precision turn_ang_sd 4
+    set MSD precision MSD 4
+    set intensity_use precision intensity_use 4
+
+    set straightness precision straightness 6
+    set sinuosity precision sinuosity 6
+
+  ]
+
+  ; remake lists to be readable in R with nlrx (I COULDN'T MANAGE TO PASTE A "_" BETWEEN EACH VALUE)
+;  ask monkeys [
+;    let a "_"
+;    foreach DPL_d [
+;      x ->
+;      set DPL_d lput a DPL_d
+;
+;    ]
+;    print DPL_d
+;
+;
+;  ]
 
 end
 
@@ -2589,11 +2653,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2603,10 +2667,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -2913,7 +2977,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-6
+1
 
 CHOOSER
 984
@@ -2980,7 +3044,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-18.0
+16.0
 1
 1
 NIL
@@ -3345,7 +3409,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.47
+0.21
 0.05
 1
 NIL
@@ -3712,7 +3776,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 247
@@ -3843,7 +3907,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-78.99
+43.02
 5
 1
 NIL
@@ -3858,7 +3922,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.214
+3.089
 0.1
 1
 NIL
@@ -3873,7 +3937,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.544
+3.931
 0.1
 1
 NIL
@@ -3888,7 +3952,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-75.63
+17.85
 1
 1
 NIL
