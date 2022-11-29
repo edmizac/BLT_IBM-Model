@@ -43,9 +43,6 @@ monkeys-own [
   going-sleeping? ; if timestep > 108 and tamarins are going to sl
   behavior        ; as in activity budget data tables
   steps-moved     ; number of steps taken
-  dist-traveled   ; distance traveled this time step
-  DPL             ; daily path length
-  DPL_d           ; list with values of DPL for the DPL plot
   travel_mode     ; if it is short or long distance travel
   tree_target     ; target tree (short distance, but = long distance in this travel mode)
   tree_target_mem ; target tree memory for when tamarins are avoiding the matrix (avoid-matrix and avoid-patch-set)
@@ -74,6 +71,10 @@ monkeys-own [
   seed_gtt_list   ; list of timesteps that each seed will take to be defecated
 
   ; OUPUT MONKEY VARIABLES
+  DPL             ; daily path length
+  DPL_d           ; list with values of DPL for the DPL plot
+  dist-traveled   ; distance traveled this time step (= step length)
+
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
   KDE_values ; output of amt package in calc-homerange
   KDE_95
@@ -91,10 +92,13 @@ monkeys-own [
   turn_ang_mean
   turn_ang_sd
 
-  MSD
-  intensity_use
-  straightness
-  sinuosity
+  MSD             ; from amt
+  intensity_use   ; from amt
+  straightness    ; from amt
+  sinuosity       ; from amt
+
+  MR              ; movement rate (from Fuzessy et al. 2017)
+  MR_d            ; list of movement rate values (~ DPL_d)
 
 ]
 
@@ -547,6 +551,7 @@ to setup-monkeys
 
     set travelmodelist []
     set DPL_d []
+    set MR_d []
 
     ; fill the potential feeding tree list
     let let_pot_list []
@@ -1974,11 +1979,25 @@ to sleeping
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 
-
-      set DPL_d lput ( precision DPL 2 ) DPL_d
+      ; calc MR and DPL
       let a "_" ; to make it possible to analyze on nlrx
+      set DPL DPL * patch-scale ; (same as multiplying by 10 m)
+      set DPL_d lput ( precision DPL 2 ) DPL_d
       set DPL_d lput a DPL_d
+
+      set MR ( DPL / (timestep * 5) )  ; MR as calculated in Fuzessy et al. 2017
+      set MR_d lput ( precision MR 2 ) MR_d
+      set MR_d lput a MR_d
+
+      ; debugging:
+      type "MR = " print MR
+      type "DPL = " print DPL
+      type "timesteps = " print timestep * 5
+
+      ; reset values
       set DPL 0 ; set daily path length to 0 every day
+      set MR 0 ; set daily path length to 0 every day
+
 
       output-type "*simulation-time* "
       output-type ticks
@@ -2433,7 +2452,7 @@ end
 
 
 to calc-movement-metrics
-
+;  set MR DPL /
 
 end
 
@@ -2570,8 +2589,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
-370
+501
+406
 -1
 -1
 3.0
@@ -2584,10 +2603,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-80
+80
+-64
+64
 0
 0
 1
@@ -2894,7 +2913,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-12
+6
 
 CHOOSER
 984
@@ -2961,7 +2980,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-21.0
+18.0
 1
 1
 NIL
@@ -3326,7 +3345,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.47
 0.05
 1
 NIL
@@ -3693,7 +3712,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-3
+0
 
 BUTTON
 247
@@ -3824,7 +3843,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-51.2
+78.99
 5
 1
 NIL
@@ -3839,7 +3858,7 @@ step_len_forage
 step_len_forage
 0
 20
-0.883
+1.214
 0.1
 1
 NIL
@@ -3854,7 +3873,7 @@ step_len_travel
 step_len_travel
 0
 20
-1.7489999999999999
+2.544
 0.1
 1
 NIL
@@ -3869,7 +3888,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-47.53
+75.63
 1
 1
 NIL

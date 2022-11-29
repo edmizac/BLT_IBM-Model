@@ -104,7 +104,18 @@ nl@experiment <- experiment(expname = expname,
                               "p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
                               "p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
                               "p_traveling", # final value                 # the best set of parameters should optimize the activity budget
-                              "p_resting"    # final value                 # the best set of parameters should optimize the activity budget
+                              "p_resting",    # final value                 # the best set of parameters should optimize the activity budget
+                              "step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              "step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              # "turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
+                              "turn_ang_sd",          # this one might be interesting though
+                              
+                              # additional movement variables
+                              "MSD",              # other modelling studies have used this one: https://doi.org/10.3390/ani12182412.
+                              "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
+                                                  # a similar variable (movement rate, MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                              # "straightness",     # path twisting is a good predictor of SDD (http://doi.wiley.com/10.1002/ajp.22659), but straightness and sinuosity are slightlty different
+                              "sinuosity"         # this I don't know which of them we should look at, but it seems that it is better (and dimensionless) than straightness, so I vote for this one instead of straightness: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
                             ),
 
                             ), # "who" "color"
@@ -113,38 +124,37 @@ nl@experiment <- experiment(expname = expname,
                               ### DO NOT SPECIFY STEPS:
                               
                               # energy
-                              "energy-from-fruits" = list(min=1, max = 20),
-                              'energy-from-prey' = list(min=1, max=20),
-                              "energy-loss-traveling" = list(min=-10, max = 0), #, step = 2
-                              "energy-loss-foraging" = list(min=-10, max = 0),
-                              "energy-loss-resting" = list(min=-10, max = 0),
+                              "energy-from-fruits" = list(min=1, max = 300),
+                              'energy-from-prey' = list(min=1, max=300),
+                              "energy-loss-traveling" = list(min=-100, max = 0), #, step = 2
+                              "energy-loss-foraging" = list(min=-100, max = 0),
+                              "energy-loss-resting" = list(min=-100, max = 0),
                               
                               "start-energy" = list(min=100, max=2000),
                               "energy_level_1" = list(min=100, max=2000),
                               "energy_level_2" = list(min=100, max=2000),
                               
-                              "energy-from-seeds" = 4,# ?
-                              "energy-from-prey" = 4,
-                              "energy-loss-traveling" = -1.6,
-                              "energy-loss-foraging" = -2,
-                              "energy-loss-resting" = -1.9,
                               
+                              # 4. Movement
+                              # "step_len_travel" = list(min= 0, max = 100)         # only when step-model-param? = 'false'
+                              # "step_len_forage" = list(min= 0, max = 100)         # only when step-model-param? = 'false'
+                              # "max_rel_ang_travel_75q" = list(min= 0, max= 180)   # only when step-model-param? = 'false'
+                              # "max_rel_ang_forage_75q" = list(min= 0, max= 180)   # only when step-model-param? = 'false'
                               
-                              # Seed dispersal
-                              # "gut_transit_time_val" = 15, # this won't be optimized as it is an emerging pattern
-                              
-                              
-                              # movement
-                              # "travel_speed_val" = list(min= 0, max = 1)  # only when step-model-param? = 'false'
-                              # "foraging_speed_val" = list(min= 0, max = 1)   # only when step-model-param? = 'false'
-                              # "duration" = list(min=0, max = 10),
+                              # "p_foraging_while_traveling" = list(min= 0, max= 1) # only when p-forage-param? = 'false'
                               
                               # memory
-                              "step_forget" = list(min=3, max = 150)
-                              # "visual" = list(min=0, max = 3)
+                              "step_forget" = list(min=3, max = 150),
+                              "visual" = list(min=0, max = 3)
+                              # 'prop_trees_to_reset_memory" = list(min=2, max=5)   # I don't think this one is needed
                               
-                              # others
-                              # 'species_time_val' = list(min = 1, max = 6, step = 2)
+                              # 5. Feeding bout
+                              # 'species_time' = list(min = 1, max = 10)        # only when "feedingbout-on?" = 'true'
+                              # 'duration' = list(min = 1, max = 10)            # only when "feedingbout-on?" = 'true'
+                              
+                              # 6. Seed dispersal
+                              # "gut_transit_time_val" = 15,    # this won't be optimized as it is an emerging pattern
+                              # "n_seeds_hatched" = 1           # this won't be optimized as it is an emerging pattern
                             ),
                             
                             constants = list(
