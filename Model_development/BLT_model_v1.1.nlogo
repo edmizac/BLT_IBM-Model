@@ -107,6 +107,9 @@ patches-own [
 
 ;; GLOBALS ;;
 globals [
+  R_seeds ; aggregation index of seeds
+  NN_seeds
+
   patch-scale
   behaviorsequence
 
@@ -742,6 +745,10 @@ to go
       output-print "calculating other movement metrics"
       calc-movement-metrics
       output-print "calculating movement metrics finished"
+
+      output-print "calculating R index for seeds"
+      calc-seed-aggregation
+      output-print "calculating R index for seeds finished"
 
       stop
     ]
@@ -2424,9 +2431,30 @@ end
 to calc-movement-metrics
 
 
+end
+
+
+to calc-seed-aggregation
+  ;based on https://r-ext.sourceforge.net/listing4.php and Felipe Bufalo script
+
+  r:eval "library(spatstat)"
+
+  ;; send agent variables into an R data-frame
+  (r:putagentdf "agentset" turtles "who" "xcor" "ycor")
+
+
+
+
+  ;; calc R index (Clark-Evans test)
+
+  set R_seeds 0
+
+  ;; calc Nearest Neighbor distance
+  set NN_seeds 0
 
 
 end
+
 
 
 ;-----------------------------------------------------------------
