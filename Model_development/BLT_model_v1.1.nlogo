@@ -108,7 +108,8 @@ patches-own [
 ;; GLOBALS ;;
 globals [
   R_seeds ; aggregation index of seeds
-  NN_seeds
+  R_seeds_p ; clarkevans test p value
+  NN_seeds  ; nearest neighbor distances for seeds (defecation events)
 
   patch-scale
   behaviorsequence
@@ -142,6 +143,9 @@ globals [
   vertex-lists
   tree-file ; filename with the tree location and type
   sleep-file ; filename with the location of all sleeping sites
+
+  ;for R index
+  limitsOwin
 
 
   ;param values;
@@ -2389,7 +2393,7 @@ to calc-activity-budget
   let p_res item 3 activity-values-ordered
 
 
-  print " ------------- Activity budgets ------------------ "
+  print " ------------- Activity budget ------------------ "
   ask monkeys [
     set p_feeding item 1 p_fee
     set p_foraging item 1 p_for
@@ -2438,20 +2442,45 @@ to calc-seed-aggregation
   ;based on https://r-ext.sourceforge.net/listing4.php and Felipe Bufalo script
 
   r:eval "library(spatstat)"
+  r:eval "library(maptools)"
+  r:eval "library(sf)"
 
   ;; send agent variables into an R data-frame
-  (r:putagentdf "agentset" turtles "who" "xcor" "ycor")
+    (r:putagentdf  "seeds" seeds "who" "x_UTM" "y_UTM")
+    print r:get "colnames(seeds)"
+    print r:get "seeds"
 
+    ; load the poligon (.shp) to determine the window (owin) ;; IDEALLY SHOULD BE THE MCP OF THE GROUP
+  if study_area = "Guareí" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ]
+  if study_area = "Suzano" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ]
+  if study_area = "Taquara" [ set limitsOwin      "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ]
+  if study_area = "Santa Maria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
 
+  r:put "limitsOwin" limitsOwin
+  print r:get "limitsOwin"
 
+  r:eval "shape <- sf::st_read(limitsOwin)"
+  r:eval "limitsOwin <- as.owin(shape)"
+  r:eval "sim <- ppp(seeds[,2], seeds[,3], window=limitsOwin)"
+ ; print r:get "colnames(obs)" ; ppp objects do not have colnames
+  print r:get "sim"
 
+  print " ------------- Seed/defecation aggregation ------------------ "
   ;; calc R index (Clark-Evans test)
-
-  set R_seeds 0
+  r:eval "sim.clark <- clarkevans.test(sim,correction = 'cdf', alternative=c('two.sided'))"
 
   ;; calc Nearest Neighbor distance
-  set NN_seeds 0
+  r:eval "NN_seeds <- max(nndist(sim))"
 
+    set R_seeds r:get "sim.clark$statistic"
+    set R_seeds_p r:get "sim.clark$p.value"
+    set NN_seeds r:get "NN_seeds"
+
+    type "R index = " print R_seeds
+    type "R index p-value  = " print R_seeds_p
+    type "Nearest neighbor distance = " type R_seeds print " meters"
+
+  ask seeds [ set size 5 set color magenta ]
 
 end
 
@@ -2744,7 +2773,7 @@ INPUTBOX
 601
 82
 no_days
-3.0
+6.0
 1
 0
 Number
