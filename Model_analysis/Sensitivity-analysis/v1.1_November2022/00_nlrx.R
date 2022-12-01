@@ -1,7 +1,7 @@
 ## Header --------------------------
 # Script name: 01_nlrx
 # Script purpose: Do sensitivity analysis with first parameterization with 
-# empirical seed dispersal data and other from Data/Parameter-table.csv
+# empirical seed dispersal data parameters and others from Data/Parameter-table.csv
 # Date created: 2022-11-20d
 # Author: Eduardo Zanette
 
