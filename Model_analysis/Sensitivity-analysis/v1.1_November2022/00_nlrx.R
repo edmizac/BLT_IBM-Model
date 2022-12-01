@@ -131,9 +131,9 @@ for (i in i:nrow(param.table)) {
   simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
   
   
-  step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
-  gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
-  p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
+  step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and included in the parameter table
+  gtt_param <- "true" # gtt parameters are setted inside the model. Change this when gtt is summarized and included in the parameter table
+  p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when p_foraging is summarized and included in the parameter table 
   feedingbout <- "false" # previous sensitivity analysis showed that this does not matter, at least for Guareí
   
 
@@ -148,75 +148,90 @@ nl@experiment <- experiment(expname = expname,
                             stopcond= "day > no_days", # reporter that returns TRUE
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
                             idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
+                            
                             # reporters:
-                            metrics = c(
+                            metrics = c( # e.g. "count sheep" or "count patches with [pcolor = green]"
                               "timestep",
-                              "day" # e.g. "count sheep" or "count patches with [pcolor = green]"
+                              "day",
+                              "n_visited_trees",
+                              "n_unvisited_trees"
                             ),
-                            metrics.turtles = list("monkeys" = c(#"x_UTM", "y_UTM",
-                                                                 # "xcor", "ycor",
-                                                                 # "behavior",
-                                                                 # "X_coords", "Y_coords", # to plot the routes without running another nlrx experiment
-                                                                 "energy", # final energy
-                                                                 "DPL_d", #DPL is set to 0 everyday 
-                                                                 "KDE_values" # KDE home range size values calculated by the r extension and amt package
-                                                                 # ""
-                                                                 #"travel_mode "
-                                                                 ),
-                                                   
-                                                   "feeding-trees" = c(
-                                                     "x_UTM", "y_UTM",
-                                                     "species",
-                                                     "id-tree",
-                                                     "visitations"
-                                                    ),
-                                                   
-                                                   "sleeping-trees" = c(
-                                                     "x_UTM", "y_UTM",
-                                                     "species",
-                                                     "id-tree",
-                                                     "visitations"
-                                                   ),
-                                                   
-                                                   "seeds" = c(
-                                                     "SDD", 
-                                                     "x_UTM", "y_UTM",
-                                                     "id-seed", 
-                                                     "species", 
-                                                     "mother-tree", 
-                                                     "disp-day"
-                                                   )
-
-                                                   # , "steps-moved"
-
+                            metrics.turtles = list("monkeys" = c(
+                              "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
+                              "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
+                              "KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
+                              "KDE_50",      # final value                 # the best set of parameters should reproduce the observed core area
+                              "p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
+                              "p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
+                              "p_traveling", # final value                 # the best set of parameters should optimize the activity budget
+                              "p_resting",    # final value                 # the best set of parameters should optimize the activity budget
+                              "step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              "step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              # "turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
+                              "turn_ang_sd",          # this one might be interesting though
+                              
+                              # additional movement variables
+                              "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                              # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
+                              # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
+                              "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                              # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                              # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                            ),
+                            
+                            "feeding-trees" = c(
+                              "x_UTM", "y_UTM",
+                              "species",
+                              "id-tree",
+                              "visitations"
+                            ),
+                            
+                            "sleeping-trees" = c(
+                              "x_UTM", "y_UTM",
+                              "species",
+                              "id-tree",
+                              "visitations"
+                            ),
+                            
+                            "seeds" = c(
+                              "SDD", 
+                              "x_UTM", "y_UTM",
+                              "id-seed", 
+                              "species", 
+                              "mother-tree", 
+                              "disp-day"
+                            )
+                            
+                            # , "steps-moved"
+                            
                             ), # "who" "color"
                             variables = list(
-
+                              
                               # energy
                               # "energy-from-seeds" = list(min=1, max = 10, step = 2),
                               # 'energy-from-prey' = list(min=1, max=16, step = 3),
                               # "energy-loss-traveling" = list(min=-10, max = 0, step = 2),
                               # "energy-loss-foraging" = list(min=-10, max = 0, step = 2),
                               # "energy-loss-resting" = list(min=-10, max = 0, step = 2),
-
+                              
                               # memory
                               # "step_forget" = list(min=0, max = 150, step = 10, qfun="qunif")
                               # "visual" = list(min=0, max = 3, step = 1)
-
+                              
                               # movement
                               # "travel_speed_val" = list(values=seq(0.3, 1, by = 0.1))
                               # "foraging_speed_val" = list(min= 0, max = 1, step = 2)
                               # "duration" = list(min=0, max = 10, step = 2),
-
+                              
                               # others
                               # 'species_time_val' = list(min = 1, max = 6, step = 2)
                             ),
-
+                            
                             # (
                             #   'start-energy' = list(min=10, max=170, step = 40, qfun="qunif")
                             #                ),
                             constants = list(
-
+                              
                               ### "true" for output related stuff
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
@@ -232,7 +247,7 @@ nl@experiment <- experiment(expname = expname,
                               # "show-path?" = "false",
                               # "all-slp-trees?" = "false",
                               # "path-color-by-day?" = "false",
-
+                              
                               ### resource scenario
                               "study_area" = area_run, #"\"Guareí\"",
                               'feeding-trees-scenario' = month_run, #"\"May\"",
@@ -242,12 +257,12 @@ nl@experiment <- experiment(expname = expname,
                               # 'sleeping-trees?' = "true",
                               # 'sleeping-trees-scenario' = "\"empirical\"",
                               # 'empirical-trees-choice' = "\"closest\"",
-
+                              
                               ### memory
                               # 'duration' = 3,
                               # 'visual' = 2,
                               # "step_forget" = 130,
-
+                              
                               ### energy
                               # 'start-energy' = 70,
                               # "energy_level_1" = 80,
@@ -259,21 +274,21 @@ nl@experiment <- experiment(expname = expname,
                               # "energy-loss-resting" = -1.9,
                               # "gut_transit_time_val" = 15,
                               # "n_seeds_hatched" = 1,
-
+                              
                               ### movement
                               # travel_speed = 1
-
+                              
                             )
 )
-  
-  
-  
-  
+
+
+
+
   report_model_parameters(nl)
 
 
 
-  nseeds <- 10 # repetitions (ideally n = 5)
+  nseeds <- 10 # repetitions (ideally n = 30)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
