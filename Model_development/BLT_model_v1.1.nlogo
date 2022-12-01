@@ -1,9 +1,9 @@
 ; ==== Black lion tamarin model ============
-; Eduardo Zanette & Ronald Bialozyt. Nov. 2022
+; Eduardo Zanette & Ronald Bialozyt. Dec. 2022
 ; Two travel modes: long-distance (target selected when energy > lvl 2 and travels to this direction up to when energy < lvl 1) and short-distance (when energy < lvl 1)
 ; Parameterized step model: step length and turning angles
 ; Parameterized p_foraging_while_traveling: % foraging / ( %foraging + %traveling)
-; Parameterized feeding-bout: tree species-specific energy_species and species_time values on and off by switcher feedingbout-on? Stil need to add phenology cycles though.
+; Parameterized feeding-bout: tree species-specific energy_species and species_time values on and off by switcher feedingbout-on?
 ; ------------------------------------------------
 
 extensions [ gis r palette pathdir] ; using the GIS extension of NetLogo
@@ -123,6 +123,8 @@ globals [
   R_seeds ; aggregation index of seeds
   R_seeds_p ; clarkevans test p value
   NN_seeds  ; nearest neighbor distances for seeds (defecation events)
+  n_visited_trees ; number of visited trees in the end of the run
+  n_unvisited_trees ; number of unvisited trees in the end of the run (calculate proportion afterwards instead of giving a very long metric to nlrx)
 
   patch-scale
   behaviorsequence
@@ -1893,7 +1895,7 @@ end
 to morning-defecation
 
   ;debugging:
-  type "MORNING-DEFECATION step: " print timestep
+;  type "MORNING-DEFECATION step: " print timestep
 
   foreach seed_ate_list [
     x ->  hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
@@ -2303,7 +2305,7 @@ to calc-homerange
     (r:putdataframe "turtle" "X" X_coords "Y" Y_coords)
     r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
     r:eval "turtles <- rbind(turtles, turtle)"
-    type "turtles data frame: " print r:get "turtles"
+;    type "turtles data frame: " print r:get "turtles"
   ]
 
   ;; split the data.frame into coordinates and factor variable
@@ -2402,12 +2404,12 @@ to calc-homerange
     foreach DPL_d [
       x -> ;print x
       set aux-list lput (x ^ 2) aux-list
-     print aux-list
+;     print aux-list
     ]
 
     foreach aux-list [
      x -> set PT_d lput (x / KDE_95) PT_d
-     print PT_d
+;     print PT_d
     ]
 
     set PT mean (PT_d)
@@ -2573,6 +2575,9 @@ to calc-seed-aggregation
     type "Nearest neighbor distance = " type NN_seeds print " meters"
 
   ask seeds [ set size 3 set color magenta ]
+
+  set n_visited_trees count feeding-trees with [visitations > 0]
+  set n_unvisited_trees count feeding-trees with [visitations = 0]
 
 end
 
