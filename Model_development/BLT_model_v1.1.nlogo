@@ -233,25 +233,31 @@ end
 
 ; GIS
 to setup-gis
+  let user-path ""
+  if USER = "Ronald"
+  [ set user-path "/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/BLT_IBM-Model/Data/Shapefiles/" ]
+  if USER = "Eduardo"
+  [ set user-path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/" ]
+
   set-patch-size 3
 
   if study_area = "Guareí" [
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
   ]
 
 
   if study_area = "Suzano" [
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
   ]
 
 
@@ -259,11 +265,11 @@ to setup-gis
     set-patch-size floor (0.8 * patch-size) ; Taquara large raster is too big for the world
 
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
   ]
 
 
@@ -271,11 +277,11 @@ to setup-gis
     set-patch-size floor (1 * patch-size) ; Santa Maria large raster results in a large world
 
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
   ]
 
 
@@ -2258,7 +2264,9 @@ end
 ;-----------------------------------------------------------------
 
 to calc-homerange
-  r:eval "library(adehabitat)"
+  r:eval "library(adehabitatHR)" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
+  r:eval "library(udunits2)"
+  r:eval "library(units)"
   r:eval "library(dplyr)"
   r:eval "library(tidyr)"
   r:eval "library(amt)"
@@ -3238,7 +3246,7 @@ visual
 visual
 0
 20
-0.0
+4.0
 1
 1
 NIL
@@ -3304,7 +3312,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "LEEC" "Others"
-1
+0
 
 SWITCH
 2
