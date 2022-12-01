@@ -174,7 +174,7 @@ nl@experiment <- experiment(expname = expname,
                               "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
                               # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
                               # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
-                              "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                              "PT"               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
                               # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                               # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                             ),
@@ -402,21 +402,21 @@ results_unnest_turtles <- results_unnest %>%
 # Check if is only one run (seed):
 results_unnest_turtles$`random-seed` %>% unique()
 
-# Plot
-ggplot() +
-  geom_path(data = results_unnest_turtles,
-            aes(x = x, y = y),
-            size = 0.15) +
-  geom_point(data = results_unnest_turtles,
-             aes(x = x, y = y
-                 , group = behavior,
-                 color = behavior,
-                 shape = behavior
-             ),
-             size = 1.4) +
-  scale_color_manual(values = simulated_colors) +
-  scale_shape_manual(values = simulated_shapes) +
-  ggtitle(paste0("Simulated data"), expname)
+# Plot routes
+# ggplot() +
+#   geom_path(data = results_unnest_turtles,
+#             aes(x = x, y = y),
+#             size = 0.15) +
+#   geom_point(data = results_unnest_turtles,
+#              aes(x = x, y = y
+#                  , group = behavior,
+#                  color = behavior,
+#                  shape = behavior
+#              ),
+#              size = 1.4) +
+#   scale_color_manual(values = simulated_colors) +
+#   scale_shape_manual(values = simulated_shapes) +
+#   ggtitle(paste0("Simulated data"), expname)
 
 
 
