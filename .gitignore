@@ -27,7 +27,7 @@
 /Data/Movement/Trees-Guarei/*
 /Data/Trees-Guarei/*
 !/Data/Movement/Trees-Guarei/Tree-points-unique.R
-/Data/Movement/Resource-trees/*
+/Data/Movement/Resource-Trees/*
 !*/Tree-points-unique.R
 !*/Tree-points-to-shapefile.R
 /Model_development/Model-cleaning/runtime
