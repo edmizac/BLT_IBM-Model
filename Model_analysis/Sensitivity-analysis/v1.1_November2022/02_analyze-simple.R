@@ -65,13 +65,25 @@ theme_set(theme_bw(base_size = 15))
 
 db <- db1
 
+db %>% str()
+
+db$month %>% unique()
+db$group %>% unique()
+db$group %>% unique()
+
+db <- db %>% 
+  rename(group = study_area) %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                         "Jun", "Jul", "Aug", "Sep", "Dec"))
+
 
 ## Plot example runs -------------------------
 
 # 1) Guareí
-group <- "Taquara" # "Guareí"
+group <-  "Guareí" # "Taquara" 
 rseed <- db %>% 
-  dplyr::filter(study_area == group) %>% 
+  dplyr::filter(group == group) %>% 
   dplyr::select(random_seed) %>%
   pull(1) %>% 
   sample(size = 1)
@@ -80,7 +92,7 @@ breed_ <- "seeds"
 
 db_filt <- db %>%
   dplyr::filter(
-    study_area == group &
+    group == group &
       breed == breed_ &
       random_seed == rseed
   )
@@ -96,7 +108,7 @@ gua.p1 <- gua.sf +
                                   alpha = 0.2) +
   # scale_shape_manual(17) +
   ggtitle(paste0("Simulated seed dispersal coordinates", 
-                 " (", unique(db_filt$feeding_trees_scenario), ")")
+                 " (", unique(db_filt$month), ")")
   )
 
 gua.p1
@@ -105,7 +117,7 @@ gua.p1
 # target <- c("feeding-trees", "sleeping-trees")
 trees.gua <- db %>% 
   dplyr::filter(
-    study_area == group &
+    group == group &
       breed == "feeding-trees" | breed == "sleeping-trees" &
       # breed %in% target &
       random_seed == rseed
@@ -122,7 +134,7 @@ gua.sf +
              alpha = 0.2) +
   # scale_shape_manual(17) +
   ggtitle(paste0("Simulated seed dispersal coordinates", 
-                 " (", unique(db_filt$feeding_trees_scenario), ")")
+                 " (", unique(db_filt$month), ")")
   ) +
   
   geom_point(data = trees.gua, # they don't disperse Syagrus (this has to be corrected in the model)
@@ -142,9 +154,9 @@ gua.sf +
 #            aes(x = x_UTM, y = y_UTM, color = species))
 
 # 2) Santa Maria
-group <- "Taquara"#; "Santa Maria"
+group <- "Santa Maria" # "Taquara"
 rseed <- db %>% 
-  dplyr::filter(study_area == group) %>% 
+  dplyr::filter(group == group) %>% 
   dplyr::select(random_seed) %>%
   pull(1) %>% 
   sample(size = 1)
@@ -153,7 +165,7 @@ breed_ <- "seeds"
 
 db_filt <- db %>%
   dplyr::filter(
-    study_area == group &
+    group == group &
       breed == breed_ &
       random_seed == rseed
   )
@@ -169,7 +181,7 @@ sma.p1 <- sma.sf +
              alpha = 0.2) +
   # scale_shape_manual(17) +
   ggtitle(paste0("Simulated seed dispersal coordinates", 
-                 " (", unique(db_filt$feeding_trees_scenario), ")")
+                 " (", unique(db_filt$month), ")")
   )
 
 sma.p1
@@ -178,7 +190,7 @@ sma.p1
 # target <- c("feeding-trees", "sleeping-trees")
 trees.sma <- db %>% 
   dplyr::filter(
-    study_area == group &
+    group == group &
       breed == "feeding-trees" | breed == "sleeping-trees" &
       # breed %in% target &
       random_seed == rseed
@@ -195,7 +207,7 @@ sma.sf +
              alpha = 0.2) +
   # scale_shape_manual(17) +
   ggtitle(paste0("Simulated seed dispersal coordinates", 
-                 " (", unique(db_filt$feeding_trees_scenario), ")")
+                 " (", unique(db_filt$month), ")")
   ) +
   
   geom_point(data = trees.sma, # they don't disperse Syagrus (this has to be corrected in the model)
@@ -213,8 +225,8 @@ sma.sf +
 ## SDD -------------------------
 rm(group)
 db <- db %>% 
-  rename(group= study_area,
-         month = feeding_trees_scenario)
+  rename(group= group,
+         month = month)
 db_sdd <- db %>% 
   dplyr::filter(breed == "seeds") %>% 
   group_by(group, random_seed)
@@ -285,7 +297,7 @@ ggsave(paste0(path, 'SDD_disp_day_By-month_boxplot.png'), height = 2.5, width = 
 db_mv <- db %>% 
 dplyr::filter(breed == "monkeys") %>% 
   # group_by(group, random_seed)
-  group_by(study_area, `random-seed`)
+  group_by(group, `random-seed`)
 
 a <- db_mv$DPL_d %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
 a <- a %>% str_split(pattern = "_") #, simplify = TRUE)

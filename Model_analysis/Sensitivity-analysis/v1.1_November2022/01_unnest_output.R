@@ -63,7 +63,7 @@ for (f in nls_to_df) {
    db <- unnest_simoutput(nl_file) %>% 
      mutate(
        turn_ang_sd = as.character(turn_ang_sd)
-     #   turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA),
+     #   turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA), # turn angles are "false" in Guareí Aug (value from amt package)
      #   turn_ang_sd = as.numeric(turn_ang_sd)
      )
   }
@@ -87,7 +87,7 @@ db$turn_ang_sd %>% unique()
 ### Repair data
 db$species %>% as.factor() %>% levels()
 
-db$KDE_values
+# db$KDE_values
 
 db$`random-seed`
 
@@ -134,10 +134,7 @@ db1 <- db %>%
                              species == "[NA]" ~ "NA",
                              is.na(species)  ~ "NA",
                              TRUE ~ species
-                             )) %>% 
-  dplyr::mutate(
-    SDD = SDD * 10  # SDD is in patches and 1 patch = 10 m
-  )
+                             )) # %>% 
 
 
 db1 <- db1 %>% 
@@ -156,7 +153,9 @@ db1 <- db1 %>%
   mutate(
     x = as.numeric(x),
     y = as.numeric(y)
-    
+  ) %>% 
+  rename(
+    month = feeding_trees_scenario
   )
 
 # Write csv
@@ -167,9 +166,9 @@ db1 <- db1 %>%
   
 
 # Split into tables
-db_monkeys <- db %>% 
+db_monkeys <- db1 %>% 
   dplyr::filter(breed == "monkeys") %>% 
-  dplyr::select(-c("x":`disp-day`)) %>% 
+  dplyr::select(-c("x":disp_day)) %>% 
   mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
   
 
