@@ -213,7 +213,7 @@ to setup
 ;  set gut_transit_time round (gut_transit_time)
 ;  set travel_speed travel_speed
 
-  if p-forage-param? = TRUE [
+  if gtt-param? = TRUE [
     if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set gut_transit_time 17 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set gut_transit_time 18 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set gut_transit_time 13 ]
@@ -2371,8 +2371,8 @@ to calc-homerange
   r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
   r:eval "mov1 <- db_metr %>% mutate( step_length = step_lengths(.), turn_ang = direction_rel(.) )"
   print " ------------- Step lengths/Turning angles ------------------ "
-;  print r:get "colnames(mov1)"
-;  print r:get "mov1"
+  print r:get "colnames(mov1)"
+  print r:get "mov1"
   r:eval "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE), step_length_sd = sd(step_length, na.rm = TRUE), turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE), turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
   print r:get "colnames(mov1)"
   print r:get "mov1"
@@ -2658,11 +2658,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+501
+406
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2672,10 +2672,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -2790,7 +2790,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-105.0
+103.0
 1
 1
 NIL
@@ -2982,7 +2982,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+8
 
 CHOOSER
 984
@@ -3049,7 +3049,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+19.0
 1
 1
 NIL
@@ -3414,7 +3414,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.7
 0.05
 1
 NIL
@@ -3781,7 +3781,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 247
@@ -3912,7 +3912,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+77.22
 5
 1
 NIL
@@ -3927,7 +3927,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.387
 0.1
 1
 NIL
@@ -3942,7 +3942,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.5300000000000002
 0.1
 1
 NIL
@@ -3957,7 +3957,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+59.53
 1
 1
 NIL

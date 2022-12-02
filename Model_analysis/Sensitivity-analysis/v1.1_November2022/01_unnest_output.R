@@ -12,13 +12,23 @@ path <- here("Model_analysis", "Sensitivity-analysis",
              "v1.1_November2022", "temp")
 
 nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
-                    "v1.1_November2022", "temp", "v1.1_Taquara_Jan_simple1199731059_tempRDS.Rdata"))
+                    "v1.1_November2022", "temp", 
+                   "v1.1_Guareí_Aug_simple778458464_tempRDS.Rdata"))#"v1.1_Taquara_Jan_simple1674592755_tempRDS.Rdata"))
                     # "v1.1_November2022", "temp", "v1.1_Guareí_Aug_simple33642352_tempRDS.Rdata"))
 db1  <-  unnest_simoutput(nl)
 
+db1 %>% str()
+db1$turn_ang_sd%>% str()
 
+db1 <- db1 %>% 
+  dplyr::select(
+    -c(1:7, 
+       agent, 
+       siminputrow
+       )
+    ) # agent is always 'turtles', siminputrow is always 1
 
-seeds <- db %>% 
+seeds <- db1 %>% 
   dplyr::filter(breed == "seeds") %>% 
   droplevels()
 
@@ -31,8 +41,8 @@ seeds %>%
              alpha = 0.3)
 
 
-ggplot(db) +
-  geom_point(data = subset(db, breed == "seeds"), 
+ggplot(db1) +
+  geom_point(data = subset(db1, breed == "seeds"), 
              aes(x = x_UTM, y = y_UTM, color = species, shape = `disp-day`)) #https://stackoverflow.com/questions/60817705/filtering-values-in-ggplot2
   
 
@@ -50,18 +60,32 @@ for (f in nls_to_df) {
   
   # paste0("df_", i)
   if (i == 1) {
-    db <- unnest_simoutput(nl_file)
+   db <- unnest_simoutput(nl_file) %>% 
+     mutate(
+       turn_ang_sd = as.character(turn_ang_sd)
+     #   turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA),
+     #   turn_ang_sd = as.numeric(turn_ang_sd)
+     )
   }
   
-  db <- dplyr::bind_rows(db, unnest_simoutput(nl_file))
+  db <- dplyr::bind_rows(db, unnest_simoutput(nl_file) %>%
+                           mutate(
+                             turn_ang_sd = as.character(turn_ang_sd)
+                         
+                         #     turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA),
+                         #     turn_ang_sd = as.numeric(turn_ang_sd)
+                           )
+                         )
   
   i <- i + 1
 }
 
 
+db %>% str()
+db$turn_ang_sd %>% unique()
+
 ### Repair data
 db$species %>% as.factor() %>% levels()
-db %>% str()
 
 db$KDE_values
 
