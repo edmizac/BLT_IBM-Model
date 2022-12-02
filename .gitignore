@@ -31,6 +31,7 @@
 !*/Tree-points-unique.R
 !*/Tree-points-to-shapefile.R
 /Model_development/Model-cleaning/runtime
+/Data/Movement/Resource-Trees/*
 
 # Specific files in specific folders:
 /Documentation/2022-05-12_Talk-EcoMod/

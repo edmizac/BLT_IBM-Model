@@ -6,7 +6,7 @@
 ; Parameterized feeding-bout: tree species-specific energy_species and species_time values on and off by switcher feedingbout-on? Stil need to add phenology cycles though.
 ; ------------------------------------------------
 
-extensions [ gis r palette pathdir] ; using the GIS extension of NetLogo
+extensions [ gis sr palette pathdir] ; using the GIS extension of NetLogo
 
 ;; BREEDS ;;
 turtles-own [
@@ -70,6 +70,14 @@ monkeys-own [
 
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
   KDE_values ; output of amt package in calc-homerange
+  KDE_95
+  KDE_50
+
+  ; activity budget
+  p_feeding
+  p_foraging
+  p_traveling
+  p_resting
 
 ]
 
@@ -197,25 +205,31 @@ end
 
 ; GIS
 to setup-gis
+  let user-path ""
+  if USER = "Ronald"
+  [ set user-path "/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/BLT_IBM-Model/Data/Shapefiles/" ]
+  if USER = "Eduardo"
+  [ set user-path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/" ]
+
   set-patch-size 3
 
   if study_area = "Guareí" [
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
   ]
 
 
   if study_area = "Suzano" [
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
   ]
 
 
@@ -223,11 +237,11 @@ to setup-gis
     set-patch-size floor (0.8 * patch-size) ; Taquara large raster is too big for the world
 
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
   ]
 
 
@@ -235,11 +249,11 @@ to setup-gis
     set-patch-size floor (1 * patch-size) ; Santa Maria large raster results in a large world
 
     ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    gis:load-coordinate-system word ( user-path ) "shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+    set bb-gis gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
     ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
+    set bb-gis-shp gis:load-dataset word ( user-path ) "shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
   ]
 
 
@@ -445,10 +459,16 @@ to setup-monkeys
     ; for the behaviorsequence plot
     set behaviorsequence []
 
+    ; activity budget:
+    set p_feeding 0
+    set p_foraging 0
+    set p_traveling 0
+    set p_resting 0
+
     ; for home range calculation with the r extension
     set Name word "BLT_" ( [who] of self )
-    set X_coords ( list x_UTM )
-    set Y_coords ( list y_UTM )
+    set X_coords [] ;( list x_UTM )
+    set Y_coords [] ;( list y_UTM )
 
     ;;    set shape "banana"
 ;    set shape "mlp-2"
@@ -683,10 +703,20 @@ to go
       set action ""
     ]
     if day > no_days [
-      output-print "run-days click finished"
-      output-print "calculating home range with r extension"
-      calc-homerange
-      output-print "home range calculation with r extension finished"
+      if do_R_calculations [
+        output-print "run-days click finished"
+        output-print "calculating home range with r extension"
+        calc-homerange
+        output-print "home range calculation with r extension finished"
+
+        output-print "calculating activity budget"
+        calc-activity-budget
+        output-print "calculating activity budget finished"
+
+        output-print "calculating other movement metrics"
+        calc-movement-metrics
+        output-print "calculating movement metrics finished"
+      ]
       stop
     ]
   ]
@@ -869,8 +899,8 @@ to move-monkeys
 
     if energy < 1 [ die ]
 
-    set x_UTM (item 0 gis:envelope-of self)
-    set y_UTM (item 2 gis:envelope-of self)
+;    set x_UTM (item 0 gis:envelope-of self)
+;    set y_UTM (item 2 gis:envelope-of self)
 
     ; for home range calculation with r extension:
     set X_coords lput x_UTM X_coords
@@ -1686,8 +1716,8 @@ to defecation
         set SDD distance ( feeding-tree loc_who ) ;with [id-tree] = mother-tree]
         set label ""
         set shape "plant"
-        set size 0.45
-        set color 1
+        set size 1.45
+        set color 4
       ]
     ]
   ]
@@ -1707,12 +1737,21 @@ to morning-defecation
       set species [species] of feeding-trees with [ who = x ]
       set id-seed who
       set disp-day "next day"
+;      let loc_who [who] of feeding-trees with [ who = x ] ; this does not work becuse there are duplicated agents (more than one feeding-tree with id-tree = "AMf043"), thus this returns a list
+;      print loc_who
+;      set SDD distance feeding-trees with [ loc_who = x ]
+      set SDD distance ( feeding-tree x )
+      ; testing if the SDD is correct (print on command center):
+      ; ask feeding-trees with [ id-tree = "AMf167" ] [ set color pink ]
+      ; ask seed 105 [ print distance feeding-tree 27  ]
       set label ""
       set shape "plant"
       set size 1
       set color 1
     ]
   ]
+
+  ; make lists empty as they were all defecated:
   set seed_ate_list []
   set seed_mem_list []
   set seed_add_list []
@@ -2067,75 +2106,165 @@ end
 ;-----------------------------------------------------------------
 
 to calc-homerange
-  r:eval "library(adehabitat)"
-  r:eval "library(dplyr)"
-  r:eval "library(tidyr)"
-  r:eval "library(amt)"
+  ;; R environment only once
+  sr:setup
+;  sr:run "library(adehabitatHR)" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
+;  sr:run "library(udunits2)"
+;  sr:run "library(units)"
+  sr:run "library(dplyr)"
+  sr:run "library(tidyr)"
+  sr:run "library(amt)"
 
   ;; create an empty data.frame"
-  r:eval "turtles <- data.frame()"
+  ; sr:run "tamarins <- data.frame()"
 
   ;; merge the Name, X- and Y-lists of all animals to one big data.frame
-  ask monkeys
-  [
-    (r:putdataframe "turtle" "X" X_coords "Y" Y_coords)
-    r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
-    r:eval "turtles <- rbind(turtles, turtle)"
-  ]
+;  ask monkeys
+;  [
+;    (sr:set-data-frame "turtle" "X" X_coords "Y" Y_coords)
+;    sr:run (word "turtle <- data.frame(turtle, Name = '" Name "')")
+;    sr:run "tamarins <- rbind(tamarins, turtle)"
+;    ; type "tamarins data frame: " print sr:runresult "tamarins"
+;  ]
+
+  (sr:set-agent-data-frame "tamarins" monkeys "who" "x_coords" "y_coords")
+;  sr:run "print(head(tamarins))"
+  sr:run "names(tamarins) <- c('Name', 'X', 'Y')"
 
   ;; split the data.frame into coordinates and factor variable
-  r:eval "xy <- turtles[,c('X','Y')]"
-  r:eval "id <- turtles$Name"
-
+  sr:run "xy <- tamarins[,c('X','Y')]"
+  sr:run "id <- tamarins$Name"
   ;; calculate homerange (mcp method)
-;  r:eval "homerange <- mcp(xy, id)"
+;  sr:run "homerange <- mcp(xy, id)"
 
   ;; calculate homerange (amt package)
-  r:eval "db <- cbind(xy, id)"
-  ;  show r:get "db"
-  r:eval "db_nest <- db %>%  make_track(.x=Y, .y=X, id = id) %>% nest(data = -c(id))"
-  ;  show r:get "db_nest"
+  sr:run "db <- cbind(xy, id)"  ;; you could do this already in 'set-agent-data-frame' resorting the columns
+  ;  sr:run "print(head(db))"
+  sr:run "db_nest <- db %>%  amt::make_track(.x=Y, .y=X, id = id) %>% nest(data = -c(id))"
+
+  ;  sr:run "print(head(db_nest))"
   ; calculate HR metrics for every list (=id = run) using map()
-  r:eval "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
-  r:eval "db_nest <- db_nest %>%  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
-  r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
-;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
-  r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
-  r:eval "db_nest <- db_nest %>% mutate(area = area / 10000)" ; values in ha
+  sr:run "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
+  sr:run "db_nest <- db_nest %>%  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
+
+  sr:run "db_nest <- db_nest %>% mutate(hr_area = purrr::map(hr, hr_area)) %>%  unnest(cols = hr_area)"
+;  sr:run "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
+
+  sr:run "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
+;  sr:run "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)" ; values in ha
+
 
   ; for outputting on nlrx:
   ; home range
-  r:eval "db_nest$area <- paste0(db_nest$area, '_')"
+;  sr:run "db_nest$hr_area_ha <- paste0(db_nest$hr_area_ha, '_')"
   ; coordinates
-;  r:eval "db$X <- paste0(db$X, '_')"
-;  r:eval "db$Y <- paste0(db$Y, '_')"
-;  r:eval "db$id <- paste(db$id, '_')"
+;  sr:run "db$X <- paste0(db$X, '_')"
+;  sr:run "db$Y <- paste0(db$Y, '_')"
+;  sr:run "db$id <- paste(db$id, '_')"
 
 ;  print "db: "
-;  show r:get "db"
+;  show sr:runresult "db"
 
   print "db_nest: "
-  show r:get "db_nest"
+  show sr:runresult "db_nest"
 
-  r:gc
+;  r:gc
 
   ; get hr values to agent variable
   ask monkeys [
-   set KDE_values item 3 r:get "db_nest"
+    set KDE_95 sr:runresult "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+    set KDE_50 sr:runresult "db_nest %>%  dplyr::filter(KDE_value == 'KDE50') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+
+;    type "KDE_95: " print round KDE_95
+;    type "KDE_50: " print round KDE_50
+
+    type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
+    type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
   ]
 
 
 ;  ; Merge HR to db and save
-;  r:eval "db <- left_join(db, db_nest)"
-;  r:eval "db <- db %>% mutate(hr_area_ha = area / 10000)"
+;  sr:run "db <- left_join(db, db_nest)"
+;  sr:run "db <- db %>% mutate(hr_area_ha = area / 10000)"
 ;
 ;  ; drop columns
-;  r:eval "db <- db %>%    select(-c(KDE_value, area))"
+;  sr:run "db <- db %>%    select(-c(KDE_value, area))"
 ;  print "db: "
-;  show r:get "db"
+;  show sr:runresult "db"
+
+end
+
+
+to calc-activity-budget
+;  foreach ( freq_map behaviorsequence ) [
+;    x -> print first x print last x
+;  ]
+
+;  print freq_map behaviorsequence
+  let activity-values freq_map behaviorsequence
+;  print sublist activity-values 0 4 ; same as print activity-values
+
+  let activity-values-ordered sort-by [[list1 list2] -> first list1 < first list2] activity-values
+
+  ;debugging:
+;  print activity-values-ordered
+;  print item 0 activity-values-ordered
+;  print item 1 activity-values-ordered
+;  print item 2 activity-values-ordered
+;  print item 3 activity-values-ordered
+
+  let p_fee item 0 activity-values-ordered
+  let p_for item 1 activity-values-ordered
+  let p_tra item 2 activity-values-ordered
+  let p_res item 3 activity-values-ordered
+
+
+  ask monkeys [
+    set p_feeding item 1 p_fee
+    set p_foraging item 1 p_for
+    set p_traveling item 1 p_tra
+    set p_resting item 1 p_res
+
+    ;debugging:
+      type "p_feeding = " print item 1 p_fee
+      type "p_foraging = " print item 1 p_for
+      type "p_traveling = "  print item 1 p_tra
+      type "p_resting = " print item 1 p_res
+;    type "Total activity budget = " print ( p_feeding + p_foraging + p_traveling + p_resting )
+
+  ]
+
+  ; for some reason the following code indexing does not work:
+;;  print item 0 item 0 activity-values-ordered
+;  print item 1 item 1 activity-values-ordered
+;  print item 2 item 1 activity-values-ordered
+;  print item 3 item 1 activity-values-ordered
+
+
+;  ask monkeys [
+  ; activity budget:
+;    set p_feeding item 0 item 1 activity-values-ordered
+;    set p_foraging item 1 item 1 activity-values-ordered
+;    set p_traveling item 2 item 1 activity-values-ordered
+;    set p_resting item 3 item 1 activity-values-ordered
+
+;    type "activity 1 - %feeding =" print p_feeding
+;    type "activity 2 - %foraging = " print p_foraging
+;    type "activity 3 - %travel = " print p_traveling
+;    type "activity 4 - %resting  = " print  p_resting
+;  ]
+
+end
+
+
+to calc-movement-metrics
+
+
 
 
 end
+
+
 ;-----------------------------------------------------------------
 ; end of commands ================================================
 ;-----------------------------------------------------------------
@@ -2172,8 +2301,14 @@ to-report freq_map [ list_ ]
   ; get counts of each unique value
   let counts map [ i -> freq i list_ ] uniques
 
+;;   debugging
+;  let a ( map [ [ x y ] -> list x ( y / len ) ] uniques counts )
+;  print a
+
   ; report an xy pair for each unique value / proportion
   report ( map [ [ x y ] -> list x ( y / len ) ] uniques counts )
+
+
 end
 
 ;;; --------------------------------- ;;;
@@ -2205,11 +2340,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+501
+406
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2219,12 +2354,12 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
-0
-0
+-80
+80
+-64
+64
+1
+1
 1
 ticks
 30.0
@@ -2494,10 +2629,10 @@ timestep
 11
 
 OUTPUT
-450
-615
-674
-728
+422
+614
+720
+742
 11
 
 TEXTBOX
@@ -2529,7 +2664,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+6
 
 CHOOSER
 984
@@ -2561,7 +2696,7 @@ step_forget
 step_forget
 0
 200
-40.0
+82.0
 1
 1
 NIL
@@ -2596,7 +2731,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+18.0
 1
 1
 NIL
@@ -2873,7 +3008,7 @@ visual
 visual
 0
 20
-0.0
+4.0
 1
 1
 NIL
@@ -2927,7 +3062,7 @@ SWITCH
 532
 output-files?
 output-files?
-1
+0
 1
 -1000
 
@@ -2939,7 +3074,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "LEEC" "Others"
-1
+0
 
 SWITCH
 2
@@ -2961,7 +3096,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.47
 0.05
 1
 NIL
@@ -3328,7 +3463,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 247
@@ -3459,7 +3594,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+78.99
 5
 1
 NIL
@@ -3474,7 +3609,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.214
 0.1
 1
 NIL
@@ -3489,7 +3624,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.544
 0.1
 1
 NIL
@@ -3504,7 +3639,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+75.63
 1
 1
 NIL
@@ -3576,6 +3711,17 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [SDD] of seeds"
 "pen-1" 1.0 0 -14070903 true "" "plot min [SDD] of seeds"
 "pen-2" 1.0 0 -2674135 true "" "plot max [SDD] of seeds"
+
+SWITCH
+191
+708
+380
+741
+do_R_calculations
+do_R_calculations
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -4002,7 +4148,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
