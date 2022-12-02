@@ -246,8 +246,8 @@ b %>% str_split(pattern = "^[:digit:]{2}")
 
 
 # Write csv
-db %>%
-  write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
-            row.names = FALSE)
+# db %>%
+#   write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
+#             row.names = FALSE)
 
 

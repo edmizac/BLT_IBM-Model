@@ -637,8 +637,7 @@ to setup-monkeys
 
     ; forage angle
     if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set max_rel_ang_forage_75q ( 68.98 ) ]
-    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set max_rel_ang_forage_75q ( 78.99
-    ) ]
+    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set max_rel_ang_forage_75q ( 78.99 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set max_rel_ang_forage_75q ( 75.66 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set max_rel_ang_forage_75q ( 77.22 ) ]
     if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set max_rel_ang_forage_75q ( 89.73  ) ]
@@ -2305,7 +2304,7 @@ to calc-homerange
     (r:putdataframe "turtle" "X" X_coords "Y" Y_coords)
     r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
     r:eval "turtles <- rbind(turtles, turtle)"
-;    type "turtles data frame: " print r:get "turtles"
+    type "turtles data frame: " print r:get "turtles"
   ]
 
   ;; split the data.frame into coordinates and factor variable
@@ -2317,16 +2316,38 @@ to calc-homerange
 
   ;; calculate homerange (amt package)
   r:eval "db <- cbind(xy, id)"
-  ;  show r:get "db"
-  r:eval "db_nest <- db %>% make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs') %>% nest(data = -c(id))"
+    show r:get "colnames(db)"
+    show r:get "db"
+
+  ; Using non-nested data as we only have one group. When multiple tamarin groups are simulated, we will need to call nest():
+  r:eval "db_ <- db %>% make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')" ;%>% nest(data = -c(id))"
+    show r:get "colnames(db_)"
+    show r:get "db_"
+
+  r:eval "db_KDE <- db_ %>% hr_kde(., levels = c(0.50, 0.95))"
+  r:eval "db_KDE_area <- db_KDE %>% hr_area(.)"
+
+  r:eval "db_KDE_area <- db_KDE_area %>% dplyr::select(-what)"
+  r:eval "db_KDE95 <- db_KDE_area %>% dplyr::filter(level == 0.95) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
+  r:eval "db_KDE50 <- db_KDE_area %>% dplyr::filter(level == 0.50) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
+
+  show r:get "db_KDE95"
+  show r:get "db_KDE50"
+
+  ;  show r:get "db_"
+
+
+;  ; Using nested data with multiple tamarin groups are simulated (we will need to call nest())
+;  r:eval "db_nest <- db %>% make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs') %>% nest(data = -c(id))"
+;  ; calculate HR metrics for every list (=id = run) using map()
+;  r:eval "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
+;  r:eval "db_nest <- db_nest %>%  dplyr::select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
+;  r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
+;;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
+;  r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
+;;  r:eval "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)" ; values in ha
+
   ;  show r:get "db_nest"
-  ; calculate HR metrics for every list (=id = run) using map()
-  r:eval "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
-  r:eval "db_nest <- db_nest %>%  dplyr::select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
-  r:eval "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
-;  r:eval "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
-  r:eval "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
-;  r:eval "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)" ; values in ha
 
   ; for outputting on nlrx:
   ; home range
@@ -2347,8 +2368,14 @@ to calc-homerange
   ; get hr values to agent variable
   print " ------------- Home range size ------------------ "
   ask monkeys [
-    set KDE_95 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
-    set KDE_50 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE50') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+
+    ; if only one group was simulated:
+    set KDE_95 r:get "db_KDE95"
+    set KDE_50 r:get "db_KDE95"
+
+;    ; if you used nested output (simulated multiple tamarin groups):
+;    set KDE_95 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+;    set KDE_50 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE50') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
 
 ;    type "KDE_95: " print round KDE_95
 ;    type "KDE_50: " print round KDE_50
@@ -2370,6 +2397,7 @@ to calc-homerange
   ; calculating other movement metrics
   r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
   r:eval "mov1 <- db_metr %>% mutate( step_length = step_lengths(.), turn_ang = direction_rel(.) )"
+
   print " ------------- Step lengths/Turning angles ------------------ "
   print r:get "colnames(mov1)"
   print r:get "mov1"
@@ -4006,7 +4034,7 @@ SWITCH
 649
 gtt-param?
 gtt-param?
-1
+0
 1
 -1000
 
