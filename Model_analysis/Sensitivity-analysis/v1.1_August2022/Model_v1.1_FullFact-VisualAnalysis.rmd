@@ -191,8 +191,9 @@ db <- db %>%
 
 # For a specific group:
 # a1 <- db %>% filter(id == "GuaSim_19") %>% # agente morreu na maioria das primeiras runs
+db$id %>% unique()
 a <- db %>% filter(id == "GuaSim_1150" | id == "GuaSim_5513") 
-a <- db %>% filter(id == "GuaSim_5513") 
+a <- db %>% filter(id == "GuaSim_190") 
 
 # saveRDS(a, here("Model_analysis",  "Hr_NetLogo.rds"))
 
@@ -337,9 +338,10 @@ db_nest_a2 <- db_nest_a2 %>%
 db_nest_a2 <- db_nest_a2 %>% mutate(hr_area_ha = area / 10000)
 
 
+
 # Other travel patterns
 a1 <- a %>%
-  make_track(.x=x, .y=y, id = id, crs = our_crs, all_cols = TRUE) #%>% nest(data = -c(id))
+  make_track(.x=x, .y=y, id = id, crs = our_crs) #, all_cols = TRUE) #%>% nest(data = -c(id))
 
 
 straight1 <- a1 %>%
@@ -362,6 +364,8 @@ mov2 <- a1 %>%
     step_length = step_lengths(.),
     turn_ang = direction_rel(.)
   )
+
+mov2$turn_ang
 
 mov2 <- mov2 %>% 
   summarise(

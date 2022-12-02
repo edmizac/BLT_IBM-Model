@@ -767,7 +767,7 @@ to go
       output-print "calculating movement metrics finished"
 
       output-print "calculating R index for seeds"
-      calc-seed-aggregation
+;      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       stop
@@ -1050,6 +1050,13 @@ to move-monkeys
       forget_trees
       defecation
 
+      ifelse on-feeding-tree? = TRUE [
+        set x_UTM [ x_UTM ] of tree_current
+        set y_UTM [ y_UTM ] of tree_current
+      ][
+      set x_UTM (item 0 gis:envelope-of self)
+      set y_UTM (item 2 gis:envelope-of self)
+      ]
       set DPL DPL + dist-traveled
 
     ] ; end of daily routine
@@ -1249,8 +1256,8 @@ to-report on-feeding-tree?
         move-to tree_target
 
         ; make UTM of tamarins match UTM of trees (like empirical data collection):
-        set x_UTM [ x_UTM ] of tree_current
-        set y_UTM [ y_UTM ] of tree_current
+;        set x_UTM [ x_UTM ] of tree_current
+;        set y_UTM [ y_UTM ] of tree_current
         ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
         set xcor [xcor] of tree_current + 0.01
         set ycor [ycor] of tree_current + 0.01
@@ -1299,8 +1306,8 @@ to-report on-feeding-tree?
         set dist-traveled dist-traveled + distance ld_tree_target
         move-to ld_tree_target
 
-        set x_UTM [ x_UTM ] of tree_current
-        set y_UTM [ y_UTM ] of tree_current
+;        set x_UTM [ x_UTM ] of tree_current
+;        set y_UTM [ y_UTM ] of tree_current
         ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
         set xcor [xcor] of tree_current + 0.01
         set ycor [ycor] of tree_current + 0.01
@@ -1478,8 +1485,8 @@ to to-feeding-tree
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
       ; make UTM of tamarins match UTM of trees (like empirical data collection):
-      set x_UTM [ x_UTM ] of tree_current
-      set y_UTM [ y_UTM ] of tree_current
+;      set x_UTM [ x_UTM ] of tree_current
+;      set y_UTM [ y_UTM ] of tree_current
       ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
       set xcor [xcor] of tree_current + 0.01
       set ycor [ycor] of tree_current + 0.01
@@ -1563,8 +1570,8 @@ to to-feeding-tree
       move-to ld_tree_target
 
       ; make UTM of tamarins match UTM of trees (like empirical data collection):
-      set x_UTM [ x_UTM ] of tree_current
-      set y_UTM [ y_UTM ] of tree_current
+;      set x_UTM [ x_UTM ] of tree_current
+;      set y_UTM [ y_UTM ] of tree_current
       ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
       set xcor [xcor] of tree_current + 0.01
       set ycor [ycor] of tree_current + 0.01
@@ -1966,7 +1973,6 @@ to sleeping
 
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
-      set x_UTM [ x_UTM ] of tree_target
       set y_UTM [ y_UTM ] of tree_target
       ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
       ; use set timestep 108 to test this
@@ -2371,7 +2377,7 @@ to calc-homerange
 
     ; if only one group was simulated:
     set KDE_95 r:get "db_KDE95"
-    set KDE_50 r:get "db_KDE95"
+    set KDE_50 r:get "db_KDE50"
 
 ;    ; if you used nested output (simulated multiple tamarin groups):
 ;    set KDE_95 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
@@ -2395,13 +2401,18 @@ to calc-homerange
 ;  show r:get "db"
 
   ; calculating other movement metrics
-  r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
-  r:eval "mov1 <- db_metr %>% mutate( step_length = step_lengths(.), turn_ang = direction_rel(.) )"
+  r:eval "db_metr <- db %>%  make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+  print r:get "colnames(db_metr)"
+  print r:get "db_metr"
+  print r:get "dim(db_metr)"
+  r:eval "mov1 <- db_metr %>% mutate( step_length = step_lengths(., append_last = TRUE), turn_ang = direction_rel(., append_last = TRUE) )" ;,  turn_ang = as_degree(turn_ang) )"
+  print r:get "length(db_metr$step_length)"
 
   print " ------------- Step lengths/Turning angles ------------------ "
   print r:get "colnames(mov1)"
   print r:get "mov1"
-  r:eval "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE), step_length_sd = sd(step_length, na.rm = TRUE), turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE), turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
+  print r:get "length(mov1$step_length)"
+  r:eval "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE),  step_length_sd = sd(step_length, na.rm = TRUE),  turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE),  turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
   print r:get "colnames(mov1)"
   print r:get "mov1"
 
@@ -2490,6 +2501,7 @@ to calc-activity-budget
 ;  print freq_map behaviorsequence
   let activity-values freq_map behaviorsequence
 ;  print sublist activity-values 0 4 ; same as print activity-values
+  type "activity values: " print activity-values
 
   let activity-values-ordered sort-by [[list1 list2] -> first list1 < first list2] activity-values
 
@@ -2500,25 +2512,48 @@ to calc-activity-budget
 ;  print item 2 activity-values-ordered
 ;  print item 3 activity-values-ordered
 
-  let p_fee item 0 activity-values-ordered
-  let p_for item 1 activity-values-ordered
-  let p_tra item 2 activity-values-ordered
-  let p_res item 3 activity-values-ordered
-
-
   print " ------------- Activity budget ------------------ "
   ask monkeys [
-    set p_feeding item 1 p_fee
-    set p_foraging item 1 p_for
-    set p_traveling item 1 p_tra
-    set p_resting item 1 p_res
 
-    ;debugging:
+    if length activity-values-ordered = 4 [
+      let p_fee item 0 activity-values-ordered
+      let p_for item 1 activity-values-ordered
+      let p_tra item 2 activity-values-ordered
+      let p_res item 3 activity-values-ordered
+
+      set p_feeding item 1 p_fee
+      set p_foraging item 1 p_for
+      set p_traveling item 1 p_tra
+      set p_resting item 1 p_res
+
+      ;debugging:
       type "p_feeding = " print item 1 p_fee
       type "p_foraging = " print item 1 p_for
       type "p_traveling = "  print item 1 p_tra
       type "p_resting = " print item 1 p_res
-;    type "Total activity budget = " print ( p_feeding + p_foraging + p_traveling + p_resting )
+      ;    type "Total activity budget = " print ( p_feeding + p_foraging + p_traveling + p_resting )
+
+    ]
+
+    if length activity-values-ordered = 3 [ ; no resting
+      let p_fee item 0 activity-values-ordered
+      let p_for item 1 activity-values-ordered
+      let p_tra item 2 activity-values-ordered
+      ;    let p_res item 3 activity-values-ordered
+
+      set p_feeding item 1 p_fee
+      set p_foraging item 1 p_for
+      set p_traveling item 1 p_tra
+      set p_resting 0
+
+      ;debugging:
+      type "p_feeding = " print item 1 p_fee
+      type "p_foraging = " print item 1 p_for
+      type "p_traveling = "  print item 1 p_tra
+;      type "p_resting = " print item 1 p_res
+      ;    type "Total activity budget = " print ( p_feeding + p_foraging + p_traveling + p_resting )
+    ]
+
 
   ]
 
@@ -2686,8 +2721,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+499
+405
 -1
 -1
 3.0
@@ -2818,7 +2853,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-103.0
+73.0
 1
 1
 NIL
@@ -2898,7 +2933,7 @@ INPUTBOX
 601
 82
 no_days
-6.0
+4.0
 1
 0
 Number
