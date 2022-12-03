@@ -13,7 +13,8 @@ path <- here("Model_analysis", "Sensitivity-analysis",
 
 nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
                     "v1.1_November2022", "temp", 
-                   "v1.1_Guareí_Aug_simple778458464_tempRDS.Rdata"))#"v1.1_Taquara_Jan_simple1674592755_tempRDS.Rdata"))
+                   # "v1.1_Guareí_Aug_simple778458464_tempRDS.Rdata"))
+                    "v1.1_Taquara_Jan_simple-609482361_tempRDS.Rdata"))
                     # "v1.1_November2022", "temp", "v1.1_Guareí_Aug_simple33642352_tempRDS.Rdata"))
 db1  <-  unnest_simoutput(nl)
 
@@ -22,7 +23,7 @@ db1$turn_ang_sd%>% str()
 
 db1 <- db1 %>% 
   dplyr::select(
-    -c(1:7, 
+    -c(1:6, 
        agent, 
        siminputrow
        )
@@ -96,78 +97,90 @@ db$`random-seed`
 # db1$x_UTM.x
 # db1$x_UTM.y
 
+# stringr::str_replace_all(db$species, c("\\[" = "", "\\]" = ""))
+
 db1 <- db %>% 
   dplyr::rename_all(~str_replace_all(., c("-" = "_", "\\s+" = "_"))) %>% # Remove - and space characters.
-  mutate(species = case_when(species == "[Abutaselloana]" ~ "Abuta selloana",             
-                             species == "[Allophylusedulis]" ~ "Allophylus edulis",          
-                             species == "[Campomanesiaxanthocarpa]" ~ "Campomanesia xanthocarpa",   
-                             species == "[Caseariasylvestris]" ~ "Casearia sylvestris",       
-                             species == "[Celtisfluminensis]" ~ "Celtis fluminensis",         
-                             species == "[Celtisiguanaea]" ~ "Celtis iguanaea",            
-                             species == "[Cissussulcicaulis]" ~ "Cissus sulcicaulis",         
-                             species == "[Cordiasellowiana]" ~ "Cordia sellowiana",         
-                             species == "[Dyospirosinconstans]" ~ "Dyospiros inconstans",       
-                             species == "[Eugeniaaff.ramboi]" ~ "Eugenia aff. ramboi",         
-                             species == "[Eugeniabrasiliensis]" ~ "Eugenia brasiliensis",       
-                             species == "[Eugeniapunicifolia]" ~ "Eugenia punicifolia",       
-                             species == "[Eugeniasp.]" ~ "Eugenia sp.",                
-                             species == "[Ficusenormis]" ~ "Ficus enormis",              
-                             species == "[Myrceugeniaovata]" ~ "Myrceugenia ovata",         
-                             species == "[Myrciariacuspidata]" ~ "Myrciaria cuspidata",        
-                             species == "[Myrciasplendens(Sw.)DC.]" ~ "Myrcia splendens",    
-                             species == "[Myrsineumbellata]" ~ "Myrsine umbellata",          
-                             species == "[Peraglabrata]" ~ "Pera glabrat",              
-                             species == "[Pereskiaaculeata]" ~ "Pereskia aculeata",          
-                             species == "[Philodendronspp.]" ~ "Philodendron spp.",          
-                             species == "[Phoradendronquadrangulare]" ~ "Phoradendron quadrangulare",
-                             species == "[Pliniatrunciflora]" ~ "Plinia trunciflora",         
-                             species == "[Psidiumlongipetiolatum]" ~ "Psidium longipetiolatum",    
-                             species == "[Psidiummyrtoides]" ~ "Psidium myrtoides",          
-                             species == "[Randiaarmata]" ~ "Randia armata",             
-                             species == "[Rhipsaliscereuscula]" ~ "Rhipsalis cereuscula",       
-                             species == "[Rhipsalisteres]" ~ "Rhipsalis teres",            
-                             species == "[Soroceabonplandii]" ~ "Sorocea bonplandii",         
-                             species == "[Syagrusromanzoffiana]" ~ "Syagrus romanzoffiana",     
-                             species == "[Trichiliacatigua]" ~ "Trichilia catigua",          
-                             species == "[Xylopiabrasiliensis]" ~ "Xylopia brasiliensis",
-                             species == "[inch_pass]" ~ "Unidentified",
-                             species == "[NA]" ~ "NA",
-                             is.na(species)  ~ "NA",
-                             TRUE ~ species
-                             )) # %>% 
 
+  # fix species names
+  mutate(species = stringr::str_replace_all(species, c("\\[" = "", "\\]" = ""))) %>%
+  mutate(species = case_when(is.na(species.x) ~ species,
+                             TRUE ~ species.x)) %>% 
+  dplyr::select(-species.x) %>%
+  
+  mutate(species = case_when(species == "Abutaselloana" ~ "Abuta selloana",             
+                             species == "Allophylusedulis" ~ "Allophylus edulis",          
+                             species == "Campomanesiaxanthocarpa" ~ "Campomanesia xanthocarpa",   
+                             species == "Caseariasylvestris" ~ "Casearia sylvestris",       
+                             species == "Celtisfluminensis" ~ "Celtis fluminensis",         
+                             species == "Celtisiguanaea" ~ "Celtis iguanaea",            
+                             species == "Cissussulcicaulis" ~ "Cissus sulcicaulis",         
+                             species == "Cordiasellowiana" ~ "Cordia sellowiana",         
+                             species == "Dyospirosinconstans" ~ "Dyospiros inconstans",       
+                             species == "Eugeniaaff.ramboi" ~ "Eugenia aff. ramboi",         
+                             species == "Eugeniabrasiliensis" ~ "Eugenia brasiliensis",       
+                             species == "Eugeniapunicifolia" ~ "Eugenia punicifolia",       
+                             species == "Eugeniasp." ~ "Eugenia sp.",                
+                             species == "Ficusenormis" ~ "Ficus enormis",              
+                             species == "Myrceugeniaovata" ~ "Myrceugenia ovata",         
+                             species == "Myrciariacuspidata" ~ "Myrciaria cuspidata",        
+                             species == "Myrciasplendens(Sw.)DC." ~ "Myrcia splendens",    
+                             species == "Myrsineumbellata" ~ "Myrsine umbellata",          
+                             species == "Peraglabrata" ~ "Pera glabrat",              
+                             species == "Pereskiaaculeata" ~ "Pereskia aculeata",          
+                             species == "Philodendronspp." ~ "Philodendron spp.",          
+                             species == "Phoradendronquadrangulare" ~ "Phoradendron quadrangulare",
+                             species == "Pliniatrunciflora" ~ "Plinia trunciflora",         
+                             species == "Psidiumlongipetiolatum" ~ "Psidium longipetiolatum",    
+                             species == "Psidiummyrtoides" ~ "Psidium myrtoides",          
+                             species == "Randiaarmata" ~ "Randia armata",             
+                             species == "Rhipsaliscereuscula" ~ "Rhipsalis cereuscula",       
+                             species == "Rhipsalisteres" ~ "Rhipsalis teres",            
+                             species == "Soroceabonplandii" ~ "Sorocea bonplandii",         
+                             species == "Syagrusromanzoffiana" ~ "Syagrus romanzoffiana",     
+                             species == "Trichiliacatigua" ~ "Trichilia catigua",          
+                             species == "Xylopiabrasiliensis" ~ "Xylopia brasiliensis",
+                             species == "inch_pass" ~ "Unidentified",
+                             # species == "NA" ~ "NA",
+                             is.na(species)  ~ "NA"
+                             # TRUE ~ species
+                             ))  %>% 
 
-db1 <- db1 %>% 
   tidyr::unite(x_UTM, x_UTM.x, x_UTM.y, col = "x", remove = TRUE, na.rm = TRUE) %>% 
   tidyr::unite(y_UTM, y_UTM.x, y_UTM.y, col = "y", remove = TRUE, na.rm = TRUE)  %>% 
   tidyr::unite(visitations.x, visitations.y, col = "visitations", remove = TRUE, na.rm = TRUE)  %>% 
-  # tidyr::unite(id_tree.x, id_tree.y, col = "id_tree", remove = TRUE, na.rm = TRUE) %>% 
+  tidyr::unite(id_tree.x, id_tree.y, col = "id_tree", remove = TRUE, na.rm = TRUE) %>% 
   
-  
-  # dplyr::select(-c("breed.x", "breed.y")) %>% 
   dplyr::select(-c("USER", `feedingbout_on?`, `step_model_param?`, `gtt_param?`, `p_forage_param?`))
-
+  # dplyr::select(-c("breed.x", "breed.y")) %>% 
+  
 
 db1 %>% str()
+db1$species %>% as.factor() %>% levels()  
+# a <- db1 %>% dplyr::filter(species == "Syagrus romanzoffiana")
+# db1 <- db1
+# a <- db1 %>% dplyr::filter_if(!is.na(SDD) & species != "Syagrus romanzoffiana")
+
 db1 <- db1 %>% 
   mutate(
     x = as.numeric(x),
     y = as.numeric(y)
   ) %>% 
   rename(
-    month = feeding_trees_scenario
+    month = feeding_trees_scenario,
+    group = study_area
   )
 
-# Write csv
+# # Write csv
 # db1 %>%
 #   write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
 #             row.names = FALSE)
 
+
   
 
 # Split into tables
-db_monkeys <- db1 %>% 
-  dplyr::filter(breed == "monkeys") %>% 
+db_monkeys <- db_monkeys %>% 
   dplyr::select(-c("x":disp_day)) %>% 
   mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
   
@@ -213,6 +226,7 @@ str_split(a, pattern = "\\d{3}(?=\\.(?<=\\.)\\d{2})", simplify = TRUE) #quase
 a
 str_subset(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") #quase
 str_extract_all(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") #quase
+# str_extract_all(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") %>% mean(., na.rm = TRUE) #quase
 
 str_subset(a, pattern = "\\d+(?=(?<=\\.)\\d{2})")
 
@@ -246,8 +260,8 @@ b %>% str_split(pattern = "^[:digit:]{2}")
 
 
 # Write csv
-# db %>%
-#   write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
-#             row.names = FALSE)
+db1 %>%
+  write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
+            row.names = FALSE)
 
 

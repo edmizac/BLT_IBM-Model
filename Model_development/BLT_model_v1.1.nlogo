@@ -767,7 +767,7 @@ to go
       output-print "calculating movement metrics finished"
 
       output-print "calculating R index for seeds"
-;      calc-seed-aggregation
+      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       stop
@@ -2007,9 +2007,9 @@ to sleeping
 ;      set MR_d lput a MR_d
 
       ; debugging:
-      type "MR = " print MR
-      type "DPL = " print DPL
-      type "timesteps = " print timestep * 5
+;      type "MR = " print MR
+;      type "DPL = " print DPL
+;      type "time (min) = " print timestep * 5
 
       ; reset values everyday, except the last one (otherwise PT can't be calculated)
       if day != no_days [
@@ -2310,7 +2310,7 @@ to calc-homerange
     (r:putdataframe "turtle" "X" X_coords "Y" Y_coords)
     r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
     r:eval "turtles <- rbind(turtles, turtle)"
-    type "turtles data frame: " print r:get "turtles"
+;    type "turtles data frame: " print r:get "turtles"
   ]
 
   ;; split the data.frame into coordinates and factor variable
@@ -2322,13 +2322,13 @@ to calc-homerange
 
   ;; calculate homerange (amt package)
   r:eval "db <- cbind(xy, id)"
-    show r:get "colnames(db)"
-    show r:get "db"
+;    show r:get "colnames(db)"
+;    show r:get "db"
 
   ; Using non-nested data as we only have one group. When multiple tamarin groups are simulated, we will need to call nest():
   r:eval "db_ <- db %>% make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')" ;%>% nest(data = -c(id))"
-    show r:get "colnames(db_)"
-    show r:get "db_"
+;    show r:get "colnames(db_)"
+;    show r:get "db_"
 
   r:eval "db_KDE <- db_ %>% hr_kde(., levels = c(0.50, 0.95))"
   r:eval "db_KDE_area <- db_KDE %>% hr_area(.)"
@@ -2337,8 +2337,8 @@ to calc-homerange
   r:eval "db_KDE95 <- db_KDE_area %>% dplyr::filter(level == 0.95) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
   r:eval "db_KDE50 <- db_KDE_area %>% dplyr::filter(level == 0.50) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
 
-  show r:get "db_KDE95"
-  show r:get "db_KDE50"
+;  show r:get "db_KDE95"
+;  show r:get "db_KDE50"
 
   ;  show r:get "db_"
 
@@ -2403,18 +2403,18 @@ to calc-homerange
   ; calculating other movement metrics
   r:eval "db_metr <- db %>%  make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
   print r:get "colnames(db_metr)"
-  print r:get "db_metr"
-  print r:get "dim(db_metr)"
+;  print r:get "db_metr"
+;  print r:get "dim(db_metr)"
   r:eval "mov1 <- db_metr %>% mutate( step_length = step_lengths(., append_last = TRUE), turn_ang = direction_rel(., append_last = TRUE) )" ;,  turn_ang = as_degree(turn_ang) )"
-  print r:get "length(db_metr$step_length)"
+;  print r:get "length(db_metr$step_length)"
 
   print " ------------- Step lengths/Turning angles ------------------ "
-  print r:get "colnames(mov1)"
-  print r:get "mov1"
-  print r:get "length(mov1$step_length)"
+;  print r:get "colnames(mov1)"
+;  print r:get "mov1"
+;  print r:get "length(mov1$step_length)"
   r:eval "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE),  step_length_sd = sd(step_length, na.rm = TRUE),  turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE),  turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
-  print r:get "colnames(mov1)"
-  print r:get "mov1"
+;  print r:get "colnames(mov1)"
+;  print r:get "mov1"
 
   ask monkeys [
     set step_length_mean r:get "mov1 %>% dplyr::select(step_length_mean) %>%  unlist() %>% as.vector()"
@@ -2721,8 +2721,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-499
-405
+501
+406
 -1
 -1
 3.0
