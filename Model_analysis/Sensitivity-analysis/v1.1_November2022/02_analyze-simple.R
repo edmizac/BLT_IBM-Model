@@ -524,101 +524,8 @@ db1_sdd %>% ggplot(
 ## DPL -------------------------
 db1_mv <- db1_monkeys %>% 
 dplyr::filter(breed == "monkeys") %>% 
-  # group_by(group, random_seed)
   group_by(group, random_seed)
 
-# This works for "_" separated columns
-# a <- db1_mv$DPL_d %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
-# a <- a %>% str_split(pattern = "_") #, simplify = TRUE)
-# a <- a %>% str_split(pattern = "_", simplify = TRUE)
-# a %>% str()
-# a <- a %>% purrr::map(as.numeric)
-# a <- a %>% purrr::map(round, 2)
-# a <- a %>% purrr::map_db1l(mean, na.rm=TRUE)
-# a %>% str()
-# db1_mv$DPL_mean <- a #%>% round(., 2)
-# db1_mv %>% str()
-
-# This works for DPL values 
-a <- db1_mv %>% str_sub()
-a <- db1_mv$DPL_d %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
-
-
-db1_mv$DPL_d%>% str_split(., "[0-9]\\.[0-9]")
-db1_mv$DPL_d%>% str_split(., "[0-9.]+")
-db1_mv$DPL_d%>% str_split(., "[^0-9.<>]")
-db1_mv$DPL_d%>% str_split(., "'\\d+'")
-db1_mv$DPL_d%>% str_split(., "\\d+(?:\\.\\d+)?") # quase?
-db1_mv$DPL_d%>% str_split(., "\\d+(?:\\.\\d+)?-<(\\d+(?:\\.\\d+)?).*") # quase?
-db1_mv$DPL_d%>% str_split(., "((?<=\\<)\\d\\.?\\d+|NA)")
-db1_mv$DPL_d%>% str_split(., "[0-9][0-9]$", ".[0-9][0-9]$")
-db1_mv$DPL_d%>% str_split(., ".(.{2})\\..")
-db1_mv$DPL_d%>% str_split(., "\\d{4}(?=\\b)")
-db1_mv$DPL_d%>% str_split(., '\\d{3,4}[\\.]\\d{1,2}') # quase?
-db1_mv$DPL_d%>% str_split(., '[^0-9.]') # quase?
-db1_mv$DPL_d%>% str_split(., '[^0-9.\\d{1,2}]') # quase?
-
-db1_mv$DPL_d%>% str_split(., '[.\\d{1,2}]') # quase?
-db1_mv$DPL_d%>% strex::str_split_by_numbers(., decimals = TRUE)
-# db1_mv %>% group_nest() %>% 
-#   unnest_longer(data)
-# 
-# db1_mv_DPL  <- db1_mv %>% unnest_legacy()
-
-# db1_mv %>% saveRDS(paste0(path, "/", "Camila.RDS"))
-# readRDS("Camila.RDS")
-
-
-# aa %>% map_int(as.numeric)
-# a %>% map_dbl(as.numeric)
-# 
-# a %>% str()
-# 
-# c <- a
-# a <- a %>% as.numeric()
-# length(a)
-# db1_mv$DPL_d %>% length()
-# 
-# b <- a %>% str_remove(., "[[:digit:]].,")
-# a <- a %>% str_split(pattern = "[[:digit:]].,", simplify = TRUE)
-# 
-# 
-# c <- lapply( c, function(x) trimws( unlist ( strsplit( x, ",") ) ) )
-# c
-# 
-# db1_mv$c <- c
-# 
-# purrr::map_int()
-# 
-# 
-# db1_mv$DPL_d <- db1_mv$DPL_d %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
-# db1_mv$DPL_d <- db1_mv$DPL_d %>% str_split(pattern = "_") #, simplify = TRUE)
-# # db1_mv$DPL_d <- db1_mv$DPL_d%>% map(as.numeric)
-# 
-# db1_mv$DPL_d
-# 
-# teste <- db1_mv
-# teste$DPL_d <- lapply(db1_mv$DPL_d, function(x) trimws( unlist ( strsplit( x, ",") ) ) )
-# teste$DPL_d <- as.numeric(str_extract_all(teste$DPL_d, "[0-9.]+")[[1]])
-#   #map(as.numeric)
-# teste$DPL_d
-# 
-# 
-# teste$DPL_d %>% map(~ str_extract_all(., "[0-9.]+")[[1]]) %>%
-#   as.numeric()
-# 
-# 
-# 
-# library(purrr)
-# library(repurrrsive)
-# 
-# got_chars[1:3]
-# 
-# tibble::tibble(
-#   # name = map_chr(db1_mv$DPL_d, "name"),
-#   id = map_db1l(db1_mv, "DPL_d")
-# )
-# got_chars[[5]]["id"]
 
 db1_mv_DPL <- db1_mv_DPL %>% 
   rename(DPL = DPL_d) %>%
@@ -639,10 +546,14 @@ db1_mv_DPL %>%
 
 
 ## Home range -------------------------
+db1_mv <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys.rds"))
+db1_mv %>% str()
+
+
 db1_mv <- db1 %>% 
   dplyr::filter(breed == "monkeys") %>% 
-  group_by(group, random_seed) %>% 
-  dplyr::select(-"DPL_d")
+  group_by(group, random_seed) #%>% 
+  # dplyr::select(-"DPL_d")
   
 
 

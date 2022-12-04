@@ -6,6 +6,8 @@ library("stringr")
 library("stringi")
 library("vctrs")
 library("nlrx")
+library("purrr")
+
 
 
 path <- here("Model_analysis", "Sensitivity-analysis",
@@ -151,7 +153,8 @@ db1 <- db %>%
   tidyr::unite(visitations.x, visitations.y, col = "visitations", remove = TRUE, na.rm = TRUE)  %>% 
   tidyr::unite(id_tree.x, id_tree.y, col = "id_tree", remove = TRUE, na.rm = TRUE) %>% 
   
-  dplyr::select(-c("USER", `feedingbout_on?`, `step_model_param?`, `gtt_param?`, `p_forage_param?`))
+  dplyr::select(-c("USER", `feedingbout_on?`, `step_model_param?`, `gtt_param?`, `p_forage_param?`)) %>% 
+  dplyr::select(-c(siminputrow, "[run_number]"))
   # dplyr::select(-c("breed.x", "breed.y")) %>% 
   
 
@@ -180,15 +183,75 @@ db1 <- db1 %>%
   
 
 # Split into tables
-db_monkeys <- db_monkeys %>% 
+db_monkeys <- db1 %>% 
+  dplyr::filter(breed == "monkeys") %>% 
   dplyr::select(-c("x":disp_day)) %>% 
-  mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
+  mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = ""))) 
+  
+b <- db_monkeys$DPL_d %>%
+  str_extract_all(., pattern = ".{0,4}[\\.].{0,2}")
+db_monkeys$DPL_d <- b
+  
+db_monkeys <- db_monkeys %>% 
+  # map_dbl(., as.numeric) #%>% 
+  tidyr::unnest_longer(DPL_d)
+
+db_monkeys <- db_monkeys %>% 
+  mutate(DPL_d = as.numeric(DPL_d))
+
+# db_monkeys$DPL_d
+# db_monkeys$DPL_d %>% str()
+# db_monkeys %>% str()
+
+# Drop this down when separating DPL from strings is done correctly:
+db_monkeys <- db_monkeys %>% 
+  dplyr::filter(DPL_d > 600) %>% # some values are smaller than 700, which is not realistic (it seems like it is a regex problem)
+  mutate(
+    source = "simulated"
+  )
+
+db_monkeys %>% str()
+foo <- function(x, na.rm = TRUE) (x = as.numeric(x))
+# db1_mv$MR %>% foo
+
+db_monkeys <- db_monkeys %>% 
+  mutate(
+    across(
+      c("energy":"PT", "[step]":"day", "simulation_time", "n_visited_trees", "n_unvisited_trees"), 
+      foo
+    )
+  ) %>% 
+  mutate_if(is.character, as.factor)
+
+db_monkeys %>% str()
+
+
+
+# # # Write data
+# db_monkeys %>%
+#   saveRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# mutate(DPL_d = str_split(abilities, ";"))
   
 
-mutate(DPL_d = str_split(abilities, ";"))
-  
-
-tidyr::separate_rows(DPL_d, )
+# tidyr::separate_rows(DPL_d, )
 
 
 a <- db_monkeys$DPL_d
@@ -206,40 +269,37 @@ str_split(a, pattern = "\\.+", simplify = TRUE)
 str_split(a, pattern = "[\\.{3}]", simplify = TRUE)
 
 str_split(a, pattern = "[{2}\\.{3}]", simplify = TRUE) #melhor
-str_split(a, pattern = ".{0,3}[\\.].{0,2}", simplify = TRUE) # dá certo no regex https://regex101.com/r/hMM7dV/1
+str_split(a, pattern = ".{0,4}[\\.].{0,2}", simplify = TRUE) # dá certo no regex https://regex101.com/r/hMM7dV/1
+str_split(a, pattern = ".{0,4}[\\.].{0,2}")
+
+str_extract_all(a, pattern = ".{0,4}[\\.].{0,2}") # PQP FUNCIONOU
 
 
-str_split(a, pattern = "\\d(?=\\.)", simplify = TRUE) #melhor
-str_split(a, pattern = "\\d{3}(?=\\.(?<=\\.)\\d{2})", simplify = TRUE) #quase
+# str_split(a, pattern = "\\d(?=\\.)", simplify = TRUE) #melhor
+# str_split(a, pattern = "\\d{3}(?=\\.(?<=\\.)\\d{2})", simplify = TRUE) #quase
 
-
-
-
-
-
-
-
-
-
-
-
-a
-str_subset(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") #quase
-str_extract_all(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") #quase
-# str_extract_all(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") %>% mean(., na.rm = TRUE) #quase
-
-str_subset(a, pattern = "\\d+(?=(?<=\\.)\\d{2})")
-
-
-
-str_subset(a, pattern = "(?<=\\.)\\d{2})") #melhor
-
-a
-
-
-
-
-
+# a
+# str_subset(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") #quase
+# str_extract_all(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") #quase
+# # str_extract_all(a, pattern = "\\d+(?=\\.(?<=\\.)\\d{2})") %>% mean(., na.rm = TRUE) #quase
+# 
+# str_subset(a, pattern = "\\d+(?=(?<=\\.)\\d{2})")
+# 
+# 
+# 
+# str_subset(a, pattern = "(?<=\\.)\\d{2})") #melhor
+# 
+# a
+# 
+# 
+# str_split(a, pattern = "[^.d{2}]+")
+# str_split(a, pattern = '[\\d+\\.\\d*^+]')
+# b <- str_split(a, pattern = '\\.')
+# 
+# 
+# 
+# b %>% str_split(pattern = "{3}")
+# b %>% str_split(pattern = "^[:digit:]{2}")
 
 
 
@@ -249,19 +309,64 @@ a
 
 
 
-str_split(a, pattern = "[^.d{2}]+")
-str_split(a, pattern = '[\\d+\\.\\d*^+]')
-b <- str_split(a, pattern = '\\.')
+# Methods for Home range (as it was before):
+
+a <- db1_mv$KDE_values %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
+a <- a %>% str_split(pattern = "_") #, simplify = TRUE)
+# a <- a %>% str_split(pattern = "_", simplify = TRUE)
+
+a <- a %>% map(as.numeric)
+
+
+db1_mv$KDE_values <- a
+# teste <- db1_mv %>% tidyr::nest(data="KDE_values") %>% unnest("data")
+
+
+
+db1_mv %>% group_nest() %>% 
+  unnest_longer(data)
+
+db1_mv_HR  <- db1_mv %>% unnest_legacy()
+
+KDE_levels <- rep(c("KDE95", "KDE50", "drop"), nrow(db1_mv))
+db1_mv_HR$KDE_levels  <- KDE_levels 
+
+db1_mv_HR %>% str()
+
+db1_mv_HR$KDE_levels  <-  as.factor(db1_mv_HR$KDE_levels)
+
+
+db1_mv_HR <- db1_mv_HR %>% 
+  filter(KDE_levels != 'drop') %>% 
+  pivot_wider(names_from = "KDE_levels", values_from = "KDE_values",
+              values_fn = "list")
+
+# line 1 is still nested
+# db1_mv_HR <- db1_mv_HR %>% 
+#   dplyr::filter(row_number()==1) %>% 
+#   as_tibble()
+db1_mv_HR <- db1_mv_HR[-1, ]
+
+
+db1_mv_HR %>% str()
+
+# Divide HR by 10000 (ha)
+db1_mv_HR <- db1_mv_HR %>% 
+  # unlist as numeric
+  mutate(
+    KDE95 = unlist(KDE95),
+    KDE50 = unlist(KDE50)
+  ) %>% 
   
+  mutate(
+    KDE95 = KDE95 / 100000,
+    KDE50 = KDE50 / 100000
+  )
+
+db1_mv_HR$KDE50 %>% str()
+)
 
 
-b %>% str_split(pattern = "{3}")
-b %>% str_split(pattern = "^[:digit:]{2}")
 
-
-# Write csv
-db1 %>%
-  write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
-            row.names = FALSE)
 
 
