@@ -61,7 +61,8 @@ load(here("Data", "06_sf-plots.RData"))
 
 
 # ggplot theme
-theme_set(theme_bw(base_size = 15))
+theme_set(theme_bw(base_size = 15,
+                   theme(axis.text.x = element_text(size = 11))))
 
 # db1 <- db1
 
@@ -91,6 +92,10 @@ db1 <- db1 %>%
   
 db1$species %>% as.factor() %>% levels()
 
+
+# define boxplot width
+bpw <- 4/length(unique(paste(db1$group, db1$month)))
+bpw # 0.44444
 
 ## Plot example runs -------------------------
 
@@ -180,7 +185,7 @@ gua.sf +
   
 #### Save plot
 # ggsave(paste0(path, "/",
-#             'Spatial_SDD_Guareí-example.png'), height = 7, width = 10)
+#             '02_simple_Spatial_SDD_Guareí-example.png'), height = 7, width = 10)
 
 
 ### 2) Santa Maria -------------------------
@@ -267,7 +272,7 @@ sma.sf +
 
 #### Save plot
 # ggsave(paste0(path, "/",
-#             'Spatial_SDD_SantaMaria-example.png'), height = 7, width = 10)
+#             '02_simple_Spatial_SDD_SantaMaria-example.png'), height = 7, width = 10)
 
 
 
@@ -356,7 +361,7 @@ taq.sf +
 
 #### Save plot
 # ggsave(paste0(path, "/",
-#             'Spatial_SDD_Taquara-example.png'), height = 7, width = 10)
+#             '02_simple_Spatial_SDD_Taquara-example.png'), height = 7, width = 10)
 
 
 ### 4) Suzano -------------------------
@@ -444,7 +449,7 @@ suz.sf +
 
 #### Save plot
 # ggsave(paste0(path, "/",
-#             'Spatial_SDD_Suzano-example.png'), height = 7, width = 10)
+#             '02_simple_Spatial_SDD_Suzano-example.png'), height = 7, width = 10)
 
 
 ### 5) Facet -------------------------
@@ -453,36 +458,94 @@ suz.sf +
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## SDD -------------------------
 rm(group)
-# db1 <- db1 %>%
-#   rename(group= group,
-#          month = month)
-db1_sdd <- db1 %>% 
+
+# Load empirical data
+obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminputrow_SDD.csv"),
+                    sep = ",", stringsAsFactors = TRUE)  %>%  
+  # mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
+  mutate(source = as.factor("observed")) %>% 
+  rename(month = id_month) %>% 
+  ungroup() %>% 
+  as.data.frame()
+
+# Simulated data
+db_sd <- readRDS(paste0(path, "/", "02_Simoutput-simple_plants.rds"))
+db_sd <- db_sd %>% 
   dplyr::filter(breed == "seeds") %>% 
-  group_by(group, random_seed)
+  group_by(group, random_seed) %>% 
+  mutate(source = "simulated") %>% 
+  mutate(day = as.factor(day),
+         disp_day = recode(disp_day, 
+                        "sameday" = "same day",
+                        "nextday" = "next day"
+                        ) %>% as.factor()
+  )
+db_sd$disp_day %>% str()
+db_sd$source %>% str()
 # db1_sdd <- db1_sdd %>% 
 #   filter(SDD > 0)
 # db1_sdd <- db1_sdd %>%
 #   dplyr::filter(disp_day == "sameday") # next_day SDD is all 0 (check model)
 
+# Merge obserded data into db1_sd
+db_sd <- db_sd %>% dplyr::bind_rows(obs)
 
+db_sd <- db_sd %>% 
+  mutate(source = as.factor(source)) %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec"))
+
+db_sd$disp_day %>% str()
+db_sd$disp_day %>% levels()
+length(db_sd$disp_day %>% is.na(.)) # no NAs
+
+db_sd$source %>% str()
+db_sd$disp_day %>% levels()
+length(db_sd$disp_day %>% is.na(.)) # no NAs
+
+# db_sd$group %>% str()
 ## Density Option 1: by day of dispersal
 # By group
 
-db1_sdd %>% ggplot(
+db_sd <- db_sd %>% 
+  dplyr::filter(!is.na(SDD)) %>% 
+  dplyr::filter(!is.na(disp_day))
+
+db_sd %>% ggplot(
   aes(x = SDD, fill = group, group = group)
 ) +
   geom_density(alpha = 0.4) +
   xlab("SDD (in meters)") +
-  facet_wrap(~disp_day, nrow = 2)
+  # facet_grid(. ~ disp_day, rows = 2)
+  # facet_wrap(vars(source, disp_day), nrow = 2) +
+  facet_grid(disp_day ~ source) +
+  
+  # others
+  theme(axis.text = element_text(size = 9))
+
 
 # Save plot
-# ggsave(paste0(path, "/", 'SDD_disp_day_density.png'), height = 3.5, width = 6)
+# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density.png'), height = 5, width = 7)
 
 ## Boxplot
 # By group
-db1_sdd %>%
+db_sd %>%
   ggplot() +
   aes(x = group, y = SDD, fill = group) +
   geom_violin() +
@@ -490,154 +553,247 @@ db1_sdd %>%
   theme(axis.title.x = element_blank()) +
   facet_wrap(~disp_day, nrow = 2) +
   ylab("SDD (m)") +
-  ylim(0, 1500)
+  ylim(0, 1500) +
+  # facet_wrap(vars(disp_day, source), nrow = 2) +
+  facet_grid(disp_day ~ source) +
+  
+  # others
+  theme(axis.text = element_text(size = 9))
+# geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+
 
 # Save plot
-# ggsave(paste0(path, "/", 'SDD_disp_day_violin.png'), height = 3.5, width = 7)
+# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_violin.png'), height = 5, width = 7)
 
 
-db1_sdd %>% ggplot(
+db_sd %>% ggplot(
   aes(x = group, y = SDD, color = month)
 ) +
   geom_boxplot() +
   geom_point(
-    position = position_jitterdodge(jitter.width = .05) # only way of dodging the points and jitter it
+    position = position_jitterdodge(jitter.width = .45) # only way of dodging the points and jitter it
   ) +
   ylab("SDD (in meters)") +
   ylim(0, 1500) +
   facet_wrap(~disp_day, nrow = 2) +
+  # scale_color_viridis_d() +
+  # facet_wrap(vars(disp_day, source), nrow = 2) +
+  
+  # others
+  theme(axis.text = element_text(size = 9)) +
+# geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+
+
+# Save plot
+# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_boxplot.png'), height = 5, width = 7)
+
+
+  # facet_grid(cols = vars(disp_day), rows = vars(source)) +
+  facet_grid(cols = vars(disp_day), rows = vars(source)) +
   scale_color_viridis_d()
 
 # Save plot
-# ggsave(paste0(path, "/", 'SDD_disp_day_boxplot.png'), height = 3.5, width = 7)
-
-
-  facet_wrap(~disp_day, nrow = 2) +
-  scale_color_viridis_d()
-
-# Save plot
-# ggsave(paste0(path, "/", 'SDD_disp_day_grid-boxplot.png'), height = 3.5, width = 7)
+# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-boxplot.png'), height = 5, width = 7)
 
 
 
 
-## DPL -------------------------
-db1_mv <- db1_monkeys %>% 
-dplyr::filter(breed == "monkeys") %>% 
-  group_by(group, random_seed)
+  
+  
+  
+## Movement patterns -------------------------
+theme_update(
+      axis.title.x = element_blank()
+  )
+
+# define boxplot width
+bpw <- 6/length(unique(paste(db1$group, db1$month)))
+bpw # 0.44444
+  
+  
+db1_mv <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds")) %>% 
+    # mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
+    ungroup() %>% 
+    as.data.frame()
+  
+# db1_mv %>% str()
+  
+# Wrangle data:
+  
+db1_mv <- db1_mv %>% 
+# dplyr::filter(breed == "monkeys") %>% 
+  rename(DPL = DPL_d,
+         KDE95 = KDE_95,
+         KDE50 = KDE_50) %>% 
+  mutate(date = as.factor(date))
 
 
-db1_mv_DPL <- db1_mv_DPL %>% 
-  rename(DPL = DPL_d) %>%
-  mutate(DPL = 10 * DPL)
+# load DPL empirical data
+obs.dpl <- read.csv(here("Data", "Movement", "Curated", "Validation", 
+                         "Siminputrow_DPL_by-day.csv")
+                    , stringsAsFactors = TRUE
+)  %>% 
+  # mutate(group = recode(group, "Guarei" = "Guareí")) %>% # to match all other datasets
+  mutate(source = as.factor("observed")) %>% 
+  rename(month = id_month) #%>% 
+  # as_tibble()
 
-db1_mv_DPL %>% 
-  ggplot(aes(x = group, y = DPL, color = month)) +
+# load HR empirical data
+obs.hr <- read.csv(here("Data", "Movement", "Curated", "Validation", 
+                         "Siminputrow_Home-range_by-month.csv")
+                    , stringsAsFactors = TRUE
+)  %>% 
+  # mutate(group = recode(group, "Guarei" = "Guareí")) %>% # to match all other datasets
+  mutate(source = as.factor("observed")) %>% 
+  rename(month = id_month)
+
+obs.hr <- obs.hr %>% 
+  dplyr::select(group, month, source, KDE_value, area) %>% 
+  tidyr::pivot_wider(
+    names_from = KDE_value,
+    values_from = area
+  ) %>% 
+  as.data.frame()
+
+obs <- obs.dpl %>% dplyr::left_join(obs.hr, by = c("group"="group", "month"= "month",
+                                                     "source"="source"
+                                                     # "KDE95" = "KDE95",
+                                                     # "KDE50" = "KDE50"
+))
+
+# Merge obserded data into db1_mv
+db1_mv <- dplyr::bind_rows(db1_mv, obs)
+
+db1_mv <- db1_mv %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(
+    KDE95 = KDE95 / 10000,
+    KDE50 = KDE50 / 10000
+  )
+                  
+
+
+# obs.hr$group
+# db1_mv$group
+# 
+# obs.hr %>% str()
+# db1_mv %>% str()
+# obs.dpl %>% str()
+# 
+# db1_mv %>% str()
+
+# db1_mv %>% str()
+# obs.dpl %>% str()
+
+
+### DPL -------------------------
+
+# Check data:
+# d <- db1_mv %>% dplyr::filter(source == "observed")
+# d <- a %>%  dplyr::filter(random_seed == "-1996108983") # por algum motivo essa simullação tem 16 dias em vez de 8 
+
+# # Option 1 (can't identify simulated from observed ones)
+# db1_mv %>% 
+#   ggplot(aes(x = group, y = DPL, group = paste(source, month), color = month)) +
+#   # ggplot(aes(x = group, y = DPL, fill = source, color = month)) +
+#   geom_boxplot() +
+#   guides(scale="none") +
+#   ylab("DPL (m)") +
+#   ylim(c(0,5000)) +
+#   scale_colour_viridis_d() +
+#   scale_fill_discrete(guide = "none")
+
+
+# # Option2  (oly way of identifyin simulated from observed ones)
+db1_mv %>% 
+  ggplot(aes(x = group, y = DPL, 
+             color = month,
+             # fill = month
+             ), shape = source) +
+  # geom_boxplot(position = position_dodge(preserve = "single")) +
   geom_boxplot() +
-  guides(fill=FALSE) +
+  guides(scale="none") +
   ylab("DPL (m)") +
   ylim(c(0,5000)) +
-  scale_colour_viridis_d()
+  scale_colour_viridis_d() +
+  # scale_fill_viridis_d() +
+  facet_grid(~source) +
+  
+  # others
+  theme(axis.text = element_text(size = 9))
+# geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+
+
+# db1_mv %>%
+#   ggplot(aes(x = group, y = DPL, color = month)) +
+#   geom_boxplot() +
+#   guides(scale="none") +
+#   ylab("DPL (m)") +
+#   ylim(c(0,5000)) +
+#   scale_colour_viridis_d()
 
 # Save plot
-# ggsave(paste0(path, 'DPL_By-month_boxplot.png'), height = 5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_DPL_By-month_boxplot.png'), height = 3.5, width = 7)
 
 
 
 
-## Home range -------------------------
-db1_mv <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys.rds"))
-db1_mv %>% str()
 
-
-db1_mv <- db1 %>% 
-  dplyr::filter(breed == "monkeys") %>% 
-  group_by(group, random_seed) #%>% 
-  # dplyr::select(-"DPL_d")
   
 
 
-a <- db1_mv$KDE_values %>% str_replace_all(., c("\\[" = "", "\\]" = ""))#(pattern = "\\[", simplify = TRUE)
-a <- a %>% str_split(pattern = "_") #, simplify = TRUE)
-# a <- a %>% str_split(pattern = "_", simplify = TRUE)
 
-a <- a %>% map(as.numeric)
-
-
-db1_mv$KDE_values <- a
-# teste <- db1_mv %>% tidyr::nest(data="KDE_values") %>% unnest("data")
-
-
-
-db1_mv %>% group_nest() %>% 
-  unnest_longer(data)
-
-db1_mv_HR  <- db1_mv %>% unnest_legacy()
-
-KDE_levels <- rep(c("KDE95", "KDE50", "drop"), nrow(db1_mv))
-db1_mv_HR$KDE_levels  <- KDE_levels 
-
-db1_mv_HR %>% str()
-
-db1_mv_HR$KDE_levels  <-  as.factor(db1_mv_HR$KDE_levels)
-
-
-db1_mv_HR <- db1_mv_HR %>% 
-  filter(KDE_levels != 'drop') %>% 
-  pivot_wider(names_from = "KDE_levels", values_from = "KDE_values",
-              values_fn = "list")
-
-# line 1 is still nested
-# db1_mv_HR <- db1_mv_HR %>% 
-#   dplyr::filter(row_number()==1) %>% 
-#   as_tibble()
-db1_mv_HR <- db1_mv_HR[-1, ]
-
-
-db1_mv_HR %>% str()
-
-# Divide HR by 10000 (ha)
-db1_mv_HR <- db1_mv_HR %>% 
-  # unlist as numeric
-  mutate(
-    KDE95 = unlist(KDE95),
-    KDE50 = unlist(KDE50)
-  ) %>% 
-  
-  mutate(
-    KDE95 = KDE95 / 100000,
-    KDE50 = KDE50 / 100000
-    )
-  
-  db1_mv_HR$KDE50 %>% str()
+### Home range -------------------------
 
 # KDE 95
-db1_mv_HR %>% 
+db1_mv %>% 
   ggplot(aes(x = group, y = KDE95, color = month)) +
+  # geom_boxplot(position = position_dodge(preserve = "single")) +
   geom_boxplot() +
   guides(fill=FALSE) +
   ylim(0, 350) +
   ylab("Area (ha)") +
-  ggtitle("KDE 95% (Home range)") +
-  scale_colour_viridis_d()
+  ggtitle("KDE 95% (Activity range)") +
+  scale_colour_viridis_d() +
+  facet_grid(~source) +
+  
+  # others
+  theme(axis.text = element_text(size = 9))
+# geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+
 # geom_jitter(width = 0.15) +
 # annotate("text", x=2, y=5000, label= paste0("Mean ± sd = ", round(avg_dist, 2), " ± ", round(sd_dist, 2)))
+
+# Save plot
+# ggsave(paste0(path,  "/", '02_simple_HR_KDE95_boxplot.png'), height = 3.5, width = 7)
 
 # ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
 #                        "HomeRangeKDE95-speedval.png"),
 #        dpi = 300, width = 30, height = 20, units = "cm")
 
 # KDE 50
-db1_mv_HR %>% 
+db1_mv %>% 
   ggplot(aes(x = group, y = KDE50, color = month)) +
+  # geom_boxplot(position = position_dodge(preserve = "single")) +
   geom_boxplot() +
   guides(fill=FALSE) +
   ylim(0, 350) +
   ylab("Area (ha)") +
   ggtitle("KDE 50% (Core area)") +
-  scale_colour_viridis_d()
-# geom_jitter(width = 0.15) +
+  scale_colour_viridis_d() +
+  facet_grid(~source) +
+  
+  # others
+  theme(axis.text = element_text(size = 9))# +
+  # geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+
+# geom_jitter(width = 0.15)
 # annotate("text", x=2, y=5000, label= paste0("Mean ± sd = ", round(avg_dist, 2), " ± ", round(sd_dist, 2)))
+
+# Save plot
+# ggsave(paste0(path,  "/", '02_simple_HR_KDE50_boxplot.png'), height = 3.5, width = 7)
 
 # ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
 #                        "HomeRangeKDE95-speedval.png"),

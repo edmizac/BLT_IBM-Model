@@ -73,6 +73,21 @@ dat.all %>%
 dat.all %>% 
   str()
 
+dat.all[ , c("group", "id_month") ] %>% distinct() # This dataset is not filtered for the siminputrow matrix
+
+# Inport siminputrowmatrix to filter Validation data only for the simulated months:
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation-time",  "BLT_groups_data_summary_siminputrow.csv"),
+                           sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
+siminputmatrix %>% str()
+
+dat.all <- dplyr::left_join(siminputmatrix, dat.all)
+
+## Write csv
+# dat.all %>%
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminputrow_SDD.csv"),
+#             row.names = FALSE)
+
 
 # General summary by month -> THESE ARE THE VALUES I WILL USE FORVALIDATION ON CHAPTER 1
 round2 <- function(x) (round(x, digits = 2))

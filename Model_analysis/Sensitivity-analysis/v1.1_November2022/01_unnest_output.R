@@ -174,6 +174,14 @@ db1 <- db1 %>%
     group = study_area
   )
 
+db1 <- db1 %>% 
+  dplyr::select(-c("energy":"PT")) %>% 
+  dplyr::filter(breed != "monkeys")
+# # # Write data
+# db1 %>%
+#   saveRDS(paste0(path, "/", "02_Simoutput-simple_plants.rds"))
+
+
 # # Write csv
 # db1 %>%
 #   write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
@@ -225,7 +233,12 @@ db_monkeys <- db_monkeys %>%
 
 db_monkeys %>% str()
 
-
+db_monkeys <- db_monkeys %>% 
+  group_by(random_seed) %>% 
+  mutate(
+    date = row_number()
+  )
+  
 
 # # # Write data
 # db_monkeys %>%
