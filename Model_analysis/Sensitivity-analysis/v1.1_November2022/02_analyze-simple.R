@@ -598,6 +598,7 @@ db_sd %>% ggplot(
 
 
 
+
   
   
   
@@ -798,3 +799,220 @@ db1_mv %>%
 # ggsave(filename = here("Model_analysis", "Workflow", "Run_travelspeedvar",
 #                        "HomeRangeKDE95-speedval.png"),
 #        dpi = 300, width = 30, height = 20, units = "cm")
+
+
+
+### Activity budget -------------------------
+
+# load activity budget empirical data
+obs.ab <- read.csv(here("Data", "Movement", "Curated", "Validation", 
+                         "Siminputrow_Activity-budget_By-month.csv")
+                    , stringsAsFactors = TRUE
+)  %>% 
+  # mutate(group = recode(group, "Guarei" = "Guareí")) %>% # to match all other datasets
+  mutate(source = as.factor("observed")) %>% 
+  rename(month = id_month) %>%
+  as.data.frame()
+# as_tibble()
+
+obs.ab$perc_behavior_mean %>% str()
+obs.ab %>% str()
+
+foo <- function(x) ( x = x / 100 )
+obs.ab <- obs.ab %>% 
+  dplyr::select(-perc_behavior_sd) %>%  # we are interested in mean values (perc_behavior_mean)
+  tidyr::pivot_wider(names_from = behavior,
+                     values_from = perc_behavior_mean,
+                     values_fill = 0 # only for Guareí in the month they didn't rest (0% resting)
+                    ) %>% 
+  rename(
+    p_feeding = Frugivory,
+    p_foraging = Foraging,
+    p_traveling = Travel,
+    p_resting = Resting
+  ) %>% 
+  mutate_if(is.numeric, foo) %>% 
+  as.data.frame()
+
+db1_mv %>% str()
+a %>% str()
+a$p_traveling.y %>% hist()
+a$p_traveling.y %>% tail()
+obs.ab %>% str()
+
+# Merge obserded data into db1_mv
+db1_mv <- db1_mv %>%  dplyr::left_join(obs.ab, by = c("group", "month", "source")) %>% #,  by = c("group"="group", "month"= "month",
+                                             # "source"="source")) #, # PORQUE DIABOS N FUNCIOMA
+                                             # "p_feeding" = "p_feeding",
+                                             # "p_foraging" = "p_foraging",
+                                             # "p_traveling" = "p_traveling",
+                                             # "p_resting" = "p_resting"
+                                             # ))
+  tidyr::unite(p_feeding.x, p_feeding.y, col = "p_feeding", remove = TRUE, na.rm = TRUE) %>% 
+  tidyr::unite(p_foraging.x, p_foraging.y, col = "p_foraging", remove = TRUE, na.rm = TRUE) %>% 
+  tidyr::unite(p_traveling.x, p_traveling.y, col = "p_traveling", remove = TRUE, na.rm = TRUE) %>% 
+  tidyr::unite(p_resting.x, p_resting.y, col = "p_resting", remove = TRUE, na.rm = TRUE) #%>%
+
+a$p_feeding %>% tail()
+a$p_foraging %>% tail()
+a$p_feeding %>% as.numeric() %>%  tail()
+  
+
+db1_mv <- db1_mv %>%  
+  mutate(
+    p_feeding = as.numeric(p_feeding),
+    p_foraging = as.numeric(p_foraging),
+    p_traveling = as.numeric(p_traveling),
+    p_resting = as.numeric(p_resting),
+  )
+  # mutate(across(starts_with("p_"), as.numeric(na.rm = TRUE)))
+
+db1_mv %>% select(starts_with("p_")) %>% tail()
+
+
+db1_mv <- db1_mv %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec"))
+
+
+db1_mv_longer <- db1_mv %>% 
+  tidyr::pivot_longer(cols = starts_with("p_"), names_to = "behavior", values_to = "percentage_mean") #%>% 
+  # group_by(group, month, source)
+
+db1_mv_longer <- db1_mv_longer %>% 
+  mutate(percentage_mean = stringr::str_replace_all(percentage_mean, c("\\[" = "", "\\]" = "")),
+         percentage_mean = as.numeric(percentage_mean))
+
+db1_mv_longer %>% str()
+
+db1_mv_longer$percentage_mean <- db1_mv_longer$percentage_mean %>% as.numeric()
+
+
+db1_mv_longer %>% 
+  ggplot(aes(x = interaction(group, source), y = percentage_mean, fill = behavior)) +
+  # geom_histogram() +
+  # geom_col(position = position_dodge()) +
+  # geom_bar(position = position_dodge()) +
+  # geom_bar(position = "dodge", stat = "identity") +
+  # geom_bar(position = "fill", stat = "identity") +
+  geom_bar(method="mean", stat = "identity", position=position_dodge()) +
+
+  ggtitle("Activity budget of 4 behaviors") +
+  # ylab("Proportion (%)") +
+  xlab("")  +
+  theme(
+    # legend.position = "none",
+    axis.title.x = element_blank()
+    # axis.text.y = element_blank()
+    ) +
+
+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_fill_viridis_d() #+
+  # scale_y_continuous(labels = scales::percent)
+
+
+
+# ggplot(data=db1_mv_longer,aes(x=interaction(group, month),y=percentage_mean,fill=behavior)) +
+ggplot(data=db1_mv_longer,aes(x=group ,y=percentage_mean,fill=month)) +
+  stat_summary(geom='bar', fun='mean', position='dodge') +
+  stat_summary(geom='errorbar', fun.data='mean_cl_boot', position='dodge') +
+  # ylim(0, 1) +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1) 
+  ) +
+  scale_fill_viridis_d() +
+  # facet_wrap(~source)
+  facet_grid(behavior ~ source)
+
+
+
+db1_mv_longer %>%
+  group_by(group, month, source) %>% 
+  ggplot(aes(x = factor(group), y = percentage_mean, fill = month)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  facet_grid(behavior ~ source) +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.title.x = element_blank()
+  ) +
+  scale_fill_viridis_d()
+
+
+# Option 3
+ggplot(data = db1_mv_longer, aes(x = group, y = percentage_mean, fill = month))  +
+  # geom_bar(stat="identity", position="dodge", colour="black") +  # to check the errors
+  geom_bar(stat="summary", fun = "median", position="dodge", colour="black") + 
+  ylab("Percentage (%)") +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text.x = element_text(size = 9),
+    axis.title.x = element_blank()
+  ) +
+  scale_fill_viridis_d() +
+  facet_grid(behavior ~ source)
+
+# a <- db1_mv_longer %>% 
+#   # dplyr::filter(p_resting > 0.1)
+#   dplyr::filter(group == "Guareí") %>% 
+#   dplyr::filter(behavior == "p_resting") #%>% 
+#   dplyr::filter(group == "Guareí") 
+  
+
+# Save plot
+ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot.png'), height = 5, width = 7)
+
+
+
+
+
+
+
+
+
+
+
+### Movement rate (MR) -------------------------
+# Load empirical data and calculate MR and PT 
+
+
+db1_mv_summarry <- db1_mv %>% 
+  group_by(source, group, month) %>% 
+  summarise(
+    MR_mean = mean(MR, na.rm = TRUE),
+    MR_sd = sd(MR, na.rm = TRUE)
+  )
+
+db1_mv_summarry %>% ggplot(
+  aes(x = group, y = MR_mean, 
+      ymin = MR_mean - MR_sd,
+      ymax = MR_mean + MR_sd,
+      color = month,
+      shape = source
+      )
+  ) +
+  # geom_linerange() + 
+  geom_linerange(position = position_dodge(set.seed(123), width = .5)) +
+  # geom_pointrange() +
+  geom_point(aes(shape = source), position = position_dodge(set.seed(123), width = .5)) +
+  # stat_summary(fun.y = "median", geom = "point", size = 3) +
+  scale_color_viridis_d()
+
+
+#+
+  geom_title() 
+
+
+### Path twisting -------------------------
+
+
+
+
+### R index (defecations) -------------------------
+
