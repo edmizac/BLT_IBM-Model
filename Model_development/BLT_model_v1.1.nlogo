@@ -144,6 +144,17 @@ globals [
 to setup
   clear-all
 
+  ;; R environment only once
+  sr:setup
+;  sr:run "library(adehabitatHR)" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
+;  sr:run "library(udunits2)"
+;  sr:run "library(units)"
+  sr:run "library(purrr)"
+  sr:run "library(dplyr)"
+  sr:run "library(tidyr)"
+  sr:run "library(amt)"
+  sr:run "print('R packages initialised')"
+
   if USER = "Ronald"
   [ set local-path "/home/rbialozyt/BLT_IBM-Model/" ]
   if USER = "Eduardo"
@@ -706,7 +717,7 @@ to go
       if do_R_calculations [
         output-print "run-days click finished"
         output-print "calculating home range with r extension"
-        calc-homerange
+       ; calc-homerange
         output-print "home range calculation with r extension finished"
 
         output-print "calculating activity budget"
@@ -2106,15 +2117,6 @@ end
 ;-----------------------------------------------------------------
 
 to calc-homerange
-  ;; R environment only once
-  sr:setup
-;  sr:run "library(adehabitatHR)" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
-;  sr:run "library(udunits2)"
-;  sr:run "library(units)"
-  sr:run "library(dplyr)"
-  sr:run "library(tidyr)"
-  sr:run "library(amt)"
-
   ;; create an empty data.frame"
   ; sr:run "tamarins <- data.frame()"
 
@@ -2147,8 +2149,16 @@ to calc-homerange
   sr:run "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
   sr:run "db_nest <- db_nest %>%  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
 
-  sr:run "db_nest <- db_nest %>% mutate(hr_area = purrr::map(hr, hr_area)) %>%  unnest(cols = hr_area)"
+  print "Before purrr"
+
+  sr:run "db_nest <- db_nest %>% mutate(hr_area = amt::map(hr, hr_area))"
+
+  print "Before unnest"
+
+  sr:run "db_nest <- db_nest %>% unnest(cols = hr_area)"
 ;  sr:run "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
+
+  print "Before dplyr::select()"
 
   sr:run "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
 ;  sr:run "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)" ; values in ha
@@ -2166,9 +2176,11 @@ to calc-homerange
 ;  show sr:runresult "db"
 
   print "db_nest: "
-  show sr:runresult "db_nest"
+  sr:run "print(head(db_nest))"
 
 ;  r:gc
+
+  print "Before ask monkeys"
 
   ; get hr values to agent variable
   ask monkeys [
@@ -2552,7 +2564,7 @@ INPUTBOX
 601
 82
 no_days
-5.0
+2.0
 1
 0
 Number
