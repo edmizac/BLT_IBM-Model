@@ -19,6 +19,8 @@ nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
                     "v1.1_Taquara_Jan_simple-609482361_tempRDS.Rdata"))
                     # "v1.1_November2022", "temp", "v1.1_Guareí_Aug_simple33642352_tempRDS.Rdata"))
 db1  <-  unnest_simoutput(nl)
+eval_simoutput(nl)
+nl@simdesign@siminput
 
 db1 %>% str()
 db1$turn_ang_sd%>% str()
