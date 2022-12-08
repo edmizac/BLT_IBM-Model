@@ -146,13 +146,14 @@ to setup
 
   ;; R environment only once
   sr:setup
-;  sr:run "library(adehabitatHR)" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
+  sr:run "library(adehabitatHR)"
+  sr:run "library(sf)"
 ;  sr:run "library(udunits2)"
 ;  sr:run "library(units)"
-  sr:run "library(purrr)"
-  sr:run "library(dplyr)"
-  sr:run "library(tidyr)"
-  sr:run "library(amt)"
+;  sr:run "library(purrr)"
+;  sr:run "library(dplyr)"
+;  sr:run "library(tidyr)"
+;  sr:run "library(amt)"
   sr:run "print('R packages initialised')"
 
   if USER = "Ronald"
@@ -624,19 +625,19 @@ to create-legend
     set size 4
     set shape "tree"
     set color green
-    setxy min-pxcor + 4 max-pycor - 10
+    setxy min-pxcor + 4 max-pycor - 12
   ]
   create-legend-trees 1 [ ; sleeping
     set size 4
     set shape "tree"
     set color magenta
-    setxy min-pxcor + 4 max-pycor - 15
+    setxy min-pxcor + 4 max-pycor - 18
   ]
   create-legend-trees 1 [ ; seeds
     set size 3
-    set shape "circle"
+    set shape "plant"
     set color black
-    setxy min-pxcor + 4 max-pycor - 20
+    setxy min-pxcor + 4 max-pycor - 25
   ]
   create-legend-trees 1 [ ; short distance target tree
     set size 4
@@ -705,7 +706,7 @@ end
 ;--------------------------------------------------------------------------------------------
 to go
 
-  if ticks > 10000 [stop]
+  if ticks > 12000 [stop] ; about 100 days
 
   if all? monkeys [action = "sleeping"] [
     set day day + 1
@@ -717,7 +718,7 @@ to go
       if do_R_calculations [
         output-print "run-days click finished"
         output-print "calculating home range with r extension"
-       ; calc-homerange
+        calc-homerange
         output-print "home range calculation with r extension finished"
 
         output-print "calculating activity budget"
@@ -2116,53 +2117,22 @@ to write-sleep
 end
 ;-----------------------------------------------------------------
 
-to calc-homerange
-  ;; create an empty data.frame"
-  ; sr:run "tamarins <- data.frame()"
-
-  ;; merge the Name, X- and Y-lists of all animals to one big data.frame
-;  ask monkeys
-;  [
-;    (sr:set-data-frame "turtle" "X" X_coords "Y" Y_coords)
-;    sr:run (word "turtle <- data.frame(turtle, Name = '" Name "')")
-;    sr:run "tamarins <- rbind(tamarins, turtle)"
-;    ; type "tamarins data frame: " print sr:runresult "tamarins"
-;  ]
+to calc-homerange ;; using "adehabitaHR"
 
   (sr:set-agent-data-frame "tamarins" monkeys "who" "x_coords" "y_coords")
 ;  sr:run "print(head(tamarins))"
-  sr:run "names(tamarins) <- c('Name', 'X', 'Y')"
-
-  ;; split the data.frame into coordinates and factor variable
-  sr:run "xy <- tamarins[,c('X','Y')]"
-  sr:run "id <- tamarins$Name"
-  ;; calculate homerange (mcp method)
-;  sr:run "homerange <- mcp(xy, id)"
-
-  ;; calculate homerange (amt package)
-  sr:run "db <- cbind(xy, id)"  ;; you could do this already in 'set-agent-data-frame' resorting the columns
-  ;  sr:run "print(head(db))"
-  sr:run "db_nest <- db %>%  amt::make_track(.x=Y, .y=X, id = id) %>% nest(data = -c(id))"
-
-  ;  sr:run "print(head(db_nest))"
-  ; calculate HR metrics for every list (=id = run) using map()
-  sr:run "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
-  sr:run "db_nest <- db_nest %>%  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
-
-  print "Before purrr"
-
-  sr:run "db_nest <- db_nest %>% mutate(hr_area = amt::map(hr, hr_area))"
-
-  print "Before unnest"
-
-  sr:run "db_nest <- db_nest %>% unnest(cols = hr_area)"
-;  sr:run "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
-
-  print "Before dplyr::select()"
-
-  sr:run "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
-;  sr:run "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)" ; values in ha
-
+  ;; use of CRS does crash the sr extension
+  ;;     because of all the warnings ??
+  sr:run "tam_sf <- st_as_sf(tamarins, coords = c('x_coords', 'y_coords'))"
+  sr:run "tam_sp <- sf::as_Spatial(tam_sf)"
+;  sr:run "kudl <- kernelUD(tam_sp, h = 'href')"
+  ;; h-values changes with amount of simulated days, points
+  ;; and so does the KDE sizes
+  ;; therefore using a fixed value taken from 100 simulations
+  sr:run "kudl <- kernelUD(tam_sp, h = 37.13)"
+  sr:run "kde <- kernel.area(kudl, percent=c(50, 95))"
+  ;; kde from here and calcultaed from 'locations_monkey.txt' are different
+  ;; in x_, y_coords are only the feeding locations (no travel locations)
 
   ; for outputting on nlrx:
   ; home range
@@ -2172,26 +2142,21 @@ to calc-homerange
 ;  sr:run "db$Y <- paste0(db$Y, '_')"
 ;  sr:run "db$id <- paste(db$id, '_')"
 
-;  print "db: "
-;  show sr:runresult "db"
-
-  print "db_nest: "
-  sr:run "print(head(db_nest))"
-
-;  r:gc
-
-  print "Before ask monkeys"
+  print "KDE: "
+  sr:run "print(kde)"
+  sr:run "print(kudl[[1]]@h$h)"
 
   ; get hr values to agent variable
   ask monkeys [
-    set KDE_95 sr:runresult "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
-    set KDE_50 sr:runresult "db_nest %>%  dplyr::filter(KDE_value == 'KDE50') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+    set KDE_95 sr:runresult "kde['95',] |> round(2)"
+    set KDE_50 sr:runresult "kde['50',] |> round(2)"
+    set KDE_values sr:runresult "kudl[[1]]@h$h"
 
 ;    type "KDE_95: " print round KDE_95
 ;    type "KDE_50: " print round KDE_50
 
-    type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
-    type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
+;    type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
+;    type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
   ]
 
 
@@ -2397,7 +2362,7 @@ BUTTON
 675
 48
 SETUP
-if any? monkeys [ stop-inspecting one-of monkeys ]\nsetup\ninspect one-of monkeys
+if any? monkeys [ stop-inspecting one-of monkeys ]\nsetup\n; inspect one-of monkeys
 NIL
 1
 T
@@ -2564,7 +2529,7 @@ INPUTBOX
 601
 82
 no_days
-2.0
+15.0
 1
 0
 Number
@@ -3060,7 +3025,7 @@ path-color-by-day?
 TEXTBOX
 30
 422
-102
+110
 466
 OUTPUT:
 18
@@ -3125,10 +3090,10 @@ max timesteps repeating same behavior (other than feeding)
 1
 
 PLOT
-1148
-336
-1356
-460
+1142
+367
+1350
+491
 action-time (red) / frugivory-time (blue)
 NIL
 NIL
@@ -3203,10 +3168,10 @@ resting
 1
 
 PLOT
-1148
-210
-1356
-333
+1142
+241
+1350
+364
 energy
 NIL
 NIL
@@ -3250,10 +3215,10 @@ NIL
 1
 
 PLOT
-1151
-588
-1351
-738
+1142
+619
+1349
+739
 Travel mode frequency
 NIL
 NIL
@@ -3382,10 +3347,10 @@ energy and time spent feeding for each tree species. If not:
 1
 
 PLOT
-1148
-461
-1356
-581
+1142
+492
+1350
+612
 duration (red) / species_time (blue)
 NIL
 NIL
@@ -3418,10 +3383,10 @@ NIL
 1
 
 PLOT
-1147
-69
-1356
-206
+1141
+100
+1350
+237
 DPL (m)
 NIL
 NIL
@@ -3517,8 +3482,8 @@ Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr\nTaquara = Jan\nSuzano = Se
 TEXTBOX
 802
 148
-951
-172
+957
+173
 1.2 Create tree resources
 11
 0.0
