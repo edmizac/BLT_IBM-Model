@@ -208,6 +208,7 @@ to setup
   ]
 
   reset-ticks
+  write-to-file ;; the starting location was missing
 end
 
 ; PATCHES
@@ -911,8 +912,8 @@ to move-monkeys
 
     if energy < 1 [ die ]
 
-;    set x_UTM (item 0 gis:envelope-of self)
-;    set y_UTM (item 2 gis:envelope-of self)
+    set x_UTM (item 0 gis:envelope-of self)
+    set y_UTM (item 2 gis:envelope-of self)
 
     ; for home range calculation with r extension:
     set X_coords lput x_UTM X_coords
@@ -1817,6 +1818,11 @@ to sleeping
       set xcor [xcor] of tree_target + 0.01
       set ycor [ycor] of tree_target + 0.01
 
+      ; for home range calculation with r extension:
+      set X_coords lput x_UTM X_coords
+      set Y_coords lput y_UTM Y_coords
+
+
       ask tree_target [ set visitations visitations + 1 ]
 
       set tree_current tree_target
@@ -2362,7 +2368,7 @@ BUTTON
 675
 48
 SETUP
-if any? monkeys [ stop-inspecting one-of monkeys ]\nsetup\n; inspect one-of monkeys
+if any? monkeys [ stop-inspecting one-of monkeys ]\nsetup\ninspect one-of monkeys
 NIL
 1
 T
@@ -2529,7 +2535,7 @@ INPUTBOX
 601
 82
 no_days
-15.0
+5.0
 1
 0
 Number
