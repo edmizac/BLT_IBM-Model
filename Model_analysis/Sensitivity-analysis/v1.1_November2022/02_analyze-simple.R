@@ -918,6 +918,7 @@ db1_mv_longer %>%
   xlab("")  +
   theme(
     # legend.position = "none",
+    axis.text = element_text(size = 9),
     axis.title.x = element_blank()
     # axis.text.y = element_blank()
     ) +
@@ -974,6 +975,7 @@ ggplot(data = db1_mv_sum, aes(x = factor(group), y = mean, fill = month)) +
   theme(
     # legend.position = "none",
     # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
     axis.title.x = element_blank()
   ) +
   scale_fill_viridis_d()
