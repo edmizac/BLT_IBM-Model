@@ -66,6 +66,12 @@ theme_set(theme_bw(base_size = 15,
 
 # db1 <- db1
 
+
+db1 <- read.csv(paste0(path, "/", "02_Simoutput-simple.csv"))
+# db_monkeys <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds"))
+
+
+
 db1 %>% str()
 
 db1$month %>% unique()
@@ -76,6 +82,12 @@ db1 <- db1 %>%
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                          "Jun", "Jul", "Aug", "Sep", "Dec"))
+# 
+# db_monkeys <- db_monkeys %>% 
+#   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+#   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+#                                       "Jun", "Jul", "Aug", "Sep", "Dec"))
+
 
 db1_monkeys <- db1 %>% 
   dplyr::filter(breed == "monkeys") #%>% 
@@ -736,7 +748,7 @@ db1_mv %>%
 #   scale_colour_viridis_d()
 
 # Save plot
-ggsave(paste0(path,  "/", '02_simple_DPL_By-month_boxplot.png'), height = 3.5, width = 7)
+# ggsave(paste0(path,  "/", '02_simple_DPL_By-month_boxplot.png'), height = 3.5, width = 7)
 
 
 
@@ -889,6 +901,9 @@ db1_mv_longer %>% str()
 db1_mv_longer$percentage_mean <- db1_mv_longer$percentage_mean %>% as.numeric()
 
 
+
+# Option 1
+
 db1_mv_longer %>% 
   ggplot(aes(x = interaction(group, source), y = percentage_mean, fill = behavior)) +
   # geom_histogram() +
@@ -914,27 +929,47 @@ db1_mv_longer %>%
 
 
 
+# Option 2 (stat summary)
 # ggplot(data=db1_mv_longer,aes(x=interaction(group, month),y=percentage_mean,fill=behavior)) +
-ggplot(data=db1_mv_longer,aes(x=group ,y=percentage_mean,fill=month)) +
-  stat_summary(geom='bar', fun='mean', position='dodge') +
+ggplot(data=db1_mv_longer,aes(x=group ,y=percentage_mean
+                              ,fill=month
+                              )) +
+  stat_summary(geom='bar', fun='mean', position='dodge',
+               # fill = "white", color = "red"
+               ) +
   stat_summary(geom='errorbar', fun.data='mean_cl_boot', position='dodge') +
   # ylim(0, 1) +
+  ylab("Percentage (%)") +
   theme(
     # legend.position = "none",
     # axis.text.y = element_blank(),
-    axis.title.x = element_blank(),
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1) 
+    axis.text = element_text(size = 9),
+    axis.title.x = element_blank()#,
+    # axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1) 
   ) +
   scale_fill_viridis_d() +
   # facet_wrap(~source)
   facet_grid(behavior ~ source)
 
+# Save plot
+# ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_statsummary.png'), height = 5, width = 7)
 
 
-db1_mv_longer %>%
-  group_by(group, month, source) %>% 
-  ggplot(aes(x = factor(group), y = percentage_mean, fill = month)) +
-  geom_bar(position = "dodge", stat = "identity") +
+# Option 3
+db1_mv_sum <- db1_mv_longer %>% 
+  group_by(group, month, source, behavior) %>% 
+  summarise(
+    mean = mean(percentage_mean),
+    sd = sd(percentage_mean)
+  )
+# db1_mv_sum %>% str()
+# db1_mv_longer %>%
+# db1_mv_sum %>%
+ggplot(data = db1_mv_sum, aes(x = factor(group), y = mean, fill = month)) +
+  geom_bar(position = "dodge", stat = "identity", color = "black") +
+  geom_errorbar(aes(ymin=mean, ymax=mean+sd), position = position_dodge(.9)) +
+  # stat_summary(geom='errorbar', fun.data='mean_cl_boot', position='dodge') +
+  ylab("Percentage (%)") +
   facet_grid(behavior ~ source) +
   theme(
     # legend.position = "none",
@@ -942,6 +977,10 @@ db1_mv_longer %>%
     axis.title.x = element_blank()
   ) +
   scale_fill_viridis_d()
+
+# Save plot
+ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_errorbar.png'), height = 5, width = 7)
+
 
 
 # Option 3
@@ -964,9 +1003,9 @@ ggplot(data = db1_mv_longer, aes(x = group, y = percentage_mean, fill = month)) 
 #   dplyr::filter(behavior == "p_resting") #%>% 
 #   dplyr::filter(group == "Guareí") 
   
-
 # Save plot
-ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot.png'), height = 5, width = 7)
+# ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_option2.png'), height = 5, width = 7)
+
 
 
 
@@ -997,11 +1036,7 @@ db1_mv_summarry %>% ggplot(
       shape = source
       )
   ) +
-  # geom_linerange() + 
-  geom_linerange(position = position_dodge(set.seed(123), width = .5)) +
-  # geom_pointrange() +
-  geom_point(aes(shape = source), position = position_dodge(set.seed(123), width = .5)) +
-  # stat_summary(fun.y = "median", geom = "point", size = 3) +
+  geom_pointrange(aes(shape = source), position = position_dodge2(width = .5)) +
   scale_color_viridis_d()
 
 
