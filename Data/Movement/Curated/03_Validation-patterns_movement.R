@@ -48,7 +48,7 @@ library("amt")
 
 
 # Read siminputrow movement data and define levels
-dat.all.mv <- read.csv(here("Data", "Movement", "Curated", 
+dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminputrow", 
                             "Siminputrow_movement-data.csv") #"BLT_groups_data_siminputrow.csv"),
             #row.names = FALSE
             ) %>% 
@@ -157,7 +157,7 @@ hrvalues <- hrvalues %>% mutate(hr_area_ha = area / 10000)
 
 
 
-# Plot home range -------------------------
+## Plot home range -------------------------
 
 # Define factor order
 
@@ -210,8 +210,33 @@ ggsave(filename = here("Data", "Movement", "Curated", "Validation",
 # Other parameters not initially assessed -------------------------
 # (R2n = Square displacement)
 
+# Movement Rate
+mv.metrics <- dat.all.mv %>% 
+  dplyr::select(-id) %>% 
+  group_by(group, id_month, date) %>% 
+  summarise(
+    DPL = sum(dist, na.rm = TRUE),
+    activitytime = sum(dt, na.rm = TRUE) / 60 / 60, # / minutes / hours
+    MR = DPL/activitytime
+  )
+
+hrvalues <- hrvalues %>%
+  # dplyr::select(-id) %>% 
+  dplyr::filter(KDE_value == "KDE95")
+  
+mv.metrics <- mv.metrics %>% 
+  left_join(hrvalues) %>% 
+  dplyr::select(-level)
+
+# Path Twisting (PT)
+mv.metrics <- mv.metrics %>% 
+  mutate(
+    PT = DPL^2/area
+  )
 
 
-
-
+# # Write csv
+# mv.metrics %>%
+#   write.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_MR-PT_by-day.csv"),
+#             row.names = FALSE)
 

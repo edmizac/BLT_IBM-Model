@@ -92,15 +92,18 @@ monkeys-own [
 
   ; calculated in the sleeping procedure (because it becomes 0 everyday)
   DPL             ; daily path length. It is a daily value, but it become the average in the end of the run
+  DPL_sd          ; sd daily path length. It is only calculated by the end of the run
   DPL_d           ; list with values of DPL for the DPL plot
 
   MR              ; movement rate (as in Fuzessy et al. 2017) (DPL / activity time in hours)
-  MR_d            ; list of movement rate values (~ DPL_d)
+  MR_sd           ; sd movement rate. It is only calculated by the end of the run
+  MR_d            ; list of movement rate values (as in DPL_d)
 
 
   ; aditional metrics
-  PT              ; average path twisting (as in Fuzessy et al. 2017)
-  PT_d            ; list of path twisting values (~ DPL_d)
+  PT              ; path twisting (as in Fuzessy et al. 2017). It is only calculated by the end of the run as it requires the home range
+  PT_sd           ; sd path twisting. It is only calculated by the end of the run
+  PT_d            ; list of path twisting values (as in DPL_d)
 
   MSD             ; from amt
   intensity_use   ; from amt
@@ -2440,7 +2443,7 @@ to calc-homerange
     set sinuosity r:get "db_metr %>% dplyr::select(sinuosity) %>%  unlist() %>% as.vector()"
   ]
 
-  ; calculating mean DPL, MR and PT
+  ; calculating mean and sd DPL, MR and PT
   ask monkeys [
     let aux-list []
     foreach DPL_d [
@@ -2456,10 +2459,18 @@ to calc-homerange
 
     set MR mean (MR_d)
     set MR precision MR 4
+    set MR_sd standard-deviation (MR_d)
+    set MR_sd precision MR_sd 4
+
     set PT mean (PT_d)
     set PT precision PT 4
+    set PT_sd standard-deviation (PT_d)
+    set PT_sd precision PT_sd 4
+
     set DPL mean (DPL_d)
     set DPL precision DPL 4
+    set DPL_sd standard-deviation (DPL_d)
+    set DPL_sd precision DPL 4
 
     type "MR mean = " print MR
     type "PT mean = " print PT
@@ -2729,11 +2740,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+459
+370
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2743,10 +2754,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-73
+73
+-58
+58
 0
 0
 1
@@ -3053,7 +3064,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+12
 
 CHOOSER
 984
@@ -3120,7 +3131,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+21.0
 1
 1
 NIL
@@ -3852,7 +3863,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+3
 
 BUTTON
 247
@@ -3983,7 +3994,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+51.2
 5
 1
 NIL
@@ -3998,7 +4009,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+0.883
 0.1
 1
 NIL
@@ -4013,7 +4024,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+1.7489999999999999
 0.1
 1
 NIL
@@ -4028,7 +4039,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+47.53
 1
 1
 NIL

@@ -979,7 +979,7 @@ ggplot(data = db1_mv_sum, aes(x = factor(group), y = mean, fill = month)) +
   scale_fill_viridis_d()
 
 # Save plot
-ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_errorbar.png'), height = 5, width = 7)
+# ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_errorbar.png'), height = 5, width = 7)
 
 
 
@@ -1017,17 +1017,46 @@ ggplot(data = db1_mv_longer, aes(x = group, y = percentage_mean, fill = month)) 
 
 
 
-### Movement rate (MR) -------------------------
+### Movement rate (MR) and Path twisting (PT) -------------------------
 # Load empirical data and calculate MR and PT 
+obs.mv.metrics <- read.csv(here("Data", "Movement", "Curated", "Validation", 
+                                "Siminputrow_MR-PT_by-day.csv")) %>% 
+  dplyr::select(c(1:MR, PT)) %>% 
+  rename(month = id_month)
 
+obs.mv.metrics %>% str()
+
+obs.mv.metrics.summary <- obs.mv.metrics %>% 
+  group_by(group, month) %>% 
+  summarise(
+    MR_mean = mean(MR, na.rm = TRUE),
+    MR_sd = sd(MR, na.rm = TRUE),
+    PT_mean = mean(PT, na.rm = TRUE),
+    PT_sd = sd(PT, na.rm = TRUE)
+  ) %>% 
+  mutate(source = "observed")
 
 db1_mv_summarry <- db1_mv %>% 
   group_by(source, group, month) %>% 
-  summarise(
+  dplyr::summarise(
     MR_mean = mean(MR, na.rm = TRUE),
-    MR_sd = sd(MR, na.rm = TRUE)
-  )
+    MR_sd = sd(MR, na.rm = TRUE),
+    PT_mean = mean(PT, na.rm = TRUE),
+    PT_sd = sd(PT, na.rm = TRUE)
+  ) %>% 
+  dplyr::filter(source == "simulated")
 
+db1_mv_summarry <- db1_mv_summarry %>% 
+  bind_rows(obs.mv.metrics.summary)
+
+db1_mv_summarry <- db1_mv_summarry %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = factor(source, levels = c("simulated", "observed")))
+
+
+# Movement rate
 db1_mv_summarry %>% ggplot(
   aes(x = group, y = MR_mean, 
       ymin = MR_mean - MR_sd,
@@ -1037,14 +1066,48 @@ db1_mv_summarry %>% ggplot(
       )
   ) +
   geom_pointrange(aes(shape = source), position = position_dodge2(width = .5)) +
-  scale_color_viridis_d()
+  scale_color_viridis_d() +
+  ylab("DPL / hours active") +
+  facet_grid(~source) +
+  ggtitle("Movement rate")  +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
+    axis.title.x = element_blank()
+  ) +
+  guides(shape = FALSE) # drop legend of shape only
+# Save plot
+# ggsave(paste0(path,  "/", '02_simple_MR.png'), height = 3.5, width = 7)
 
 
-#+
-  geom_title() 
 
+# Path twisting
+db1_mv_summarry %>% ggplot(
+  aes(x = group, y = PT_mean, 
+      ymin = PT_mean - PT_sd,
+      ymax = PT_mean + PT_sd,
+      color = month,
+      shape = source
+  )
+) +
+  geom_pointrange(aes(shape = source), position = position_dodge2(width = .5)) +
+  scale_color_viridis_d() +
+  # ylab(expression(DPL^{'2-'}/home range)) +
+  ylab(bquote(~DPL^2~'/home range size')) +
+  ggtitle("Path twisting")  +
+  # facet_grid(~factor(source, levels = c("simulated", "observed"))) +
+  facet_grid(~source) +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
+    axis.title.x = element_blank()
+  )+
+  guides(shape = FALSE) # drop legend of shape only
+# Save plot
+# ggsave(paste0(path,  "/", '02_simple_PT.png'), height = 3.5, width = 7)
 
-### Path twisting -------------------------
 
 
 
