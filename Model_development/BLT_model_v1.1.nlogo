@@ -94,7 +94,7 @@ monkeys-own [
   DPL             ; daily path length. It is a daily value, but it become the average in the end of the run
   DPL_d           ; list with values of DPL for the DPL plot
 
-  MR              ; movement rate (as in Fuzessy et al. 2017)
+  MR              ; movement rate (as in Fuzessy et al. 2017) (DPL / activity time in hours)
   MR_d            ; list of movement rate values (~ DPL_d)
 
 
@@ -1399,6 +1399,9 @@ to feeding
 
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"  [ set seed_gtt_list lput random-poisson 26 seed_gtt_list ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"  [ set seed_gtt_list lput random-poisson 21 seed_gtt_list ]
+    if study_area = "Suzano" AND feeding-trees-scenario = "Feb"  [ set seed_gtt_list lput random-poisson 21 seed_gtt_list ] ; = September value
+    if study_area = "Suzano" AND feeding-trees-scenario = "Apr"  [ set seed_gtt_list lput random-poisson 21 seed_gtt_list ] ; = September value
+
 
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"  [ set seed_gtt_list lput random-poisson 16 seed_gtt_list ]
   ]
@@ -2002,7 +2005,7 @@ to sleeping
       set DPL_d lput ( precision DPL 2 ) DPL_d
 ;      set DPL_d lput a DPL_d
 
-      set MR ( DPL / (timestep * 5) )  ; MR as calculated in Fuzessy et al. 2017
+      set MR ( DPL / (timestep * 5 / 60 ) )  ; MR as calculated in Fuzessy et al. 2017: DPL/activity time (hours)
       set MR_d lput ( precision MR 2 ) MR_d
 ;      set MR_d lput a MR_d
 
@@ -2437,7 +2440,7 @@ to calc-homerange
     set sinuosity r:get "db_metr %>% dplyr::select(sinuosity) %>%  unlist() %>% as.vector()"
   ]
 
-  ; calculating PT
+  ; calculating mean DPL, MR and PT
   ask monkeys [
     let aux-list []
     foreach DPL_d [
@@ -2451,10 +2454,16 @@ to calc-homerange
 ;     print PT_d
     ]
 
+    set MR mean (MR_d)
+    set MR precision MR 4
     set PT mean (PT_d)
     set PT precision PT 4
     set DPL mean (DPL_d)
-    set DPL precision PT 4
+    set DPL precision DPL 4
+
+    type "MR mean = " print MR
+    type "PT mean = " print PT
+    type "DPL mean = " print DPL
 
     ;round also other outputs
     set KDE_95 precision KDE_95 4
@@ -2464,7 +2473,6 @@ to calc-homerange
     set p_traveling precision p_traveling 4
     set p_resting precision p_resting 4
 
-    set MR precision MR 4
     set step_length_mean precision step_length_mean 4
     set step_length_sd precision step_length_sd 4
     set turn_ang_mean precision turn_ang_mean 4
@@ -2501,7 +2509,7 @@ to calc-activity-budget
 ;  print freq_map behaviorsequence
   let activity-values freq_map behaviorsequence
 ;  print sublist activity-values 0 4 ; same as print activity-values
-  type "activity values: " print activity-values
+;  type "activity values: " print activity-values
 
   let activity-values-ordered sort-by [[list1 list2] -> first list1 < first list2] activity-values
 
@@ -2637,7 +2645,7 @@ to calc-seed-aggregation
     type "R index p-value  = " print R_seeds_p
     type "Nearest neighbor distance = " type NN_seeds print " meters"
 
-  ask seeds [ set size 3 set color magenta ]
+  ask seeds [ set size 3 set color orange ]
 
   set n_visited_trees count feeding-trees with [visitations > 0]
   set n_unvisited_trees count feeding-trees with [visitations = 0]
@@ -2721,11 +2729,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2735,10 +2743,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -2962,7 +2970,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--10.0
+-20.0
 1
 1
 NIL
@@ -3045,7 +3053,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-8
+1
 
 CHOOSER
 984
@@ -3112,7 +3120,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-19.0
+16.0
 1
 1
 NIL
@@ -3477,7 +3485,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.7
+0.21
 0.05
 1
 NIL
@@ -3724,7 +3732,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-5.0
+2.0
 1
 1
 NIL
@@ -3844,7 +3852,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 247
@@ -3975,7 +3983,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-77.22
+43.02
 5
 1
 NIL
@@ -3990,7 +3998,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.387
+3.089
 0.1
 1
 NIL
@@ -4005,7 +4013,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.5300000000000002
+3.931
 0.1
 1
 NIL
@@ -4020,7 +4028,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-59.53
+17.85
 1
 1
 NIL
