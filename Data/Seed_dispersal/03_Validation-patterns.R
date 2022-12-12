@@ -60,7 +60,7 @@ dat.all <- dat.all %>%
   mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Feb", "Mar", "Apr", "May", 
                                          "Jun", "Jul", "Aug", "Sep", "Nov",  "Dec", "Dec2017", "Dec2018"))
 
-# dat.all$id_month %>% levels()
+# dat.all$id_month %>% as.factor() %>% levels()
 # str(dat.all)
 # str(a)
 
@@ -82,6 +82,8 @@ siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation
 siminputmatrix %>% str()
 
 dat.all <- dplyr::left_join(siminputmatrix, dat.all)
+# dat.all$id_month  %>% levels()
+
 
 ## Write csv
 # dat.all %>%
@@ -254,6 +256,123 @@ dat.all %>% ggplot(
 
 # Save plot
 # ggsave(here("Data", "Seed_dispersal", "Curated", "Validation", 'Plot_species_SDD_byarea.png'), height = 15, width = 15)
+
+
+
+#### R index of seeds #####
+library(spatstat)
+library(maptools)
+library(sf)
+library(adehabitatHR)
+dat.all <- dat.all %>% 
+  rename(month = id_month)
+
+# Get owin as limits of feeding trees (= NetLogo v1.1 model)
+trees <- read.csv(here("Data", "Movement", "Curated",  "BLT_groups_data.csv")) %>% 
+  # dplyr::filter(behavior == "Frugivory") %>% 
+  dplyr::select(-c(datetime, behavior, id_day_all)) %>% 
+  distinct()
+
+trees_gua <- trees %>% 
+  dplyr::filter(group == "Guareí")
+xy_gua <- SpatialPoints(trees_gua[ , 1:2])
+proj4string(xy_gua) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+limitsOwin_gua <- mcp(xy_gua, percent = 100) # define mcp as owin
+# plot(limitsOwin_gua)
+limitsOwin_gua <- as.owin(limitsOwin_gua)
+                                
+trees_sma <- trees %>% 
+  dplyr::filter(group == "Santa Maria")
+xy_sma <- SpatialPoints(trees_sma[ , 1:2])
+proj4string(xy_sma) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+limitsOwin_sma <- mcp(xy_sma, percent = 100) # define mcp as owin
+# plot(limitsOwin_sma)
+limitsOwin_sma <- as.owin(limitsOwin_sma)
+
+trees_taq <- trees %>% 
+  dplyr::filter(group == "Taquara")
+xy_taq <- SpatialPoints(trees_taq[ , 1:2])
+proj4string(xy_taq) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+limitsOwin_taq <- mcp(xy_taq, percent = 100) # define mcp as owin
+# plot(limitsOwin_taq)
+limitsOwin_taq <- as.owin(limitsOwin_taq)
+
+trees_suz <- trees %>% 
+  dplyr::filter(group == "Suzano")
+xy_suz <- SpatialPoints(trees_suz[ , 1:2])
+proj4string(xy_suz) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+limitsOwin_suz <- mcp(xy_suz, percent = 100) # define mcp as owin
+# plot(limitsOwin_suz)
+limitsOwin_suz <- as.owin(limitsOwin_suz)
+
+
+# Guareí
+seeds <- dat.all %>%  
+  # dplyr::filter(group == "Guareí") %>% 
+  dplyr::select(group, month, def_x, def_y) %>%
+  distinct()
+
+# lp <- levels(seeds$month)
+rm(clark.values)
+rm(clarktest)
+rm(i)
+rm(j)
+rm(seeds.i)
+rm(seeds.j)
+clark.values <- data.frame(R = double(), p = double(), group = character(), month = character())
+# clark.values %>% str()
+
+for ( i in levels(seeds$group) ) {
+  # i <- "Santa Maria"
+  # i <- "Guareí"
+  # i <- "Taquara"
+  # i <- "Suzano"
+  if (i == "Guareí") {
+    seeds.i <- seeds %>%  dplyr::filter(group == i)
+    limitsOwin <- limitsOwin_gua
+  }
+  if (i == "Santa Maria") {
+    seeds.i <- seeds %>%  dplyr::filter(group == i)
+    limitsOwin <- limitsOwin_sma
+  }
+  if (i == "Taquara") {
+    seeds.i <- seeds %>%  dplyr::filter(group == i)
+    limitsOwin <- limitsOwin_taq
+  }
+  if (i == "Suzano") {
+    seeds.i <- seeds %>%  dplyr::filter(group == i)
+    limitsOwin <- limitsOwin_suz
+  }
+  
+  
+  for ( j in levels(seeds.i$month)) {
+    
+    # j <- "Jul"
+    seeds.j <- seeds.i %>% dplyr::filter(month == j)
+    obs <- ppp(seeds.j[,3], seeds.j[,4], window=limitsOwin)
+    clarktest <- clarkevans.test(obs,correction = 'cdf', alternative=c('two.sided'))
+    clarktest <- data.frame(R = clarktest$statistic, p = clarktest$p.value, group = i, month = j)
+    
+    clark.values <- clark.values %>%  bind_rows(clarktest)
+    
+    print(clark.values)
+    
+  }
+  
+}
+
+
+
+# cvbackup <- clark.values
+siminputmatrix <- siminputmatrix %>% 
+  rename(month = id_month)
+a <- dplyr::left_join(siminputmatrix, clark.values)
+
+
+# # Write csv
+# a %>%
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Summary_by-month_R-aggregation.csv"),
+#             row.names = FALSE)
 
 
 

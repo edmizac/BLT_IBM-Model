@@ -76,8 +76,8 @@ db1 <- readRDS(paste0(path, "/", "02_Simoutput-simple.rds"))
 
 db1$month %>% unique()
 db1$group %>% unique()
-db_monkeys$month %>% unique()
-db_monkeys$group %>% unique()
+# db_monkeys$month %>% unique()
+# db_monkeys$group %>% unique()
 
 db1 <- db1 %>% 
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
@@ -1122,4 +1122,74 @@ db1_mv_summarry %>% ggplot(
 
 
 ### R index (defecations) -------------------------
+R.obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", 
+                       "Summary_by-month_R-aggregation.csv")) %>% 
+  mutate(
+    source = "observed"
+  )
+
+R.sim <- db1 %>% 
+  dplyr::select(group, month, random_seed, R_seeds, R_seeds_p) %>% 
+  rename(R = R_seeds,
+         p = R_seeds_p) %>% 
+  mutate(
+    source = "simulated"
+  ) #%>% 
+  # group_by(group, month) %>% 
+  # summarise(
+  #   R = mean(R, na.rm = TRUE),
+  #   p = mean(p, na.rm = TRUE),
+  #   R_sd = mean(R, na.rm = TRUE),
+  #   p_sd = mean(p, na.rm = TRUE)
+  # )
+
+R.all <- bind_rows(R.obs, R.sim) %>% 
+  distinct() %>% 
+  mutate(
+    point_pattern = case_when(
+      R > 1 & p <= 0.05 ~ "ordered",
+      R < 1 & p <= 0.05 ~ "clustered",
+      TRUE ~ "random"
+    )
+  ) %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec"))
+
+
+
+# Check why some R values are 0 (filtering them out for now)
+R.all <- R.all %>% 
+  dplyr::filter(R > 0.1)
+
+
+R.all %>% ggplot(
+  aes(x = group, y = R, 
+      color = month,
+      shape = point_pattern
+  )
+) +
+  # geom_boxplot() +
+  geom_point(
+    aes(size = 1.5),
+    # position = position_jitterdodge(jitter.width = 0.25)
+    position = position_dodge2(width = .5)
+             ) +
+  scale_color_viridis_d() +
+  # ylab(expression(DPL^{'2-'}/home range)) +
+  ylim(0, 1.5) +
+  ylab("R index") +
+  ggtitle("Seed aggregation")  +
+  # facet_grid(~factor(source, levels = c("simulated", "observed"))) +
+  facet_grid(~source) +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
+    axis.title.x = element_blank()
+  ) +
+  guides(size = FALSE) # drop legend of size only
+
+# Save plot
+# ggsave(paste0(path,  "/", '02_simple_R-aggregation.png'), height = 5, width = 8)
 
