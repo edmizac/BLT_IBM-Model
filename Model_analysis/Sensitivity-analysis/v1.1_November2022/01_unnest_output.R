@@ -62,24 +62,27 @@ for (f in nls_to_df) {
   
   # nl_file <- paste0("nl_", i)
   nl_file <- readRDS(paste0(path, "/", f))
+  # nl_file <- readRDS(paste0(path, "/", "v1.1_Taquara_Jan_simple1671135962_tempRDS.Rdata"))
+  # nl_file <- readRDS(paste0(path, "/", "v1.1_Suzano_Sep_simple453130432_tempRDS.Rdata"))
   
   # paste0("df_", i)
   if (i == 1) {
-   db <- unnest_simoutput(nl_file) %>% 
-     mutate(
-       turn_ang_sd = as.character(turn_ang_sd)
+   db <- unnest_simoutput(nl_file) #%>% 
+     # mutate(
+       # turn_ang_sd = as.character(turn_ang_sd)
      #   turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA), # turn angles are "false" in Guareí Aug (value from amt package)
      #   turn_ang_sd = as.numeric(turn_ang_sd)
-     )
+     # )
+   db$breed %>% unique()
   }
   
-  db <- dplyr::bind_rows(db, unnest_simoutput(nl_file) %>%
-                           mutate(
-                             turn_ang_sd = as.character(turn_ang_sd)
+  db <- dplyr::bind_rows(db, unnest_simoutput(nl_file) #%>%
+                           # mutate(
+                             # turn_ang_sd = as.character(turn_ang_sd)
                          
                          #     turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA),
                          #     turn_ang_sd = as.numeric(turn_ang_sd)
-                           )
+                           # )
                          )
   
   i <- i + 1
@@ -88,6 +91,7 @@ for (f in nls_to_df) {
 
 db %>% str()
 db$turn_ang_sd %>% unique()
+db$study_area %>% unique()
 
 ### Repair data
 db$species %>% as.factor() %>% levels()
@@ -161,7 +165,8 @@ db1 <- db %>%
   
 
 db1 %>% str()
-db1$species %>% as.factor() %>% levels()  
+db1$species %>% as.factor() %>% levels() 
+db$study_area %>% unique()
 # a <- db1 %>% dplyr::filter(species == "Syagrus romanzoffiana")
 # db1 <- db1
 # a <- db1 %>% dplyr::filter_if(!is.na(SDD) & species != "Syagrus romanzoffiana")
@@ -174,60 +179,97 @@ db1 <- db1 %>%
   rename(
     month = feeding_trees_scenario,
     group = study_area
+  ) %>% 
+  mutate(
+    source = "simulated"
   )
 
-db1 <- db1 %>% 
-  dplyr::select(-c("energy":"PT")) %>% 
-  dplyr::filter(breed != "monkeys")
-# # # Write data
+db1 %>% str()
+db1$group %>% as.factor() %>% levels()
+
+# Write data (all)
 # db1 %>%
-#   saveRDS(paste0(path, "/", "02_Simoutput-simple_plants.rds"))
+#   saveRDS(paste0(path, "/", "02_Simoutput-simple.rds"))
 
-
-# # Write csv
+# # Write csv (all)
 # db1 %>%
 #   write.csv(paste0(path, "/", "02_Simoutput-simple.csv"),
 #             row.names = FALSE)
 
 
-  
 
 # Split into tables
-db_monkeys <- db1 %>% 
-  dplyr::filter(breed == "monkeys") %>% 
-  dplyr::select(-c("x":disp_day)) %>% 
-  mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = ""))) 
-  
-b <- db_monkeys$DPL_d %>%
-  str_extract_all(., pattern = ".{0,4}[\\.].{0,2}")
-db_monkeys$DPL_d <- b
-  
-db_monkeys <- db_monkeys %>% 
-  # map_dbl(., as.numeric) #%>% 
-  tidyr::unnest_longer(DPL_d)
 
-db_monkeys <- db_monkeys %>% 
-  mutate(DPL_d = as.numeric(DPL_d))
+# # # Write csv (plants)
+# db1 %>%
+#   dplyr::select(-c("energy":"PT_sd")) %>%
+#   dplyr::filter(breed != "monkeys") %>%
+#   write.csv(paste0(path, "/", "02_Simoutput-simple_plants.csv"),
+#             row.names = FALSE)
+# db1 %>%
+#   dplyr::select(-c("energy":"PT_sd")) %>%
+#   dplyr::filter(breed != "monkeys") %>%
+#   saveRDS(paste0(path, "/", "02_Simoutput-simple_plants.rds"))
 
-# db_monkeys$DPL_d
+
+db_monkeys <- db1 %>%
+  dplyr::filter(breed == "monkeys") %>%
+  dplyr::select(-c("x":disp_day)) %>%
+  mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
+
+db_monkeys$group %>% as.factor() %>% levels()  
+
+# a <- db1 %>% 
+#   # dplyr::filter(group == "Taquara") %>%
+#   dplyr::filter(breed == "monkeys")
+
+# Option 1: gather all daily values of DPL
+# b <- db_monkeys$DPL_d %>%
+#   str_extract_all(., pattern = ".{0,4}[\\.].{0,2}")
+# db_monkeys$DPL_d <- b
+#   
+# db_monkeys <- db_monkeys %>% 
+#   # map_dbl(., as.numeric) #%>% 
+#   tidyr::unnest_longer(DPL_d)
+# 
+# db_monkeys <- db_monkeys %>% 
+#   mutate(DPL_d = as.numeric(DPL_d))
+# Add day id:
+# db_monkeys <- db_monkeys %>% 
+#   group_by(random_seed) %>% 
+#   mutate(
+#     date = row_number()
+#   )
+
+# # Option 2: use only mean and sd
+db_monkeys <- db_monkeys %>%
+  dplyr::select(-DPL_d)
+# db_monkeys$DPL_d # THIS IS STILL WRONG
 # db_monkeys$DPL_d %>% str()
 # db_monkeys %>% str()
-
 # Drop this down when separating DPL from strings is done correctly:
-db_monkeys <- db_monkeys %>% 
-  dplyr::filter(DPL_d > 600) %>% # some values are smaller than 700, which is not realistic (it seems like it is a regex problem)
-  mutate(
-    source = "simulated"
-  )
+# db_monkeys <- db_monkeys %>% 
+#   dplyr::filter(DPL_d > 600) # some values are smaller than 700, which is not realistic (it seems like it is a regex problem)
+  
 
 db_monkeys %>% str()
 foo <- function(x, na.rm = TRUE) (x = as.numeric(x))
 # db1_mv$MR %>% foo
 
+db_monkeys %>% colnames()
+
 db_monkeys <- db_monkeys %>% 
+  dplyr::select(-timestep) %>%  # it is always 0 when nlrx valuates only in the end of the run
   mutate(
     across(
-      c("energy":"PT", "[step]":"day", "simulation_time", "n_visited_trees", "n_unvisited_trees"), 
+      c("no_days", "simulation_time", "[step]", "day",
+        "n_visited_trees", "n_unvisited_trees", 
+        "R_seeds", "R_seeds_p", "NN_seeds",
+        "energy", "DPL", "DPL_sd", "KDE_95", "KDE_50",
+        "p_feeding", "p_foraging","p_traveling",  "p_resting",
+        "step_length_mean", "step_length_sd", "turn_ang_sd", 
+        "MR", "MR_sd", "PT", "PT_sd"
+        ), 
       foo
     )
   ) %>% 
@@ -235,18 +277,15 @@ db_monkeys <- db_monkeys %>%
 
 db_monkeys %>% str()
 
-db_monkeys <- db_monkeys %>% 
-  group_by(random_seed) %>% 
-  mutate(
-    date = row_number()
-  )
   
 
 # # # Write data
 # db_monkeys %>%
 #   saveRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds"))
 
-
+# db_monkeys %>%
+#   write.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv"),
+#             row.names = FALSE)
 
 
 

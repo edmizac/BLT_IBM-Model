@@ -36,13 +36,6 @@ if(Sys.getenv("JAVA_HOME") == "") {
 ## ---------------------------
 
 
-# Empirical data for criteval function:
-values_ga <- read.csv(here("Data", "Validation-table.csv"),
-                           sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
-
-
-
 # Step 1: Create nl object
 if(Sys.info()[["nodename"]] == "simul02") {
   netlogopath <- file.path("/home/rbialozyt/Software/NetLogo 6.2.0")
@@ -209,6 +202,17 @@ nl@experiment <- experiment(expname = expname,
 )
 
 
+
+# Empirical data for criteval function:
+values_ga <- read.csv(here("Data", "Validation-table.csv"),
+                      sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+
+# Movement variables:
+values_ga_mv <-  read.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_MR-PT_by-day.csv"),
+                          sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+
 ## Create evaluation criteria function -------------------------
 
 # get optimized (observed) values
@@ -228,9 +232,11 @@ p_resting_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" ==
 # obs: they don't sum up to 1
 p_feeding_obs + p_foraging_obs + p_traveling_obs + p_resting_obs
 
-# Still have to calculate them from empirical data
-# MR_obs <- values_ga %>% 
-# PT_obs <- values_ga %>% 
+
+MR_obs <- values_ga_mv %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select("MR") %>% unlist() %>% as.vector()
+PT_obs <- values_ga_mv %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::select("PT") %>% unlist() %>% as.vector()
 
 # tamarins visit all the observed trees, but they don't usually visit all of them in the model (might be related to memory)
 param_table <- read.csv(here("Data", "Parameter_table.csv"),
@@ -259,15 +265,20 @@ visits_obs <- param_table %>%
 critfun <- function(nl) {
   
   # extract values from run from example nl object:
-  nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
-                     "v1.1_November2022", "temp", "v1.1_Taquara_Jan_simple1199731059_tempRDS.Rdata"))
+  # nl <- readRDS(here("Model_analysis", "Genetic_analysis", "v1.1_Taquara_Jan_simple-609482361_tempRDS.Rdata"))
+  nl <- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
+                     "v1.1_Guareí_Aug_simple-866006203_tempRDS.Rdata"))
   
   db <- unnest_simoutput(nl)
   
   db <- db %>% 
-    dplyr::filter(breed == "monkeys")
+    dplyr::filter(breed == "monkeys") %>% 
+    mutate(
+      KDE_50 = KDE_50 / 10000,
+      KDE_95 = KDE_95 / 10000
+    )
   
-  visits <- "count feeding-trees with [visitations > 0] / count feeding trees"
+  visits <- db$n_visited_trees
   
   energy <- db %>%  dplyr::select("energy") %>% unlist() %>% as.vector()
   energy_obs <- db %>%  dplyr::select(`start-energy`) %>% unlist() %>% as.vector() # we don't have observed energy values so we will use the start energy
@@ -281,24 +292,30 @@ critfun <- function(nl) {
   p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>% as.vector()
   p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>% as.vector()
   
-  DPL_mean <- db$DPL_d
-  DPL_mean <- DPL_mean %>%
-    str_replace_all(., c("\\[" = "", "\\]" = "")) %>%
-    str_split(pattern = "_") %>%  #, simplify = TRUE) %>%
-    purrr::map(as.numeric, na.rm = TRUE) %>% 
-    # purrr::map(round, 2) %>%
-    map_dbl(mean, na.rm=TRUE)
-  db$DPL_mean <- DPL_mean
+  DPL_mean <- db$DPL
+  # DPL_sd <- db$DPL_sd # check it
   
+  # DPL_mean <- db$DPL_d
+  # DPL_mean <- DPL_mean %>%
+  #   str_replace_all(., c("\\[" = "", "\\]" = "")) %>%
+  #   str_split(pattern = "_") %>%  #, simplify = TRUE) %>%
+  #   purrr::map(as.numeric, na.rm = TRUE) %>% 
+  #   # purrr::map(round, 2) %>%
+  #   map_dbl(mean, na.rm=TRUE)
+  # db$DPL_mean <- DPL_mean
   
-  visit_count <- db$visits
+  MR_mean <- db$MR
+  MR_sd <- db$MR_sd
+  PT_mean <- db$PT
+  PT_sd <- db$PT_sd
+  
   
   
   # calc differences
-  en <- energy - energy_obs
-  hr <- KDE95 - KDE95_obs
-  ca <- KDE50 - KDE50_obs
-  dp <- XXX - DPL_obs
+  en <- abs(energy - energy_obs)
+  hr <- abs(KDE95 - KDE95_obs)
+  ca <- abs(KDE50 - KDE50_obs)
+  dp <- abs(DPL_mean - DPL_obs)
   
   # normalize them (min-max)
   en_min <- min(en) 

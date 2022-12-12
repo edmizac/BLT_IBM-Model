@@ -2470,7 +2470,7 @@ to calc-homerange
     set DPL mean (DPL_d)
     set DPL precision DPL 4
     set DPL_sd standard-deviation (DPL_d)
-    set DPL_sd precision DPL 4
+    set DPL_sd precision DPL_sd 4
 
     type "MR mean = " print MR
     type "PT mean = " print PT

@@ -67,40 +67,41 @@ theme_set(theme_bw(base_size = 15,
 # db1 <- db1
 
 
-db1 <- read.csv(paste0(path, "/", "02_Simoutput-simple.csv"))
+db1 <- readRDS(paste0(path, "/", "02_Simoutput-simple.rds"))
+# db1 <- read.csv(paste0(path, "/", "02_Simoutput-simple.csv"))
 # db_monkeys <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds"))
+# db_plants <- readRDS(paste0(path, "/", "02_Simoutput-simple_plants.rds"))
 
-
-
-db1 %>% str()
+# db1 %>% str()
 
 db1$month %>% unique()
 db1$group %>% unique()
-db1$group %>% unique()
+db_monkeys$month %>% unique()
+db_monkeys$group %>% unique()
 
 db1 <- db1 %>% 
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                          "Jun", "Jul", "Aug", "Sep", "Dec"))
-# 
-# db_monkeys <- db_monkeys %>% 
-#   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
-#   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+# # 
+# db_monkeys <- db_monkeys %>%
+#   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>%
+#   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May",
 #                                       "Jun", "Jul", "Aug", "Sep", "Dec"))
 
 
-db1_monkeys <- db1 %>% 
-  dplyr::filter(breed == "monkeys") #%>% 
-  # dplyr::select(-c("x":disp_day)) %>% 
-  # mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
+# db1_monkeys <- db1 %>%
+#   dplyr::filter(breed == "monkeys") #%>%
+#   dplyr::select(-c("x":disp_day)) %>%
+#   mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
 
 
 # Plants (feeding, sleeping-trees and seeds)
-db1 <- db1 %>%
-  dplyr::filter(breed != "monkeys") %>%
-  dplyr::select(-c(energy:PT)) %>%
-  dplyr::select(-species.y) #%>%
-  # dplyr::filter(if (breed != "seeds") species != "Syagrus romanzoffiana" else TRUE)
+# db1 <- db1 %>%
+#   dplyr::filter(breed != "monkeys") %>%
+#   dplyr::select(-c(energy:PT)) %>%
+#   dplyr::select(-species.y) #%>%
+#   # dplyr::filter(if (breed != "seeds") species != "Syagrus romanzoffiana" else TRUE)
   
 db1$species %>% as.factor() %>% levels()
 
@@ -498,6 +499,7 @@ obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminpu
 # Simulated data
 db_sd <- readRDS(paste0(path, "/", "02_Simoutput-simple_plants.rds"))
 db_sd <- db_sd %>% 
+  # rename(group = study_area) %>% 
   dplyr::filter(breed == "seeds") %>% 
   group_by(group, random_seed) %>% 
   mutate(source = "simulated") %>% 
@@ -509,6 +511,7 @@ db_sd <- db_sd %>%
   )
 db_sd$disp_day %>% str()
 db_sd$source %>% str()
+db_sd$group %>% levels()
 # db1_sdd <- db1_sdd %>% 
 #   filter(SDD > 0)
 # db1_sdd <- db1_sdd %>%
@@ -528,8 +531,12 @@ db_sd$disp_day %>% levels()
 length(db_sd$disp_day %>% is.na(.)) # no NAs
 
 db_sd$source %>% str()
-db_sd$disp_day %>% levels()
-length(db_sd$disp_day %>% is.na(.)) # no NAs
+db_sd$source %>% levels()
+length(db_sd$source %>% is.na(.)) # no NAs
+
+db_sd$group %>% str()
+db_sd$group %>% levels()
+length(db_sd$group %>% is.na(.)) # no NAs
 
 # db_sd$group %>% str()
 ## Density Option 1: by day of dispersal
@@ -635,9 +642,9 @@ db1_mv <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds")) %>%
   
 db1_mv <- db1_mv %>% 
 # dplyr::filter(breed == "monkeys") %>% 
-  rename(DPL = DPL_d,
+  rename(#DPL = DPL_d,
          KDE95 = KDE_95,
-         KDE50 = KDE_50) %>% 
+         KDE50 = KDE_50) #%>% 
   mutate(date = as.factor(date))
 
 

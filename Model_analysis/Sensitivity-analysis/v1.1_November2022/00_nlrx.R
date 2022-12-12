@@ -101,11 +101,11 @@ i <- 1
 for (i in i:nrow(param.table)) {
   
   # Define run and parameterisation: (all strings must use escaped quotes)
-  area_run <- paste0('\"', param.table$group[i], '\"')
-  month_run <- paste0('\"', param.table$id_month[i], '\"')
+  # area_run <- paste0('\"', param.table$group[i], '\"')
+  # month_run <- paste0('\"', param.table$id_month[i], '\"')
   
-  # area_run <- '"Guareí"'
-  # month_run <- '"Jun"'
+  area_run <- '"Taquara"'
+  month_run <- '"Jan"'
   expname <-  paste0("v1.1_", 
                      gsub(area_run, pattern = ('\"'), replacement = '', fixed = T), 
                      "_", 
@@ -151,61 +151,67 @@ nl@experiment <- experiment(expname = expname,
                             
                             # reporters:
                             metrics = c( # e.g. "count sheep" or "count patches with [pcolor = green]"
-                              "timestep",
+                              # "timestep",
                               "day",
                               "n_visited_trees",
-                              "n_unvisited_trees"
+                              "n_unvisited_trees",
+                              "R_seeds",
+                              "R_seeds_p",
+                              "NN_seeds"
                             ),
-                            metrics.turtles = list("monkeys" = c(
-                              "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
-                              "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
-                              "KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
-                              "KDE_50",      # final value                 # the best set of parameters should reproduce the observed core area
-                              "p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
-                              "p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
-                              "p_traveling", # final value                 # the best set of parameters should optimize the activity budget
-                              "p_resting",    # final value                 # the best set of parameters should optimize the activity budget
-                              "step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
-                              "step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
-                              # "turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
-                              "turn_ang_sd",          # this one might be interesting though
+                            metrics.turtles = list(
+                              "monkeys" = c(
+                                "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
+                                "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
+                                "DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
+                                "DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
+                                "KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
+                                "KDE_50",      # final value                 # the best set of parameters should reproduce the observed core area
+                                "p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
+                                "p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
+                                "p_traveling", # final value                 # the best set of parameters should optimize the activity budget
+                                "p_resting",    # final value                 # the best set of parameters should optimize the activity budget
+                                "step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
+                                "step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
+                                # "turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
+                                "turn_ang_sd",          # this one might be interesting though
+                                
+                                # additional movement variables
+                                "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                                "MR_sd",
+                                # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
+                                # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
+                                "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                                "PT_sd"
+                                # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                                # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                              ),
                               
-                              # additional movement variables
-                              "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
-                              "MR_sd",
-                              # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
-                              # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
-                              "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
-                              "PT_sd",
-                              # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
-                              # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
-                            ),
-                            
-                            "feeding-trees" = c(
-                              "x_UTM", "y_UTM",
-                              "species",
-                              "id-tree",
-                              "visitations"
-                            ),
-                            
-                            "sleeping-trees" = c(
-                              "x_UTM", "y_UTM",
-                              "species",
-                              "id-tree",
-                              "visitations"
-                            ),
-                            
-                            "seeds" = c(
-                              "SDD", 
-                              "x_UTM", "y_UTM",
-                              "id-seed", 
-                              "species", 
-                              "mother-tree", 
-                              "disp-day"
-                            )
-                            
-                            # , "steps-moved"
-                            
+                              "feeding-trees" = c(
+                                "x_UTM", "y_UTM",
+                                "species",
+                                "id-tree",
+                                "visitations"
+                              ),
+                              
+                              "sleeping-trees" = c(
+                                "x_UTM", "y_UTM",
+                                "species",
+                                "id-tree",
+                                "visitations"
+                              ),
+                              
+                              "seeds" = c(
+                                "SDD", 
+                                "x_UTM", "y_UTM",
+                                "id-seed", 
+                                "species", 
+                                "mother-tree", 
+                                "disp-day"
+                              )
+                              
+                              # , "steps-moved"
+                              
                             ), # "who" "color"
                             variables = list(
                               
