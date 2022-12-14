@@ -51,6 +51,8 @@
 
 /Model_analysis/Genetic-analysis/**.csv
 /Model_analysis/Genetic-analysis/**.png
+/Model_analysis/Genetic-analysis/**.rds
+/Model_analysis/Genetic-analysis/**.RData
 /Model_analysis/Genetic-analysis/temp/
 
 
