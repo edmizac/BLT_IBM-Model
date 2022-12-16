@@ -2684,6 +2684,11 @@ end
 ;  [   report FALSE  ]
 ;end
 
+to-report p-visited-trees
+  let x count feeding-trees with [visitations > 0] / count feeding-trees
+  report x
+end
+
 
 ;;; --------------------------------- ;;;
 ;;; REPORTERS FOR THE ACTIVITY BUDGET ;;;

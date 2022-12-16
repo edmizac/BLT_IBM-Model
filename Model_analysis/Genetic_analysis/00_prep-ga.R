@@ -21,7 +21,7 @@ library("nlrx")
 library("progressr")
 library("future")
 library("tictoc")
-library("GenSA")
+# library("GenSA")
 
 ## Config cores
 ncores <- parallel::detectCores()
@@ -67,9 +67,13 @@ nl <- nl(nlversion = "6.2.2",
 nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
 
+# Decide which area/month to run the optimization on:
+area_run <- "Taquara"
+month_run <- "Jan"
+
 
 # Empirical data for parameterisation:
-param.table <- read.csv(here("Data", "Parameter_table.csv"),
+param_table <- read.csv(here("Data", "Parameter_table.csv"),
                         sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
 
@@ -84,37 +88,54 @@ values_ga_mv <-  read.csv(here("Data", "Movement", "Curated", "Validation", "Sim
                           sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
 
+
+
 ## Create evaluation criteria function -------------------------
 
-KDE95_max <- values_ga %>% dplyr::select(KDE95) %>% unlist() %>% max() %>% as.vector()
+# 1) Get min and max values for each parameter -----------------
+
+energy_min <- 0
+# tamarins should not spend too much energy above level 2, thus I'm defining the max energy as 50% more than energy_level_2. If the values are above this, the run is dropped:
+energy_max <- params_run$energy_level_2$value + ( 0.5 * params_run$energy_level_2$value ) 
+
+# KDE95_max <- values_ga %>% dplyr::select(KDE95) %>% unlist() %>% max() %>% as.vector()
+KDE95_max <- 400 # (400 is the year-round home range of Taquara group)
 KDE50_max <- values_ga %>% dplyr::select(KDE50) %>% unlist() %>% max() %>% as.vector()
 KDE95_min <- values_ga %>% dplyr::select(KDE95) %>% unlist() %>% min() %>% as.vector()
 KDE50_min <- values_ga %>% dplyr::select(KDE50) %>% unlist() %>% min() %>% as.vector()
 
-p_feeding_max <- values_ga %>% dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% max() %>% as.vector()
-p_feeding_min <- values_ga %>% dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% min() %>% as.vector()
-p_foraging_max <- values_ga %>%  dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% max() %>% as.vector()
-p_foraging_min <- values_ga %>%  dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% min() %>% as.vector()
-p_traveling_max <- values_ga %>% dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% max() %>% as.vector()
-p_traveling_min <- values_ga %>% dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% min() %>% as.vector()
-p_resting_max <- values_ga %>% dplyr::select("Resting_perc_behavior_mean") %>% 
-  dplyr::filter(!is.na(.)) %>%  unlist() %>% max() %>% as.vector()
-p_resting_min <- values_ga %>% dplyr::select("Resting_perc_behavior_mean") %>% 
-  dplyr::filter(!is.na(.)) %>%  unlist() %>% min() %>% as.vector()
+# p_feeding_max <- values_ga %>% dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% max() %>% as.vector() %>% '/' (100)
+p_feeding_max <- 0.7
+# p_feeding_min <- values_ga %>% dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% min() %>% as.vector() %>% '/' (100)
+p_feeding_min <- 0.1
+# p_foraging_max <- values_ga %>%  dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% max() %>% as.vector() %>% '/' (100)
+p_foraging_max <- 0.7
+# p_foraging_min <- values_ga %>%  dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% min() %>% as.vector() %>% '/' (100)
+p_foraging_min <- 0
+# p_traveling_max <- values_ga %>% dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% max() %>% as.vector() %>% '/' (100)
+p_traveling_max <- 0.8
+p_traveling_min <- values_ga %>% dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% min() %>% as.vector() %>% '/' (100)
+# p_traveling_min <- 0.1
+# p_resting_max <- values_ga %>% dplyr::select("Resting_perc_behavior_mean") %>% 
+#   dplyr::filter(!is.na(.)) %>%  unlist() %>% max() %>% as.vector() %>% '/' (100)
+p_resting_max <- 0.8
+# p_resting_min <- values_ga %>% dplyr::select("Resting_perc_behavior_mean") %>% 
+#   dplyr::filter(!is.na(.)) %>%  unlist() %>% min() %>% as.vector() %>% '/' (100)
+p_resting_min <- 0 # (Guareí NA = 0, i.e., no resting)
 # obs: p_feeding_obs + p_foraging_obs + p_traveling_obs + p_resting_obs don't sum up to 1 (these are values filtered for the four behaviors in the model)
 
 
 # # Still have to calculate them from empirical data
 # step_length_mean_obs <- param_table %>% 
-#   dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+#   dplyr::filter(group == area_run | "id_month" == month_run) %>%
 #   dplyr::select(step_length_mean_obs) %>% unlist() %>% as.vector()
 # 
 # step_length_sd <- param_table %>% 
-#   dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+#   dplyr::filter(group == area_run | "id_month" == month_run) %>%
 #   dplyr::select(step_length_sd) %>% unlist() %>% as.vector()
 # 
 # turn_ang_sd <- param_table %>% 
-#   dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+#   dplyr::filter(group == area_run | "id_month" == month_run) %>%
 #   dplyr::select(turn_ang_sd) %>% unlist() %>% as.vector()
 
 max_angle_75_travel_max <- param_table %>% 
@@ -139,18 +160,7 @@ values_ga_mv_summary <- values_ga_mv %>%
     PT_sd_obs = sd(PT)
   ) %>% 
   ungroup()
-  #dplyr::filter(group == "Taquara" | "id_month" == "Jan")
-
-
-# Get min and max values for each parameter
-hr95_min <- values_ga %>%
-  dplyr::select(KDE95) %>% min() %>% unlist() %>% as.vector()
-hr95_max <- values_ga %>%
-  dplyr::select(KDE95) %>% max() %>% unlist() %>% as.vector()
-hr50_min <- values_ga %>%
-  dplyr::select(KDE50) %>% min() %>% unlist() %>% as.vector()
-hr50_max <- values_ga %>%
-  dplyr::select(KDE50) %>% max() %>% unlist() %>% as.vector()
+  #dplyr::filter(group == area_run | "id_month" == month_run)
 
 dpl_mean_min <- values_ga_mv_summary %>%
   dplyr::select(DPL_mean_obs) %>% min() %>%  unlist() %>% as.vector()
@@ -175,24 +185,22 @@ pt_min <- values_ga_mv_summary %>%
   dplyr::select(PT_mean_obs) %>% min() %>% unlist() %>% as.vector()
 pt_max <- values_ga_mv_summary %>%
   dplyr::select(PT_mean_obs) %>% max() %>% unlist() %>% as.vector()
-pt_sd_min <- values_ga_mv_summary %>%
-  dplyr::select(PT_sd_obs) %>% min() %>% unlist() %>% as.vector()
+# pt_sd_min <- values_ga_mv_summary %>%
+#   dplyr::select(PT_sd_obs) %>% min() %>% unlist() %>% as.vector()
+pt_sd_min <- 0.1 # check which value is the minimum theoritically possible
 pt_sd_max <- values_ga_mv_summary %>%
   dplyr::select(PT_sd_obs) %>% max() %>% unlist() %>% as.vector()
 
 
 # tamarins visit all the observed trees, but they don't usually visit all of them in the model (might be related to memory)
-param_table <- read.csv(here("Data", "Parameter_table.csv"),
-                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
-
 visits_max <- param_table %>% 
   dplyr::select(n_trees_Frugivory) %>% max() %>% unlist() %>% as.vector()
 visits_min <- param_table %>% 
   dplyr::select(n_trees_Frugivory) %>% min() %>% unlist() %>% as.vector()
 
 
-# Normalizing (min-max; 0-1) observed parameters
+# 2) Normalizing (min-max; 0-1) observed parameters --------------
+
 # normalized = (x-min(x))/(max(x)-min(x))
 # normalize <- function(x) {
 #   x.norm <- (x-min(x))/(max(x)-min(x))
@@ -210,40 +218,40 @@ normalize <- function(x, min, max) {
 }
 # normalize(20, min=2.5, max=100)
 
-KDE95_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-  dplyr::select(KDE95) %>% unlist() %>% as.vector() %>% normalize(min = hr95_min, max = hr95_max)
-KDE50_obs <- values_ga %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-  dplyr::select(KDE50) %>% unlist() %>% as.vector() %>% normalize(min = hr50_min, max = hr50_max)
+KDE95_obs <- values_ga %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
+  dplyr::select(KDE95) %>% unlist() %>% as.vector() %>% normalize(min = KDE95_min, max = KDE95_max)
+KDE50_obs <- values_ga %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
+  dplyr::select(KDE50) %>% unlist() %>% as.vector() %>% normalize(min = KDE50_min, max = KDE50_max)
 
-MR_obs <- values_ga_mv_summary %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+MR_obs <- values_ga_mv_summary %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
   dplyr::select("MR_mean_obs") %>% unlist() %>% as.vector() %>% normalize(min = mr_min, max = mr_max)
-PT_obs <- values_ga_mv_summary %>% dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+PT_obs <- values_ga_mv_summary %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
   dplyr::select("PT_mean_obs") %>% unlist() %>% as.vector() %>% normalize(min = pt_min, max = pt_max)
 
-p_feeding_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-  dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% as.vector() %>% 
+p_feeding_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+  dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% as.vector() %>%  '/' (100) %>% 
   normalize(min = p_feeding_min, max = p_feeding_max)
-p_foraging_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-  dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% as.vector() %>% 
+p_foraging_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+  dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% as.vector() %>%  '/' (100) %>% 
   normalize(min = p_foraging_min, max = p_foraging_max)
-p_traveling_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-  dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% as.vector() %>% 
+p_traveling_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+  dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% as.vector() %>%  '/' (100) %>% 
   normalize(min = p_traveling_min, max = p_traveling_max)
-p_resting_obs <- values_ga %>%  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
-  dplyr::select("Resting_perc_behavior_mean") %>% unlist() %>% as.vector() %>% 
+p_resting_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+  dplyr::select("Resting_perc_behavior_mean") %>% unlist() %>% as.vector() %>% '/' (100) %>% 
   normalize(min = p_resting_min, max = p_resting_max)
 
 
 visits_obs <- param_table %>% 
-  dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+  dplyr::filter(group == area_run | "id_month" == month_run) %>%
   dplyr::select(n_trees_Frugivory) %>% unlist() %>% as.vector() %>% 
   normalize(min = visits_min, max = visits_max)
 
 
 # Por enquanto não - trampo demais:
-# step_length_mean_min <- param.table %>%
+# step_length_mean_min <- param_table %>%
 #   dplyr::select(step) %>% min() %>% unlist() %>% as.vector()
-# step_length_mean_max <- param.table %>%
+# step_length_mean_max <- param_table %>%
 #   dplyr::select(step) %>% max() %>% unlist() %>% as.vector()
 # 
 # step_length_sd
@@ -252,13 +260,15 @@ visits_obs <- param_table %>%
 
 
 
-# Create critfun (fitness function)
+# 2) Define critfun (fitness function) --------------
+
 critfun <- function(nl) {
   
   # extract values from run from example nl object:
   # nl <- readRDS(here("Model_analysis", "Genetic_analysis", "v1.1_Taquara_Jan_simple-609482361_tempRDS.Rdata"))
   nl.x <- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
                      "v1.1_Taquara_Jan_simple1671135962_tempRDS.Rdata"))
+  params_run <- nl.x %>% nlrx::report_model_parameters()
   
   db <- unnest_simoutput(nl.x)
   
@@ -269,24 +279,27 @@ critfun <- function(nl) {
       KDE_95 = KDE_95 / 10000
     )
   KDE95 <- db %>%  dplyr::select("KDE_95") %>% unlist() %>% as.vector() %>% 
-    normalize(min = hr95_min, max = hr95_max)
+    normalize(min = KDE95_min, max = KDE95_max)
   KDE50 <- db %>%  dplyr::select("KDE_50") %>% unlist() %>% as.vector() %>% 
-    normalize(min = hr50_min, max = hr50_max)
+    normalize(min = KDE50_min, max = KDE50_max)
   
   visits <- db %>% dplyr::select(n_visited_trees) %>% unlist() %>% as.vector() %>% 
     normalize(min = visits_min, max = visits_max)
   
-  energy <- db %>%  dplyr::select("energy") %>% unlist() %>% as.vector()
+  energy <- db %>%  dplyr::select("energy") %>% unlist() %>% as.vector() %>% 
+    normalize(min = energy_min, max = energy_max)
   # energy_obs <- db %>%  dplyr::select(`start-energy`) %>% unlist() %>% as.vector() # we don't have observed energy values so we will use the start energy
-  energy_obs <- 980
+  energy_obs <- params_run$`start-energy`$value %>% 
+    normalize(min = energy_min, max = energy_max)
+  # energy_obs <- 980
   
   p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist() %>% as.vector() %>% 
     normalize(min = p_feeding_min, max = p_feeding_max)
   p_foraging <- db %>%  dplyr::select("p_foraging") %>% unlist() %>% as.vector() %>% 
     normalize(min = p_foraging_min, max = p_foraging_max)
-  p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>% as.vector()
+  p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>% as.vector() %>% 
     normalize(min = p_traveling_min, max = p_traveling_max)
-  p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>% as.vector()    
+  p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>% as.vector() %>% 
     normalize(min = p_resting_min, max = p_resting_max)
   
   # DPL_sd <- db$DPL_sd # check it
@@ -315,37 +328,34 @@ critfun <- function(nl) {
   
   # Get observed values (normalized)
   DPL_mean_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::filter(group == area_run | "id_month" == month_run) %>%
     dplyr::select(DPL_mean_obs)  %>% unlist() %>% as.vector() %>% 
     normalize(min = dpl_mean_min, max = dpl_mean_max)
   DPL_sd_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::filter(group == area_run | "id_month" == month_run) %>%
     dplyr::select(DPL_sd_obs)  %>% unlist() %>% as.vector() %>% 
     normalize(min = dpl_sd_min, max = dpl_sd_max)
   
   MR_mean_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::filter(group == area_run | "id_month" == month_run) %>%
     dplyr::select(MR_mean_obs)  %>% unlist() %>% as.vector() %>% 
     normalize(min = mr_min, max = mr_max)
   MR_sd_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::filter(group == area_run | "id_month" == month_run) %>%
     dplyr::select(MR_sd_obs)  %>% unlist() %>% as.vector() %>% 
     normalize(min = mr_sd_min, max = mr_sd_max)
   
   PT_mean_obs <- values_ga_mv_summary %>%
-    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::filter(group == area_run | "id_month" == month_run) %>%
     dplyr::select(PT_mean_obs)  %>% unlist() %>% as.vector() %>% 
     normalize(min = pt_min, max = pt_max)
   PT_sd_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == "Taquara" | "id_month" == "Jan") %>%
+    dplyr::filter(group == area_run | "id_month" == month_run) %>%
     dplyr::select(PT_sd_obs)  %>% unlist() %>% as.vector() %>% 
     normalize(min = pt_sd_min, max = pt_sd_max)
   
   
-  
-  
-  
-  # calc differences
+  # calc differences (or put all into a dataframe and use custom_fitness() function)
   en <- abs(energy - energy_obs)
   vi <- abs(visits - visits_obs)
   hr95 <- abs(KDE95 - KDE95_obs)
@@ -361,36 +371,45 @@ critfun <- function(nl) {
   ptra <- abs(p_traveling - p_traveling_obs)
   pres <- abs(p_resting - p_resting_obs)
   
+  # calc the fitness function
+  # more important ones:
+  w <- 1 # weight 
+  crit <- 
+    1/sum(en) * w + 1/sum(vi) * w + 1/sum(hr95) * w + 1/sum(hr50) * w + 
+      1/sum(dp) * w + 1/sum(mr) * w + 1/sum(pt) * w +
+      1/sum(pfee) * w + 1/sum(pfor) * w + 1/sum(ptra) * w + 1/sum(pres) * w
+  # less important ones:
+  w <- 0.5
+  critc <- crit +
+    1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd)
   
-  # or put all into a dataframe and use custom_fitness() function
   
-  
-  
-  crit <- lsm$value
   return(crit)
 }
 
 
 
 ## Step 2: Attach an experiment   -------------------------
-expname <- "GA_algorithm"
+expname <- "GA"
 
-area_run <- '"Taquara"'
-month_run <- '"Jan"'
-no_days_run <- param.table %>% 
+area_run <- paste0('"', area_run, '"')
+month_run <- paste0('"', month_run, '"')
+
+# define how much each run should take based on empirical activity periods
+no_days_run <- param_table %>% 
   dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                 id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
   dplyr::select(ndays) %>% 
   pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
 
-simultime_run <- param.table %>% 
+simultime_run <- param_table %>% 
   dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                 id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
   dplyr::select(mean_timesteps) %>% 
   pull()
 simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
 
-
+# choose which parameterizations should be on:
 step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
 gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
 p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
@@ -410,7 +429,9 @@ nl@experiment <- experiment(expname = expname,
                             idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
                             # reporters:
                             metrics = c(
-                              "count feeding-trees with [visitations > 0] / count feeding trees" # the best set of parameters should make tamarins visit all the observed trees in the period
+                              # "count feeding-trees with [visitations > 0] / count feeding trees" # the best set of parameters should make tamarins visit all the observed trees in the period
+                              # "count feeding-trees"
+                              "p-visited-trees"
                             ),
                             metrics.turtles = list(
                               
@@ -545,15 +566,16 @@ nl@simdesign <- simdesign_GenAlg(nl,
                                 nseeds = 1
                                 )
 
-## Step 4: run
-
+## Step 4: run -------------------------
 set.seed(1234)
+
 tictoc::tic()
 progressr::handlers("progress")
 
 results <- with_progress(
   run_nl_dyn(
-    nl
+    nl, 
+    seed = nl@simdesign@simseeds
   )
 )
 tictoc::toc()
