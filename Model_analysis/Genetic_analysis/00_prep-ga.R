@@ -23,6 +23,7 @@ library("future")
 library("tictoc")
 library("magrittr")
 # library("GenSA")
+library("genalg")
 
 ## Config cores
 ncores <- parallel::detectCores()
@@ -365,9 +366,9 @@ nl@experiment <- experiment(expname = expname,
                               # "p_foraging_while_traveling" = list(min= 0, max= 1) # only when p-forage-param? = 'false'
                               
                               # memory
-                              # "step_forget" = list(min=3, max = 150),
-                              # "visual" = list(min=0, max = 3),
-                              # 'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
+                              "step_forget" = list(min=3, max = 150),
+                              "visual" = list(min=0, max = 3),
+                              'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                               
                               # 5. Feeding bout (only when "feedingbout-on?" = 'false')
                               'species_time' = list(min = 1, max = 10), #
@@ -555,7 +556,7 @@ critfun <- function(nl) {
   critc <- crit +
     1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd)
   
-  
+  # if crit 
   return(crit)
 }
 
@@ -568,15 +569,23 @@ critfun <- function(nl) {
 # db <- unnest_simoutput(nl.x)
 
 
+# Monitor
+# monitor <- function(obj) {
+#   # plot the population
+#   xlim = c(obj$stringMin[1], obj$stringMax[1]);
+#   ylim = c(obj$stringMin[2], obj$stringMax[2]);
+#   plot(obj$population, xlim=xlim, ylim=ylim, 
+#        xlab="pi", ylab="sqrt(50)");
+# }
 
 # For differences between genetic algorithm (simdesign_GenAlg) and genetic anealing (simdesign_GenSA):
 # https://stackoverflow.com/questions/4092774/what-are-the-differences-between-simulated-annealing-and-genetic-algorithms
 nl@simdesign <- simdesign_GenAlg(nl, 
                                 evalcrit = critfun, # 1, # "e.g. 1 would use the first defined metric of the experiment to evaluate each iteration)"
                                 
-                                popSize = 10, # or chromosomes
-                                iters = 10,
-                                elitism = NA, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
+                                popSize = 100, # or chromosomes
+                                iters = 100,
+                                elitism = 20, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
                                 mutationChance = 0.01,
                                 nseeds = 1
                                 )
@@ -611,11 +620,12 @@ save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment.RData'))
 
 
 ## --- ##
+?genalg::rbga
 resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
-library("genalg")
-summary(resultsrbga)
+cat(summary(resultsrbga))
 summary.rbga(resultsrbga)
-genalg::plot.rbga(resultsrbga)
+plot(resultsrbga, type = "vars")
+plot(resultsrbga, type = "hist")
 
 
 summary(rbga.results)
