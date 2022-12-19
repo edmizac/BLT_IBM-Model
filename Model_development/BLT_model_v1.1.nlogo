@@ -769,9 +769,9 @@ to go
       calc-movement-metrics
       output-print "calculating movement metrics finished"
 
-      output-print "calculating R index for seeds"
-      calc-seed-aggregation
-      output-print "calculating R index for seeds finished"
+;      output-print "calculating R index for seeds"
+;      calc-seed-aggregation
+;      output-print "calculating R index for seeds finished"
 
       stop
     ]
