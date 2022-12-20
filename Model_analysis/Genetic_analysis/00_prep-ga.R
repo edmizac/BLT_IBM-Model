@@ -26,7 +26,7 @@ library("magrittr")
 library("genalg")
 
 ## Config cores
-ncores <- parallel::detectCores()
+# ncores <- parallel::detectCores() # ga is not paralelized
 
 ## Java memory:
 if(Sys.getenv("JAVA_HOME") == "") {
@@ -311,6 +311,9 @@ nl@experiment <- experiment(expname = expname,
                               
                               "monkeys" = c(
                                 "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
+                                "en1",         # value of energy_level_1 used at the start of the simulation
+                                "en2",         # value of energy_level_2 used at the start of the simulation 
+                                "ens",          # start-energy value at the start of the similuation
                                 "DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
                                 # "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
                                 "DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
@@ -346,15 +349,15 @@ nl@experiment <- experiment(expname = expname,
                               ### DO NOT SPECIFY STEPS FOR GA:
                               
                               # energy
-                              "energy-from-fruits" = list(min=1, max = 300),
-                              'energy-from-prey' = list(min=1, max=300),
-                              "energy-loss-traveling" = list(min=-100, max = -1), #, step = 2
+                              # "energy-from-fruits" = list(min=1, max = 300),
+                              # 'energy-from-prey' = list(min=1, max=300),
+                              # "energy-loss-traveling" = list(min=-100, max = -1), #, step = 2
                               # "energy-loss-foraging" = list(min=-100, max = -1),
                               # "energy-loss-resting" = list(min=-100, max = -1),
                               
-                              "start-energy" = list(min=100, max=2000),
+                              # "start-energy" = list(min=100, max=2000),
                               "energy_level_1" = list(min=100, max=2000),
-                              "energy_level_2" = list(min=100, max=2000),
+                              "energy_level_2" = list(min=100, max=2000)
                               
                               
                               # 4. Movement
@@ -366,13 +369,13 @@ nl@experiment <- experiment(expname = expname,
                               # "p_foraging_while_traveling" = list(min= 0, max= 1) # only when p-forage-param? = 'false'
                               
                               # memory
-                              "step_forget" = list(min=3, max = 150),
-                              "visual" = list(min=0, max = 3),
-                              'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
+                              # "step_forget" = list(min=3, max = 150),
+                              # "visual" = list(min=0, max = 3),
+                              # 'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                               
                               # 5. Feeding bout (only when "feedingbout-on?" = 'false')
-                              'species_time' = list(min = 1, max = 10), #
-                              'duration' = list(min = 1, max = 10)      #
+                              # 'species_time' = list(min = 1, max = 10), #
+                              # 'duration' = list(min = 1, max = 10)      #
                               
                               # 6. Seed dispersal
                               # "gut_transit_time_val" = 15,    # this won't be optimized as it is an emerging pattern
@@ -438,18 +441,38 @@ nl@experiment <- experiment(expname = expname,
 critfun <- function(nl) {
   
   # extract values from run from example nl object:
-  # db2 <- nlrx::getexp(nl, "variables")
+  # db <- unnest_simoutput(nl)
+  # db2 <- nlrx::getexp(nl, "variables") # or nl@experiment@variables
   db <- nlrx::getexp(nl, "metrics.turtles")
   db3 <- report_model_parameters(nl)
   
-  # nl.x@simdesign@siminput %>% as.data.frame
+  # nl@experiment
   
+  # nl.x@simdesign@siminput %>% as.data.frame
   # nl@experiment
   # nl@experiment@variables
   # nl@experiment@metrics.turtles
   # str(db)
   # class(db3)
 
+  # for criteria:
+  # db[[1]][1]
+  
+  # en1 <- db %>% magrittr::extract("en1") %>%  unlist() %>% as.vector() %>% as.numeric()
+  # en2 <- db %>% magrittr::extract("en2") %>%  unlist() %>% as.vector() %>% as.numeric()
+  # # energy_level2 <- db %>% magrittr::extract2("energy_level_2") %>% magrittr::use_series(value) %>%  unlist() %>% as.vector()
+  # # print(energy_lvl1)
+  # 
+  # 
+  # # for fitness:
+  # energy_obs <- db %>%  magrittr::extract("ens") %>% unlist() %>% as.vector() %>% 
+  #   normalize(min = energy_min, max = energy_max)
+  energy <- db %>%  magrittr::extract("energy") %>% unlist() %>% as.vector() %>% 
+    normalize(min = energy_min, max = energy_max)
+  # energy_obs <- db2 %>%  magrittr::extract(`start-energy$value`) %>% unlist() %>% as.vector() # we don't have observed energy values so we will use the start energy
+  energy_obs <- db3 %>%  magrittr::extract2("start-energy") %>% use_series(value) %>%
+    normalize(min = energy_min, max = energy_max) # does it make sense to use the start value?
+  # energy_obs <- 980
   
   KDE95 <- db %>%  magrittr::extract("KDE_95") %>% unlist() %>% as.vector() %>%
     normalize(min = KDE95_min, max = KDE95_max)
@@ -458,13 +481,6 @@ critfun <- function(nl) {
   
   visits <- db %>% magrittr::extract("n_visited_trees") %>% unlist() %>% as.vector() %>% 
     normalize(min = visits_min, max = visits_max)
-  
-  energy <- db %>%  magrittr::extract("energy") %>% unlist() %>% as.vector() %>% 
-    normalize(min = energy_min, max = energy_max)
-  # energy_obs <- db2 %>%  magrittr::extract(`start-energy$value`) %>% unlist() %>% as.vector() # we don't have observed energy values so we will use the start energy
-  energy_obs <- db3 %>%  magrittr::extract2("start-energy") %>% use_series(value) %>% 
-    normalize(min = energy_min, max = energy_max) # does it make sense to use the start value?
-  # energy_obs <- 980
   
   p_feeding <- db %>%  magrittr::extract("p_feeding") %>% unlist() %>% as.vector() %>% 
     normalize(min = p_feeding_min, max = p_feeding_max)
@@ -556,18 +572,33 @@ critfun <- function(nl) {
   critc <- crit +
     1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd)
   
-  # if crit 
-  return(crit)
+  # print(en1)
+  # print(en2)
+  
+  print(paste("Fitness value of run: ", crit))
+  # print(paste("energy_lvl_1", en1))
+  # print(paste("energy_lvl_2", en2))
+  
+  # if ( en1 > en2 ) {
+    # crit <- 99999
+    # print("energy_lvl_1 is bigger than energy_lvl 2, dropping simulation")
+    return(crit)
+  # } else {
+    # return(crit)
+  # }
+  
 }
 
 # Test the eval function:
 # # extract values from run from example objects for testing:
-# nl.x <- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
+# nl<- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
 #                      "v1.1_Taquara_Jan_simple1671135962_tempRDS.Rdata"))
-# # params_run <- nl.x %>% nlrx::report_model_parameters()
-# critfun(nl.x)
-# db <- unnest_simoutput(nl.x)
-
+# # # params_run <- nl.x %>% nlrx::report_model_parameters()
+# # critfun(nl.x)
+# db2 <- nlrx::getexp(nl.x, "variables")
+# db <- nlrx::getexp(nl.x, "metrics.turtles")
+# db3 <- report_model_parameters(nl.x)
+# db4 <- nl.x@experiment@variables
 
 # Monitor
 # monitor <- function(obj) {
@@ -583,9 +614,9 @@ critfun <- function(nl) {
 nl@simdesign <- simdesign_GenAlg(nl, 
                                 evalcrit = critfun, # 1, # "e.g. 1 would use the first defined metric of the experiment to evaluate each iteration)"
                                 
-                                popSize = 100, # or chromosomes
-                                iters = 100,
-                                elitism = 20, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
+                                popSize = 10, # or chromosomes
+                                iters = 5,
+                                elitism = 2, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
                                 mutationChance = 0.01,
                                 nseeds = 1
                                 )
@@ -610,9 +641,10 @@ tictoc::toc()
 # m <- noquote(month_run)
 
 # 00_rep-ga_resuls results
+cat(summary(results))
 
-saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds")))
-save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment.RData'))
+saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results_test.rds")))
+# save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment_test.RData'))
 
 # setsim(nl, "simoutput") <- tibble::enframe(results)
 # saveRDS(nl, file.path(nl@experiment@outpath, paste0(expname, ".rds")))
@@ -620,12 +652,12 @@ save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment.RData'))
 
 
 ## --- ##
-?genalg::rbga
-resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
+# ?genalg::rbga
+resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_test.rds"))
 cat(summary(resultsrbga))
-summary.rbga(resultsrbga)
-plot(resultsrbga, type = "vars")
-plot(resultsrbga, type = "hist")
-
-
-summary(rbga.results)
+# summary.rbga(resultsrbga)
+# plot(resultsrbga, type = "vars")
+# plot(resultsrbga, type = "hist")
+# 
+# 
+# summary(rbga.results)

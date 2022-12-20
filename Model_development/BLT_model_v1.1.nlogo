@@ -36,6 +36,9 @@ seeds-own [
 breed [monkeys monkey]
 monkeys-own [
   energy          ; energy the tamarin has left
+  en1             ; energy level 1 of every simulation
+  en2             ; energy level 2 of every simulation
+  ens             ; start energy of every simulation
 ;  status         ; what is the desire ===== DO WE REALLY NEED THIS? ==============
   action          ; what was the last action
   action-time     ; how long you do the same action again (other than frugivory)
@@ -532,6 +535,10 @@ to setup-monkeys
 
   create-monkeys 1
   ask monkeys [
+
+    set en1 energy_level_1
+    set en2 energy_level_2
+    set ens start-energy
 
     ; for the behaviorsequence plot
     set behaviorsequence []
