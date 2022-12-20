@@ -193,9 +193,11 @@ to setup
   if USER = "Ronald"
   [ set local-path "/home/rbialozyt/BLT_IBM-Model/" ]
   if USER = "Eduardo"
-  [ set local-path "D:/Data/Documentos/github/BLT_IBM-Model" ]
-  if USER = "LEEC"
+  [ set local-path "D:/Data/Documentos/github/BLT_IBM-Model/" ]
+  if USER = "LASi"
   [set local-path "D:/EDUARDO_LAP"]
+  if USER = "LEEC"
+  [set local-path "D:/Eduardo_LaP/"]
   if USER = "Others"
   [ set local-path "~/" ]
 
@@ -254,46 +256,81 @@ to setup-gis
   set-patch-size 3
 
   if study_area = "Guareí" [
-    ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
+    if USER = "Eduardo" [
+      ; load .prj and .asc (raster 10 x 10 m)
+      gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
+      set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
+
+      ; load the poligon (.shp) to determine forest and matrix patches
+      set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
+    ]
+
+    if USER = "LEEC" [
+      gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj"
+      set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc"
+      set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp"
+    ]
+
   ]
 
 
   if study_area = "Suzano" [
-    ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
+    if USER = "Eduardo" [
+      ; load .prj and .asc (raster 10 x 10 m)
+      gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
+      set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+
+      ; load the poligon (.shp) to determine forest and matrix patches
+      set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
+    ]
+
+    if USER = "LEEC" [
+      gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj"
+      set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc"
+      set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp"
+    ]
   ]
 
 
   if study_area = "Taquara" [ ;;
     set-patch-size floor (0.8 * patch-size) ; Taquara large raster is too big for the world
 
-    ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    if USER = "Eduardo" [
+      ; load .prj and .asc (raster 10 x 10 m)
+      gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+      set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
+      ; load the poligon (.shp) to determine forest and matrix patches
+      set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
+    ]
+
+        if USER = "LEEC" [
+      gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj"
+      set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc"
+      set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp"
+    ]
   ]
 
 
   if study_area = "Santa Maria" [
     set-patch-size floor (1 * patch-size) ; Santa Maria large raster results in a large world
 
-    ; load .prj and .asc (raster 10 x 10 m)
-    gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
-    set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
+    if USER = "Eduardo" [
+      ; load .prj and .asc (raster 10 x 10 m)
+      gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
+      set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
-    ; load the poligon (.shp) to determine forest and matrix patches
-    set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
+      ; load the poligon (.shp) to determine forest and matrix patches
+      set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
+    ]
+
+    if USER = "LEEC" [
+      gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj"
+      set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc"
+      set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp"
+    ]
   ]
 
 
@@ -387,34 +424,34 @@ to setup-trees
   ;;;;;;; load tree-file according to tree-scenario chooser (.SHP) ;;;;;;;
 
   ; Guareí
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_all.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_May.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jun" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_Jun.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_Jul.shp" ]
-  if ( study_area = "Guareí" AND feeding-trees-scenario = "Aug" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/guarei_trees_unique_Aug.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/guarei_trees_unique_all.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/guarei_trees_unique_May.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jun" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/guarei_trees_unique_Jun.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/guarei_trees_unique_Jul.shp" ]
+  if ( study_area = "Guareí" AND feeding-trees-scenario = "Aug" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/guarei_trees_unique_Aug.shp" ]
 
   ; Santa Maria
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_all.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Mar" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_Mar.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_Apr.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/sma_trees_unique_May.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_all.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Mar" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_Mar.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_Apr.shp" ]
+  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_May.shp" ]
 
   ; Taquara
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_all.shp" ]
-  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jan" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Jan.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Feb.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Apr.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_May.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Jul.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Sep.shp" ]
-;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/taq_trees_unique_Dec.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_all.shp" ]
+  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jan" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_Jan.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_Feb.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_Apr.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_May.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_Jul.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_Sep.shp" ]
+;  if ( study_area = "Taquara" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_Dec.shp" ]
 
   ; Suzano
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_all.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Feb.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Apr.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Sep.shp" ]
-  if ( study_area = "Suzano" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "/Data/Movement/Resource-Trees/suz_trees_unique_Dec.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/suz_trees_unique_all.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Feb" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/suz_trees_unique_Feb.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/suz_trees_unique_Apr.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Sep" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/suz_trees_unique_Sep.shp" ]
+  if ( study_area = "Suzano" AND feeding-trees-scenario = "Dec" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/suz_trees_unique_Dec.shp" ]
 
 
   let number 0
@@ -2745,8 +2782,8 @@ end
 GRAPHICS-WINDOW
 10
 10
-459
-370
+627
+430
 -1
 -1
 3.0
@@ -2759,10 +2796,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-101
+101
+-68
+68
 0
 0
 1
@@ -3069,7 +3106,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-12
+3
 
 CHOOSER
 984
@@ -3136,7 +3173,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-21.0
+16.0
 1
 1
 NIL
@@ -3478,7 +3515,7 @@ CHOOSER
 493
 USER
 USER
-"Ronald" "Eduardo" "LEEC" "Others"
+"Ronald" "Eduardo" "LEEC" "LASi" "Others"
 1
 
 SWITCH
@@ -3501,7 +3538,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.59
 0.05
 1
 NIL
@@ -3868,7 +3905,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-3
+1
 
 BUTTON
 247
@@ -3999,7 +4036,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-51.2
+89.73
 5
 1
 NIL
@@ -4014,7 +4051,7 @@ step_len_forage
 step_len_forage
 0
 20
-0.883
+1.6949999999999998
 0.1
 1
 NIL
@@ -4029,7 +4066,7 @@ step_len_travel
 step_len_travel
 0
 20
-1.7489999999999999
+3.2369999999999997
 0.1
 1
 NIL
@@ -4044,7 +4081,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-47.53
+68.99
 1
 1
 NIL
