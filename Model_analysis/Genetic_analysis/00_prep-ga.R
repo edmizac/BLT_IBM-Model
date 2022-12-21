@@ -99,7 +99,7 @@ values_ga_mv <-  read.csv(here("Data", "Movement", "Curated", "Validation", "Sim
 energy_min <- 0
 # tamarins should not spend too much energy above level 2, thus I'm defining the max energy as 50% more than energy_level_2. If the values are above this, the run is dropped:
 # energy_max <- nlogo_model_param$energy_level_2$value + ( 0.5 * nlogo_model_param$energy_level_2$value )
-energy_max <- 2000 # or the max possible number used as variable in the experiment
+energy_max <- 3000 # or the max possible number used as variable in the experiment
 
 # KDE95_max <- values_ga %>% dplyr::select(KDE95) %>% unlist() %>% max() %>% as.vector()
 KDE95_max <- 400 # (400 is the year-round home range of Taquara group)
@@ -266,19 +266,16 @@ visits_obs <- param_table %>%
 ## Step 2: Attach an experiment   -------------------------
 expname <- paste0("GA_", area_run, "_", month_run)
 
-area_run <- paste0('"', area_run, '"')
-month_run <- paste0('"', month_run, '"')
-
 # define how much each run should take based on empirical activity periods
 no_days_run <- param_table %>% 
-  dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
-                id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+  dplyr::filter(group == area_run,
+                id_month == month_run) %>% 
   dplyr::select(ndays) %>% 
   pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
 
 simultime_run <- param_table %>% 
-  dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
-                id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+  dplyr::filter(group == area_run,
+                id_month == month_run) %>% 
   dplyr::select(mean_timesteps) %>% 
   pull()
 simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
@@ -289,6 +286,9 @@ gtt_param <- "true" # gtt parameters are setted inside the model. Change this wh
 p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
 feedingbout <- "false" # previous sensitivity analysis showed that this does not matter, at least for Guareí
 
+# escape strings to nlrx experiment
+area_run_scp <- paste0('"', area_run, '"')   # scaped
+month_run_scp <- paste0('"', month_run, '"') # scaped
 
 # Attach to nl object
 nl@experiment <- experiment(expname = expname,
@@ -311,9 +311,9 @@ nl@experiment <- experiment(expname = expname,
                               
                               "monkeys" = c(
                                 "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
-                                "en1",         # value of energy_level_1 used at the start of the simulation
-                                "en2",         # value of energy_level_2 used at the start of the simulation 
-                                "ens",          # start-energy value at the start of the similuation
+                                "enlvl1",         # value of energy_level_1 used at the start of the simulation
+                                "enlvl2",         # value of energy_level_2 used at the start of the simulation 
+                                "enstart",          # start-energy value at the start of the similuation
                                 "DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
                                 # "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
                                 "DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
@@ -398,8 +398,8 @@ nl@experiment <- experiment(expname = expname,
                               # "path-color-by-day?" = "false",
                               
                               ### resource scenario
-                              "study_area" = "\"Taquara\"",           # we are optimizing with Taquara as it is the most natural condition
-                              "feeding-trees-scenario" = "\"Jan\"",   # we are optimizing with Taquara as it is the most natural condition
+                              "study_area" = area_run_scp,               # "\"Taquara\"",   # we are optimizing with Taquara as it is the most natural condition
+                              "feeding-trees-scenario" = month_run_scp,  #"\"Jan\"",        # we are optimizing with Taquara as it is the most natural condition
                               'no_days' = no_days_run, # DON'T TRY no_days = 1
                               'simulation-time' = simultime_run
                               # 'feeding-trees?' = "true",
@@ -441,10 +441,10 @@ nl@experiment <- experiment(expname = expname,
 critfun <- function(nl) {
   
   # extract values from run from example nl object:
-  # db <- unnest_simoutput(nl)
   # db2 <- nlrx::getexp(nl, "variables") # or nl@experiment@variables
-  db <- nlrx::getexp(nl, "metrics.turtles")
-  db3 <- report_model_parameters(nl)
+  db <- unnest_simoutput(nl)
+  # db <- nlrx::getexp(nl, "metrics.turtles")
+  # db3 <- report_model_parameters(nl)
   
   # nl@experiment
   
@@ -458,37 +458,48 @@ critfun <- function(nl) {
   # for criteria:
   # db[[1]][1]
   
-  # en1 <- db %>% magrittr::extract("en1") %>%  unlist() %>% as.vector() %>% as.numeric()
-  # en2 <- db %>% magrittr::extract("en2") %>%  unlist() %>% as.vector() %>% as.numeric()
+  # en1 <- db %>% magrittr::extract("en1") %>%  unlist() %>% na.omit() %>% as.vector() %>% 
+  en1 <- db %>% dplyr::select("enlvl1") %>%  unlist() %>% na.omit() %>% as.vector() %>% 
+    normalize(min = energy_min, max = energy_max)
+  # en2 <- db %>% magrittr::extract("en2") %>%  unlist() %>% na.omit() %>% as.vector() %>% 
+  en2 <- db %>% dplyr::select("enlvl2") %>%  unlist() %>% na.omit() %>% as.vector() %>%
+    normalize(min = energy_min, max = energy_max)
   # # energy_level2 <- db %>% magrittr::extract2("energy_level_2") %>% magrittr::use_series(value) %>%  unlist() %>% as.vector()
-  # # print(energy_lvl1)
-  # 
-  # 
+  # energy_obs <- 980
+  energy_obs <- db %>% dplyr::select("enstart") %>%  unlist() %>% na.omit() %>% as.vector()  %>% 
+    normalize(min = energy_min, max = energy_max) # = start-energy. does it make sense to use the start value as 'observed' (we don't have this number estimated)
+  
   # # for fitness:
   # energy_obs <- db %>%  magrittr::extract("ens") %>% unlist() %>% as.vector() %>% 
   #   normalize(min = energy_min, max = energy_max)
-  energy <- db %>%  magrittr::extract("energy") %>% unlist() %>% as.vector() %>% 
+  # energy <- db %>%  magrittr::extract("energy") %>% unlist() %>% na.omit() %>% as.vector() %>% 
+  energy <- db %>%  dplyr::select("energy") %>% unlist() %>% na.omit() %>% as.vector() %>% 
     normalize(min = energy_min, max = energy_max)
-  # energy_obs <- db2 %>%  magrittr::extract(`start-energy$value`) %>% unlist() %>% as.vector() # we don't have observed energy values so we will use the start energy
-  energy_obs <- db3 %>%  magrittr::extract2("start-energy") %>% use_series(value) %>%
-    normalize(min = energy_min, max = energy_max) # does it make sense to use the start value?
-  # energy_obs <- 980
-  
-  KDE95 <- db %>%  magrittr::extract("KDE_95") %>% unlist() %>% as.vector() %>%
+
+  # KDE95 <- db %>%  magrittr::extract("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
+  KDE95 <- db %>%  dplyr::select("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
+    `/` (10000) %>%  #convert to hectares
     normalize(min = KDE95_min, max = KDE95_max)
-  KDE50 <- db %>%  magrittr::extract("KDE_50") %>% unlist() %>% as.vector() %>% 
+  # KDE50 <- db %>%  magrittr::extract("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+  KDE50 <- db %>%  dplyr::select("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    `/` (10000) %>%  #convert to hectares
     normalize(min = KDE50_min, max = KDE50_max)
   
-  visits <- db %>% magrittr::extract("n_visited_trees") %>% unlist() %>% as.vector() %>% 
+  # visits <- db %>% magrittr::extract("n_visited_trees") %>% unlist() %>% unique() %>% as.vector() %>% 
+  visits <- db %>% dplyr::select("n_visited_trees") %>% unlist() %>% unique() %>% as.vector() %>% 
     normalize(min = visits_min, max = visits_max)
   
-  p_feeding <- db %>%  magrittr::extract("p_feeding") %>% unlist() %>% as.vector() %>% 
+  # p_feeding <- db %>%  magrittr::extract("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
+  p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
     normalize(min = p_feeding_min, max = p_feeding_max)
-  p_foraging <- db %>%  magrittr::extract("p_foraging") %>% unlist() %>% as.vector() %>% 
+  # p_foraging <- db %>%  magrittr::extract("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+  p_foraging <- db %>%  dplyr::select("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
     normalize(min = p_foraging_min, max = p_foraging_max)
-  p_traveling <- db %>%  magrittr::extract("p_traveling") %>% unlist() %>% as.vector() %>% 
+  # p_traveling <- db %>%  magrittr::extract("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+  p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
     normalize(min = p_traveling_min, max = p_traveling_max)
-  p_resting <- db %>%  magrittr::extract("p_resting") %>% unlist() %>% as.vector() %>% 
+  # p_resting <- db %>%  magrittr::extract("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+  p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
     normalize(min = p_resting_min, max = p_resting_max)
   
   # DPL_sd <- db$DPL_sd # check it
@@ -502,18 +513,13 @@ critfun <- function(nl) {
   #   map_dbl(mean, na.rm=TRUE)
   # db$DPL_mean <- DPL_mean
   
-  DPL_mean <- db$DPL %>% normalize(min = dpl_mean_min, max = dpl_mean_max)
-  DPL_sd <- db$DPL_sd %>% normalize(min = dpl_sd_min, max = dpl_sd_max)
-  MR_mean <- db$MR %>% normalize(min = mr_min, max = mr_max)
-  MR_sd <- db$MR_sd  %>% normalize(min = mr_sd_min, max = mr_sd_max)
-  PT_mean <- db$PT  %>% normalize(min = pt_min, max = pt_max)
-  PT_sd <- db$PT_sd  %>% normalize(min = pt_sd_min, max = pt_sd_max)
+  DPL_mean <- db$DPL %>%  na.omit() %>% as.vector() %>% normalize(min = dpl_mean_min, max = dpl_mean_max)
+  DPL_sd <- db$DPL_sd %>% na.omit() %>% as.vector() %>%normalize(min = dpl_sd_min, max = dpl_sd_max)
+  MR_mean <- db$MR %>% na.omit() %>% as.vector() %>% normalize(min = mr_min, max = mr_max)
+  MR_sd <- db$MR_sd  %>% na.omit() %>% as.vector() %>% normalize(min = mr_sd_min, max = mr_sd_max)
+  PT_mean <- db$PT  %>% na.omit() %>% as.vector() %>% normalize(min = pt_min, max = pt_max)
+  PT_sd <- db$PT_sd  %>% na.omit() %>% as.vector() %>% normalize(min = pt_sd_min, max = pt_sd_max)
   
-  
-  
-  
-  # en_min <- param_table
-  # en_max <- max(en)
   
   # Get observed values (normalized)
   DPL_mean_obs <- values_ga_mv_summary %>% 
@@ -564,13 +570,14 @@ critfun <- function(nl) {
   # more important ones:
   w <- 1 # weight 
   crit <- 
-    1/sum(en) * w + 1/sum(vi) * w + 1/sum(hr95) * w + 1/sum(hr50) * w + 
+    1/sum(vi) * w + 1/sum(hr95) * w + 1/sum(hr50) * w + 
     1/sum(dp) * w + 1/sum(mr) * w + 1/sum(pt) * w +
     1/sum(pfee) * w + 1/sum(pfor) * w + 1/sum(ptra) * w + 1/sum(pres) * w
   # less important ones:
   w <- 0.5
-  critc <- crit +
-    1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd)
+  crit <- crit +
+    1/sum(en) * w + # energy varies too much (min = 0, max = 3000) and we can't parameterize it (yet)
+    1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd) # variation of the output variables is not as important as the variables
   
   # print(en1)
   # print(en2)
@@ -579,13 +586,13 @@ critfun <- function(nl) {
   # print(paste("energy_lvl_1", en1))
   # print(paste("energy_lvl_2", en2))
   
-  # if ( en1 > en2 ) {
-    # crit <- 99999
-    # print("energy_lvl_1 is bigger than energy_lvl 2, dropping simulation")
+  if ( en1 > en2 ) {
+    crit <- 99999
+    print("energy_lvl_1 is bigger than energy_lvl 2, dropping simulation")
     return(crit)
-  # } else {
-    # return(crit)
-  # }
+  } else {
+    return(crit)
+  }
   
 }
 
@@ -637,8 +644,8 @@ tictoc::toc()
 
 
 ## Step 5: Investiga output
-# a <- noquote(area_run)
-# m <- noquote(month_run)
+# a <- noquote(area_run) # or gsub(area_run_scp, pattern = ('\"'), replacement = '', fixed = T)
+# m <- noquote(month_run) # or gsub(month_run_scp, pattern = ('\"'), replacement = '', fixed = T)
 
 # 00_rep-ga_resuls results
 cat(summary(results))
