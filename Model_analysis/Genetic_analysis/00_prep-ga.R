@@ -349,15 +349,15 @@ nl@experiment <- experiment(expname = expname,
                               ### DO NOT SPECIFY STEPS FOR GA:
                               
                               # energy
-                              # "energy-from-fruits" = list(min=1, max = 300),
-                              # 'energy-from-prey' = list(min=1, max=300),
-                              # "energy-loss-traveling" = list(min=-100, max = -1), #, step = 2
-                              # "energy-loss-foraging" = list(min=-100, max = -1),
-                              # "energy-loss-resting" = list(min=-100, max = -1),
+                              "energy-from-fruits" = list(min=1, max = 300),
+                              'energy-from-prey' = list(min=1, max=300),
+                              "energy-loss-traveling" = list(min=-100, max = -1), #, step = 2
+                              "energy-loss-foraging" = list(min=-100, max = -1),
+                              "energy-loss-resting" = list(min=-100, max = -1),
                               
                               # "start-energy" = list(min=100, max=2000),
                               "energy_level_1" = list(min=100, max=2000),
-                              "energy_level_2" = list(min=100, max=2000)
+                              "energy_level_2" = list(min=100, max=2000),
                               
                               
                               # 4. Movement
@@ -369,13 +369,13 @@ nl@experiment <- experiment(expname = expname,
                               # "p_foraging_while_traveling" = list(min= 0, max= 1) # only when p-forage-param? = 'false'
                               
                               # memory
-                              # "step_forget" = list(min=3, max = 150),
+                              "step_forget" = list(min=3, max = 150)
                               # "visual" = list(min=0, max = 3),
-                              # 'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
+                              'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                               
                               # 5. Feeding bout (only when "feedingbout-on?" = 'false')
-                              # 'species_time' = list(min = 1, max = 10), #
-                              # 'duration' = list(min = 1, max = 10)      #
+                              'species_time' = list(min = 1, max = 10), #
+                              'duration' = list(min = 1, max = 10)      #
                               
                               # 6. Seed dispersal
                               # "gut_transit_time_val" = 15,    # this won't be optimized as it is an emerging pattern
@@ -431,18 +431,27 @@ nl@experiment <- experiment(expname = expname,
 )
 
 
+# eval_simoutput(nl) # not run for optimization designs
 
 
 
 ## Step 3: Attach a simulation design   -------------------------
 
+# nl<- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
+#                   "v1.1_Taquara_Jan_simple1862807137_tempRDS.Rdata"))
 
-# 3) Define critfun (fitness function) --------------
+
+### Define critfun (fitness function) --------------
+deaths <- 0 # to count number of runs where tamarins died
 critfun <- function(nl) {
   
   # extract values from run from example nl object:
   # db2 <- nlrx::getexp(nl, "variables") # or nl@experiment@variables
   db <- unnest_simoutput(nl)
+  # colnames(db)
+  
+  
+  # db <- nl@simdesign@simoutput
   # db <- nlrx::getexp(nl, "metrics.turtles")
   # db3 <- report_model_parameters(nl)
   
@@ -455,142 +464,153 @@ critfun <- function(nl) {
   # str(db)
   # class(db3)
 
-  # for criteria:
-  # db[[1]][1]
+  print(paste("number of dead runs = ", deaths))
   
-  # en1 <- db %>% magrittr::extract("en1") %>%  unlist() %>% na.omit() %>% as.vector() %>% 
-  en1 <- db %>% dplyr::select("enlvl1") %>%  unlist() %>% na.omit() %>% as.vector() %>% 
-    normalize(min = energy_min, max = energy_max)
-  # en2 <- db %>% magrittr::extract("en2") %>%  unlist() %>% na.omit() %>% as.vector() %>% 
-  en2 <- db %>% dplyr::select("enlvl2") %>%  unlist() %>% na.omit() %>% as.vector() %>%
-    normalize(min = energy_min, max = energy_max)
-  # # energy_level2 <- db %>% magrittr::extract2("energy_level_2") %>% magrittr::use_series(value) %>%  unlist() %>% as.vector()
-  # energy_obs <- 980
-  energy_obs <- db %>% dplyr::select("enstart") %>%  unlist() %>% na.omit() %>% as.vector()  %>% 
-    normalize(min = energy_min, max = energy_max) # = start-energy. does it make sense to use the start value as 'observed' (we don't have this number estimated)
-  
-  # # for fitness:
-  # energy_obs <- db %>%  magrittr::extract("ens") %>% unlist() %>% as.vector() %>% 
-  #   normalize(min = energy_min, max = energy_max)
-  # energy <- db %>%  magrittr::extract("energy") %>% unlist() %>% na.omit() %>% as.vector() %>% 
-  energy <- db %>%  dplyr::select("energy") %>% unlist() %>% na.omit() %>% as.vector() %>% 
-    normalize(min = energy_min, max = energy_max)
-
-  # KDE95 <- db %>%  magrittr::extract("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
-  KDE95 <- db %>%  dplyr::select("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
-    `/` (10000) %>%  #convert to hectares
-    normalize(min = KDE95_min, max = KDE95_max)
-  # KDE50 <- db %>%  magrittr::extract("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-  KDE50 <- db %>%  dplyr::select("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    `/` (10000) %>%  #convert to hectares
-    normalize(min = KDE50_min, max = KDE50_max)
-  
-  # visits <- db %>% magrittr::extract("n_visited_trees") %>% unlist() %>% unique() %>% as.vector() %>% 
-  visits <- db %>% dplyr::select("n_visited_trees") %>% unlist() %>% unique() %>% as.vector() %>% 
-    normalize(min = visits_min, max = visits_max)
-  
-  # p_feeding <- db %>%  magrittr::extract("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
-  p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
-    normalize(min = p_feeding_min, max = p_feeding_max)
-  # p_foraging <- db %>%  magrittr::extract("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-  p_foraging <- db %>%  dplyr::select("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    normalize(min = p_foraging_min, max = p_foraging_max)
-  # p_traveling <- db %>%  magrittr::extract("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-  p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    normalize(min = p_traveling_min, max = p_traveling_max)
-  # p_resting <- db %>%  magrittr::extract("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-  p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    normalize(min = p_resting_min, max = p_resting_max)
-  
-  # DPL_sd <- db$DPL_sd # check it
-  
-  # DPL_mean <- db$DPL_d
-  # DPL_mean <- DPL_mean %>%
-  #   str_replace_all(., c("\\[" = "", "\\]" = "")) %>%
-  #   str_split(pattern = "_") %>%  #, simplify = TRUE) %>%
-  #   purrr::map(as.numeric, na.rm = TRUE) %>% 
-  #   # purrr::map(round, 2) %>%
-  #   map_dbl(mean, na.rm=TRUE)
-  # db$DPL_mean <- DPL_mean
-  
-  DPL_mean <- db$DPL %>%  na.omit() %>% as.vector() %>% normalize(min = dpl_mean_min, max = dpl_mean_max)
-  DPL_sd <- db$DPL_sd %>% na.omit() %>% as.vector() %>%normalize(min = dpl_sd_min, max = dpl_sd_max)
-  MR_mean <- db$MR %>% na.omit() %>% as.vector() %>% normalize(min = mr_min, max = mr_max)
-  MR_sd <- db$MR_sd  %>% na.omit() %>% as.vector() %>% normalize(min = mr_sd_min, max = mr_sd_max)
-  PT_mean <- db$PT  %>% na.omit() %>% as.vector() %>% normalize(min = pt_min, max = pt_max)
-  PT_sd <- db$PT_sd  %>% na.omit() %>% as.vector() %>% normalize(min = pt_sd_min, max = pt_sd_max)
-  
-  
-  # Get observed values (normalized)
-  DPL_mean_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == area_run | "id_month" == month_run) %>%
-    dplyr::select(DPL_mean_obs)  %>% unlist() %>% as.vector() %>% 
-    normalize(min = dpl_mean_min, max = dpl_mean_max)
-  DPL_sd_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == area_run | "id_month" == month_run) %>%
-    dplyr::select(DPL_sd_obs)  %>% unlist() %>% as.vector() %>% 
-    normalize(min = dpl_sd_min, max = dpl_sd_max)
-  
-  MR_mean_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == area_run | "id_month" == month_run) %>%
-    dplyr::select(MR_mean_obs)  %>% unlist() %>% as.vector() %>% 
-    normalize(min = mr_min, max = mr_max)
-  MR_sd_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == area_run | "id_month" == month_run) %>%
-    dplyr::select(MR_sd_obs)  %>% unlist() %>% as.vector() %>% 
-    normalize(min = mr_sd_min, max = mr_sd_max)
-  
-  PT_mean_obs <- values_ga_mv_summary %>%
-    dplyr::filter(group == area_run | "id_month" == month_run) %>%
-    dplyr::select(PT_mean_obs)  %>% unlist() %>% as.vector() %>% 
-    normalize(min = pt_min, max = pt_max)
-  PT_sd_obs <- values_ga_mv_summary %>% 
-    dplyr::filter(group == area_run | "id_month" == month_run) %>%
-    dplyr::select(PT_sd_obs)  %>% unlist() %>% as.vector() %>% 
-    normalize(min = pt_sd_min, max = pt_sd_max)
-  
-  
-  # calc differences (or put all into a dataframe and use custom_fitness() function)
-  en <- abs(energy - energy_obs)
-  vi <- abs(visits - visits_obs)
-  hr95 <- abs(KDE95 - KDE95_obs)
-  hr50 <- abs(KDE50 - KDE50_obs)
-  dp <- abs(DPL_mean - DPL_mean_obs)
-  dpsd <- abs(DPL_sd - DPL_sd_obs)
-  mr <- abs(MR_mean - MR_obs)
-  mrsd <- abs(MR_sd - MR_sd_obs)
-  pt <- abs(PT_mean - PT_obs)
-  ptsd <- abs(PT_sd - PT_sd_obs)
-  pfee <- abs(p_feeding - p_feeding_obs)
-  pfor <- abs(p_foraging - p_foraging_obs)
-  ptra <- abs(p_traveling - p_traveling_obs)
-  pres <- abs(p_resting - p_resting_obs)
-  
-  # calc the fitness function
-  # more important ones:
-  w <- 1 # weight 
-  crit <- 
-    1/sum(vi) * w + 1/sum(hr95) * w + 1/sum(hr50) * w + 
-    1/sum(dp) * w + 1/sum(mr) * w + 1/sum(pt) * w +
-    1/sum(pfee) * w + 1/sum(pfor) * w + 1/sum(ptra) * w + 1/sum(pres) * w
-  # less important ones:
-  w <- 0.5
-  crit <- crit +
-    1/sum(en) * w + # energy varies too much (min = 0, max = 3000) and we can't parameterize it (yet)
-    1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd) # variation of the output variables is not as important as the variables
-  
-  # print(en1)
-  # print(en2)
-  
-  print(paste("Fitness value of run: ", crit))
-  # print(paste("energy_lvl_1", en1))
-  # print(paste("energy_lvl_2", en2))
-  
-  if ( en1 > en2 ) {
-    crit <- 99999
-    print("energy_lvl_1 is bigger than energy_lvl 2, dropping simulation")
-    return(crit)
+  if ("enstart" %in% colnames(db)) { # if monkey variables are present (i.e. they didn't die)
+    
+    # for criteria:
+    # db[[1]][1]
+    
+    # en1 <- db %>% magrittr::extract("en1") %>%  unlist() %>% na.omit() %>% as.vector() %>%
+    en1 <- db %>% dplyr::select("enlvl1") %>%  unlist() %>% na.omit() %>% as.vector() %>%
+      normalize(min = energy_min, max = energy_max)
+    # en2 <- db %>% magrittr::extract("en2") %>%  unlist() %>% na.omit() %>% as.vector() %>%
+    en2 <- db %>% dplyr::select("enlvl2") %>%  unlist() %>% na.omit() %>% as.vector() %>%
+      normalize(min = energy_min, max = energy_max)
+    # # energy_level2 <- db %>% magrittr::extract2("energy_level_2") %>% magrittr::use_series(value) %>%  unlist() %>% as.vector()
+    # energy_obs <- 980
+    energy_obs <- db %>% dplyr::select("enstart") %>%  unlist() %>% na.omit() %>% as.vector()  %>%
+      normalize(min = energy_min, max = energy_max) # = start-energy. does it make sense to use the start value as 'observed' (we don't have this number estimated)
+    
+    # # for fitness:
+    # energy_obs <- db %>%  magrittr::extract("ens") %>% unlist() %>% as.vector() %>% 
+    #   normalize(min = energy_min, max = energy_max)
+    # energy <- db %>%  magrittr::extract("energy") %>% unlist() %>% na.omit() %>% as.vector() %>% 
+    energy <- db %>%  dplyr::select("energy") %>% unlist() %>% na.omit() %>% as.vector() %>% 
+      normalize(min = energy_min, max = energy_max)
+    
+    # KDE95 <- db %>%  magrittr::extract("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
+    KDE95 <- db %>%  dplyr::select("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
+      `/` (10000) %>%  #convert to hectares
+      normalize(min = KDE95_min, max = KDE95_max)
+    # KDE50 <- db %>%  magrittr::extract("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    KDE50 <- db %>%  dplyr::select("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+      `/` (10000) %>%  #convert to hectares
+      normalize(min = KDE50_min, max = KDE50_max)
+    
+    # visits <- db %>% magrittr::extract("n_visited_trees") %>% unlist() %>% unique() %>% as.vector() %>% 
+    visits <- db %>% dplyr::select("n_visited_trees") %>% unlist() %>% unique() %>% as.vector() %>% 
+      normalize(min = visits_min, max = visits_max)
+    
+    # p_feeding <- db %>%  magrittr::extract("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
+    p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
+      normalize(min = p_feeding_min, max = p_feeding_max)
+    # p_foraging <- db %>%  magrittr::extract("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    p_foraging <- db %>%  dplyr::select("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+      normalize(min = p_foraging_min, max = p_foraging_max)
+    # p_traveling <- db %>%  magrittr::extract("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+      normalize(min = p_traveling_min, max = p_traveling_max)
+    # p_resting <- db %>%  magrittr::extract("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+      normalize(min = p_resting_min, max = p_resting_max)
+    
+    # DPL_sd <- db$DPL_sd # check it
+    
+    # DPL_mean <- db$DPL_d
+    # DPL_mean <- DPL_mean %>%
+    #   str_replace_all(., c("\\[" = "", "\\]" = "")) %>%
+    #   str_split(pattern = "_") %>%  #, simplify = TRUE) %>%
+    #   purrr::map(as.numeric, na.rm = TRUE) %>% 
+    #   # purrr::map(round, 2) %>%
+    #   map_dbl(mean, na.rm=TRUE)
+    # db$DPL_mean <- DPL_mean
+    
+    DPL_mean <- db$DPL %>%  na.omit() %>% as.vector() %>% normalize(min = dpl_mean_min, max = dpl_mean_max)
+    DPL_sd <- db$DPL_sd %>% na.omit() %>% as.vector() %>%normalize(min = dpl_sd_min, max = dpl_sd_max)
+    MR_mean <- db$MR %>% na.omit() %>% as.vector() %>% normalize(min = mr_min, max = mr_max)
+    MR_sd <- db$MR_sd  %>% na.omit() %>% as.vector() %>% normalize(min = mr_sd_min, max = mr_sd_max)
+    PT_mean <- db$PT  %>% na.omit() %>% as.vector() %>% normalize(min = pt_min, max = pt_max)
+    PT_sd <- db$PT_sd  %>% na.omit() %>% as.vector() %>% normalize(min = pt_sd_min, max = pt_sd_max)
+    
+    
+    # Get observed values (normalized)
+    DPL_mean_obs <- values_ga_mv_summary %>% 
+      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::select(DPL_mean_obs)  %>% unlist() %>% as.vector() %>% 
+      normalize(min = dpl_mean_min, max = dpl_mean_max)
+    DPL_sd_obs <- values_ga_mv_summary %>% 
+      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::select(DPL_sd_obs)  %>% unlist() %>% as.vector() %>% 
+      normalize(min = dpl_sd_min, max = dpl_sd_max)
+    
+    MR_mean_obs <- values_ga_mv_summary %>% 
+      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::select(MR_mean_obs)  %>% unlist() %>% as.vector() %>% 
+      normalize(min = mr_min, max = mr_max)
+    MR_sd_obs <- values_ga_mv_summary %>% 
+      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::select(MR_sd_obs)  %>% unlist() %>% as.vector() %>% 
+      normalize(min = mr_sd_min, max = mr_sd_max)
+    
+    PT_mean_obs <- values_ga_mv_summary %>%
+      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::select(PT_mean_obs)  %>% unlist() %>% as.vector() %>% 
+      normalize(min = pt_min, max = pt_max)
+    PT_sd_obs <- values_ga_mv_summary %>% 
+      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::select(PT_sd_obs)  %>% unlist() %>% as.vector() %>% 
+      normalize(min = pt_sd_min, max = pt_sd_max)
+    
+    
+    # calc differences (or put all into a dataframe and use custom_fitness() function)
+    en <- abs(energy - energy_obs)
+    vi <- abs(visits - visits_obs)
+    hr95 <- abs(KDE95 - KDE95_obs)
+    hr50 <- abs(KDE50 - KDE50_obs)
+    dp <- abs(DPL_mean - DPL_mean_obs)
+    dpsd <- abs(DPL_sd - DPL_sd_obs)
+    mr <- abs(MR_mean - MR_obs)
+    mrsd <- abs(MR_sd - MR_sd_obs)
+    pt <- abs(PT_mean - PT_obs)
+    ptsd <- abs(PT_sd - PT_sd_obs)
+    pfee <- abs(p_feeding - p_feeding_obs)
+    pfor <- abs(p_foraging - p_foraging_obs)
+    ptra <- abs(p_traveling - p_traveling_obs)
+    pres <- abs(p_resting - p_resting_obs)
+    
+    # calc the fitness function
+    # more important ones:
+    w <- 1 # weight 
+    crit <- 
+      1/sum(vi) * w + 1/sum(hr95) * w + 1/sum(hr50) * w + 
+      1/sum(dp) * w + 1/sum(mr) * w + 1/sum(pt) * w +
+      1/sum(pfee) * w + 1/sum(pfor) * w + 1/sum(ptra) * w + 1/sum(pres) * w
+    # less important ones:
+    w <- 0.5
+    crit <- crit +
+      1/sum(en) * w + # energy varies too much (min = 0, max = 3000) and we can't parameterize it (yet)
+      1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd) # variation of the output variables is not as important as the variables
+    
+    # print(en1)
+    # print(en2)
+    
+    print(paste("Fitness value of run: ", crit))
+    # print(paste("energy_lvl_1", en1))
+    # print(paste("energy_lvl_2", en2))
+    
+    if ( en1 > en2 ) {
+      crit <- 99999
+      print("energy_lvl_1 is bigger than energy_lvl 2, dropping simulation")
+      return(crit)
+    } else {
+      return(crit)
+    }
+    
   } else {
+    crit <- 99999 # if monkeys died, the crit value is high and the run is dropped
+    print("tamarins died, dropping simulation")
+    deaths <- deaths + 1
     return(crit)
   }
   
@@ -599,7 +619,7 @@ critfun <- function(nl) {
 # Test the eval function:
 # # extract values from run from example objects for testing:
 # nl<- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
-#                      "v1.1_Taquara_Jan_simple1671135962_tempRDS.Rdata"))
+#                      "v1.1_Taquara_Jan_simple-188585647_tempRDS.Rdata"))
 # # # params_run <- nl.x %>% nlrx::report_model_parameters()
 # # critfun(nl.x)
 # db2 <- nlrx::getexp(nl.x, "variables")
@@ -621,10 +641,10 @@ critfun <- function(nl) {
 nl@simdesign <- simdesign_GenAlg(nl, 
                                 evalcrit = critfun, # 1, # "e.g. 1 would use the first defined metric of the experiment to evaluate each iteration)"
                                 
-                                popSize = 10, # or chromosomes
-                                iters = 5,
+                                popSize = 100, # or chromosomes
+                                iters = 50,
                                 elitism = 2, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
-                                mutationChance = 0.01,
+                                mutationChance = 0.1,
                                 nseeds = 1
                                 )
 
@@ -650,8 +670,8 @@ tictoc::toc()
 # 00_rep-ga_resuls results
 cat(summary(results))
 
-saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results_test.rds")))
-# save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment_test.RData'))
+saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds")))
+# save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment.RData'))
 
 # setsim(nl, "simoutput") <- tibble::enframe(results)
 # saveRDS(nl, file.path(nl@experiment@outpath, paste0(expname, ".rds")))
@@ -660,7 +680,7 @@ saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results_test
 
 ## --- ##
 # ?genalg::rbga
-resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_test.rds"))
+resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
 cat(summary(resultsrbga))
 # summary.rbga(resultsrbga)
 # plot(resultsrbga, type = "vars")

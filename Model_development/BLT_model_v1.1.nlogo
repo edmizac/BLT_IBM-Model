@@ -2789,11 +2789,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-627
-430
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2803,10 +2803,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--101
-101
--68
-68
+-129
+129
+-93
+93
 0
 0
 1
@@ -3001,7 +3001,7 @@ INPUTBOX
 601
 82
 no_days
-4.0
+6.0
 1
 0
 Number
@@ -3015,7 +3015,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-30.0
+38.0
 1
 1
 NIL
@@ -3030,7 +3030,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--20.0
+-9.0
 1
 1
 NIL
@@ -3113,7 +3113,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-3
+1
 
 CHOOSER
 984
@@ -3545,7 +3545,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.59
+0.21
 0.05
 1
 NIL
@@ -3912,7 +3912,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-1
+2
 
 BUTTON
 247
@@ -4043,7 +4043,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-89.73
+43.02
 5
 1
 NIL
@@ -4058,7 +4058,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.6949999999999998
+3.089
 0.1
 1
 NIL
@@ -4073,7 +4073,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.2369999999999997
+3.931
 0.1
 1
 NIL
@@ -4088,7 +4088,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-68.99
+17.85
 1
 1
 NIL

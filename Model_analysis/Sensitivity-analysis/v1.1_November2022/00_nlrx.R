@@ -161,6 +161,10 @@ nl@experiment <- experiment(expname = expname,
                             ),
                             metrics.turtles = list(
                               "monkeys" = c(
+                                "enstart",
+                                "enlvl1",
+                                "enlvl2",
+                                
                                 "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
                                 "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
                                 "DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
@@ -185,30 +189,31 @@ nl@experiment <- experiment(expname = expname,
                                 "PT_sd"
                                 # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                                 # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
-                              ),
-                              
-                              "feeding-trees" = c(
-                                "x_UTM", "y_UTM",
-                                "species",
-                                "id-tree",
-                                "visitations"
-                              ),
-                              
-                              "sleeping-trees" = c(
-                                "x_UTM", "y_UTM",
-                                "species",
-                                "id-tree",
-                                "visitations"
-                              ),
-                              
-                              "seeds" = c(
-                                "SDD", 
-                                "x_UTM", "y_UTM",
-                                "id-seed", 
-                                "species", 
-                                "mother-tree", 
-                                "disp-day"
                               )
+                              #,
+                              # 
+                              # "feeding-trees" = c(
+                              #   "x_UTM", "y_UTM",
+                              #   "species",
+                              #   "id-tree",
+                              #   "visitations"
+                              # ),
+                              # 
+                              # "sleeping-trees" = c(
+                              #   "x_UTM", "y_UTM",
+                              #   "species",
+                              #   "id-tree",
+                              #   "visitations"
+                              # ),
+                              # 
+                              # "seeds" = c(
+                              #   "SDD", 
+                              #   "x_UTM", "y_UTM",
+                              #   "id-seed", 
+                              #   "species", 
+                              #   "mother-tree", 
+                              #   "disp-day"
+                              # )
                               
                               # , "steps-moved"
                               
