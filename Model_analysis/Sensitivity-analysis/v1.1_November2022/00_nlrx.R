@@ -79,6 +79,14 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
   outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp")
+  user_scp = "\"Eduardo\""
+}
+if(Sys.info()[["nodename"]] == "PC9") { # LEEC
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp")
+  Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
+  user_scp = "\"LEEC\""
 }
 
 
@@ -248,7 +256,7 @@ nl@experiment <- experiment(expname = expname,
                               ### "true" for output related stuff
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
-                              "USER" = "\"Eduardo\"",
+                              "USER" = user_scp,
                               'feedingbout-on?' = feedingbout,
                               "step-model-param?" = step_model_param,
                               "gtt-param?"= gtt_param,
@@ -301,7 +309,7 @@ nl@experiment <- experiment(expname = expname,
 
 
 
-  nseeds <- 10 # repetitions (ideally n = 30)
+  nseeds <- 1 # repetitions (ideally n = 30)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)

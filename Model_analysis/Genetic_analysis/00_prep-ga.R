@@ -58,6 +58,14 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
   outpath <- here("Model_analysis", "Genetic_analysis", "temp")
+  user_scp = "\"Eduardo\""
+}
+if(Sys.info()[["nodename"]] == "PC9") { # LEEC
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp")
+  Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
+  user_scp = "\"LEEC\""
 }
 
 
@@ -384,7 +392,7 @@ nl@experiment <- experiment(expname = expname,
                             
                             constants = list(
                               
-                              "USER" = "\"Eduardo\"",
+                              "USER" = user_scp, # "\"Eduardo\"",
                               'feedingbout-on?' = feedingbout,        # uses empirical values of time spent feeding on each tree species or a random one
                               "step-model-param?" = step_model_param, # uses observed mean step length and 75q turning angles
                               "gtt-param?"= gtt_param,                # uses mean + sd of GTT for seed dispersal
