@@ -1744,67 +1744,80 @@ to search-feeding-tree
 
 
   if feedingbout-on? [
-    ;; TREE ENERGY VARIABLE WAS DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION
-    if tree_target_species = "annona" [
-      set species_time 1
-;      set energy_species 5
-    ]
-    if tree_target_species = "Celtis iguanaea" [
-      set species_time 4
-;      set energy_species 2
-    ]
-    if tree_target_species = "Cissus sulcicaulis" [
-      set species_time 1
-;      set energy_species 4
-    ]
-    if tree_target_species = "cordia" [ ; check if this species occurs in the input of trees
-      set species_time 4
-;      set energy_species 4
-    ]
-    if tree_target_species = "Dyospiros inconstans" [
-      set species_time 1
-;      set energy_species 3
-    ]
-    if tree_target_species = "ficus" [ ; check if this species occurs in the input of trees
-      set species_time 4
-;      set energy_species 2
-    ]
-    if tree_target_species = "Pereskia aculeata" [
-      set species_time 2
-;      set energy_species 5
-    ]
-    if tree_target_species = "Rhipsalis cereuscula" [
-      set species_time 2
-;      set energy_species 1
-    ]
-    if tree_target_species = "Syagrus romanzoffiana" [
-      set species_time 2
-;      set energy_species 3
-    ]
-    if tree_target_species = "rhamnidium" [ ; check if this species occurs in the input of trees
-      set species_time 1
-;      set energy_species 4
-    ]
-    if tree_target_species = "unknown" [  ; I don't know to which trees in Felipe dataset this one referes to so I didn't change the values
-      set species_time 3
-;      set energy_species 1
-    ]
-    if tree_target_species = "claussenii" [  ; This one either
-      set species_time 3
-;      set energy_species 1
-    ]
-    if tree_target_species = "Eugenia sp" [
-      set species_time 3
-;      set energy_species 3
-    ]
-    if tree_target_species = "sp_five" [     ; This one either
-      set species_time 3
-;      set energy_species 2
-    ]
-    if tree_target_species = "NA" [     ; This one either
-      set species_time 2
-      ;      set energy_species 2
-    ]
+    ;; TREE ENERGY VARIABLE WAS DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION (use 'check tree species' button to correct string names)
+    ;; ***OBS: species_time is multiplied by two in the feeding procedure ('ifelse random (2 * species_time ) > frugivory-time'), so the following variables are HALVED
+
+;    if study_area = "Guareí" [
+      set species_time 1 ; 'mode' value for Guareí (for NA species or species not specified below)
+
+;      if tree_target_species = "Annona emarginata" [
+;        set species_time 1
+;        set energy_species 5
+;      ]
+      if tree_target_species = "Celtis iguanaea" [
+        set species_time 4
+        ;      set energy_species 2
+      ]
+      if tree_target_species = "Cissus sulcicaulis" [
+        set species_time 1
+        ;      set energy_species 4
+      ]
+      if tree_target_species = "Cordia ecalyculata" [ ; check if this species occurs in the input of trees
+        set species_time 4
+        ;      set energy_species 4
+      ]
+      if tree_target_species = "Dyospiros inconstans" [ ; only one tree in May (Guareí)
+        set species_time 1
+        ;      set energy_species 3
+      ]
+      if tree_target_species = "ficus" [ ; check if this species occurs in the input of trees
+        set species_time 5  ; very variable time
+        ;      set energy_species 2
+      ]
+      if tree_target_species = "Pereskia aculeata" [
+        set species_time 1
+        ;      set energy_species 5
+      ]
+      if tree_target_species = "Rhipsalis cereuscula" [
+        set species_time 2
+        ;      set energy_species 1
+      ]
+      if tree_target_species = "Syagrus romanzoffiana" [
+        set species_time 2
+        ;      set energy_species 3
+      ]
+;      if tree_target_species = "rhamnidium" [ ; check if this species occurs in the input of trees
+;        set species_time 1
+;        ;      set energy_species 4
+;      ]
+;      if tree_target_species = "unknown" [  ; I don't know to which trees in Felipe dataset this one referes to so I didn't change the values
+;        set species_time 3
+;        ;      set energy_species 1
+;      ]
+;      if tree_target_species = "claussenii" [  ; This one either
+;        set species_time 3
+;        ;      set energy_species 1
+;      ]
+      if tree_target_species = "Eugenia sp." [
+        set species_time 6
+        ;      set energy_species 3
+      ]
+;      if tree_target_species = "sp_five" [     ; This one either
+;        set species_time 3
+;        ;      set energy_species 2
+;      ]
+;      if tree_target_species = "NA" [     ; This one either
+;        set species_time 2
+;        ;      set energy_species 2
+;      ]
+
+;    ]
+
+;    if study_area = "Taquara" [
+;         set species_time 2 ; 'mode' value for Taquara (for NA species or species not specified below)
+;    ]
+
+
   ]
 end
 
@@ -2789,11 +2802,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+501
+406
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2803,10 +2816,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -2933,7 +2946,7 @@ BUTTON
 630
 221
 STEP
-step
+step\n\nask monkeys[ print species_time ]
 NIL
 1
 T
@@ -3113,7 +3126,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+7
 
 CHOOSER
 984
@@ -3180,7 +3193,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-16.0
+13.0
 1
 1
 NIL
@@ -3545,7 +3558,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.54
 0.05
 1
 NIL
@@ -3912,7 +3925,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 247
@@ -4043,7 +4056,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+75.66
 5
 1
 NIL
@@ -4058,7 +4071,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.293
 0.1
 1
 NIL
@@ -4073,7 +4086,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.52
 0.1
 1
 NIL
@@ -4088,7 +4101,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+72.75
 1
 1
 NIL
@@ -4103,7 +4116,7 @@ species_time
 species_time
 1
 20
-2.0
+4.0
 1
 1
 NIL
