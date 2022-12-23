@@ -79,8 +79,8 @@ nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
 
 # Decide which area/month to run the sensitivity on:
-area_run <- "Taquara"
-month_run <- "Jan"
+area_run <- "Guareí" #"Taquara"
+month_run <- "Jun"  # because this months has the greates diversity of consumed feeding trees (n = 6) "Jan"
 
 
 # Define feedinbout chooser to iterate through
@@ -140,7 +140,10 @@ nl@experiment <- experiment(expname = expname,
                             metrics = c(
                               # "count feeding-trees with [visitations > 0] / count feeding trees" # the best set of parameters should make tamarins visit all the observed trees in the period
                               # "count feeding-trees"
-                              "p-visited-trees"
+                              "p-visited-trees",
+                              "R_seeds",
+                              "R_seeds_p",
+                              "NN_seeds"
                             ),
                             metrics.turtles = list(
                               
@@ -184,15 +187,15 @@ nl@experiment <- experiment(expname = expname,
                               ### DO NOT SPECIFY STEPS FOR GA:
                               
                               # energy
-                              "energy-from-fruits" = list(min=1, max = 300),
-                              'energy-from-prey' = list(min=1, max=300),
-                              "energy-loss-traveling" = list(min=-100, max = -1), #, step = 2
-                              "energy-loss-foraging" = list(min=-100, max = -1),
-                              "energy-loss-resting" = list(min=-100, max = -1),
+                              "energy-from-fruits" = list(min=1, max = 300, qfun="qunif"),
+                              'energy-from-prey' = list(min=1, max=300, qfun="qunif"),
+                              "energy-loss-traveling" = list(min=-100, max = -1, qfun="qunif"), #, step = 2
+                              "energy-loss-foraging" = list(min=-100, max = -1, qfun="qunif"),
+                              "energy-loss-resting" = list(min=-100, max = -1, qfun="qunif"),
                               
-                              # "start-energy" = list(min=100, max=2000),
-                              "energy_level_1" = list(min=100, max=2000),
-                              "energy_level_2" = list(min=100, max=2000),
+                              "start-energy" = list(min=100, max=2000, qfun="qunif"),
+                              "energy_level_1" = list(min=100, max=2000, qfun="qunif"),
+                              "energy_level_2" = list(min=100, max=2000, qfun="qunif"),
                               
                               
                               # 4. Movement
@@ -204,13 +207,15 @@ nl@experiment <- experiment(expname = expname,
                               # "p_foraging_while_traveling" = list(min= 0, max= 1) # only when p-forage-param? = 'false'
                               
                               # memory
-                              "step_forget" = list(min=3, max = 150),
+                              "step_forget" = list(min=3, max = 150, qfun="qunif"),
                               # "visual" = list(min=0, max = 3),
-                              'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
+                              'prop_trees_to_reset_memory' = list(min=2, max=5, qfun="qunif"),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                               
                               # 5. Feeding bout (only when "feedingbout-on?" = 'false')
-                              'species_time' = list(min = 1, max = 10), #
-                              'duration' = list(min = 1, max = 10)      #
+                              'species_time' = if (feedingbout == "false") {
+                                list(min = 1, max = 10, qfun="qunif")
+                                }, #
+                              'duration' = list(min = 1, max = 10, qfun="qunif")      #
                               
                               # 6. Seed dispersal
                               # "gut_transit_time_val" = 15,    # this won't be optimized as it is an emerging pattern
@@ -265,4 +270,96 @@ nl@experiment <- experiment(expname = expname,
                             )
 )
 
+# Step 3: Attach a simulation design.
+# install.packages("morris")
+# library("morris")
+
+nseeds <- 4 # (= num cores)
+
+nl@simdesign <- simdesign_morris(nl = nl,
+                                 morristype = "oat",
+                                 morrislevels = 8, # sets the number of different values for each parameter (sampling density)
+                                 morrisr = 10, # sets the number of repeated samplings (sampling size)
+                                 morrisgridjump = 4, # sets the number of levels that are increased/decreased for computing the elementary effects. . Morris recommendation is to set this value to levels / 2.
+                                 nseeds = nseeds)
+
+
+# More information on the Morris specific parameters can be found in the description of the morris function in the sensitivity package (?morris).
+# ?morris
+report_model_parameters(nl)
+
+# Save nl for consulting parameters afterwards:
+saveRDS(nl, file.path(nl@experiment@outpath, paste0(expname, "_nl.rds")))
+# readRDS(file.path(nl@experiment@outpath, paste0(expname, "_nl.rds")))
+
+# Step 4: Run simulations
+# Evaluate nl object:
+eval_variables_constants(nl)
+
+print(nl)
+
+# Run all simulations (loop over all siminputrows and simseeds)
+
+library(future)
+library(tictoc)
+
+# plan(multisession)
+## plan(list(sequential, multiseprocess))
+## plan(list(sequential, multisession))
+plan(list(sequential, multicore))
+# split_param <- min(nrow(nl@simdesign@siminput), ((ncores - 2)/nseeds))
+tictoc::tic()
+progressr::handlers("progress")
+results %<-% progressr::with_progress(
+  run_nl_all(nl = nl
+             , split = 4)
+)
+tictoc::toc()
+print("================ Finished! =========================")
+results$USER <- NULL
+# results$'feeding-trees-scenario' <- NULL
+results$'start-energy' <- NULL
+results$energy_level_1  <- NULL
+results$energy_level_2 <- NULL
+results$'energy-from-fruits' <- NULL
+results$'energy-from-prey' <- NULL
+results$'energy-loss-traveling' <- NULL
+results$'energy-loss-foraging' <- NULL
+results$'energy-loss-resting' <- NULL
+# results$gut_transit_time_val <- NULL
+# results$n_seeds_hatched <- NULL
+
+### movement
+# results$travel_speed_val <- NULL
+
+### others
+# results$'simulation-time' <- NULL 
+
+# Step 5: Attach results to nl and run analysis In order to run the
+# analyze_nl function, the simulation output has to be attached to the
+# nl object first. The simdesign class within the nl object provides a
+# slot for attaching output results (simoutput). An output results
+# tibble can be attached to this slot by using the simdesign setter
+# function setsim(nl, "simoutput"). After attaching the simulation
+# results, these can also be written to the defined outpath of the
+# experiment object.  Attach results to nl object:
+setsim(nl, "simoutput") <- results
+
+print(nl)
+
+# print("================== save nl! ==========================")
+# save(nl, file = paste0(nl@experiment@outpath, "/"
+#      , "nl_object_2022-07-20_phenology-off.RData"))
+# saveRDS(nl, file.path(paste0(nl@experiment@outpath, "/"
+#                              , "morris_2022-07-20_phenology-"
+#                              , if(feedingbout) {"on"} else {"off"}
+#                              , ".rds")))
+print("================ save unnest =========================")
+results_unnest <- unnest_simoutput(nl)
+save(results_unnest,file = paste0(nl@experiment@outpath, "/"
+                               , "results_unnest_2022-07-20_phenology-"
+                               , if(feedingbout) {"on"} else {"off"}
+                               , ".RData"))
+
+morris <- analyze_nl(nl)
 
