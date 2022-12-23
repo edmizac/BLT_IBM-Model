@@ -45,14 +45,14 @@ if(Sys.getenv("JAVA_HOME") == "") {
 if(Sys.info()[["nodename"]] == "simul02") {
   netlogopath <- file.path("/home/rbialozyt/Software/NetLogo 6.2.0")
   modelpath <- "/home/rbialozyt/BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo"
-  outpath <- "/home/rbialozyt/BLT_IBM-Model/Model_analysis/Sensitivity-analysis"
+  outpath <- "/home/rbialozyt/BLT_IBM-Model/Model_analysis/Genetic_analysis/temp"
 }
 if(Sys.info()[["nodename"]] == "PC146") {
   netlogopath <- file.path("/opt/netlogo_620")
   modelpath <- paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
                       , "BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo")
   outpath <-  paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
-                     , "BLT_IBM-Model/Model_analysis/Sensitivity-analysis")
+                     , "BLT_IBM-Model/Model_analysis/Genetic_analysis/temp")
 }
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
@@ -63,7 +63,7 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp")
+  outpath <- here("Model_analysis", "Genetic_analysis", "temp")
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
   user_scp = "\"LEEC\""
 }
@@ -377,7 +377,7 @@ nl@experiment <- experiment(expname = expname,
                               # "p_foraging_while_traveling" = list(min= 0, max= 1) # only when p-forage-param? = 'false'
                               
                               # memory
-                              "step_forget" = list(min=3, max = 150)
+                              "step_forget" = list(min=3, max = 150),
                               # "visual" = list(min=0, max = 3),
                               'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                               
@@ -649,10 +649,10 @@ critfun <- function(nl) {
 nl@simdesign <- simdesign_GenAlg(nl, 
                                 evalcrit = critfun, # 1, # "e.g. 1 would use the first defined metric of the experiment to evaluate each iteration)"
                                 
-                                popSize = 100, # or chromosomes
-                                iters = 50,
+                                popSize = 100, # or chromosomes; Ronald used 100; suggestion: population_size > num_genes^2 (https://stackoverflow.com/questions/7559274/prevent-inbreeding-and-monoculture-in-genetic-algorithm-newbie-question/7609715#7609715)
+                                iters = 50,  # Ronald used 250
                                 elitism = 2, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
-                                mutationChance = 0.1,
+                                mutationChance = 0.1, # Ronald uses 0.01
                                 nseeds = 1
                                 )
 
