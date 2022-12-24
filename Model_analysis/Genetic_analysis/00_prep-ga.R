@@ -678,6 +678,7 @@ tictoc::toc()
 # 00_rep-ga_resuls results
 cat(summary(results))
 
+saveRDS(nl, file.path(nl@experiment@outpath, paste0(expname, "_nl.rds")))
 saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds")))
 # save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment.RData'))
 
@@ -688,11 +689,54 @@ saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds"
 
 ## --- ##
 # ?genalg::rbga
+nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl.rds"))
 resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
 cat(summary(resultsrbga))
-# summary.rbga(resultsrbga)
-# plot(resultsrbga, type = "vars")
-# plot(resultsrbga, type = "hist")
-# 
-# 
-# summary(rbga.results)
+
+summary(resultsrbga)
+
+par(mar = c(1, 1, 1, 1))
+plot(resultsrbga, type = "vars")
+plot(resultsrbga, type = "hist")
+
+eval <- resultsrbga$evaluations
+popSize <- 1:resultsrbga$popSize
+best <- resultsrbga$best
+bestn <- length(best)
+
+dfga <- data.frame(evaluations = eval,
+                   popSize = popSize,
+                   best = best)
+
+library(ggplot2)
+dfga %>% 
+  ggplot() +
+  geom_density(
+    # aes(x = evaluations)
+    aes(x = best)
+  )
+
+# Animation plot (didn't work). Based on https://www.r-bloggers.com/2012/08/genetic-algorithms-a-simple-r-example/
+animate_plot <- function(x) {
+  for (i in seq(1, bestn)) {
+    temp <- data.frame(Generation = c(seq(1, i), seq(1, i)), 
+                       Variable = c(rep("mean", i), rep("best", i)), 
+                       Survivalpoints = c(-resultsrbga$mean[1:i], -resultsrbga$best[1:i])
+    )
+  }
+  
+  pl <- ggplot(dat= temp, 
+               aes(x = Generation, y = Survivalpoints, group = Variable,
+                   colour = Variable)
+  ) + 
+    geom_line() + 
+    scale_x_continuous(limits = c(0, bestn)) + 
+    scale_y_continuous(limits = c(0, 110)) #+ 
+  # geom_hline(y = max(temp$Survivalpoints), 
+  #            opts(title = "Evolution Knapsack optimization model")
+  #            print(pl)
+  
+}
+# in order to save the animation
+# library(animation)
+# saveGIF(animate_plot(), interval = 0.1, outdir = outpath)
