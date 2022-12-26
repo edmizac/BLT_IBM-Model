@@ -688,12 +688,47 @@ saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds"
 
 
 ## --- ##
-# ?genalg::rbga
+# nl <- readRDS(paste0(outpath, "/GA_Guareí_Jul_nl.rds"))
+# resultsrbga <- readRDS(paste0(outpath, "/GA_Guareí_Jul_results.rds"))
 nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl.rds"))
 resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
+
+resultsrbga <- results
 cat(summary(resultsrbga))
 
-summary(resultsrbga)
+
+min_param <- resultsrbga[2] # parameters min
+max_param <- resultsrbga[3] # parameters max
+resultsrbga[4] # popSize
+resultsrbga[5] # iter
+# population <- resultsrbga[7] %>% unlist(recursive = FALSE) # population
+population <- resultsrbga[7] %>% purrr::map_df(., ~as.data.frame(.))
+colnames(population) <- names(min_param)
+fitness <- resultsrbga[10] %>% unlist() # evaluations
+best_results <- resultsrbga[11] %>% unlist() # best
+
+min_param <- min_param %>% unlist()
+# min_param %>% class()
+max_param <- max_param %>% unlist()
+
+ga_input <- data.frame(
+  min = min_param,
+  max = max_param
+)
+
+best <- best_results %>% unlist() %>% min()
+# best %>% class()
+# best_results %>% class()
+
+idx <- match(best, best_results)
+# best %in% best_results
+# best_results %in% best
+
+optimized_param <- population[idx, ]
+
+# Save optimized
+optimized_param %>% write.csv(paste0(outpath, "/", expname, "_optimized.csv"))
+
 
 par(mar = c(1, 1, 1, 1))
 plot(resultsrbga, type = "vars")

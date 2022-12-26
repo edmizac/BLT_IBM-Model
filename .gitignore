@@ -54,11 +54,11 @@
 /Model_analysis/Sensitivity-analysis/v1.1_December2022/**.png
 
 
-/Model_analysis/Genetic-analysis/**.csv
-/Model_analysis/Genetic-analysis/**.png
-/Model_analysis/Genetic-analysis/**.rds
-/Model_analysis/Genetic-analysis/**.RData
-/Model_analysis/Genetic-analysis/temp/
+/Model_analysis/Genetic_analysis/temp/**.csv
+/Model_analysis/Genetic_analysis/temp/**.png
+/Model_analysis/Genetic_analysis/temp/**.rds
+/Model_analysis/Genetic_analysis/temp/**.RData
+/Model_analysis/Genetic_analysis/temp/
 
 
 
