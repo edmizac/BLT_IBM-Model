@@ -149,21 +149,40 @@ c <- c %>%
     species = forcats::fct_reorder(species, richness, .desc = TRUE)
   )
 
-d$species %>% unique()
+c$species %>% unique()
+
+
+c <- c %>% 
+  mutate(
+    feedingbout_dur_timestep = feedingbout_dur / 5 #convert to timesteps
+  )
 
 # cel.igu <- c %>% 
 #   dplyr::filter(species == "Celtis iguanaea")
+
+# # Write csv
+# c %>%
+#   write.csv(here("Data", "Movement", "Curated", "Param_siminputrow", "Siminputrow_feedingbout-data.csv"),
+#             row.names = FALSE)
 
 d <- c %>% 
   # group_by(group, month, species) %>%
   group_by(group, species) %>%
   summarise(
-    mean = mean(feedingbout_dur, na.rm = TRUE),
-    sd = sd(feedingbout_dur, na.rm = TRUE),
-    sqrt = sqrt(length(feedingbout_dur)),
-    error = sd / sqrt
+    mean_min = mean(feedingbout_dur, na.rm = TRUE),
+    sd_min = sd(feedingbout_dur, na.rm = TRUE),
+    sqrt_min = sqrt(length(feedingbout_dur)),
+    error_min = sd_min / sqrt_min,
+    mean_timestep = mean(feedingbout_dur_timestep, na.rm = TRUE),
+    sd_timestep = sd(feedingbout_dur_timestep, na.rm = TRUE),
+    
   ) %>% 
   ungroup()
+
+# # Write csv
+# d %>%
+#   write.csv(here("Data", "Movement", "Curated", "Param_siminputrow", "Siminputrow_feedingbout-summary.csv"),
+#             row.names = FALSE)
 
 
 # Option 1: with errorbars

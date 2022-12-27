@@ -16,7 +16,9 @@ turtles-own [
 
 ; trees
 breed [feeding-trees feeding-tree]
-feeding-trees-own [ species id-tree visitations dist-to-homerange-center] ; feeding trees have species and id code and a visited counter
+feeding-trees-own [
+  species id-tree visitations dist-to-homerange-center ; feeding trees have species and id code and a visited counter
+]
 
 breed [sleeping-trees sleeping-tree]
 sleeping-trees-own [ species id-tree visitations ]
@@ -152,6 +154,8 @@ globals [
   position-all-trees-x-list
   position-all-trees-y-list
 
+  species_time ; how long the tamarin feeds on the tree species
+  energy_species ; value of energy they get from feeding of each tree species
 
   ;; INPUT ;;
   ;gis;
@@ -172,8 +176,7 @@ globals [
   ;param values;
 ;  gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
 ;  travel_speed ; global speed for travel
-;  species_time ; how long the tamarin feeds on the tree species
-  energy_species ; value of energy they get from feeding of each species
+
 
   ;; OUTPUT ;;
   local-path  ; path for the model to run in different CPUs
@@ -813,9 +816,9 @@ to go
       calc-movement-metrics
       output-print "calculating movement metrics finished"
 
-;      output-print "calculating R index for seeds"
-;      calc-seed-aggregation
-;      output-print "calculating R index for seeds finished"
+      output-print "calculating R index for seeds"
+      calc-seed-aggregation
+      output-print "calculating R index for seeds finished"
 
       stop
     ]
@@ -1250,7 +1253,8 @@ to frugivory
   if travel_mode = "short_distance" [   ;; short distance frugivory
     set travelmodelist lput 1 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
-      ifelse random (2 * species_time ) > frugivory-time [
+      ifelse species_time > frugivory-time [
+;      ifelse random (2 * species_time ) > frugivory-time [
 ;        print "I'm feeding!" ; for debugging
         feeding
       ][
@@ -1267,7 +1271,8 @@ to frugivory
   if travel_mode = "long_distance" [    ;; long distance frugivory
     set travelmodelist lput 2 travelmodelist ; to the travel mode histogram
     ifelse on-feeding-tree? [
-      ifelse random (2 * species_time ) > frugivory-time [
+      ifelse species_time > frugivory-time [
+;      ifelse random (2 * species_time ) > frugivory-time [
 ;        print "I'm feeding!" ; for debugging
         feeding
       ][
@@ -1544,9 +1549,9 @@ to to-feeding-tree
       ask tree_target [ set visitations visitations + 1 ]
       set tree_target -1
       ifelse feedingbout-on?
-      [ set species_time [ species_time ] of tree_current ]
+      [ set species_time [ species_time ] of tree_current ] ; Dec 2022: this procedure is wrong because species_time is a global
       ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
-      [ set species_time 2 ]
+      [ set species_time species_time_val ]
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
@@ -1629,9 +1634,9 @@ to to-feeding-tree
       ask ld_tree_target [ set visitations visitations + 1 ]
       set ld_tree_target -1
       ifelse feedingbout-on?
-      [ set species_time [ species_time ] of tree_current ]
+      [ set species_time [ species_time ] of tree_current ] ;Dec 2022: this procedure is wrong because species_time is a global
       ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
-      [ set species_time 2 ]
+      [ set species_time species_time_val ]
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
@@ -1701,6 +1706,7 @@ end
 
 to search-feeding-tree
 
+   print "SEARCHING FEEDING TREE"
 
   ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
@@ -1745,78 +1751,240 @@ to search-feeding-tree
 
   if feedingbout-on? [
     ;; TREE ENERGY VARIABLE WAS DERIVED BY ECKHARD AND MAYARA; SPECIES-TIME EMPIRICAL BASED ON FELIPE BUFALO DISSERTATION (use 'check tree species' button to correct string names)
-    ;; ***OBS: species_time is multiplied by two in the feeding procedure ('ifelse random (2 * species_time ) > frugivory-time'), so the following variables are HALVED
+    ;; ***OBS: species_time was multiplied by two in the feeding procedure on the previous version ('ifelse random (2 * species_time ) > frugivory-time'), so the following parameters were HALVED
+    ;; Now (Dec 2022) these are not multiplied by 2
 
-;    if study_area = "Guareí" [
-      set species_time 1 ; 'mode' value for Guareí (for NA species or species not specified below)
+    set species_time 0
+    while [species_time <= 0] [ ; the random-normal can return negative values
 
-;      if tree_target_species = "Annona emarginata" [
-;        set species_time 1
-;        set energy_species 5
-;      ]
-      if tree_target_species = "Celtis iguanaea" [
-        set species_time 4
-        ;      set energy_species 2
-      ]
-      if tree_target_species = "Cissus sulcicaulis" [
-        set species_time 1
-        ;      set energy_species 4
-      ]
-      if tree_target_species = "Cordia ecalyculata" [ ; check if this species occurs in the input of trees
-        set species_time 4
-        ;      set energy_species 4
-      ]
-      if tree_target_species = "Dyospiros inconstans" [ ; only one tree in May (Guareí)
-        set species_time 1
-        ;      set energy_species 3
-      ]
-      if tree_target_species = "ficus" [ ; check if this species occurs in the input of trees
-        set species_time 5  ; very variable time
-        ;      set energy_species 2
+      if study_area = "Guareí" [
+        set species_time round ( random-normal 1.5 0.71 ) ; mean sd values for Guareí (for NA species or species not specified below)
+
+        ;      if tree_target_species = "Annona emarginata" [
+        ;        set species_time 1
+        ;        set energy_species 5
+        ;      ]
+        if tree_target_species = "Celtis iguanaea" [
+          set species_time round ( random-normal 2.4 4.57 )
+                                                     ;      set energy_species 2
+        ]
+        if tree_target_species = "Cissus sulcicaulis" [
+          set species_time 1                         ; no sd (few observations)
+                                                     ;      set energy_species 4
+        ]
+        if tree_target_species = "Cordia ecalyculata" [ ; check if this species occurs in the input of trees
+          set species_time 4
+          ;      set energy_species 4
+        ]
+        if tree_target_species = "Dyospiros inconstans" [ ; only one tree in May (Guareí)
+          set species_time 2                         ; no sd (few observations)
+                                                     ;      set energy_species 3
+        ]
+        ;      if tree_target_species = "ficus" [ ; check if this species occurs in the input of trees
+        ;        set species_time 5  ; very variable time
+        ;        ;      set energy_species 2
       ]
       if tree_target_species = "Pereskia aculeata" [
-        set species_time 1
+        set species_time round ( random-normal 2.71 1.81 )
         ;      set energy_species 5
       ]
       if tree_target_species = "Rhipsalis cereuscula" [
-        set species_time 2
-        ;      set energy_species 1
+        set species_time 3                         ; no sd (few observations)
+                                                   ;      set energy_species 1
       ]
       if tree_target_species = "Syagrus romanzoffiana" [
-        set species_time 2
+        set species_time round ( random-normal 2.87 1.60 )
         ;      set energy_species 3
       ]
-;      if tree_target_species = "rhamnidium" [ ; check if this species occurs in the input of trees
-;        set species_time 1
-;        ;      set energy_species 4
-;      ]
-;      if tree_target_species = "unknown" [  ; I don't know to which trees in Felipe dataset this one referes to so I didn't change the values
-;        set species_time 3
-;        ;      set energy_species 1
-;      ]
-;      if tree_target_species = "claussenii" [  ; This one either
-;        set species_time 3
-;        ;      set energy_species 1
-;      ]
+      ;      if tree_target_species = "rhamnidium" [ ; check if this species occurs in the input of trees
+      ;        set species_time 1
+      ;        ;      set energy_species 4
+      ;      ]
+      ;      if tree_target_species = "unknown" [  ; I don't know to which trees in Felipe dataset this one referes to so I didn't change the values
+      ;        set species_time 3
+      ;        ;      set energy_species 1
+      ;      ]
+      ;      if tree_target_species = "claussenii" [  ; This one either
+      ;        set species_time 3
+      ;        ;      set energy_species 1
+      ;      ]
       if tree_target_species = "Eugenia sp." [
-        set species_time 6
+        set species_time round ( random-normal 4 2.83 )
         ;      set energy_species 3
       ]
-;      if tree_target_species = "sp_five" [     ; This one either
-;        set species_time 3
-;        ;      set energy_species 2
-;      ]
-;      if tree_target_species = "NA" [     ; This one either
-;        set species_time 2
-;        ;      set energy_species 2
-;      ]
+      ;      if tree_target_species = "sp_five" [     ; This one either
+      ;        set species_time 3
+      ;        ;      set energy_species 2
+      ;      ]
+      ;      if tree_target_species = "NA" [     ; This one either
+      ;        set species_time 2
+      ;        ;      set energy_species 2
+      ;      ]
 
-;    ]
+      ;    ]
 
-;    if study_area = "Taquara" [
-;         set species_time 2 ; 'mode' value for Taquara (for NA species or species not specified below)
-;    ]
+      if study_area = "SantaMaria" [
+        set species_time round ( random-normal 2.83 2.55 ) ; mean sd values for SantaMaria (for NA species or species not specified below)
+      ]
 
+      if tree_target_species = "Myrcia splendens" [
+        set species_time round ( random-normal 4.5 2.08 )
+        ;        set energy_species 5
+      ]
+
+      if tree_target_species = "Phoradendron quadrangulare" [
+        set species_time round ( random-normal 3.0 1.83 )
+        ;        set energy_species 5
+      ]
+
+      if tree_target_species = "Celtis fluminensis" [
+        set species_time round ( random-normal 2.66 2.21 )
+        ;        set energy_species 5
+      ]
+
+      if tree_target_species = "Eugenia aff. ramboi" [
+        set species_time round ( random-normal 1.65 1.27 )
+        ;        set energy_species 5
+      ]
+
+
+      if study_area = "Taquara" [
+        set species_time random-normal 2.5 0.61 ; average of mean and sd values for SantaMaria (for NA species or species not specified below)
+
+        if tree_target_species = "Allophylus edulis" [
+          set species_time round ( random-normal 1.5 0.58 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Campomanesia xanthocarpa" [
+          set species_time round ( random-normal 3.44 1.01 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Campomanesia xanthocarpa" [
+          set species_time round ( random-normal 3.44 1.01 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Eugenia brasiliensis" [
+          set species_time round ( random-normal 2.91 0.70 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Eugenia punicifolia" [
+          set species_time 4                          ; no sd (few observations)
+                                                      ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Ficus enormis" [
+          set species_time round ( random-normal 3.33 0.82 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Myrceugenia ovata" [
+          set species_time round ( random-normal 2.0 1.41 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Psidium longipetiolatum" [
+          set species_time round ( random-normal 3.22 0.44 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Psidium myrtoides" [
+          set species_time round ( random-normal 2.5 0.71 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Rhipsalis cereuscula" [
+          set species_time round ( random-normal 2.50 0.58 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Rhipsalis teres" [
+          set species_time 1                          ; no sd (few observations)
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Sorocea bonplandii" [
+          set species_time round ( random-normal 3.44 1.01 )
+          ;        set energy_species 5
+        ]
+
+      ]
+
+      if study_area = "Suzano" [
+        set species_time random-normal 2.85 0.75 ; average of mean and sd values for SantaMaria (for NA species or species not specified below)
+
+        if tree_target_species = "Abuta selloana" [
+          set species_time 3                          ; no sd (few observations)
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Casearia sylvestris" [
+          set species_time 3                          ; no sd (few observations)
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Cordia sellowiana" [
+          set species_time 3                          ; no sd (few observations)
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Myrciaria cuspidata" [
+          set species_time round ( random-normal 2.50 0.71 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Myrsine umbellata" [
+          set species_time 3                          ; no sd (few observations)
+;          set energy_species 5
+        ]
+
+        if tree_target_species = "Pera glabrata" [
+          set species_time round ( random-normal 4.0 1.41 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Philodendron spp." [
+          set species_time round ( random-normal 2.5 0.71 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Plinia trunciflora" [
+          set species_time round ( random-normal 2.86 0.69 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Randia armata" [
+          set species_time 3                          ; no sd (few observations)
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Rhipsalis teres" [
+          set species_time round ( random-normal 3.33 1.53 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Syagrus romanzoffiana" [
+          set species_time round ( random-normal 2.50 0.80 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Trichilia catigua" [
+          set species_time round ( random-normal 2.33 0.82 )
+          ;        set energy_species 5
+        ]
+
+        if tree_target_species = "Xylopia brasiliensis" [
+          set species_time round ( random-normal 3.0 0.82 )
+          ;        set energy_species 5
+        ]
+
+
+      ]
+
+    ]
 
   ]
 end
@@ -2802,11 +2970,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-501
-406
+536
+393
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -2816,10 +2984,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -2934,7 +3102,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-73.0
+34.0
 1
 1
 NIL
@@ -2946,7 +3114,7 @@ BUTTON
 630
 221
 STEP
-step\n\nask monkeys[ print species_time ]
+step\n\n; debug species_time:\ntype \"species_time = \" print species_time\ntype \"frugivory_time = \" print [frugivory-time] of monkeys
 NIL
 1
 T
@@ -3028,7 +3196,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-38.0
+39.0
 1
 1
 NIL
@@ -3043,7 +3211,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--9.0
+-7.0
 1
 1
 NIL
@@ -3058,7 +3226,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--10.0
+-7.0
 1
 1
 NIL
@@ -3126,7 +3294,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-7
+1
 
 CHOOSER
 984
@@ -3158,7 +3326,7 @@ step_forget
 step_forget
 0
 200
-91.0
+90.0
 1
 1
 NIL
@@ -3193,7 +3361,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-13.0
+16.0
 1
 1
 NIL
@@ -3558,7 +3726,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.54
+0.21
 0.05
 1
 NIL
@@ -3568,8 +3736,8 @@ TEXTBOX
 727
 774
 877
-797
-max timesteps repeating same behavior (other than feeding)
+818
+max timesteps repeating same behavior (other than feeding) (independent of feedingbout parameterization)
 9
 0.0
 1
@@ -3579,7 +3747,7 @@ PLOT
 336
 1356
 460
-action-time (red) / frugivory-time (blue)
+duration and action-time (red) / species_time and frugivory-time (blue)
 NIL
 NIL
 0.0
@@ -3590,8 +3758,10 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -2674135 true "" "ask monkeys [ plot action-time ]"
-"pen-1" 1.0 0 -13345367 true "" "ask monkeys [ plot frugivory-time ]"
+"default" 1.0 0 -5298144 true "" "ask monkeys [ plot duration ]"
+"pen-1" 1.0 0 -14070903 true "" "plot species_time"
+"pen-2" 1.0 0 -2139308 true "" "ask monkeys [ plot action-time ]"
+"pen-3" 1.0 0 -10649926 true "" "ask monkeys [ plot frugivory-time ]"
 
 PLOT
 1360
@@ -3724,7 +3894,7 @@ SWITCH
 647
 feedingbout-on?
 feedingbout-on?
-1
+0
 1
 -1000
 
@@ -3925,7 +4095,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "Santa Maria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 247
@@ -4056,7 +4226,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-75.66
+43.02
 5
 1
 NIL
@@ -4071,7 +4241,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.293
+3.089
 0.1
 1
 NIL
@@ -4086,7 +4256,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.52
+3.931
 0.1
 1
 NIL
@@ -4101,7 +4271,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-72.75
+17.85
 1
 1
 NIL
@@ -4112,11 +4282,11 @@ SLIDER
 676
 869
 709
-species_time
-species_time
+species_time_val
+species_time_val
 1
 20
-4.0
+1.0
 1
 1
 NIL
@@ -4209,6 +4379,17 @@ ld-target-random?
 0
 1
 -1000
+
+MONITOR
+1097
+289
+1394
+334
+NIL
+species_time
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -4665,6 +4846,114 @@ NetLogo 6.2.2
       <value value="3"/>
       <value value="4"/>
       <value value="5"/>
+      <value value="8"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Sensitivity-Analysis-Dec2022-GuaJul" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <final>r:stop</final>
+    <timeLimit steps="2000"/>
+    <exitCondition>day &gt; no_days</exitCondition>
+    <metric>;globals</metric>
+    <metric>p-visited-trees</metric>
+    <metric>R_seeds</metric>
+    <metric>R_seeds_p</metric>
+    <metric>NN_seeds</metric>
+    <metric>;monkeys</metric>
+    <metric>[DPL] of monkeys</metric>
+    <metric>[DPL_sd] of monkeys</metric>
+    <metric>[KDE_95] of monkeys</metric>
+    <metric>[KDE_50] of monkeys</metric>
+    <metric>[p_feeding] of monkeys</metric>
+    <metric>[p_foraging] of monkeys</metric>
+    <metric>[p_traveling] of monkeys</metric>
+    <metric>[p_resting] of monkeys</metric>
+    <metric>[MR] of monkeys</metric>
+    <metric>[MR_sd] of monkeys</metric>
+    <metric>[PT] of monkeys</metric>
+    <metric>[PT_sd] of monkeys</metric>
+    <metric>;seeds</metric>
+    <metric>[SDD] of seeds</metric>
+    <enumeratedValueSet variable="study_area">
+      <value value="&quot;Guareí&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="feeding-trees-scenario">
+      <value value="&quot;Jul&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="simulation-time">
+      <value value="102"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="no_days">
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy_level_1">
+      <value value="600"/>
+      <value value="1000"/>
+      <value value="1400"/>
+      <value value="1800"/>
+      <value value="2200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy_level_2">
+      <value value="600"/>
+      <value value="1000"/>
+      <value value="1400"/>
+      <value value="1800"/>
+      <value value="2200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="start-energy">
+      <value value="600"/>
+      <value value="1000"/>
+      <value value="1400"/>
+      <value value="1800"/>
+      <value value="2200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-from-fruits">
+      <value value="10"/>
+      <value value="30"/>
+      <value value="50"/>
+      <value value="100"/>
+      <value value="150"/>
+      <value value="200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-from-prey">
+      <value value="30"/>
+      <value value="50"/>
+      <value value="100"/>
+      <value value="150"/>
+      <value value="200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-loss-resting">
+      <value value="-30"/>
+      <value value="-50"/>
+      <value value="-100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-loss-foraging">
+      <value value="-30"/>
+      <value value="-50"/>
+      <value value="-100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="energy-loss-traveling">
+      <value value="-30"/>
+      <value value="-50"/>
+      <value value="-100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="species_time">
+      <value value="2"/>
+      <value value="4"/>
+      <value value="6"/>
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="step_forget">
+      <value value="0"/>
+      <value value="50"/>
+      <value value="100"/>
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="duration">
+      <value value="2"/>
+      <value value="4"/>
+      <value value="6"/>
       <value value="8"/>
     </enumeratedValueSet>
   </experiment>
