@@ -18,6 +18,7 @@ library("dplyr")
 library("nlrx")
 library("tictoc")
 library("magrittr")
+library("ggplot2")
 
 path <- here("Model_analysis", "Genetic_analysis", "temp")
 

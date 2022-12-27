@@ -687,7 +687,7 @@ saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds"
 
 
 
-## --- ##
+## Wrangle results ##
 # nl <- readRDS(paste0(outpath, "/GA_Guareí_Jul_nl.rds"))
 # resultsrbga <- readRDS(paste0(outpath, "/GA_Guareí_Jul_results.rds"))
 nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl.rds"))
@@ -725,9 +725,29 @@ idx <- match(best, best_results)
 # best_results %in% best
 
 optimized_param <- population[idx, ]
+colnames(optimized_param) <- names(min_param)
+# colnames(optimized_param)
 
 # Save optimized
-optimized_param %>% write.csv(paste0(outpath, "/", expname, "_optimized.csv"))
+library("stringr")
+# colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_replace_all(., c("stringMin.", ".min"), "" )
+colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_sub(., end=-5)
+colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_sub(., start=11)
+colnames(optimized_param)
+a <- colnames(optimized_param)
+
+optimized_param <- optimized_param %>% t() %>% as.data.frame(row.names = TRUE)
+optimized_param <- cbind(optimized_param, a)
+optimized_param$simulation_scenario <- paste0(area_run, "_", month_run)
+optimized_param <- optimized_param[, c(3, 2, 1)]
+
+colnames(optimized_param) <- c("expname", "parameter", "value")
+
+optimized_param$min <- min_param
+optimized_param$max <- max_param
+
+optimized_param %>% write.csv(paste0(outpath, "/", expname, "_optimized.csv"), row.names = FALSE)
+
 
 
 par(mar = c(1, 1, 1, 1))
@@ -752,26 +772,26 @@ dfga %>%
   )
 
 # Animation plot (didn't work). Based on https://www.r-bloggers.com/2012/08/genetic-algorithms-a-simple-r-example/
-animate_plot <- function(x) {
-  for (i in seq(1, bestn)) {
-    temp <- data.frame(Generation = c(seq(1, i), seq(1, i)), 
-                       Variable = c(rep("mean", i), rep("best", i)), 
-                       Survivalpoints = c(-resultsrbga$mean[1:i], -resultsrbga$best[1:i])
-    )
-  }
-  
-  pl <- ggplot(dat= temp, 
-               aes(x = Generation, y = Survivalpoints, group = Variable,
-                   colour = Variable)
-  ) + 
-    geom_line() + 
-    scale_x_continuous(limits = c(0, bestn)) + 
-    scale_y_continuous(limits = c(0, 110)) #+ 
-  # geom_hline(y = max(temp$Survivalpoints), 
-  #            opts(title = "Evolution Knapsack optimization model")
-  #            print(pl)
-  
-}
+# animate_plot <- function(x) {
+#   for (i in seq(1, bestn)) {
+#     temp <- data.frame(Generation = c(seq(1, i), seq(1, i)), 
+#                        Variable = c(rep("mean", i), rep("best", i)), 
+#                        Survivalpoints = c(-resultsrbga$mean[1:i], -resultsrbga$best[1:i])
+#     )
+#   }
+#   
+#   pl <- ggplot(dat= temp, 
+#                aes(x = Generation, y = Survivalpoints, group = Variable,
+#                    colour = Variable)
+#   ) + 
+#     geom_line() + 
+#     scale_x_continuous(limits = c(0, bestn)) + 
+#     scale_y_continuous(limits = c(0, 110)) #+ 
+#   # geom_hline(y = max(temp$Survivalpoints), 
+#   #            opts(title = "Evolution Knapsack optimization model")
+#   #            print(pl)
+#   
+# }
 # in order to save the animation
 # library(animation)
 # saveGIF(animate_plot(), interval = 0.1, outdir = outpath)
