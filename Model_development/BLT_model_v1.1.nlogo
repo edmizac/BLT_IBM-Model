@@ -816,9 +816,9 @@ to go
       calc-movement-metrics
       output-print "calculating movement metrics finished"
 
-      output-print "calculating R index for seeds"
-      calc-seed-aggregation
-      output-print "calculating R index for seeds finished"
+;      output-print "calculating R index for seeds"
+;      calc-seed-aggregation
+;      output-print "calculating R index for seeds finished"
 
       stop
     ]
@@ -1706,7 +1706,7 @@ end
 
 to search-feeding-tree
 
-   print "SEARCHING FEEDING TREE"
+;   print "SEARCHING FEEDING TREE"
 
   ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
@@ -4379,17 +4379,6 @@ ld-target-random?
 0
 1
 -1000
-
-MONITOR
-1097
-289
-1394
-334
-NIL
-species_time
-17
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?

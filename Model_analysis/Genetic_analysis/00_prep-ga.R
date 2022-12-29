@@ -16,7 +16,7 @@
 
 ## Packages -------------------------
 library("here")
-library("dplyr")
+# library("dplyr")
 library("nlrx")
 library("progressr")
 library("future")
@@ -69,6 +69,7 @@ if(Sys.info()[["nodename"]] == "PC9") { # LEEC
 }
 
 
+
 nl <- nl(nlversion = "6.2.2",
          nlpath = netlogopath,
          modelpath = modelpath,
@@ -78,25 +79,31 @@ nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
 
 # Decide which area/month to run the optimization on:
-area_run <- "Taquara"
-month_run <- "Jan"
+area_run <- "Guareí"
+month_run <- "Jul"
 
 
 # Empirical data for parameterisation:
 param_table <- read.csv(here("Data", "Parameter_table.csv"),
-                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+                        sep = ",", dec = ".", stringsAsFactors = TRUE,
+                        encoding = "UTF-8") %>% 
+  dplyr::mutate(group = dplyr::recode(group, "Guarei" = "Guareí",
+                                      "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
 
 
 # Empirical data for criteval function:
 values_ga <- read.csv(here("Data", "Validation-table.csv"),
-                      sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+                      sep = ",", dec = ".", stringsAsFactors = TRUE,
+                      encoding = "UTF-8") %>% 
+  dplyr::mutate(group = dplyr::recode(group, "Guarei" = "Guareí",
+                                      "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
 
 # Movement variables:
 values_ga_mv <-  read.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_MR-PT_by-day.csv"),
-                          sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+                          sep = ",", dec = ".", stringsAsFactors = TRUE,
+                          encoding = "UTF-8") %>% 
+  dplyr::mutate(group = dplyr::recode(group, "Guarei" = "Guareí",
+                                      "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
 
 
 
@@ -138,15 +145,15 @@ p_resting_min <- 0 # (Guareí NA = 0, i.e., no resting)
 
 # # Still have to calculate them from empirical data
 # step_length_mean_obs <- param_table %>% 
-#   dplyr::filter(group == area_run | "id_month" == month_run) %>%
+#   dplyr::filter(group == area_run & id_month == month_run) %>%
 #   dplyr::select(step_length_mean_obs) %>% unlist() %>% as.vector()
 # 
 # step_length_sd <- param_table %>% 
-#   dplyr::filter(group == area_run | "id_month" == month_run) %>%
+#   dplyr::filter(group == area_run & id_month == month_run) %>%
 #   dplyr::select(step_length_sd) %>% unlist() %>% as.vector()
 # 
 # turn_ang_sd <- param_table %>% 
-#   dplyr::filter(group == area_run | "id_month" == month_run) %>%
+#   dplyr::filter(group == area_run & id_month == month_run) %>%
 #   dplyr::select(turn_ang_sd) %>% unlist() %>% as.vector()
 
 max_angle_75_travel_max <- param_table %>% 
@@ -161,8 +168,8 @@ max_angle_75_forage_min <- param_table %>%
 
 
 values_ga_mv_summary <- values_ga_mv %>% 
-  group_by(group, id_month) %>% 
-  summarise(
+  dplyr::group_by(group, id_month) %>% 
+  dplyr::summarise(
     DPL_mean_obs = mean(DPL),
     DPL_sd_obs = sd(DPL),
     MR_mean_obs = mean(MR), 
@@ -170,8 +177,8 @@ values_ga_mv_summary <- values_ga_mv %>%
     PT_mean_obs = mean(PT),
     PT_sd_obs = sd(PT)
   ) %>% 
-  ungroup()
-  #dplyr::filter(group == area_run | "id_month" == month_run)
+  dplyr::ungroup()
+#dplyr::filter(group == area_run & id_month == month_run)
 
 dpl_mean_min <- values_ga_mv_summary %>%
   dplyr::select(DPL_mean_obs) %>% min() %>%  unlist() %>% as.vector()
@@ -229,32 +236,33 @@ normalize <- function(x, min, max) {
 }
 # normalize(20, min=2.5, max=100)
 
-KDE95_obs <- values_ga %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
+KDE95_obs <- values_ga %>% dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select(KDE95) %>% unlist() %>% as.vector() %>% normalize(min = KDE95_min, max = KDE95_max)
-KDE50_obs <- values_ga %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
+KDE50_obs <- values_ga %>% dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select(KDE50) %>% unlist() %>% as.vector() %>% normalize(min = KDE50_min, max = KDE50_max)
 
-MR_obs <- values_ga_mv_summary %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
+MR_obs <- values_ga_mv_summary %>% dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select("MR_mean_obs") %>% unlist() %>% as.vector() %>% normalize(min = mr_min, max = mr_max)
-PT_obs <- values_ga_mv_summary %>% dplyr::filter(group == area_run | "id_month" == month_run) %>%
+PT_obs <- values_ga_mv_summary %>% dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select("PT_mean_obs") %>% unlist() %>% as.vector() %>% normalize(min = pt_min, max = pt_max)
 
-p_feeding_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+p_feeding_obs <- values_ga %>%  dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select("Frugivory_perc_behavior_mean") %>% unlist() %>% as.vector() %>%  '/' (100) %>% 
   normalize(min = p_feeding_min, max = p_feeding_max)
-p_foraging_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+p_foraging_obs <- values_ga %>%  dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select("Foraging_perc_behavior_mean") %>% unlist() %>% as.vector() %>%  '/' (100) %>% 
   normalize(min = p_foraging_min, max = p_foraging_max)
-p_traveling_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+p_traveling_obs <- values_ga %>%  dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select("Travel_perc_behavior_mean") %>% unlist() %>% as.vector() %>%  '/' (100) %>% 
   normalize(min = p_traveling_min, max = p_traveling_max)
-p_resting_obs <- values_ga %>%  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+p_resting_obs <- values_ga %>%  dplyr::filter(group == area_run & id_month == month_run) %>%
   dplyr::select("Resting_perc_behavior_mean") %>% unlist() %>% as.vector() %>% '/' (100) %>% 
   normalize(min = p_resting_min, max = p_resting_max)
 
 
 visits_obs <- param_table %>% 
-  dplyr::filter(group == area_run | "id_month" == month_run) %>%
+  dplyr::filter(group == area_run) %>% 
+  dplyr::filter(id_month == month_run) %>%
   dplyr::select(n_trees_Frugivory) %>% unlist() %>% as.vector() %>% 
   normalize(min = visits_min, max = visits_max)
 
@@ -279,20 +287,20 @@ no_days_run <- param_table %>%
   dplyr::filter(group == area_run,
                 id_month == month_run) %>% 
   dplyr::select(ndays) %>% 
-  pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
+  dplyr::pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
 
 simultime_run <- param_table %>% 
   dplyr::filter(group == area_run,
                 id_month == month_run) %>% 
   dplyr::select(mean_timesteps) %>% 
-  pull()
+  dplyr::pull()
 simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
 
 # choose which parameterizations should be on:
 step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
 gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
 p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
-feedingbout <- "false" # previous sensitivity analysis showed that this does not matter, at least for Guareí
+feedingbout <- "true" # previous sensitivity analysis showed that this does not matter, at least for Guareí
 
 # escape strings to nlrx experiment
 area_run_scp <- paste0('"', area_run, '"')   # scaped
@@ -363,7 +371,7 @@ nl@experiment <- experiment(expname = expname,
                               "energy-loss-foraging" = list(min=-100, max = -1),
                               "energy-loss-resting" = list(min=-100, max = -1),
                               
-                              # "start-energy" = list(min=100, max=2000),
+                              "start-energy" = list(min=100, max=2000),
                               "energy_level_1" = list(min=100, max=2000),
                               "energy_level_2" = list(min=100, max=2000),
                               
@@ -382,7 +390,7 @@ nl@experiment <- experiment(expname = expname,
                               'prop_trees_to_reset_memory' = list(min=2, max=5),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                               
                               # 5. Feeding bout (only when "feedingbout-on?" = 'false')
-                              'species_time' = list(min = 1, max = 10), #
+                              # 'species_time' = list(min = 1, max = 10), #
                               'duration' = list(min = 1, max = 10)      #
                               
                               # 6. Seed dispersal
@@ -392,7 +400,7 @@ nl@experiment <- experiment(expname = expname,
                             
                             constants = list(
                               
-                              "USER" = user_scp, # "\"Eduardo\"",
+                              "USER" = user_scp, #"\"Eduardo\"",
                               'feedingbout-on?' = feedingbout,        # uses empirical values of time spent feeding on each tree species or a random one
                               "step-model-param?" = step_model_param, # uses observed mean step length and 75q turning angles
                               "gtt-param?"= gtt_param,                # uses mean + sd of GTT for seed dispersal
@@ -446,11 +454,12 @@ nl@experiment <- experiment(expname = expname,
 ## Step 3: Attach a simulation design   -------------------------
 
 # nl<- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
-#                   "v1.1_Taquara_Jan_simple1862807137_tempRDS.Rdata"))
+#                   "v1.1_Taquara_Jan_simple-74525742_tempRDS.Rdata"))
 
 
 ### Define critfun (fitness function) --------------
 deaths <- 0 # to count number of runs where tamarins died
+runs <- 0
 critfun <- function(nl) {
   
   # extract values from run from example nl object:
@@ -471,8 +480,9 @@ critfun <- function(nl) {
   # nl@experiment@metrics.turtles
   # str(db)
   # class(db3)
-
+  
   print(paste("number of dead runs = ", deaths))
+  print(paste("number of runs = ", runs))
   
   if ("enstart" %in% colnames(db)) { # if monkey variables are present (i.e. they didn't die)
     
@@ -544,29 +554,29 @@ critfun <- function(nl) {
     
     # Get observed values (normalized)
     DPL_mean_obs <- values_ga_mv_summary %>% 
-      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::filter(group == area_run & id_month == month_run) %>%
       dplyr::select(DPL_mean_obs)  %>% unlist() %>% as.vector() %>% 
       normalize(min = dpl_mean_min, max = dpl_mean_max)
     DPL_sd_obs <- values_ga_mv_summary %>% 
-      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::filter(group == area_run & id_month == month_run) %>%
       dplyr::select(DPL_sd_obs)  %>% unlist() %>% as.vector() %>% 
       normalize(min = dpl_sd_min, max = dpl_sd_max)
     
     MR_mean_obs <- values_ga_mv_summary %>% 
-      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::filter(group == area_run & id_month == month_run) %>%
       dplyr::select(MR_mean_obs)  %>% unlist() %>% as.vector() %>% 
       normalize(min = mr_min, max = mr_max)
     MR_sd_obs <- values_ga_mv_summary %>% 
-      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::filter(group == area_run & id_month == month_run) %>%
       dplyr::select(MR_sd_obs)  %>% unlist() %>% as.vector() %>% 
       normalize(min = mr_sd_min, max = mr_sd_max)
     
     PT_mean_obs <- values_ga_mv_summary %>%
-      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::filter(group == area_run & id_month == month_run) %>%
       dplyr::select(PT_mean_obs)  %>% unlist() %>% as.vector() %>% 
       normalize(min = pt_min, max = pt_max)
     PT_sd_obs <- values_ga_mv_summary %>% 
-      dplyr::filter(group == area_run | "id_month" == month_run) %>%
+      dplyr::filter(group == area_run & id_month == month_run) %>%
       dplyr::select(PT_sd_obs)  %>% unlist() %>% as.vector() %>% 
       normalize(min = pt_sd_min, max = pt_sd_max)
     
@@ -609,9 +619,11 @@ critfun <- function(nl) {
     
     if ( en1 > en2 ) {
       crit <- 99999
+      runs <- runs + 1
       print("energy_lvl_1 is bigger than energy_lvl 2, dropping simulation")
       return(crit)
     } else {
+      runs <- runs + 1
       return(crit)
     }
     
@@ -622,6 +634,8 @@ critfun <- function(nl) {
     return(crit)
   }
   
+  runs <- runs + 1
+  gc()
 }
 
 # Test the eval function:
@@ -647,14 +661,14 @@ critfun <- function(nl) {
 # For differences between genetic algorithm (simdesign_GenAlg) and genetic anealing (simdesign_GenSA):
 # https://stackoverflow.com/questions/4092774/what-are-the-differences-between-simulated-annealing-and-genetic-algorithms
 nl@simdesign <- simdesign_GenAlg(nl, 
-                                evalcrit = critfun, # 1, # "e.g. 1 would use the first defined metric of the experiment to evaluate each iteration)"
-                                
-                                popSize = 100, # or chromosomes; Ronald used 100; suggestion: population_size > num_genes^2 (https://stackoverflow.com/questions/7559274/prevent-inbreeding-and-monoculture-in-genetic-algorithm-newbie-question/7609715#7609715)
-                                iters = 50,  # Ronald used 250
-                                elitism = 2, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
-                                mutationChance = 0.1, # Ronald uses 0.01
-                                nseeds = 1
-                                )
+                                 evalcrit = critfun, # 1, # "e.g. 1 would use the first defined metric of the experiment to evaluate each iteration)"
+                                 
+                                 popSize = 100, # or chromosomes. suggestion: population_size > num_genes^2 (https://stackoverflow.com/questions/7559274/prevent-inbreeding-and-monoculture-in-genetic-algorithm-newbie-question/7609715#7609715)
+                                 iters = 50,
+                                 elitism = 2, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
+                                 mutationChance = 0.1,
+                                 nseeds = 1
+)
 
 ## Step 4: run -------------------------
 set.seed(1234)
@@ -678,8 +692,10 @@ tictoc::toc()
 # 00_rep-ga_resuls results
 cat(summary(results))
 
-saveRDS(nl, file.path(nl@experiment@outpath, paste0(expname, "_nl.rds")))
-saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds")))
+setsim(nl, "simoutput") <- results
+
+saveRDS(nl, file.path(outpath, paste0("/", expname, "_nl_feedingbouton.rds")))
+saveRDS(results, file.path(outpath, paste0("/", expname, "_results_feedingbouton.rds")))
 # save.image(file=paste0(outpath, '/GA_Taquara_Jan_Environment.RData'))
 
 # setsim(nl, "simoutput") <- tibble::enframe(results)
@@ -687,16 +703,20 @@ saveRDS(results, file.path(nl@experiment@outpath, paste0(expname, "_results.rds"
 
 
 
-## Wrangle results ##
-# nl <- readRDS(paste0(outpath, "/GA_Guareí_Jul_nl.rds"))
-# resultsrbga <- readRDS(paste0(outpath, "/GA_Guareí_Jul_results.rds"))
-nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl.rds"))
-resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
+## --- ##
+# ?genalg::rbga
+nl <- readRDS(paste0(outpath, "/GA_Guareí_Jul_nl_feedingbouton.rds"))
+resultsrbga <- readRDS(paste0(outpath, "/GA_Guareí_Jul_results_feedingbouton.rds"))
+# nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl.rds"))
+# resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
+# nl <- readRDS(paste0(outpath, "/GA_SantaMaria_Apr_nl.rds"))
+# resultsrbga <- readRDS(paste0(outpath, "/GA_SantaMaria_Apr_results.rds"))
 
 resultsrbga <- results
 cat(summary(resultsrbga))
 
-
+nl@experiment@constants$study_area
+nl@experiment@constants$`feeding-trees-scenario`
 min_param <- resultsrbga[2] # parameters min
 max_param <- resultsrbga[3] # parameters max
 resultsrbga[4] # popSize
@@ -725,13 +745,11 @@ idx <- match(best, best_results)
 # best_results %in% best
 
 optimized_param <- population[idx, ]
-colnames(optimized_param) <- names(min_param)
-# colnames(optimized_param)
 
 # Save optimized
 library("stringr")
-# colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_replace_all(., c("stringMin.", ".min"), "" )
-colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_sub(., end=-5)
+# colnames(optimized_param) <- colnames(optimized_param) #%>% stringr::str_replace_all(., c("stringMin.", ".min"), "" )
+colnames(optimized_param) <- rownames(ga_input) %>% stringr::str_sub(., end=-5)
 colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_sub(., start=11)
 colnames(optimized_param)
 a <- colnames(optimized_param)
@@ -743,11 +761,7 @@ optimized_param <- optimized_param[, c(3, 2, 1)]
 
 colnames(optimized_param) <- c("expname", "parameter", "value")
 
-optimized_param$min <- min_param
-optimized_param$max <- max_param
-
-optimized_param %>% write.csv(paste0(outpath, "/", expname, "_optimized.csv"), row.names = FALSE)
-
+optimized_param %>% write.csv(paste0(outpath, "/", expname, "_optimized_feedingbouton.csv"), row.names = FALSE)
 
 
 par(mar = c(1, 1, 1, 1))
@@ -756,22 +770,28 @@ plot(resultsrbga, type = "hist")
 
 eval <- resultsrbga$evaluations
 popSize <- 1:resultsrbga$popSize
-best <- resultsrbga$best
+best <- resultsrbga$best %>% unique()
 bestn <- length(best)
 
 dfga <- data.frame(evaluations = eval,
-                   popSize = popSize,
-                   best = best)
+                   popSize = popSize
+                   # ,best = best
+)
+
+dfga %>% str()
+
+dfga <- dfga %>% 
+  dplyr::filter(evaluations < 9000)
 
 library(ggplot2)
 dfga %>% 
   ggplot() +
   geom_density(
     # aes(x = evaluations)
-    aes(x = best)
+    aes(x = evaluations)
   )
-
-# Animation plot (didn't work). Based on https://www.r-bloggers.com/2012/08/genetic-algorithms-a-simple-r-example/
+# 
+# # Animation plot (didn't work). Based on https://www.r-bloggers.com/2012/08/genetic-algorithms-a-simple-r-example/
 # animate_plot <- function(x) {
 #   for (i in seq(1, bestn)) {
 #     temp <- data.frame(Generation = c(seq(1, i), seq(1, i)), 
@@ -787,10 +807,10 @@ dfga %>%
 #     geom_line() + 
 #     scale_x_continuous(limits = c(0, bestn)) + 
 #     scale_y_continuous(limits = c(0, 110)) #+ 
-#   # geom_hline(y = max(temp$Survivalpoints), 
-#   #            opts(title = "Evolution Knapsack optimization model")
-#   #            print(pl)
-#   
+#     # geom_hline(y = max(temp$Survivalpoints), 
+#     #            opts(title = "Evolution Knapsack optimization model")
+#     #            print(pl)
+#                
 # }
 # in order to save the animation
 # library(animation)
