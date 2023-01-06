@@ -79,8 +79,8 @@ nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
 
 # Decide which area/month to run the optimization on:
-area_run <- "Guareí"
-month_run <- "Jul"
+area_run <- "SantaMaria"
+month_run <- "Mar"
 
 
 # Empirical data for parameterisation:
@@ -705,15 +705,21 @@ saveRDS(results, file.path(outpath, paste0("/", expname, "_results_feedingbouton
 
 ## --- ##
 # ?genalg::rbga
-nl <- readRDS(paste0(outpath, "/GA_Guareí_Jul_nl_feedingbouton.rds"))
-resultsrbga <- readRDS(paste0(outpath, "/GA_Guareí_Jul_results_feedingbouton.rds"))
-# nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl.rds"))
-# resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results.rds"))
-# nl <- readRDS(paste0(outpath, "/GA_SantaMaria_Apr_nl.rds"))
-# resultsrbga <- readRDS(paste0(outpath, "/GA_SantaMaria_Apr_results.rds"))
+# nl <- readRDS(paste0(outpath, "/GA_Guarei_Jul_nl_feedingbouton.rds"))
+# resultsrbga <- readRDS(paste0(outpath, "/GA_Guarei_Jul_nl_feedingbouton.rds"))
+# nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl_feedingbouton.rds"))
+# resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_feedingbouton.rds"))
+nl <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_nl_feedingbouton.rds"))
+resultsrbga <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_results_feedingbouton.rds"))
 
-resultsrbga <- results
+# resultsrbga <- results
+# resultsrbga <- resultsrbga@simdesign@simoutput
 cat(summary(resultsrbga))
+
+# resultsrbga %>% class()
+# resultsrbga %>% str()
+
+# resultsrbga@experiment
 
 nl@experiment@constants$study_area
 nl@experiment@constants$`feeding-trees-scenario`
@@ -759,7 +765,10 @@ optimized_param <- cbind(optimized_param, a)
 optimized_param$simulation_scenario <- paste0(area_run, "_", month_run)
 optimized_param <- optimized_param[, c(3, 2, 1)]
 
-colnames(optimized_param) <- c("expname", "parameter", "value")
+optimized_param <- cbind(optimized_param, ga_input)
+row.names(optimized_param) <- NULL
+
+colnames(optimized_param) <- c("expname", "parameter", "value", "min", "max")
 
 optimized_param %>% write.csv(paste0(outpath, "/", expname, "_optimized_feedingbouton.csv"), row.names = FALSE)
 

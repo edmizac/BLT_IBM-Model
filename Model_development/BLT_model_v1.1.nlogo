@@ -229,8 +229,8 @@ to setup
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set gut_transit_time 18 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set gut_transit_time 13 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set gut_transit_time 19 ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set gut_transit_time 16 ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set gut_transit_time 16 ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set gut_transit_time 16 ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set gut_transit_time 16 ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set gut_transit_time 26 ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set gut_transit_time 21 ]
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set gut_transit_time 16 ]
@@ -242,8 +242,8 @@ to setup
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set p_foraging_while_traveling 0.47 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set p_foraging_while_traveling 0.54 ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set p_foraging_while_traveling 0.70 ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set p_foraging_while_traveling 0.59 ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set p_foraging_while_traveling 0.61 ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set p_foraging_while_traveling 0.59 ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set p_foraging_while_traveling 0.61 ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set p_foraging_while_traveling 0.31 ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set p_foraging_while_traveling 0.21 ]
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set p_foraging_while_traveling 0.21 ]
@@ -320,8 +320,8 @@ to setup-gis
   ]
 
 
-  if study_area = "Santa Maria" [
-    set-patch-size floor (1 * patch-size) ; Santa Maria large raster results in a large world
+  if study_area = "SantaMaria" [
+    set-patch-size floor (1 * patch-size) ; SantaMaria large raster results in a large world
 
     if USER = "Eduardo" [
       ; load .prj and .asc (raster 10 x 10 m)
@@ -406,7 +406,7 @@ to setup-trees
   let id-tree-slp 0
   if ( sleeping-trees-scenario = "empirical" AND all-slp-trees? = TRUE )  [
     if ( study_area = "Guareí")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/guarei_trees_unique_slp.shp" ]
-    if ( study_area = "Santa Maria")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_slp.shp" ]
+    if ( study_area = "SantaMaria")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/sma_trees_unique_slp.shp" ]
     if ( study_area = "Suzano")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/suz_trees_unique_slp.shp" ]
     if ( study_area = "Taquara")  [ set sleep-file word ( local-path) "/Data/Resource-Trees/taq_trees_unique_slp.shp" ]
 
@@ -436,11 +436,11 @@ to setup-trees
   if ( study_area = "Guareí" AND feeding-trees-scenario = "Jul" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/guarei_trees_unique_Jul.shp" ]
   if ( study_area = "Guareí" AND feeding-trees-scenario = "Aug" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/guarei_trees_unique_Aug.shp" ]
 
-  ; Santa Maria
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_all.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Mar" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_Mar.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_Apr.shp" ]
-  if ( study_area = "Santa Maria" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_May.shp" ]
+  ; SantaMaria
+  if ( study_area = "SantaMaria" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_all.shp" ]
+  if ( study_area = "SantaMaria" AND feeding-trees-scenario = "Mar" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_Mar.shp" ]
+  if ( study_area = "SantaMaria" AND feeding-trees-scenario = "Apr" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_Apr.shp" ]
+  if ( study_area = "SantaMaria" AND feeding-trees-scenario = "May" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/sma_trees_unique_May.shp" ]
 
   ; Taquara
   if ( study_area = "Taquara" AND feeding-trees-scenario = "All months" )   [ set tree-file word ( local-path) "Data/Movement/Resource-Trees/taq_trees_unique_all.shp" ]
@@ -639,13 +639,13 @@ to setup-monkeys
     ;; Parameterizing BLT velocity with empirical data:
     ;option 1 (= mean velocities, Zanette et al 2021 ATBC) (I believe this underestimates tamarin velocities as our model only uses travelling speed
     ;  if study_area = "Guareí" [ set travel_speed ( 15.27 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
-    ;  if study_area = "Santa Maria" [ set travel_speed ( 18.4 / 10 ) ]
+    ;  if study_area = "SantaMaria" [ set travel_speed ( 18.4 / 10 ) ]
     ;  if study_area = "Taquara" [ set travel_speed ( 23.24 / 10 ) ]
     ;  if study_area = "Guareí" [ set travel_speed ( 8.93 / 10 )  ]
 
 ;    ;option 2 (= 3 steps before feeding on fruits, Zanette et al 2021 ATBC)
 ;    if study_area = "Guareí" [ set travel_speed ( 20 / 10 ) ]   ; 15.27 m / 10 m ( BLT mean velocity / patch resolution)
-;    if study_area = "Santa Maria" [ set travel_speed ( 20.2 / 10 ) ]
+;    if study_area = "SantaMaria" [ set travel_speed ( 20.2 / 10 ) ]
 ;    if study_area = "Taquara" [ set travel_speed ( 33.4 / 10 ) ]
 ;    if study_area = "Suzano" [ set travel_speed ( 13.7 / 10 )  ]
 ;  ]
@@ -657,8 +657,8 @@ to setup-monkeys
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_travel ( 25.44 / 10 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_travel ( 25.20 / 10 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_travel ( 25.30 / 10 ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_travel ( 32.37 / 10 ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_travel ( 35.97 / 10 ) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set step_len_travel ( 32.37 / 10 ) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set step_len_travel ( 35.97 / 10 ) ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_travel ( 17.94 / 10 )  ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_travel ( 17.49 / 10 )  ]
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_travel ( 39.31 / 10 ) ]
@@ -668,8 +668,8 @@ to setup-monkeys
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set step_len_forage ( 12.14 / 10 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set step_len_forage ( 12.93 / 10 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set step_len_forage ( 13.87 / 10 ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set step_len_forage ( 16.95 / 10 ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set step_len_forage ( 21.3 / 10 ) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set step_len_forage ( 16.95 / 10 ) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set step_len_forage ( 21.3 / 10 ) ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set step_len_forage ( 7.51 / 10 )  ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set step_len_forage ( 8.83 / 10 )  ]
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set step_len_forage ( 30.89 / 10 ) ]
@@ -679,8 +679,8 @@ to setup-monkeys
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set max_rel_ang_travel_75q ( 75.63 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set max_rel_ang_travel_75q ( 72.75 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set max_rel_ang_travel_75q ( 59.53 ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set max_rel_ang_travel_75q ( 68.99 ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set max_rel_ang_travel_75q ( 58.76 ) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set max_rel_ang_travel_75q ( 68.99 ) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set max_rel_ang_travel_75q ( 58.76 ) ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set max_rel_ang_travel_75q ( 63.61 )  ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set max_rel_ang_travel_75q ( 47.53 )  ]
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set max_rel_ang_travel_75q ( 17.85 ) ]
@@ -690,8 +690,8 @@ to setup-monkeys
     if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set max_rel_ang_forage_75q ( 78.99 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set max_rel_ang_forage_75q ( 75.66 ) ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set max_rel_ang_forage_75q ( 77.22 ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"[ set max_rel_ang_forage_75q ( 89.73  ) ]
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"[ set max_rel_ang_forage_75q ( 63.00) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set max_rel_ang_forage_75q ( 89.73  ) ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set max_rel_ang_forage_75q ( 63.00) ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set max_rel_ang_forage_75q ( 55.92  )  ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set max_rel_ang_forage_75q ( 51.20 )  ]
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set max_rel_ang_forage_75q ( 43.02 ) ]
@@ -1446,8 +1446,8 @@ to feeding
     if study_area = "Guareí" AND feeding-trees-scenario = "Jul"  [ set seed_gtt_list lput random-poisson 17 seed_gtt_list ]
     if study_area = "Guareí" AND feeding-trees-scenario = "Aug"  [ set seed_gtt_list lput random-poisson 19 seed_gtt_list ]
 
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Mar"  [ set seed_gtt_list lput random-poisson 16.6 seed_gtt_list ] ;this value is not empirical, it is estimated
-    if study_area = "Santa Maria" AND feeding-trees-scenario = "Apr"  [ set seed_gtt_list lput random-poisson 16 seed_gtt_list ]
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"  [ set seed_gtt_list lput random-poisson 16.6 seed_gtt_list ] ;this value is not empirical, it is estimated
+    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"  [ set seed_gtt_list lput random-poisson 16 seed_gtt_list ]
 
     if study_area = "Suzano" AND feeding-trees-scenario = "Sep"  [ set seed_gtt_list lput random-poisson 26 seed_gtt_list ]
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"  [ set seed_gtt_list lput random-poisson 21 seed_gtt_list ]
@@ -2847,7 +2847,7 @@ to calc-seed-aggregation
 ;  if study_area = "Guareí" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ]
 ;  if study_area = "Suzano" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ]
 ;  if study_area = "Taquara" [ set limitsOwin      "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ]
-;  if study_area = "Santa Maria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
+;  if study_area = "SantaMaria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
 ;  r:put "limitsOwin" limitsOwin
 ;  print r:get "limitsOwin"
 ;  r:eval "limitsOwin) <- sf::st_read(limitsOwin)"
@@ -2864,7 +2864,7 @@ to calc-seed-aggregation
   r:eval "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
   r:eval "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
  ; print r:get "colnames(sim)" ; ppp objects do not have colnames
-;  print r:get "sim"
+  print r:get "sim"
 
   print " ------------- Seed/defecation aggregation ------------------ "
   ;; calc R index (Clark-Evans test)
@@ -2970,11 +2970,11 @@ end
 GRAPHICS-WINDOW
 10
 10
-536
-393
+627
+430
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -2984,10 +2984,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-101
+101
+-68
+68
 0
 0
 1
@@ -3294,7 +3294,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+4
 
 CHOOSER
 984
@@ -3726,7 +3726,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.61
 0.05
 1
 NIL
@@ -4094,8 +4094,8 @@ CHOOSER
 95
 study_area
 study_area
-"Guareí" "Santa Maria" "Taquara" "Suzano"
-2
+"Guareí" "SantaMaria" "Taquara" "Suzano"
+1
 
 BUTTON
 247
@@ -4226,7 +4226,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+63.0
 5
 1
 NIL
@@ -4241,7 +4241,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+2.13
 0.1
 1
 NIL
@@ -4256,7 +4256,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+3.597
 0.1
 1
 NIL
@@ -4271,7 +4271,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+58.76
 1
 1
 NIL

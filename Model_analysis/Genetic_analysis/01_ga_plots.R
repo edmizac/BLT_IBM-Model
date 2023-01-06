@@ -20,9 +20,12 @@ library("tictoc")
 library("magrittr")
 library("ggplot2")
 
+# ggplot theme
+theme_set(theme_bw(base_size = 18))
+
 path <- here("Model_analysis", "Genetic_analysis", "temp")
 
-filesga <- list.files(path, pattern = ".csv")
+filesga <- list.files(path, pattern = "feedingbouton.csv")
 filesga <- paste0(path, "/", filesga)
 
 dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
@@ -92,7 +95,7 @@ dfga_en %>%
   ggtitle("Optimization of energy levels")
 
 # Save plot
-# ggsave(paste0(outpath,  "/", '01_GA_optimized-params1.png'), height = 5, width = 7)
+# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_feedingbout-on1.png'), height = 5, width = 7)
 
 
 # Plot showing how the optimization differed for each energy parameter
@@ -119,7 +122,7 @@ dfga_en2 %>%
   ggtitle("Optimization of energy gain and loss")
 
 # Save plot
-# ggsave(paste0(outpath,  "/", '01_GA_optimized-params2.png'), height = 5, width = 7)
+# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_feedingbout-on2.png'), height = 5, width = 7)
 
 
 # Plot showing how the optimization differed for each parameter (others)
@@ -146,7 +149,7 @@ dfga_otr %>%
   ggtitle("Optimization of non-energy parameters")
 
 # Save plot
-# ggsave(paste0(outpath,  "/", '01_GA_optimized-params3.png'), height = 5, width = 7)
+# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_feedingbout-on3.png'), height = 5, width = 7)
 
 
 dfga <- dfga %>% 
@@ -197,5 +200,5 @@ dfga %>%
   facet_wrap(~param_category, scales = "free", nrow = 1)
 
 # Save plot
-# ggsave(paste0(outpath,  "/", '01_GA_optimized-params-wrap.png'), height = 5, width = 10)
+# ggsave(paste0(outpath,  "/", '01_GA_optimized-params-feedingbout-on_wrap.png'), height = 5, width = 10)
 
