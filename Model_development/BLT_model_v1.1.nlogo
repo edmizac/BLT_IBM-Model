@@ -2526,7 +2526,7 @@ end
 ;-----------------------------------------------------------------
 
 to calc-homerange
-  r:eval "library(adehabitat)"
+;  r:eval "library(adehabitat)"
   r:eval "library(dplyr)"
   r:eval "library(tidyr)"
   r:eval "library(amt)"
