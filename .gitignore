@@ -79,6 +79,14 @@ Data/Movement/Curated/Validation/**.png
 
 Model_analysis/Sensitivity-analysis/v1.1_August2022/**.text
 
+
+# Scenario simulations
+Model_simulations/**.png
+Model_simulations/**.Rdata
+Model_simulations/**.rds
+Model_simulations/**.csv
+
+
 # Temporary files
 **/runtime
 runtime/
