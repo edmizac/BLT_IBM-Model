@@ -85,6 +85,7 @@ Model_simulations/**.png
 Model_simulations/**.Rdata
 Model_simulations/**.rds
 Model_simulations/**.csv
+Model_simulations/patch_examples/
 
 
 # Temporary files
