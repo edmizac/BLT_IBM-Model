@@ -50,6 +50,7 @@ seeds-own [
 
 breed [monkeys monkey]
 monkeys-own [
+  energy_stored   ; amount of energy accumulated throughout the simulation
   energy          ; energy the tamarin has left
   enlvl1             ; energy level 1 of every simulation
   enlvl2             ; energy level 2 of every simulation
@@ -158,11 +159,44 @@ patches-own [
 
 ;; GLOBALS ;;
 globals [
+  survived? ; to check if tamarins survived up to the end of the run and test parameterizations
+
   R_seeds ; aggregation index of seeds
   R_seeds_p ; clarkevans test p value
   NN_seeds  ; nearest neighbor distances for seeds (defecation events)
   n_visited_trees ; number of visited trees in the end of the run
   n_unvisited_trees ; number of unvisited trees in the end of the run (calculate proportion afterwards instead of giving a very long metric to nlrx)
+
+  ; THESE ARE MONKEY VARIABLES THAT WE TAKE AS GLOBAL TO AVOID NLRX ERRORS (OR DEAD AGENTS OUTPUTING EMPTY VALUES)
+  g_energy_stored
+  g_KDE_95
+  g_KDE_50
+  g_p_feeding
+  g_p_foraging
+  g_p_traveling
+  g_p_resting
+  g_step_length_mean
+  g_step_length_sd
+  g_turn_ang_mean
+  g_turn_ang_sd
+  g_DPL
+  g_DPL_sd
+  g_DPL_d
+  g_MR
+  g_MR_sd
+  g_MR_d
+  g_PT
+  g_PT_sd
+  g_PT_d
+  g_MSD
+  g_intensity_use
+  g_straightness
+  g_sinuosity
+
+  g_n_visited_trees
+  g_n_unvisited_trees
+
+
 
   patch-scale
   behaviorsequence
@@ -202,14 +236,13 @@ globals [
   ;for R index
   limitsOwin
 
-
   ;param values;
 ;  gut_transit_time ; amount of timesteps until the tamarin defecates (time the seed takes to go throught all the digestive system)
 ;  travel_speed ; global speed for travel
 
 
   ;; OUTPUT ;;
-  path ; for inputting generated_patches
+;  path ; for inputting generated_patches
   local-path  ; path for the model to run in different CPUs
   output-locations ; base filename for the monkey locations
   output-seeds-locations ; base filename for the seed locations
@@ -223,6 +256,7 @@ globals [
   stop-report
   chosen-cluster
 
+  field.shape.factor
   final-frac
   final-patches
 
@@ -293,6 +327,7 @@ globals [
   river-nodes
   cluster-type
   home_ranges_n
+  hr-size-final
 
 
 ]
@@ -327,9 +362,9 @@ to setup
   setup-trees
   setup-monkeys
 
-  output-files
+;  output-files
 
-  create-legend
+;  create-legend
 
   set day 1
   set midday 58
@@ -338,16 +373,25 @@ to setup
 ;  set travel_speed travel_speed
 
   if gtt-param? = TRUE [
-    if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set gut_transit_time 17 ]
-    if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set gut_transit_time 18 ]
-    if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set gut_transit_time 13 ]
-    if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set gut_transit_time 19 ]
-    if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set gut_transit_time 16 ]
-    if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set gut_transit_time 16 ]
-    if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set gut_transit_time 26 ]
-    if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set gut_transit_time 21 ]
-    if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set gut_transit_time 16 ]
+    if patch_type = "empirical" [
+      if study_area = "Guareí" AND feeding-trees-scenario = "May"[ set gut_transit_time 17 ]
+      if study_area = "Guareí" AND feeding-trees-scenario = "Jun"[ set gut_transit_time 18 ]
+      if study_area = "Guareí" AND feeding-trees-scenario = "Jul"[ set gut_transit_time 13 ]
+      if study_area = "Guareí" AND feeding-trees-scenario = "Aug"[ set gut_transit_time 19 ]
+      if study_area = "SantaMaria" AND feeding-trees-scenario = "Mar"[ set gut_transit_time 16 ]
+      if study_area = "SantaMaria" AND feeding-trees-scenario = "Apr"[ set gut_transit_time 16 ]
+      if study_area = "Suzano" AND feeding-trees-scenario = "Sep"[ set gut_transit_time 26 ]
+      if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set gut_transit_time 21 ]
+      if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set gut_transit_time 16 ]
+    ]
 
+    if patch_type = "generated" [
+      ; *** STILL NEEDS TO SPECIFY RIPARIAN FORESTS (AS IT IS LOWER)
+      set gut_transit_time 23.5 ; = rough estimate of mean gtt of Suzano (as we still haven't generated riparian forests)
+      if patch-size-ha < 200 [ set gut_transit_time 16 ] ; = Santa Maria
+      if patch-size-ha < 200 [ set gut_transit_time 17 ] ; = rough estimate of mean gtt of Guareí
+      if patch-size-ha > 2000 [ set gut_transit_time 16 ] ; = Taquara
+    ]
   ]
 
   if p-forage-param? = TRUE [
@@ -1024,13 +1068,46 @@ to go
 
   if ticks > 10000 [stop]
 
+  ask monkeys [
+    if energy < 0 [
+      set survived? "no"
+      if day > 3 [
+        print "calculating from GO"
+        calc-movement-dead
+        store-as-globals
+        ; calc resource metrics
+        NNdist
+        calc-seed-aggregation
+      ]
+      print "not enough days to calculate movement and seed dispersal metrics"
+
+;      set day no_days + 999 ; to achieve the stop condition of nlrx
+    ; only after calculating all variables and storing as globals otherwise nlrx does not take monkey variables. Instead, stop]
+    die
+    stop
+    ]
+
+  ]
+
+;  ask monkeys [
+;    if energy < 0 [  ; if monkeys are dead
+;      if day > 3 [
+;        print "FROM THE GO PROCEDURE"
+;        calc-movement-dead
+;        store-as-globals
+;      ]
+;      set survived? "no"
+;      stop
+;    ]
+;  ]
+
   if all? monkeys [action = "sleeping"] [
     set day day + 1
     set timestep 0
     ask monkeys [
       set action ""
     ]
-    if day > no_days [
+    if day > no_days [ ; if the simulation has ended
       output-print "run-days click finished"
       output-print "calculating home range with r extension"
       calc-homerange
@@ -1041,12 +1118,20 @@ to go
       output-print "calculating activity budget finished"
 
       output-print "calculating other movement metrics"
-      calc-movement-metrics
+;      calc-movement-metrics ; these are being estimated within calc-homerange
       output-print "calculating movement metrics finished"
+
+      ; calc near neighbor distance (in NetLogo)
+      NNdist
 
       output-print "calculating R index for seeds"
       calc-seed-aggregation
       output-print "calculating R index for seeds finished"
+
+      set survived? "yes" ; tamarins are alive by the end of the run
+
+      ask monkeys [ store-as-globals ]
+
 
       stop
     ]
@@ -1227,7 +1312,20 @@ to move-monkeys
     [ set label "" ]
 
 
-    if energy < 1 [ die ]
+    if energy < 0 [
+      if day > 3 [
+        print "calculating from move-monkeys"
+        calc-movement-dead
+        store-as-globals
+      ]
+      set survived? "no"
+;      set day no_days + 999 ; to achieve the stop condition of nlrx
+      stop
+      ; only after calculating all variables and storing as globals otherwise nlrx does not take monkey variables. Instead, stop
+      die
+
+
+    ]
 
 
     ; for home range calculation with r extension:
@@ -1250,7 +1348,8 @@ to move-monkeys
   ;; BLT ROUTINE
 
     if timestep = 0 [
-      ;set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
+      set energy_stored energy_stored + (energy - start-energy)
+      set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
       set tree_current -1
       set going-sleeping? FALSE
       remove_trees_surrounding ; to avoid feeding in the closest tree
@@ -1289,6 +1388,7 @@ to move-monkeys
       enhance_memory_list
 
       ; keep track of distance to the target
+      if tree_target = nobody [ enhance_memory_list search-feeding-tree ]
       if tree_target != -1 [ set tree_target_dist distance tree_target ]
 
       ifelse energy < energy_level_1 [ ; energy < level 1
@@ -1355,6 +1455,7 @@ to move-monkeys
 
     ] ; end of daily routine
 ] ; end ask monkeys
+
 end
 
 
@@ -1564,7 +1665,7 @@ to-report on-feeding-tree?
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
-        [ set species_time 2 ]
+        [ set species_time species_time_val ]
 ;        type "tree_current: " print tree_current
 ;        type "tree_target: " print tree_target
 ;        print "on-feeding-tree? TRUE" ; for debugging
@@ -1617,7 +1718,7 @@ to-report on-feeding-tree?
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
-        [ set species_time 2 ]
+        [ set species_time species_time_val ]
 ;        print "ON tree"
         report true
       ][
@@ -1707,7 +1808,7 @@ to feeding
     ]
 
 
-    if patch-type = "generated" [ set seed_gtt_list lput random-poisson 16 seed_gtt_list ]
+    if patch-type = "generated" [ set seed_gtt_list lput random-poisson gut_transit_time seed_gtt_list ]
 
 
   ]
@@ -1922,7 +2023,7 @@ to to-feeding-tree
 
         ][
 
-          if step-model-param? = TRUE  AND distance ld_tree_target > 0.8 [
+          if step-model-param? = TRUE  AND distance ld_tree_target > 1.5 [
             rt ( random max_rel_ang_travel_75q ) - ( random max_rel_ang_travel_75q )  ; travel is more directed than foraging, so we don't divide the max-random-angle
           ]
           travel
@@ -1998,6 +2099,12 @@ to search-feeding-tree
     ]
 
     set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
+    if tree_target = nobody [
+      print "monkey ran out of tree options"
+      enhance_memory_list
+      search-feeding-tree
+    ]
+
     ask tree_target [ set color blue ]    ; make long distance target blue
 
     set tree_target_species [ species ] of ld_tree_target
@@ -2291,6 +2398,8 @@ end
 ; Defecation commands
 ;---------------------------------------------------------------------------------------------
 to defecation
+;  output-print "voiding seeds ****************** "
+
   ifelse ( timestep < simulation-time * 90 / 100 ) [ ; if the time is below 90% of the simulation-time, seeds should be defecated (check parameterization);   Mayara's model: 84 timesteps is for 7 hours after waking up (after 3pm)
 
     ; testing if the monkey defecates the seeds AND put the seeds to the seeds' agent list
@@ -2322,6 +2431,8 @@ to defecation
 
           hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
             setxy xcor ycor
+            set x_scaled (xcor * patch-scale)
+            set y_scaled (ycor * patch-scale)
             set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
 ;            set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
             set species [species] of feeding-trees with [ who = loc_who ]
@@ -2362,6 +2473,8 @@ to defecation
 
         hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
           setxy xcor ycor
+          set x_scaled (xcor * patch-scale)
+          set y_scaled (ycor * patch-scale)
           set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
 ;          set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
           set species [species] of feeding-trees with [ who = loc_who ]
@@ -2402,6 +2515,8 @@ to morning-defecation
   foreach seed_ate_list [
     ax ->  hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
       setxy xcor ycor
+      set x_scaled (xcor * patch-scale)
+      set y_scaled (ycor * patch-scale)
       set mother-tree [id-tree] of feeding-trees with [ who = ax ]
 ;      set mother-tree-who [who] of feeding-trees with [ who = loc_who ] ; loc_who has to be redefined
       set species [species] of feeding-trees with [ who = ax ]
@@ -2492,13 +2607,15 @@ to sleeping
 ;      set tree_mem_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 ;      set tree_add_list [] ;; COMMENT OUT THIS BECAUSE THE TAMARINS DON'T FORGET
 
-      ; calc MR and DPL
-;      let a "_" ; to make it possible to analyze on nlrx
+
+;      calc-movement-vars
+;      let a "_" ; to make it possible to analyze it with nlrx
       set DPL DPL * patch-scale ; (same as multiplying by 10 m)
       set DPL_d lput ( precision DPL 2 ) DPL_d
 ;      set DPL_d lput a DPL_d
 
       set MR ( DPL / (timestep * 5 / 60 ) )  ; MR as calculated in Fuzessy et al. 2017: DPL/activity time (hours)
+;      type "MR = " print MR
       set MR_d lput ( precision MR 2 ) MR_d
 ;      set MR_d lput a MR_d
 
@@ -2512,6 +2629,7 @@ to sleeping
         set DPL 0
         set MR 0
       ]
+
 
       output-type "*simulation-time* "
       output-type ticks
@@ -2564,6 +2682,12 @@ to sleeping
         output-print "AHOY"
 
   ]
+
+end
+
+to calc-movement-metrics
+
+
 
 end
 
@@ -2933,58 +3057,63 @@ to calc-homerange
     set sinuosity r:get "db_metr %>% dplyr::select(sinuosity) %>%  unlist() %>% as.vector()"
   ]
 
-  ; calculating mean and sd DPL, MR and PT
-  ask monkeys [
-    let aux-list []
-    foreach DPL_d [
-      ax -> ;print x
-      set aux-list lput (ax ^ 2) aux-list
-;     print aux-list
+  ; calculating mean and sd DPL, MR and PT ONLY IF THE MONKEYS RAN FOR MORE THAN 3 DAYS
+
+  if day > 3 [
+    ask monkeys [
+      let aux-list []
+      foreach DPL_d [
+        ax -> ;print x
+        set aux-list lput (ax ^ 2) aux-list
+        ;     print aux-list
+      ]
+
+      foreach aux-list [
+        ax -> set PT_d lput (ax / KDE_95) PT_d
+        ;     print PT_d
+      ]
+
+      set MR mean (MR_d)
+      set MR precision MR 4
+      set MR_sd standard-deviation (MR_d)
+      set MR_sd precision MR_sd 4
+
+      set PT mean (PT_d)
+      set PT precision PT 4
+      set PT_sd standard-deviation (PT_d)
+      set PT_sd precision PT_sd 4
+
+      set DPL mean (DPL_d)
+      set DPL precision DPL 4
+      set DPL_sd standard-deviation (DPL_d)
+      set DPL_sd precision DPL_sd 4
+
+      type "MR mean = " print MR
+      type "PT mean = " print PT
+      type "DPL mean = " print DPL
+
+      ;round also other outputs
+      set KDE_95 precision KDE_95 4
+      set KDE_50 precision KDE_50 4
+      set p_feeding precision p_feeding 4
+      set p_foraging precision p_foraging 4
+      set p_traveling precision p_traveling 4
+      set p_resting precision p_resting 4
+
+      set step_length_mean precision step_length_mean 4
+      set step_length_sd precision step_length_sd 4
+      set turn_ang_mean precision turn_ang_mean 4
+      set turn_ang_sd precision turn_ang_sd 4
+      set MSD precision MSD 4
+      set intensity_use precision intensity_use 4
+
+      set straightness precision straightness 6
+      set sinuosity precision sinuosity 6
+
     ]
-
-    foreach aux-list [
-     ax -> set PT_d lput (ax / KDE_95) PT_d
-;     print PT_d
-    ]
-
-    set MR mean (MR_d)
-    set MR precision MR 4
-    set MR_sd standard-deviation (MR_d)
-    set MR_sd precision MR_sd 4
-
-    set PT mean (PT_d)
-    set PT precision PT 4
-    set PT_sd standard-deviation (PT_d)
-    set PT_sd precision PT_sd 4
-
-    set DPL mean (DPL_d)
-    set DPL precision DPL 4
-    set DPL_sd standard-deviation (DPL_d)
-    set DPL_sd precision DPL_sd 4
-
-    type "MR mean = " print MR
-    type "PT mean = " print PT
-    type "DPL mean = " print DPL
-
-    ;round also other outputs
-    set KDE_95 precision KDE_95 4
-    set KDE_50 precision KDE_50 4
-    set p_feeding precision p_feeding 4
-    set p_foraging precision p_foraging 4
-    set p_traveling precision p_traveling 4
-    set p_resting precision p_resting 4
-
-    set step_length_mean precision step_length_mean 4
-    set step_length_sd precision step_length_sd 4
-    set turn_ang_mean precision turn_ang_mean 4
-    set turn_ang_sd precision turn_ang_sd 4
-    set MSD precision MSD 4
-    set intensity_use precision intensity_use 4
-
-    set straightness precision straightness 6
-    set sinuosity precision sinuosity 6
 
   ]
+
 
   ; remake lists to be readable in R with nlrx (I COULDN'T MANAGE TO PASTE A "_" BETWEEN EACH VALUE)
 ;  ask monkeys [
@@ -3089,8 +3218,29 @@ to calc-activity-budget
 end
 
 
-to calc-movement-metrics
-;  set MR DPL /
+to calc-movement-dead ; if tamarins die before days > no_days, their variables get lost. So we put it as global variables
+
+  print "calculating movement from calc-movemement-dead"
+  ifelse day > 3 [
+    print "from movemend-dead"
+;    print day
+    output-print "monkeys died"
+    output-print "calculating metrics"
+    calc-homerange
+    calc-activity-budget
+    ;      calc-movement-metrics ; these are being estimated within calc-homerange
+    NNdist
+    calc-seed-aggregation
+
+  ][
+    print "not enough days to calculate movement metrics"
+    ; calc near neighbor distance (in NetLogo)
+    set day 999
+    die
+    stop
+  ]
+
+  stop
 
 end
 
@@ -3104,40 +3254,53 @@ to calc-seed-aggregation
   r:eval "library(adehabitatHR)"
 
 
-  ;; send agent variables into an R data-frame
+  ;; send agent variables into a R data-frame
 
   if patch-type = "generated" [
     (r:putagentdf  "seeds" seeds "who" "x_scaled" "y_scaled")
-;    (r:putagentdf  "seeds" seeds "who" "xcor" "ycor")
+    ;    (r:putagentdf  "seeds" seeds "who" "xcor" "ycor")
     ;    print r:get "colnames(seeds)"
-;    print r:get "seeds"
+    ;    print r:get "seeds"
 
-    ; load the poligon (.shp) to determine the window (owin) ;; IDEALLY SHOULD BE THE MCP OF THE GROUP
-    ;  if study_area = "Guareí" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ]
-    ;  if study_area = "Suzano" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ]
-    ;  if study_area = "Taquara" [ set limitsOwin      "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ]
-    ;  if study_area = "SantaMaria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
-    ;  r:put "limitsOwin" limitsOwin
-    ;  print r:get "limitsOwin"
-    ;  r:eval "limitsOwin) <- sf::st_read(limitsOwin)"
-    ;  r:eval "limitsOwin <- as.owin(limitsOwin))"
-
-    ;; use feeding-tree locations as owin (MCP)
-    (r:putagentdf "trees" feeding-trees "who" "x_scaled" "y_scaled")
-;    (r:putagentdf "trees" feeding-trees "who" "xcor" "ycor")
-;    print r:get "trees"
-    r:eval "xy <- SpatialPoints(trees[ , 2:3])"
-;    print r:get "xy"
-;    type "xy = " print r:get "xy <- SpatialPoints(trees[ , 2:3])"
+    ;; use all turtle locations as owin (MCP)
+    (r:putagentdf "bbox" turtles "who" "x_scaled" "y_scaled")
+    ;    (r:putagentdf "trees" feeding-trees "who" "xcor" "ycor")
+    ;    print r:get "trees"
+    r:eval "xy <- SpatialPoints(bbox[ , 2:3])"
+    ;    print r:get "xy"
+    ;    type "xy = " print r:get "xy <- SpatialPoints(trees[ , 2:3])"
 
     r:eval "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
     r:eval "limitsOwin <- as.owin(limitsOwin)"
 
     ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
-    r:eval "seeds <- seeds %>%  dplyr::select(x_scaled, y_scaled)  %>%  distinct()"
-;    r:eval "seeds <- seeds %>%  dplyr::select(xcor, ycor)  %>%  distinct()"
-    print r:get "seeds"
+    r:eval "seeds <- seeds %>%  dplyr::select(x_scaled, y_scaled)  %>%  dplyr::distinct()"
+    ;    r:eval "seeds <- seeds %>%  dplyr::select(xcor, ycor)  %>%  dplyr::distinct()"
+    ;    print r:get "seeds"
     r:eval "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+
+    ;; calc Nearest Neighbor distance within R
+;    r:eval "NN_seeds <- mean(nndist(sim))"
+;
+;    ; same for trees and sleeping trees
+;    (r:putagentdf  "ftrees" feeding-trees "who" "x_scaled" "y_scaled")
+;    (r:putagentdf  "strees" sleeping-trees "who" "x_scaled" "y_scaled")
+;
+;    r:eval "ftrees <- ftrees %>%  dplyr::select(x_scaled, y_scaled)  %>%  distinct()"
+;    r:eval "strees <- strees %>%  dplyr::select(x_scaled, y_scaled)  %>%  distinct()"
+;    r:eval "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
+;    r:eval "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
+;    r:eval "NN_feeding_trees <- mean(nndist(simf))"
+;    r:eval "NN_sleeping_trees <- mean(nndist(sims))"
+;
+;    set NN_seeds r:get "NN_seeds"
+;    set NN_feeding_trees r:get "NN_feeding_trees"
+;    set NN_sleeping_trees r:get "NN_sleeping_trees"
+;
+;        type "NN_seeds = " print NN_seeds
+;        type "NN_feeding_trees = " print NN_feeding_trees
+;        type "NN_sleeping_trees = " print NN_sleeping_trees
+
   ]
 
   if patch-type = "empirical" [
@@ -3155,9 +3318,9 @@ to calc-seed-aggregation
     ;  r:eval "limitsOwin) <- sf::st_read(limitsOwin)"
     ;  r:eval "limitsOwin <- as.owin(limitsOwin))"
 
-    ;; use feeding-tree locations as owin (MCP)
-    (r:putagentdf "trees" feeding-trees "who" "x_UTM" "y_UTM")
-    r:eval "xy <- SpatialPoints(trees[ , 2:3])"
+    ;; use agents' locations locations as owin (MCP)
+    (r:putagentdf "bbox" turtles "who" "x_UTM" "y_UTM")
+    r:eval "xy <- SpatialPoints(bbox[ , 2:3])"
     r:eval "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
     r:eval "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
     r:eval "limitsOwin <- as.owin(limitsOwin)"
@@ -3165,23 +3328,42 @@ to calc-seed-aggregation
     ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
     r:eval "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
     r:eval "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+
+    ;; calc Nearest Neighbor distance
+    r:eval "NN_seeds <- mean(nndist(sim))"
+
+    ; same for trees and sleeping trees
+    (r:putagentdf  "ftrees" feeding-trees "who" "x_UTM" "y_UTM")
+    (r:putagentdf  "strees" sleeping-trees "who" "x_UTM" "y_UTM")
+
+    r:eval "ftrees <- ftrees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
+    r:eval "strees <- strees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
+    r:eval "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
+    r:eval "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
+    r:eval "NN_feeding_trees <- mean(nndist(simf))"
+    r:eval "NN_sleeping_trees <- mean(nndist(sims))"
+
+;    set NN_seeds r:get "NN_seeds"
+;    set NN_feeding_trees r:get "NN_feeding_trees"
+;    set NN_sleeping_trees r:get "NN_sleeping_trees"
+
+;    type "NN_seeds = " print NN_seeds
+;    type "NN_feeding_trees = " print NN_feeding_trees
+;    type "NN_sleeping_trees = " print NN_sleeping_trees
   ]
 
 
 
  ; print r:get "colnames(sim)" ; ppp objects do not have colnames
-  type "sim object in R = " print r:get "sim"
+;  type "sim object in R = " print r:get "sim"
 
   print " ------------- Seed/defecation aggregation ------------------ "
   ;; calc R index (Clark-Evans test)
   r:eval "sim.clark <- clarkevans.test(sim,correction = 'cdf', alternative=c('two.sided'))"
 
-  ;; calc Nearest Neighbor distance
-  r:eval "NN_seeds <- mean(nndist(sim))"
-
     set R_seeds r:get "sim.clark$statistic"
     set R_seeds_p r:get "sim.clark$p.value"
-    set NN_seeds r:get "NN_seeds"
+;    set NN_seeds r:get "NN_seeds"
 
     type "R index = " print R_seeds
     type "R index p-value  = " print R_seeds_p
@@ -3192,20 +3374,80 @@ to calc-seed-aggregation
   set n_visited_trees count feeding-trees with [visitations > 0]
   set n_unvisited_trees count feeding-trees with [visitations = 0]
 
-  NNdist
 
 end
 
 
+
 to NNdist
+  if count seeds < 1 [ print "LESS THAN ONE SEED"]
+
   ask seeds [
     let myneighbor min-one-of other seeds [distance myself]  ;; choose my nearest neighbor based on distance
+;    print myneighbor
+;    if distance myneighbor > 0 [
     set myNND distance myneighbor * patch-scale
+;    ]
   ]
   ask feeding-trees [
     let myneighbor min-one-of other feeding-trees [distance myself]  ;; choose my nearest neighbor based on distance
     set myNND distance myneighbor * patch-scale
   ]
+  ask sleeping-trees [
+    let myneighbor min-one-of other sleeping-trees [distance myself]  ;; choose my nearest neighbor based on distance
+    set myNND distance myneighbor * patch-scale
+  ]
+
+  print "*********"
+
+
+  if count seeds > 1 [
+    set NN_seeds mean [MyNND] of seeds with [MyNND > 0]     ; for this to be correct one should make the seed locations unique, otherwise we will have 0 values.
+;    set NN_seeds mean [MyNND] of seeds                     ; wrong
+  ]
+
+  set NN_feeding_trees mean [MyNND] of feeding-trees
+  set NN_sleeping_trees mean [MyNND] of sleeping-trees
+
+  type "NN_seeds = " print NN_seeds
+  type "NN_feeding_trees = " print NN_feeding_trees
+  type "NN_sleeping_trees = " print NN_sleeping_trees
+
+end
+
+
+to store-as-globals
+  set g_energy_stored energy_stored
+
+  set g_KDE_95 KDE_95
+  set g_KDE_50 KDE_50
+  set g_p_feeding p_feeding
+  set g_p_foraging p_foraging
+  set g_p_traveling p_traveling
+  set g_p_resting p_resting
+  set g_step_length_mean step_length_mean
+  set g_step_length_sd step_length_sd
+  set g_turn_ang_mean turn_ang_mean
+  set g_turn_ang_sd turn_ang_sd
+  set g_DPL DPL
+  set g_DPL_sd DPL_sd
+  set g_DPL_d DPL_d
+  set g_MR MR
+  set g_MR_sd MR_sd
+  set g_MR_d MR_d
+  set g_PT PT
+  set g_PT_sd PT_sd
+  set g_PT_d PT_d
+  set g_MSD MSD
+  set g_intensity_use intensity_use
+  set g_straightness straightness
+  set g_sinuosity sinuosity
+
+  set g_n_visited_trees n_visited_trees
+  set g_n_unvisited_trees n_unvisited_trees
+
+
+
 end
 
 
@@ -3231,7 +3473,7 @@ end
 
 to-report p-visited-trees
   let ax count feeding-trees with [visitations > 0] / count feeding-trees
-  report x
+  report ax
 end
 
 
@@ -3322,22 +3564,9 @@ to-report patch-size-ha ; in hectares
   report final-patch-size / 100
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+;to-report NN-seeds-w0
+;   set NN_seeds mean [MyNND] of seeds
+;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 0
@@ -3374,7 +3603,7 @@ SLIDER
 start-energy
 start-energy
 100
-1000
+2000
 980.0
 1
 1
@@ -3459,7 +3688,7 @@ simulation-time
 simulation-time
 0
 170
-108.0
+110.0
 1
 1
 NIL
@@ -3474,7 +3703,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-34.0
+192.0
 1
 1
 NIL
@@ -3568,7 +3797,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-39.0
+246.0
 1
 1
 NIL
@@ -3583,7 +3812,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--10.0
+-53.0
 1
 1
 NIL
@@ -3598,7 +3827,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--7.0
+-31.0
 1
 1
 NIL
@@ -3613,7 +3842,7 @@ energy-loss-resting
 energy-loss-resting
 -100
 0
--6.0
+-65.0
 1
 1
 NIL
@@ -3666,7 +3895,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+4
 
 CHOOSER
 1017
@@ -3697,8 +3926,8 @@ SLIDER
 step_forget
 step_forget
 0
-200
-90.0
+500
+265.0
 1
 1
 NIL
@@ -3733,7 +3962,7 @@ gut_transit_time
 gut_transit_time
 0
 100
-17.0
+16.0
 1
 1
 NIL
@@ -3768,7 +3997,7 @@ energy_level_1
 energy_level_1
 100
 2000
-999.0
+1584.0
 1
 1
 NIL
@@ -3783,7 +4012,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1430.0
+1897.0
 1
 1
 NIL
@@ -4098,7 +4327,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.61
 0.05
 1
 NIL
@@ -4598,7 +4827,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-72.0
+74.0
 5
 1
 NIL
@@ -4613,7 +4842,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.8
+1.3
 0.1
 1
 NIL
@@ -4628,7 +4857,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.4
+2.4
 0.1
 1
 NIL
@@ -4643,7 +4872,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-75.0
+67.0
 1
 1
 NIL
@@ -4658,7 +4887,7 @@ species_time_val
 species_time_val
 1
 20
-1.0
+3.0
 1
 1
 NIL
@@ -4834,6 +5063,77 @@ NIL
 NIL
 NIL
 1
+
+INPUTBOX
+1178
+13
+1393
+73
+path
+D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/
+1
+0
+String
+
+SLIDER
+824
+10
+996
+43
+monkey_runs
+monkey_runs
+1
+100
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+733
+5
+841
+38
+mov variables
+type \"DPL_mean = \" ask monkeys [ show DPL ]\ntype \"DPL_sd = \" ask monkeys [ show DPL_sd ]\n\ntype \"PT_mean = \" ask monkeys [ show PT ]\ntype \"PT_sd = \" ask monkeys [ show PT_sd ]\ntype \"MR_mean = \" ask monkeys [ show MR ]\ntype \"MR_sd = \" ask monkeys [ show MR_sd ]\n\ntype \"DPL_d = \" ask monkeys [ show DPL_d ]\ntype \"PT_d = \" ask monkeys [ show PT_d ]\ntype \"MR_d = \" ask monkeys [ show MR_d ]\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+849
+10
+961
+43
+reset monkeys
+;ask turtles [ die ]\nask monkeys [ die ]\nask seeds [ die ]\nset day 1\nset timestep 0\n;ask monkeys [ die ]\n;set survived? 0\n;ask seeds [ die ]\nsetup-monkeys\nreset-ticks\nclear-drawing\ninspect one-of monkeys\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+459
+0
+537
+45
+NIL
+hr-size-final
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -87,6 +87,14 @@ Model_simulations/**.rds
 Model_simulations/**.csv
 Model_simulations/patch_examples/
 
+Model_simulations/Exp1/**.rds
+Model_simulations/Exp2/**.rds
+Model_simulations/Exp3/**.rds
+Model_simulations/Exp4/**.rds
+Model_simulations/Exp5/**.rds
+Model_simulations/Exp6/**.rds
+Model_simulations/Exp7/**.rds
+
 
 # Temporary files
 **/runtime
