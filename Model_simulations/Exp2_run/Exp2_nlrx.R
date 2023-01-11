@@ -169,15 +169,20 @@ files_forests[1]
 ### Define expname ---- 
 expname = paste0("Exp2_2023-01-10d")
 
+db <- readRDS("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment2/exampleRDS.rds")
+db <- getsim(nl, "simoutput") %>% as.data.frame()
+db <- db[-1, ] # drop first line because we don't want this data, we just want the collumns
 
 
 # # Loop through all forest files in .csv (import-world ---
 
-# for (i in files_forests) {
+for (i in files_forests) {
   
   # Test loop:
   # i <- files_forests[sample(length(files_forests), 1)]
-  i <- files_forests[999]
+  # i <- files_forests[999]
+  # i <- files_forests[1]
+  
   
   
   ### Attach to nl object ----
@@ -451,6 +456,8 @@ expname = paste0("Exp2_2023-01-10d")
   #' experiment object.  Attach results to nl object:
   setsim(nl, "simoutput") <- results
   
+  db <- bind_rows(results)
+  
   # rm(results)
   
   # nl@experiment@metrics.turtles
@@ -467,7 +474,7 @@ expname = paste0("Exp2_2023-01-10d")
                 i, 
                 ".rds"
                 )
-  filename
+  # filename
   
   
   saveRDS(nl, file = filename)
@@ -480,14 +487,14 @@ expname = paste0("Exp2_2023-01-10d")
   # i <- i + 1
   
   
-# }
+}
 
 
 
 
 ##### Screening data #####
 # results_unnest <- unnest_simoutput(nl) # for some reason unnest_simoutput does not work
-results_unnest <- getsim(nl, "simoutput")
+# results_unnest <- getsim(nl, "simoutput")
   
   # nl2 <- readRDS(filename)
 

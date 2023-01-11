@@ -346,7 +346,7 @@ to setup
   if USER = "Eduardo"
   [
     set local-path "D:/Data/Documentos/github/BLT_IBM-Model/"
-    set path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment7/batch_all/"
+;    set path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment7/batch_all/"
   ]
   if USER = "LASi"
   [set local-path "D:/EDUARDO_LAP"]
@@ -1846,15 +1846,17 @@ to remove_trees_surrounding
 end
 
 to enhance_memory_list
+
     ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
     ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
   let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find other trees in the pot_list while avoiding returning to visited trees ;
   if ( length tree_pot_list <= n_trees ) [
+    print "ENHANCING MEMORY"
     let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
 ;    print tree_bucket
 
     ; enhance potential list
-    ( foreach tree_bucket [ ax -> set tree_pot_list lput x tree_pot_list ] )
+    ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
 
     ; reduce mem_list and add_list
     set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
@@ -4141,15 +4143,15 @@ SWITCH
 275
 print-step?
 print-step?
-0
+1
 1
 -1000
 
 PLOT
-1432
-552
-1655
-746
+1419
+385
+1642
+579
 Memory
 tick
 count memory lists
