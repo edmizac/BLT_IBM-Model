@@ -162,19 +162,20 @@ feedingbout <- "true" # we are running general trees, and these values are speci
 # month_run_scp <- paste0('"', month_run, '"') # scaped
 pathfiles <- paste0('"', pathfiles, '"'); noquote(pathfiles) # scaped
 files_forests <- paste0('"', files_forests, '"'); noquote(files_forests) # scaped
-files_forests[1]
+# files_forests[1]
 
 
 
 ### Define expname ---- 
 expname = paste0("Exp2_2023-01-10d")
 
-db <- readRDS("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment2/exampleRDS.rds")
+db <- readRDS("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/exampleRDS.rds")
 db <- getsim(nl, "simoutput") %>% as.data.frame()
 db <- db[-1, ] # drop first line because we don't want this data, we just want the collumns
 
 
 # # Loop through all forest files in .csv (import-world ---
+files_forests <- files_forests[1067:1069]
 
 for (i in files_forests) {
   
@@ -456,7 +457,7 @@ for (i in files_forests) {
   #' experiment object.  Attach results to nl object:
   setsim(nl, "simoutput") <- results
   
-  db <- bind_rows(results)
+  db <- bind_rows(db, results)
   
   # rm(results)
   

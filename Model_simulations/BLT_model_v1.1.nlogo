@@ -362,6 +362,9 @@ to setup
   setup-trees
   setup-monkeys
 
+  set hr-size-final count patches with [pcolor = 58] / 100
+
+
 ;  output-files
 
 ;  create-legend
