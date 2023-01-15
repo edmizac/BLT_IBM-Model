@@ -168,6 +168,8 @@ globals [
   n_unvisited_trees ; number of unvisited trees in the end of the run (calculate proportion afterwards instead of giving a very long metric to nlrx)
 
   ; THESE ARE MONKEY VARIABLES THAT WE TAKE AS GLOBAL TO AVOID NLRX ERRORS (OR DEAD AGENTS OUTPUTING EMPTY VALUES)
+  g_SDD
+  g_SDD_sd
   g_energy_stored
   g_KDE_95
   g_KDE_50
@@ -346,7 +348,7 @@ to setup
   if USER = "Eduardo"
   [
     set local-path "D:/Data/Documentos/github/BLT_IBM-Model/"
-;    set path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment7/batch_all/"
+;    if patch-type = "generated" [ set path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment7/batch_all/" ]
   ]
   if USER = "LASi"
   [set local-path "D:/EDUARDO_LAP"]
@@ -392,7 +394,7 @@ to setup
       ; *** STILL NEEDS TO SPECIFY RIPARIAN FORESTS (AS IT IS LOWER)
       set gut_transit_time 23.5 ; = rough estimate of mean gtt of Suzano (as we still haven't generated riparian forests)
       if patch-size-ha < 200 [ set gut_transit_time 16 ] ; = Santa Maria
-      if patch-size-ha < 200 [ set gut_transit_time 17 ] ; = rough estimate of mean gtt of Guareí
+      if patch-size-ha >= 200 [ set gut_transit_time 17 ] ; = rough estimate of mean gtt of Guareí
       if patch-size-ha > 2000 [ set gut_transit_time 16 ] ; = Taquara
     ]
   ]
@@ -1080,6 +1082,7 @@ to go
         store-as-globals
         ; calc resource metrics
         NNdist
+        SDDcalc
         calc-seed-aggregation
       ]
       print "not enough days to calculate movement and seed dispersal metrics"
@@ -1126,6 +1129,7 @@ to go
 
       ; calc near neighbor distance (in NetLogo)
       NNdist
+      SDDcalc
 
       output-print "calculating R index for seeds"
       calc-seed-aggregation
@@ -3235,6 +3239,7 @@ to calc-movement-dead ; if tamarins die before days > no_days, their variables g
     calc-activity-budget
     ;      calc-movement-metrics ; these are being estimated within calc-homerange
     NNdist
+    SDDcalc
     calc-seed-aggregation
 
   ][
@@ -3341,12 +3346,12 @@ to calc-seed-aggregation
     (r:putagentdf  "ftrees" feeding-trees "who" "x_UTM" "y_UTM")
     (r:putagentdf  "strees" sleeping-trees "who" "x_UTM" "y_UTM")
 
-    r:eval "ftrees <- ftrees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
-    r:eval "strees <- strees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
-    r:eval "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
-    r:eval "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
-    r:eval "NN_feeding_trees <- mean(nndist(simf))"
-    r:eval "NN_sleeping_trees <- mean(nndist(sims))"
+;    r:eval "ftrees <- ftrees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
+;    r:eval "strees <- strees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
+;    r:eval "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
+;    r:eval "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
+;    r:eval "NN_feeding_trees <- mean(nndist(simf))"
+;    r:eval "NN_sleeping_trees <- mean(nndist(sims))"
 
 ;    set NN_seeds r:get "NN_seeds"
 ;    set NN_feeding_trees r:get "NN_feeding_trees"
@@ -3417,6 +3422,12 @@ to NNdist
   type "NN_seeds = " print NN_seeds
   type "NN_feeding_trees = " print NN_feeding_trees
   type "NN_sleeping_trees = " print NN_sleeping_trees
+
+end
+
+to SDDcalc
+  set g_SDD mean [SDD] of seeds
+  set g_SDD_sd standard-deviation [SDD] of seeds ;should be the same as sd() in R
 
 end
 
@@ -3576,8 +3587,8 @@ end
 GRAPHICS-WINDOW
 0
 20
-808
-829
+2510
+2531
 -1
 -1
 2.0
@@ -3591,9 +3602,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-399
+1249
 0
-399
+1249
 0
 0
 1
@@ -5013,7 +5024,7 @@ INPUTBOX
 1045
 222
 generated_patch
-generated_patches/8500_1.6.csv
+dens0.14size500_shapefact1_0_55.37_n20_R1.37_p0.024_NN198.63_ordered.csv
 1
 0
 String
@@ -5075,7 +5086,7 @@ INPUTBOX
 1393
 73
 path
-D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/
+D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment3/batch_all/
 1
 0
 String

@@ -95,11 +95,33 @@ nlogo_model_param
 ## List files patch generated csv files ------
 pathfiles <- paste0(path, "Experiment3/batch_all/") # Exp 1 and 2 turned into Exp 1 and Exp 3 turned into Exp 2
 
-files_forests <- list.files(pathfiles, pattern = ".csv")
-# files_forests <- paste0(pathfiles, "/", files_forests)
+# list generated landscapes (forests). It represents # number of patches * home ranges (10 reps) * number of clumped/random/ordered resourcers
+files_forests <- list.files(pathfiles, pattern = ".csv") ; length(files_forests)# should be 1069. Actually it should be 2700 but something in the build_forest model failed
+files_forests <- stringr::str_remove(files_forests, ".csv")
 
-# n files should be 2700 but it is 1069:
-length(files_forests) # number of patches * home ranges (10 reps) * number of clumped/random/ordered resourcers
+# files already processed:
+# donepath <- paste0(outpath, "withoutSDD/")
+files_done <- list.files(outpath, ".rds") ; length(files_done) # 46 files were processed
+files_done <- stringr::str_remove(files_done, ".rds")
+
+# Select only the files that were not processed:
+files_forests <- files_forests[!files_forests %in% files_done] ; length(files_forests)
+
+length(files_forests) + length(files_done) # it should be = 1069
+
+# paste the file extensions again
+files_forests <- paste0(files_forests, ".csv")
+
+
+### escape strings to nlrx experiment ----
+# files to be processed
+files_forests <- paste0('"', files_forests, '"'); noquote(files_forests) # scaped
+# files_forests[1]
+
+# month_run_scp <- paste0('"', month_run, '"') # scaped
+pathfiles <- paste0('"', pathfiles, '"'); noquote(pathfiles) # scaped
+
+
 
 #### Simple design experiment ( = one go button, no varibles) ####
 
@@ -158,13 +180,6 @@ p_forage_val <- param_table %>% dplyr::select(p_foraging_while_traveling) %>% pu
 feedingbout <- "true" # we are running general trees, and these values are specified inside the model (rough estimate, hardwired). A value is drawn from a normal distribution with 2.5 mean and 3 of sd. 
 
 
-### escape strings to nlrx experiment ----
-# month_run_scp <- paste0('"', month_run, '"') # scaped
-pathfiles <- paste0('"', pathfiles, '"'); noquote(pathfiles) # scaped
-files_forests <- paste0('"', files_forests, '"'); noquote(files_forests) # scaped
-# files_forests[1]
-
-
 
 ### Define expname ---- 
 expname = paste0("Exp2_2023-01-10d")
@@ -175,7 +190,7 @@ db <- db[-1, ] # drop first line because we don't want this data, we just want t
 
 
 # # Loop through all forest files in .csv (import-world ---
-files_forests <- files_forests[1067:1069]
+# files_forests <- files_forests[1067:1069]
 
 for (i in files_forests) {
   
@@ -214,6 +229,8 @@ for (i in files_forests) {
                                 # resource generation variables
                                 # "n-clusters", # n-clusters were held constant (=10)
                                 # "n-sleeping-trees", # also constant (n=5)
+                                "g_SDD",
+                                "g_SDD_sd",
                                 "n",
                                 "p-visited-trees",
                                 "R_seeds",        
@@ -395,9 +412,23 @@ for (i in files_forests) {
 
   
   
-  # report_model_parameters(nl)
-  
-  
+  # paramexp2 <- report_model_parameters(nl)
+  # a <- paramexp2 %>% unlist() %>% t() %>% as.data.frame()
+  #   
+  # a <- a %>% 
+  #   dplyr::select(., ends_with("value")) %>%
+  #   mutate_if(is.character, as.numeric) %>% # this generates NA where there are characters
+  #   rename_with(~gsub(".value", "", .x)) %>% 
+  #   sjmisc::rotate_df() %>%
+  #   # mutate(parameter = rownames(.)) %>%
+  #   rename(value = V1)
+  # a <- a %>% 
+  #   dplyr::filter(!is.na(value))
+  # 
+  # a %>% write.csv(here("Model_simulations", "Exp2_run", "Table2_params.csv"))
+  #   
+  # a %>% glimpse()
+  # 
   
   nseeds <- 1 # repetitions are specified in n-reps slider
   
@@ -457,7 +488,7 @@ for (i in files_forests) {
   #' experiment object.  Attach results to nl object:
   setsim(nl, "simoutput") <- results
   
-  db <- bind_rows(db, results)
+  # db <- bind_rows(db, results) # sometimes the output come as .chr or double and bind_rows break the loop
   
   # rm(results)
   
@@ -472,10 +503,9 @@ for (i in files_forests) {
   
   filename <-
          paste0(outpath, 
-                i, 
+                i,
                 ".rds"
                 )
-  # filename
   
   
   saveRDS(nl, file = filename)
@@ -500,11 +530,12 @@ for (i in files_forests) {
   # nl2 <- readRDS(filename)
 
 # # "Study/Mestrado/Model_Documentation/build_forest/"
-#   nl <- readRDS(paste0("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/",  
+#   nl2 <- readRDS(paste0("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/",  
 #                           "generate-R-aggreg-values.rds"))
-#   
-#   # results <- unnest_simoutput(nl)
-#   results <- nl@simdesign@simoutput
+#     nl2 <- readRDS(paste0(outpath, "dens0.034size100_shapefact3_0_77.89_n20_R0.78_p0.812_NN217.59_random.rds"))
+# #   
+#   results <- unnest_simoutput(nl2)
+#   results <- nl2@simdesign@simoutput
 # 
 # results <- results %>%
 #     rename(
