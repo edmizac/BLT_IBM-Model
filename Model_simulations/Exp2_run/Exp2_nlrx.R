@@ -530,12 +530,13 @@ for (i in files_forests) {
   # nl2 <- readRDS(filename)
 
 # # "Study/Mestrado/Model_Documentation/build_forest/"
-#   nl2 <- readRDS(paste0("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/",  
-#                           "generate-R-aggreg-values.rds"))
-#     nl2 <- readRDS(paste0(outpath, "dens0.034size100_shapefact3_0_77.89_n20_R0.78_p0.812_NN217.59_random.rds"))
+  # nl2 <- readRDS(paste0("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment1/batch_all/without_SDD/size750shapefact1257.15_R1.1_p0.232_NN113.85random.rds"))
+  # nl2 <- readRDS(paste0("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment1/batch_all/without_SDD/size1000shapefact1159.13_R1.1_p0.242_NN120.9random.rds"))
+  # nl2 <- readRDS(paste0("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment1/batch_all/without_SDD/size300shapefact2351.96_R0.94_p0.53_NN106.77random.rds"))
+    # nl2 <- readRDS(paste0(outpath, "size150shapefact1448.98_R1.11_p0.196_NN99.39random.rds"))
 # #   
-#   results <- unnest_simoutput(nl2)
-#   results <- nl2@simdesign@simoutput
+  # results <- nl2@simdesign@simoutput
+  # results %>% glimpse()
 # 
 # results <- results %>%
 #     rename(
