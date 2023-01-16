@@ -41,7 +41,8 @@ theme_set(theme_bw())
 # Empirical data for parameterisation:
 param.table <- read.csv(here("Data", "Parameter_table.csv"),
                                           sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí",
+                                      "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
 
 
 # Options (plotting, memory limit, decimal digits)
@@ -63,28 +64,18 @@ if(Sys.getenv("JAVA_HOME") == "") {
 
 
 # Step 1: Create nl object
-if(Sys.info()[["nodename"]] == "simul02") {
-  netlogopath <- file.path("/home/rbialozyt/Software/NetLogo 6.2.0")
-  modelpath <- "/home/rbialozyt/BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo"
-  outpath <- "/home/rbialozyt/BLT_IBM-Model/Model_analysis/Sensitivity-analysis"
-}
-if(Sys.info()[["nodename"]] == "PC146") {
-  netlogopath <- file.path("/opt/netlogo_620")
-  modelpath <- paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
-                      , "BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo")
-  outpath <-  paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
-                     , "BLT_IBM-Model/Model_analysis/Sensitivity-analysis")
-}
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp")
+  # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp", "Jan2023")
   user_scp = "\"Eduardo\""
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp")
+  # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp", "Jan2023")
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
   user_scp = "\"LEEC\""
 }
@@ -93,7 +84,7 @@ if(Sys.info()[["nodename"]] == "PC9") { # LEEC
 nl <- nl(nlversion = "6.2.2",
          nlpath = netlogopath,
          modelpath = modelpath,
-         jvmmem = 1024)
+         jvmmem = 2048)
 
 nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
@@ -105,15 +96,53 @@ nlogo_model_param
 ## Step 2: Attach an experiment
 exptype <- "simple"
 
+
+# If you want to use the calibrated parameters and not the model values defined by sliders:
+pathga <- here("Model_analysis", "Genetic_analysis", "temp")
+
+
+filesga <- list.files(pathga, pattern = "feedingbouton.csv")
+filesga <- paste0(pathga, "/", filesga)
+
+dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
+for (i in filesga) {
+  # i <- filesga[2]
+  filei <- read.csv(i)
+  dfga <- dplyr::bind_rows(dfga, filei)
+} 
+
+
+# We will use Santa Maria values as Taquara values were very inconsistent and we used SantaMaria values for the scenario simulations (Chapter3)
+dfga <- dfga %>% dplyr::filter(expname == "SantaMaria_Mar")
+
+
+
+### memory
+duration <- dfga %>% dplyr::filter(parameter=="duration") %>% pull("value")
+# visual = 2,
+step_forget <- dfga %>% dplyr::filter(parameter=="step_forget") %>% pull("value")
+
+### energy
+start_energy <- dfga %>% dplyr::filter(parameter=="start-energy") %>% pull("value")
+energy_level_1 <- dfga %>% dplyr::filter(parameter=="energy_level_1") %>% pull("value")
+energy_level_2 <- dfga %>% dplyr::filter(parameter=="energy_level_2") %>% pull("value")
+energy_from_fruits <- dfga %>% dplyr::filter(parameter=="energy-from-fruits") %>% pull("value")
+energy_from_prey <- dfga %>% dplyr::filter(parameter=="energy-from-prey") %>% pull("value")
+energy_loss_traveling <- dfga %>% dplyr::filter(parameter=="energy-loss-traveling") %>% pull("value")
+energy_loss_foraging <- dfga %>% dplyr::filter(parameter=="energy-loss-foraging") %>% pull("value")
+energy_loss_resting <- dfga %>% dplyr::filter(parameter=="energy-loss-resting") %>% pull("value")
+
+
+
 i <- 1
 for (i in i:nrow(param.table)) {
   
   # Define run and parameterisation: (all strings must use escaped quotes)
-  # area_run <- paste0('\"', param.table$group[i], '\"')
-  # month_run <- paste0('\"', param.table$id_month[i], '\"')
+  area_run <- paste0('\"', param.table$group[i], '\"')
+  month_run <- paste0('\"', param.table$id_month[i], '\"')
   
-  area_run <- '"Taquara"'
-  month_run <- '"Jan"'
+  # area_run <- '"Taquara"'
+  # month_run <- '"Jan"'
   expname <-  paste0("v1.1_", 
                      gsub(area_run, pattern = ('\"'), replacement = '', fixed = T), 
                      "_", 
@@ -161,40 +190,72 @@ nl@experiment <- experiment(expname = expname,
                             metrics = c( # e.g. "count sheep" or "count patches with [pcolor = green]"
                               # "timestep",
                               "day",
-                              "n_visited_trees",
-                              "n_unvisited_trees",
-                              "R_seeds",
-                              "R_seeds_p",
-                              "NN_seeds"
+                              "timestep",
+                              
+                              "g_SDD",
+                              "g_SDD_sd",
+                              "n",
+                              "p-visited-trees",
+                              "R_seeds",        
+                              "R_seeds_p",      
+                              "NN_seeds",       
+                              "NN_feeding_trees", # this is calculated again by the end of the run although it was calculated priorly within the build_forest process
+                              "NN_sleeping_trees", # might be a more important factor affecting SDD than the NN of feeding trees 
+                              
+                              # turtle variables as globals:
+                              "g_energy_stored", # energy is reset to energy-start everyday, thus we take
+                              # "g_energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
+                              # "g_enlvl1",         # value of energy_level_1 used at the start of the simulation
+                              # "g_enlvl2",         # value of energy_level_2 used at the start of the simulation 
+                              # "g_enstart",          # start-energy value at the start of the similuation
+                              "g_DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
+                              # "g_DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
+                              "g_DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
+                              "g_KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
+                              "g_KDE_50",      # final value                 # the best set of parameters should reproduce the observed core area
+                              "g_p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
+                              "g_p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
+                              "g_p_traveling", # final value                 # the best set of parameters should optimize the activity budget
+                              "g_p_resting",    # final value                 # the best set of parameters should optimize the activity budget
+                              # "g_step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              # "g_step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              # "g_turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
+                              # "g_turn_ang_sd",          # this one might be interesting though (but I haven't estimated the empirical ones yet)
+                              
+                              # additional movement variables
+                              "g_MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                              "g_MR_sd",
+                              # "g_MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
+                              # "g_intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
+                              "g_PT",               # Highly recommended as it is the only unbiased estimator of tortuosity. Almost the same thing as intensity of use (IU). path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                              "g_PT_sd",
+                              # "g_straightness",   # straightness is being wrongly estimated. DON'T USE IT NOW (first make it to be calculated in daily basis). straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                              # "g_sinuosity"       # sinuosity can't be compared across scales. DON'T USE IT straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                              
+                              "g_n_visited_trees",
+                              "g_n_unvisited_trees"
+                              
+                              
                             ),
                             metrics.turtles = list(
                               "monkeys" = c(
-                                "enstart",
-                                "enlvl1",
-                                "enlvl2",
+                                # "enstart",
+                                # "enlvl1",
+                                # "enlvl2",
                                 
-                                "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
-                                "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
-                                "DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
-                                "DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
-                                "KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
-                                "KDE_50",      # final value                 # the best set of parameters should reproduce the observed core area
-                                "p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
-                                "p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
-                                "p_traveling", # final value                 # the best set of parameters should optimize the activity budget
-                                "p_resting",    # final value                 # the best set of parameters should optimize the activity budget
+                                # "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
                                 "step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
                                 "step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
-                                # "turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
-                                "turn_ang_sd",          # this one might be interesting though
+                                # "turn_ang_mean",     # this one is quite consistent (~0), so I don't think this one is necessary
+                                "turn_ang_sd"          # this one might be interesting though
                                 
                                 # additional movement variables
-                                "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
-                                "MR_sd",
+                                # "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                                # "MR_sd",
                                 # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
                                 # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
-                                "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
-                                "PT_sd"
+                                # "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                                # "PT_sd"
                                 # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                                 # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                               )
@@ -273,27 +334,30 @@ nl@experiment <- experiment(expname = expname,
                               "study_area" = area_run, #"\"Guareí\"",
                               'feeding-trees-scenario' = month_run, #"\"May\"",
                               'no_days' = no_days_run, # DON'T TRY no_days = 1
-                              'simulation-time' = simultime_run
+                              'simulation-time' = simultime_run,
                               # 'feeding-trees?' = "true",
                               # 'sleeping-trees?' = "true",
-                              # 'sleeping-trees-scenario' = "\"empirical\"",
+                              'patch-type' = "\"empirical\"",
                               # 'empirical-trees-choice' = "\"closest\"",
                               
                               ### memory
-                              # 'duration' = 3,
-                              # 'visual' = 2,
-                              # "step_forget" = 130,
+                              'duration' = duration,
+                              'visual' = 0,
+                              "step_forget" = step_forget,
                               
                               ### energy
-                              # 'start-energy' = 70,
-                              # "energy_level_1" = 80,
-                              # "energy_level_2" = 150,
-                              # "energy-from-seeds" = 4,# ?
-                              # "energy-from-prey" = 4,
-                              # "energy-loss-traveling" = -1.6,
-                              # "energy-loss-foraging" = -2,
-                              # "energy-loss-resting" = -1.9,
-                              # "gut_transit_time_val" = 15,
+                              'start-energy' = start_energy,
+                              "energy_level_1" = energy_level_1,
+                              "energy_level_2" = energy_level_2,
+                              "energy-from-fruits" = energy_from_fruits,# ?
+                              "energy-from-prey" = energy_from_prey,
+                              "energy-loss-traveling" = energy_loss_traveling,
+                              "energy-loss-foraging" = energy_loss_foraging,
+                              "energy-loss-resting" = energy_loss_resting
+                              
+                              
+                              # Seed dispersal
+                              # "gut_transit_time_val" = 15   # not needed when gtt-param = true
                               # "n_seeds_hatched" = 1,
                               
                               ### movement
@@ -309,7 +373,7 @@ nl@experiment <- experiment(expname = expname,
 
 
 
-  nseeds <- 1 # repetitions (ideally n = 30)
+  nseeds <- 5 # repetitions (ideally n = 30)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)

@@ -422,8 +422,6 @@ end
 ; GIS
 to setup-gis
 
-  if patch-type = "generated" [ ]
-
 
   if patch-type = "empirical" [
     set-patch-size 3
@@ -544,8 +542,8 @@ to setup-gis
 
   if patch-type = "generated" [
 
+    set-patch-size 1
     resize-world 0 1250 0 1250
-    set-patch-size 2
     import-world ( word path generated_patch )
 
     ask patches with [pcolor = 105 ] [set pcolor green + 3]
@@ -3587,11 +3585,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-2510
-2531
+1258
+1279
 -1
 -1
-2.0
+1.0
 1
 10
 1
@@ -4843,7 +4841,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-74.0
+72.0
 5
 1
 NIL
@@ -4858,7 +4856,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.3
+1.8
 0.1
 1
 NIL
@@ -4873,7 +4871,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.4
+3.4
 0.1
 1
 NIL
@@ -4888,7 +4886,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.0
+75.0
 1
 1
 NIL
@@ -5024,7 +5022,7 @@ INPUTBOX
 1045
 222
 generated_patch
-dens0.14size500_shapefact1_0_55.37_n20_R1.37_p0.024_NN198.63_ordered.csv
+generated_patches/8500_1.6.csv
 1
 0
 String
@@ -5086,7 +5084,7 @@ INPUTBOX
 1393
 73
 path
-D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment3/batch_all/
+D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/
 1
 0
 String
