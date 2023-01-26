@@ -56,8 +56,8 @@ if(Sys.info()[["nodename"]] == "PC146") {
 }
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-  # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
+  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  # modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
   outpath <- here("Model_analysis", "Genetic_analysis", "temp")
   user_scp = "\"Eduardo\""
 }
@@ -116,6 +116,10 @@ energy_min <- 0
 # tamarins should not spend too much energy above level 2, thus I'm defining the max energy as 50% more than energy_level_2. If the values are above this, the run is dropped:
 # energy_max <- nlogo_model_param$energy_level_2$value + ( 0.5 * nlogo_model_param$energy_level_2$value )
 energy_max <- 3000 # or the max possible number used as variable in the experiment
+
+energy_stored_min <- 0
+energy_stored_max <- 100000
+
 
 # KDE95_max <- values_ga %>% dplyr::select(KDE95) %>% unlist() %>% max() %>% as.vector()
 KDE95_max <- 400 # (400 is the year-round home range of Taquara group)
@@ -402,7 +406,7 @@ nl@experiment <- experiment(expname = expname,
                             constants = list(
                               
                               "USER" = user_scp, #"\"Eduardo\"",
-                              "patch_type" = "empirical",
+                              # "patch_type" = patch_type_scp,     # only when using the model in Model_simulations
                               
                               'feedingbout-on?' = feedingbout,        # uses empirical values of time spent feeding on each tree species or a random one
                               "step-model-param?" = step_model_param, # uses observed mean step length and 75q turning angles
@@ -556,6 +560,12 @@ critfun <- function(nl) {
     
     
     # Get observed values (normalized)
+    
+    ## Don't use it yet
+    # energy_stored_obs <-  5000 %>% 
+    #   normalize(min = energy_stored_min, max = energy_stored_max) # as we don't have observed empirical values, I'm using 5000 (kJ)
+    # 
+    
     DPL_mean_obs <- values_ga_mv_summary %>% 
       dplyr::filter(group == area_run & id_month == month_run) %>%
       dplyr::select(DPL_mean_obs)  %>% unlist() %>% as.vector() %>% 
@@ -586,6 +596,7 @@ critfun <- function(nl) {
     
     # calc differences (or put all into a dataframe and use custom_fitness() function)
     en <- abs(energy - energy_obs)
+    # ens <- abs(energy) # energy stored (don't use it yet)
     vi <- abs(visits - visits_obs)
     hr95 <- abs(KDE95 - KDE95_obs)
     hr50 <- abs(KDE50 - KDE50_obs)
@@ -613,6 +624,11 @@ critfun <- function(nl) {
       1/sum(en) * w + # energy varies too much (min = 0, max = 3000) and we can't parameterize it (yet)
       1/sum(dpsd) * w + 1/sum(mrsd) * w + 1/sum(ptsd) # variation of the output variables is not as important as the variables
     
+    ## Don't use it yet:
+    # w <- 0.1
+    # crit <- crit +
+    #   1/sum(ens) * w + # energy stored varied too much (min = 0, max = ? I used 10^4) and we can't parameterize it (yet)
+      
     # print(en1)
     # print(en2)
     
@@ -712,8 +728,8 @@ saveRDS(results, file.path(outpath, paste0("/", expname, "_results_feedingbouton
 # resultsrbga <- readRDS(paste0(outpath, "/GA_Guarei_Jul_nl_feedingbouton.rds"))
 # nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl_feedingbouton.rds"))
 # resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_feedingbouton.rds"))
-nl <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_nl_feedingbouton.rds"))
-resultsrbga <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_results_feedingbouton.rds"))
+# nl <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_nl_feedingbouton.rds"))
+# resultsrbga <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_results_feedingbouton.rds"))
 
 # resultsrbga <- results
 # resultsrbga <- resultsrbga@simdesign@simoutput

@@ -111,16 +111,19 @@ monkeys-own [
 
   ; calculated in the sleeping procedure (because it becomes 0 everyday)
   DPL             ; daily path length. It is a daily value, but it become the average in the end of the run
+  DPL_mean        ; for outputing mean DPL
   DPL_sd          ; sd daily path length. It is only calculated by the end of the run
   DPL_d           ; list with values of DPL for the DPL plot
 
   MR              ; movement rate (as in Fuzessy et al. 2017) (DPL / activity time in hours)
+  MR_mean         ; for outputing mean MR
   MR_sd           ; sd movement rate. It is only calculated by the end of the run
   MR_d            ; list of movement rate values (as in DPL_d)
 
 
   ; aditional metrics
   PT              ; path twisting (as in Fuzessy et al. 2017). It is only calculated by the end of the run as it requires the home range
+  PT_mean         ; for outputing mean PT
   PT_sd           ; sd path twisting. It is only calculated by the end of the run
   PT_d            ; list of path twisting values (as in DPL_d)
 
@@ -781,6 +784,7 @@ to setup-monkeys
     set enlvl1 energy_level_1
     set enlvl2 energy_level_2
     set enstart start-energy
+    set energy_stored energy_stored_val
 
     ; for the behaviorsequence plot
     set behaviorsequence []
@@ -1071,8 +1075,10 @@ to go
 
   if ticks > 10000 [stop]
 
+  get_stored_energy
+
   ask monkeys [
-    if energy < 0 [
+    if energy < 0 AND energy_stored < 0 [
       set survived? "no"
       if day > 3 [
         print "calculating from GO"
@@ -1189,6 +1195,8 @@ to step ; FOR DEBUG PURPOSES ONLY
     ask monkeys [ set action "travel" ]
     stop
   ]
+
+  get_stored_energy
 
   repeat 1 [ move-monkeys ]
   set timestep timestep + 1
@@ -1316,8 +1324,7 @@ to move-monkeys
     ]
     [ set label "" ]
 
-
-    if energy < 0 [
+    if energy < 0 AND energy_stored < 0 [
       if day > 3 [
         print "calculating from move-monkeys"
         calc-movement-dead
@@ -2811,6 +2818,17 @@ to forget_trees
 end
 
 
+to get_stored_energy
+
+  ; Avoid that tamarins die by making them use their stored energy from other days
+  ask monkeys [
+    if energy < 50 [
+      set energy energy + (0.5 * energy_stored) ; take 50% of stored energy
+      set energy_stored energy_stored - (0.5 * energy_stored) ; diminish 50% of stored energy
+    ]
+  ]
+
+end
 
 
 ;---------------------------------------------------------------------------------------------
@@ -3080,24 +3098,24 @@ to calc-homerange
         ;     print PT_d
       ]
 
-      set MR mean (MR_d)
-      set MR precision MR 4
+      set MR_mean mean (MR_d)
+      set MR_mean precision MR 4
       set MR_sd standard-deviation (MR_d)
       set MR_sd precision MR_sd 4
 
-      set PT mean (PT_d)
-      set PT precision PT 4
+      set PT_mean mean (PT_d)
+      set PT_mean precision PT 4
       set PT_sd standard-deviation (PT_d)
       set PT_sd precision PT_sd 4
 
-      set DPL mean (DPL_d)
-      set DPL precision DPL 4
+      set DPL_mean mean (DPL_d)
+      set DPL_mean precision DPL 4
       set DPL_sd standard-deviation (DPL_d)
       set DPL_sd precision DPL_sd 4
 
-      type "MR mean = " print MR
-      type "PT mean = " print PT
-      type "DPL mean = " print DPL
+      type "MR mean = " print MR_mean
+      type "PT mean = " print PT_mean
+      type "DPL mean = " print DPL_mean
 
       ;round also other outputs
       set KDE_95 precision KDE_95 4
@@ -3585,11 +3603,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-1258
-1279
+617
+440
 -1
 -1
-1.0
+3.0
 1
 10
 1
@@ -3599,10 +3617,10 @@ GRAPHICS-WINDOW
 0
 0
 1
-0
-1249
-0
-1249
+-101
+101
+-68
+68
 0
 0
 1
@@ -3717,7 +3735,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-192.0
+84.0
 1
 1
 NIL
@@ -3763,7 +3781,7 @@ BUTTON
 760
 103
 Next Day
-next_day
+next_day\nask monkeys [ print DPL_d ]
 NIL
 1
 T
@@ -3811,7 +3829,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-246.0
+105.0
 1
 1
 NIL
@@ -3826,7 +3844,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--53.0
+-32.0
 1
 1
 NIL
@@ -3841,7 +3859,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--31.0
+-34.0
 1
 1
 NIL
@@ -4653,10 +4671,10 @@ NIL
 1
 
 PLOT
-1202
-85
-1411
-222
+1201
+94
+1410
+231
 DPL (m)
 NIL
 NIL
@@ -4669,7 +4687,7 @@ false
 "" ""
 PENS
 "default" 1.0 2 -16777216 true ";if [behavior] of monkeys = \"sleeping\" [ plot-pen-down ]\nask monkeys [ if behavior = \"sleeping\" [ plot-pen-down ] ]" ";ask monkeys [ plot DPL * patch-scale ]"
-"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-scale ] ]"
+"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if length DPL_d > 0 [ plot last DPL_d ] ]\n\n;ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-scale ] ]\n;ask monkeys [ foreach DPL_d [ dpl_i -> plot dpl_i ] ]\n"
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
 TEXTBOX
@@ -4736,16 +4754,6 @@ TEXTBOX
 482
 MODEL VERIFICATION:
 18
-15.0
-1
-
-TEXTBOX
-1202
-25
-1382
-197
-Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr\nTaquara = Jan\nSuzano = Sep, Dec (Feb and Apr for debugging avoid-matrix)\n
-1
 15.0
 1
 
@@ -4841,7 +4849,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-72.0
+63.0
 5
 1
 NIL
@@ -4856,7 +4864,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.8
+2.13
 0.1
 1
 NIL
@@ -4871,7 +4879,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.4
+3.597
 0.1
 1
 NIL
@@ -4886,7 +4894,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-75.0
+58.76
 1
 1
 NIL
@@ -5003,7 +5011,7 @@ CHOOSER
 patch-type
 patch-type
 "empirical" "generated"
-1
+0
 
 MONITOR
 457
@@ -5127,7 +5135,7 @@ BUTTON
 961
 43
 reset monkeys
-;ask turtles [ die ]\nask monkeys [ die ]\nask seeds [ die ]\nset day 1\nset timestep 0\n;ask monkeys [ die ]\n;set survived? 0\n;ask seeds [ die ]\nsetup-monkeys\nreset-ticks\nclear-drawing\ninspect one-of monkeys\n
+;ask turtles [ die ]\nask monkeys [ die ]\nask seeds [ die ]\nset day 1\nset timestep 0\n;ask monkeys [ die ]\n;set survived? 0\n;ask seeds [ die ]\nsetup-monkeys\nreset-ticks\nclear-drawing\ninspect one-of monkeys\n\nask monkeys [ set energy_stored 1000 ]
 NIL
 1
 T
@@ -5148,6 +5156,42 @@ hr-size-final
 17
 1
 11
+
+MONITOR
+1119
+297
+1203
+342
+energy_stored
+[energy_stored] of monkeys
+17
+1
+11
+
+SLIDER
+550
+625
+722
+658
+energy_stored_val
+energy_stored_val
+0
+10000
+1000.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+1167
+78
+1317
+118
+Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr\nTaquara = Jan\nSuzano = Sep, Dec (Feb and Apr for debugging avoid-matrix)
+6
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
