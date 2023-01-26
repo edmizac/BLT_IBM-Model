@@ -56,7 +56,8 @@ if(Sys.info()[["nodename"]] == "PC146") {
 }
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
   outpath <- here("Model_analysis", "Genetic_analysis", "temp")
   user_scp = "\"Eduardo\""
 }
@@ -79,8 +80,8 @@ nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
 
 # Decide which area/month to run the optimization on:
-area_run <- "SantaMaria"
-month_run <- "Mar"
+area_run <- "Taquara"
+month_run <- "Jan"
 
 
 # Empirical data for parameterisation:
@@ -401,6 +402,8 @@ nl@experiment <- experiment(expname = expname,
                             constants = list(
                               
                               "USER" = user_scp, #"\"Eduardo\"",
+                              "patch_type" = "empirical",
+                              
                               'feedingbout-on?' = feedingbout,        # uses empirical values of time spent feeding on each tree species or a random one
                               "step-model-param?" = step_model_param, # uses observed mean step length and 75q turning angles
                               "gtt-param?"= gtt_param,                # uses mean + sd of GTT for seed dispersal

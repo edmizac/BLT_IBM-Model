@@ -93,7 +93,7 @@ nlogo_model_param
 
 
 ## List files patch generated csv files ------
-pathfiles <- paste0(path, "Experiment3/batch_all/") # Exp 1 and 2 turned into Exp 1 and Exp 3 turned into Exp 2
+pathfiles <- paste0(path, "Experiment2/batch_all/") # Exp 1 and 2 turned into Exp 1 and Exp 3 turned into Exp 2
 
 # list generated landscapes (forests). It represents # number of patches * home ranges (10 reps) * number of clumped/random/ordered resourcers
 files_forests <- list.files(pathfiles, pattern = ".csv") ; length(files_forests)# should be 1069. Actually it should be 2700 but something in the build_forest model failed
@@ -497,7 +497,8 @@ for (i in files_forests) {
   # nl@experiment@variables
   
   #' Save RDS to avoid losing it by R abortion:
-  i <- files_forests[sample(length(files_forests), 1)]
+  # i <- files_forests[999]
+  # i <- files_forests[sample(length(files_forests), 1)] ### why ?????#####
   i <- i %>% str_remove(".csv") %>% str_remove_all("\"") # unquote
   # i <- i %>% noquote()
   

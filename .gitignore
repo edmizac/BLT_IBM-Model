@@ -95,6 +95,15 @@ Model_simulations/Exp5/**.rds
 Model_simulations/Exp6/**.rds
 Model_simulations/Exp7/**.rds
 
+Model_simulations/Exp1/**.png
+Model_simulations/Exp2/**.png
+Model_simulations/Exp3/**.png
+Model_simulations/Exp4/**.png
+Model_simulations/Exp5/**.png
+Model_simulations/Exp6/**.png
+Model_simulations/Exp7/**.png
+
+
 
 # Temporary files
 **/runtime
