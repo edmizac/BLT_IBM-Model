@@ -1,16 +1,12 @@
 ## Header --------------------------
 # Script name: 01_nlrx
-# Script purpose: Do sensitivity analysis with first parameterization with 
-# empirical seed dispersal data parameters and others from Data/Parameter-table.csv
-# Date created: 2022-11-20d
+# Script purpose: Do simple runs for every siminputrow using calibrated parameters
+# from the genetic algorithm
+# Date created: 2023-01-26d
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
-# From the previous sensitivity analysis to this one, lots of stuff changed:
-# 1) last-action was changed
-# 2) to-feeding-tree procedure was heavily changed
-# 3) There's a step model parameterization now, not to mention seed dispersal and p_foraging parameters
-#
+
 
 ## Packages -------------------------
 library("nlrx")
@@ -68,14 +64,14 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
   modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp", "Jan2023")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_2023Jan", "Param_calibrated", "temp")
   user_scp = "\"Eduardo\""
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
   modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp", "Jan2023")
+  # outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp", "Jan2023")
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
   user_scp = "\"LEEC\""
 }
@@ -91,58 +87,95 @@ nlogo_model_param
 # saveRDS(nlogo_model_param, file = paste0(outpath, "/nlogo_model_param.rds"))
 
 
-#### Simple design experiment ( = one go button, no varibles) ####
+
+## Parameterizations and calibrations -----
+
+### Empirical data for parameterisation ----
+dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
+                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí",
+                                      "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
+
+
+### Calibrated values for unknown parameters ----
+# If you want to use the calibrated parameters and not the model values defined by sliders
+calibrated_on <- "true"
+
+if (calibrated_on == "true") {
+  
+  path <- here("Model_analysis", "Genetic_analysis", "temp")
+  
+  filesga <- list.files(path, pattern = "feedingbouton.csv")
+  filesga <- paste0(path, "/", filesga)
+  
+  dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
+  for (i in filesga) {
+    # i <- filesga[2]
+    filei <- read.csv(i)
+    dfga <- dplyr::bind_rows(dfga, filei)
+  }
+  
+  # dfga <- dfga %>% 
+  #   dplyr::mutate(parameter, str_replace_all(., c("-" = "_", 
+  #                                                 # "\\." = "_",
+  #                                                 " " = "")))# %>% 
+  
+  a <- dfga$expname %>%  
+    str_split(., pattern = "_", simplify = TRUE)
+  
+  dfga <- dfga %>% 
+    mutate(
+      group = as.vector(a[, 1]),
+      month_run = as.vector(a[, 2])
+    ) %>% 
+    as.data.frame()
+  
+  # dfga %>% str()
+  # dfga %>% class()
+  
+  dfga <- dfga %>%
+    dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+  
+  # dfga <- dfga %>% 
+  #   mutate_if(is.character, as.factor)
+  
+  # dfga %>% str()
+  dfga$parameter %>% levels()
+  
+  
+  
+  dfga %>% str()
+  dfga %>% class()
+  
+}
+
+
+
+
+
+## Simple design experiment ( = one go button, no varibles) ####
 
 ## Step 2: Attach an experiment
 exptype <- "simple"
 
-
-# If you want to use the calibrated parameters and not the model values defined by sliders:
-pathga <- here("Model_analysis", "Genetic_analysis", "temp")
-
-
-filesga <- list.files(pathga, pattern = "feedingbouton.csv")
-filesga <- paste0(pathga, "/", filesga)
-
-dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
-for (i in filesga) {
-  # i <- filesga[2]
-  filei <- read.csv(i)
-  dfga <- dplyr::bind_rows(dfga, filei)
-} 
-
-
-# We will use Santa Maria values as Taquara values were very inconsistent and we used SantaMaria values for the scenario simulations (Chapter3)
-dfga <- dfga %>% dplyr::filter(expname == "SantaMaria_Mar")
-
-
-
-### memory
-duration <- dfga %>% dplyr::filter(parameter=="duration") %>% pull("value")
-# visual = 2,
-step_forget <- dfga %>% dplyr::filter(parameter=="step_forget") %>% pull("value")
-
-### energy
-start_energy <- dfga %>% dplyr::filter(parameter=="start-energy") %>% pull("value")
-energy_level_1 <- dfga %>% dplyr::filter(parameter=="energy_level_1") %>% pull("value")
-energy_level_2 <- dfga %>% dplyr::filter(parameter=="energy_level_2") %>% pull("value")
-energy_from_fruits <- dfga %>% dplyr::filter(parameter=="energy-from-fruits") %>% pull("value")
-energy_from_prey <- dfga %>% dplyr::filter(parameter=="energy-from-prey") %>% pull("value")
-energy_loss_traveling <- dfga %>% dplyr::filter(parameter=="energy-loss-traveling") %>% pull("value")
-energy_loss_foraging <- dfga %>% dplyr::filter(parameter=="energy-loss-foraging") %>% pull("value")
-energy_loss_resting <- dfga %>% dplyr::filter(parameter=="energy-loss-resting") %>% pull("value")
-
-
-
-i <- 1
+i <- 7
 for (i in i:nrow(param.table)) {
   
-  # Define run and parameterisation: (all strings must use escaped quotes)
-  area_run <- paste0('\"', param.table$group[i], '\"')
-  month_run <- paste0('\"', param.table$id_month[i], '\"')
   
-  # area_run <- '"Taquara"'
-  # month_run <- '"Jan"'
+  ### choose which parameterizations should be on
+  feedingbout <- "true"
+  step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
+  gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
+  p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
+  
+  
+  
+  ### Define run and parameterisation: (all strings must use escaped quotes)
+  area_run <- paste0('\"', dat.summary$group[i], '\"')
+  month_run <- paste0('\"', dat.summary$id_month[i], '\"')
+  
+  # area_run <- '"Guareí"'
+  # month_run <- '"Jun"'
   expname <-  paste0("v1.1_", 
                      gsub(area_run, pattern = ('\"'), replacement = '', fixed = T), 
                      "_", 
@@ -152,27 +185,94 @@ for (i in i:nrow(param.table)) {
     str_replace_all(., c("-" = "_", "\\s+" = "_")) # Remove - and space characters.
   # print(expname)
   # i <- i + 1
-#} # loop testing
+  #} # loop testing
   
-  no_days_run <- param.table %>% 
+  no_days_run <- dat.summary %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(ndays) %>% 
-     pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
+    pull() + 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
   
-  simultime_run <- param.table %>% 
+  simultime_run <- dat.summary %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(mean_timesteps) %>% 
     pull()
-  simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
+  simultime_run <- round(simultime_run * 0.9) # that's the timestep when tamarins should start looking for the sleeping site
+  
+
   
   
-  step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and included in the parameter table
-  gtt_param <- "true" # gtt parameters are setted inside the model. Change this when gtt is summarized and included in the parameter table
-  p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when p_foraging is summarized and included in the parameter table 
-  feedingbout <- "false" # previous sensitivity analysis showed that this does not matter, at least for Guareí
+  ### Define calbirated parameters:
+  # I only calibrated for one month of each group, so we are using the set of parameters of each area for all months in the same area
+  # memory
+  energy_from_fruits <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-from-fruits") %>% 
+    dplyr::select(value) %>% 
+    pull()
   
+  energy_from_prey <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-from-prey") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  energy_loss_traveling <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-loss-traveling") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  energy_loss_foraging <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-loss-foraging") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  energy_loss_resting <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-loss-resting") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  start_energy <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "start-energy") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  energy_level_1 <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy_level_1") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  energy_level_2 <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy_level_2") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  step_forget <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "step_forget") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  p_memory <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "prop_trees_to_reset_memory") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  duration <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "duration") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+
 
 # # Attach to nl experiment
 nl@experiment <- experiment(expname = expname,
@@ -342,14 +442,14 @@ nl@experiment <- experiment(expname = expname,
                               
                               ### memory
                               'duration' = duration,
-                              'visual' = 0,
+                              'visual' = 0,                # does not matter
                               "step_forget" = step_forget,
                               
                               ### energy
                               'start-energy' = start_energy,
                               "energy_level_1" = energy_level_1,
                               "energy_level_2" = energy_level_2,
-                              "energy-from-fruits" = energy_from_fruits,# ?
+                              "energy-from-fruits" = energy_from_fruits,
                               "energy-from-prey" = energy_from_prey,
                               "energy-loss-traveling" = energy_loss_traveling,
                               "energy-loss-foraging" = energy_loss_foraging,

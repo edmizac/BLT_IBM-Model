@@ -46,11 +46,6 @@ simulated_colors <- c("foraging" = "magenta",
 ## ---------------------------
 
 
-# Empirical data for parameterisation:
-dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_aftercleaning.csv"),
-                                          sep = ";", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
-
 
 # Options (plotting, memory limit, decimal digits)
 
@@ -86,7 +81,7 @@ if(Sys.info()[["nodename"]] == "PC146") {
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_development", "runtime")
+  outpath <- here("Model_development", "runtime", "v1.1_2023_Dec")
 }
 
 
@@ -96,6 +91,66 @@ nl <- nl(nlversion = "6.2.2",
          jvmmem = 1024)
 
 report_model_parameters(nl)
+
+
+#### Parameterizations and calibrations -----
+
+# Empirical data for parameterisation:
+dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
+                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+
+
+# Calibrated values for unknown parameters
+calibrated_on <- "true"
+
+if (calibrated_on == "true") {
+  
+  path <- here("Model_analysis", "Genetic_analysis", "temp")
+  
+  filesga <- list.files(path, pattern = "feedingbouton.csv")
+  filesga <- paste0(path, "/", filesga)
+  
+  dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
+  for (i in filesga) {
+    # i <- filesga[2]
+    filei <- read.csv(i)
+    dfga <- dplyr::bind_rows(dfga, filei)
+  }
+  
+  # dfga <- dfga %>% 
+  #   dplyr::mutate(parameter, str_replace_all(., c("-" = "_", 
+  #                                                 # "\\." = "_",
+  #                                                 " " = "")))# %>% 
+  
+  a <- dfga$expname %>%  
+    str_split(., pattern = "_", simplify = TRUE)
+  
+  dfga <- dfga %>% 
+    mutate(
+      group = as.vector(a[, 1]),
+      month_run = as.vector(a[, 2])
+    ) %>% 
+    as.data.frame()
+  
+  # dfga %>% str()
+  # dfga %>% class()
+  
+  dfga <- dfga %>%
+    dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
+  
+  # dfga <- dfga %>% 
+  #   mutate_if(is.character, as.factor)
+  
+  # dfga %>% str()
+  dfga$parameter %>% levels()
+  
+  
+  
+  dfga %>% str()
+  dfga %>% class()
+  
+}
 
 
 
@@ -137,8 +192,83 @@ for (i in i:nrow(dat.summary)) {
     pull()
   simultime_run <- round(simultime_run * 0.9) # that's the timestep when tamarins should start looking for the sleeping site
   
-  empiricalvelocities <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in dat.summary
-  feedingbout <- "false" # previous sensitivity analysis showed that this does not matter for Guareí
+  
+  ### choose which parameterizations should be on ----
+  feedingbout <- "true"
+  step_model_param <- "true" # velocity parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
+  gtt_param <- "true" # gtt parameters are setted inside the model. Change this when velocity is summarized and inclued in the parameter table
+  p_forage_param <- "true" # p_foraging parameter is setted inside the model. Change this when velocity is summarized and inclued in the parameter table 
+  
+  # Define calbirated parameters:
+  ## I only calibrated for one month of each group, so we are using the set of parameters of each area for all months in the same area
+  ### memory
+  e_fruits <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-from-fruits") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  e_prey <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-from-prey") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  e_travel <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-loss-traveling") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  e_foraging <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-loss-foraging") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  e_resting <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy-loss-resting") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  e_start <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "start-energy") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  en1 <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy_level_1") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  en2 <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "energy_level_2") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  step_f <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "step_forget") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  p_memory <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "prop_trees_to_reset_memory") %>% 
+    dplyr::select(value) %>% 
+    pull()
+  
+  duration <- dfga %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::filter(parameter == "duration") %>% 
+    dplyr::select(value) %>% 
+    pull()
+
+  
   
 
 # # Attach to nl experiment
@@ -195,39 +325,41 @@ nl@experiment <- experiment(expname = expname,
                               # "output-files?" = "false", #THIS IS VERY IMPORTANT (csv files)
                               # "output-print?" = "false", #true to output in the console
                               "USER" = "\"Eduardo\"",
-                              "empirical-velocities?" = empiricalvelocities, #"true",
-                              'feedingbout-on?' = feedingbout,
-                              # "print-step?" = "false",
-                              # 'export-png'= "false",
-                              # "show-energy?" = "false",
-                              # "show-path?" = "false",
-                              # "all-slp-trees?" = "false",
-                              # "path-color-by-day?" = "false",
-
+                              
+                              'feedingbout-on?' = feedingbout,        # uses empirical values of time spent feeding on each tree species or a random one
+                              "step-model-param?" = step_model_param, # uses observed mean step length and 75q turning angles
+                              "gtt-param?"= gtt_param,                # uses mean + sd of GTT for seed dispersal
+                              "p-forage-param?" = p_forage_param,     # uses empirical probabilities of foraging while traveling (p_foraging = p_foraging + p_traveling)
+                              
                               ### resource scenario
                               "study_area" = area_run, #"\"Guareí\"",
                               'feeding-trees-scenario' = month_run, #"\"May\"",
                               'no_days' = no_days_run, # DON'T TRY no_days = 1
-                              'simulation-time' = simultime_run
+                              'simulation-time' = simultime_run,
                               # 'feeding-trees?' = "true",
                               # 'sleeping-trees?' = "true",
                               # 'sleeping-trees-scenario' = "\"empirical\"",
                               # 'empirical-trees-choice' = "\"closest\"",
 
+                              
+                              # Calbirated parameters:
                               ### memory
-                              # 'duration' = 3,
-                              # 'visual' = 2,
-                              # "step_forget" = 130,
+                              'duration' = duration,
+                              'visual' = 0,            # does not make any difference
+                              "step_forget" = step_f,
 
                               ### energy
-                              # 'start-energy' = 70,
-                              # "energy_level_1" = 80,
-                              # "energy_level_2" = 150,
-                              # "energy-from-seeds" = 4,# ?
-                              # "energy-from-prey" = 4,
-                              # "energy-loss-traveling" = -1.6,
-                              # "energy-loss-foraging" = -2,
-                              # "energy-loss-resting" = -1.9,
+                              'start-energy' = e_start,
+                              "energy_level_1" = en1,
+                              "energy_level_2" = en2,
+                              "energy-from-fruits" = e_fruits,
+                              "energy-from-prey" = e_prey,
+                              "energy-loss-traveling" = e_travel,
+                              "energy-loss-foraging" = e_foraging,
+                              "energy-loss-resting" = e_resting
+
+
+                              # Others
                               # "gut_transit_time_val" = 15,
                               # "n_seeds_hatched" = 1,
 
@@ -318,10 +450,11 @@ for (seed in unique(nl@simdesign@simseeds)) {
   
   #' Save RDS to avoid losing it by R abortion:
   filename <-
-    here("Model_development",
-         "runtime",
-         "v1.1",
-         paste0(expname, seed, "_tempRDS.Rdata"))
+    # here("Model_development",
+    #      "runtime",
+    #      "v1.1",
+         paste0(outpath, "/", expname, seed, "_tempRDS.Rdata")
+  
   saveRDS(nl, file = filename)
   # rm(nl)
   

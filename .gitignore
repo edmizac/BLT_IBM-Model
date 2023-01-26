@@ -53,6 +53,8 @@
 /Model_analysis/Sensitivity-analysis/v1.1_December2022/**.RData
 /Model_analysis/Sensitivity-analysis/v1.1_December2022/**.png
 
+Model_analysis/Sensitivity-analysis/v1.1_2023Jan/**.rds
+
 
 /Model_analysis/Genetic_analysis/temp/**.csv
 /Model_analysis/Genetic_analysis/temp/**.png
@@ -77,7 +79,7 @@ Data/Movement/Curated/Param_siminputrow/**.png
 Data/Movement/Curated/Param_all-data/**.png
 Data/Movement/Curated/Validation/**.png
 
-Model_analysis/Sensitivity-analysis/v1.1_August2022/**.text
+Model_analysis/Sensitivity-analysis/v1.1_August2022/**.txt
 
 
 # Scenario simulations

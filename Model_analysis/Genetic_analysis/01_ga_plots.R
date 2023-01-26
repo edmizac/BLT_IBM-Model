@@ -25,6 +25,11 @@ theme_set(theme_bw(base_size = 18))
 
 path <- here("Model_analysis", "Genetic_analysis", "temp")
 
+# suz <- filesga <- list.files(path, pattern = "Dec_nl.rds")
+# suz <- paste0(path, "/", filesga)
+# suz <- readRDS(suz)
+
+
 filesga <- list.files(path, pattern = "feedingbouton.csv")
 filesga <- paste0(path, "/", filesga)
 

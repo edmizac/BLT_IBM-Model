@@ -817,7 +817,7 @@ to go
       output-print "calculating movement metrics finished"
 
 ;      output-print "calculating R index for seeds"
-;      calc-seed-aggregation
+      calc-seed-aggregation
 ;      output-print "calculating R index for seeds finished"
 
       stop
@@ -2886,6 +2886,7 @@ to calc-seed-aggregation
   set n_visited_trees count feeding-trees with [visitations > 0]
   set n_unvisited_trees count feeding-trees with [visitations = 0]
 
+  set day 9999
 end
 
 

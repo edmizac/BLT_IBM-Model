@@ -2822,9 +2822,9 @@ to get_stored_energy
 
   ; Avoid that tamarins die by making them use their stored energy from other days
   ask monkeys [
-    if energy < 50 [
-      set energy energy + (0.5 * energy_stored) ; take 50% of stored energy
-      set energy_stored energy_stored - (0.5 * energy_stored) ; diminish 50% of stored energy
+    if energy < ( 0.7 * start-energy ) [
+      set energy energy + (0.2 * energy_stored) ; take 20% of stored energy
+      set energy_stored energy_stored - (0.2 * energy_stored) ; diminish 20% of stored energy
     ]
   ]
 
@@ -3960,7 +3960,7 @@ step_forget
 step_forget
 0
 500
-265.0
+160.0
 1
 1
 NIL

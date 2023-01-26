@@ -112,10 +112,9 @@ for (i in filesga) {
 } 
 
 
-# We will use Santa Maria values as Taquara values were very inconsistent and we used SantaMaria values for the scenario simulations (Chapter3)
+#I will use Santa Maria values only as Taquara values were very inconsistent and 
+# we used SantaMaria values for the scenario simulations (Chapter3)
 dfga <- dfga %>% dplyr::filter(expname == "SantaMaria_Mar")
-
-
 
 ### memory
 duration <- dfga %>% dplyr::filter(parameter=="duration") %>% pull("value")
