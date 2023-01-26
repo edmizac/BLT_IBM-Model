@@ -3099,17 +3099,17 @@ to calc-homerange
       ]
 
       set MR_mean mean (MR_d)
-      set MR_mean precision MR 4
+      set MR_mean precision MR_mean 4
       set MR_sd standard-deviation (MR_d)
       set MR_sd precision MR_sd 4
 
       set PT_mean mean (PT_d)
-      set PT_mean precision PT 4
+      set PT_mean precision PT_mean 4
       set PT_sd standard-deviation (PT_d)
       set PT_sd precision PT_sd 4
 
       set DPL_mean mean (DPL_d)
-      set DPL_mean precision DPL 4
+      set DPL_mean precision DPL_mean 4
       set DPL_sd standard-deviation (DPL_d)
       set DPL_sd precision DPL_sd 4
 
@@ -3138,6 +3138,7 @@ to calc-homerange
     ]
 
   ]
+
 
 
   ; remake lists to be readable in R with nlrx (I COULDN'T MANAGE TO PASTE A "_" BETWEEN EACH VALUE)
@@ -3815,7 +3816,7 @@ INPUTBOX
 604
 105
 no_days
-10.0
+3.0
 1
 0
 Number
@@ -4687,7 +4688,7 @@ false
 "" ""
 PENS
 "default" 1.0 2 -16777216 true ";if [behavior] of monkeys = \"sleeping\" [ plot-pen-down ]\nask monkeys [ if behavior = \"sleeping\" [ plot-pen-down ] ]" ";ask monkeys [ plot DPL * patch-scale ]"
-"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if length DPL_d > 0 [ plot last DPL_d ] ]\n\n;ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-scale ] ]\n;ask monkeys [ foreach DPL_d [ dpl_i -> plot dpl_i ] ]\n"
+"pen-1" 1.0 2 -2674135 true "" "ask monkeys [ if action = \"sleeping\" AND length DPL_d > 0 [ plotxy ticks last DPL_d ] ]\n\n;ask monkeys [ if action = \"sleeping\" [ plot DPL * patch-scale ] ]\n;ask monkeys [ foreach DPL_d [ dpl_i -> plot dpl_i ] ]\n"
 "pen-2" 1.0 0 -7500403 true "" ";ask monkeys [ if behavior = \"sleeping\" [ plot mean DPL_d ] ]\n;ask monkeys [ plot mean DPL_d ]"
 
 TEXTBOX

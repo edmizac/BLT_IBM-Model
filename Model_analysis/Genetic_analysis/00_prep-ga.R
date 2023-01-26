@@ -335,7 +335,7 @@ nl@experiment <- experiment(expname = expname,
                                 "enlvl1",         # value of energy_level_1 used at the start of the simulation
                                 "enlvl2",         # value of energy_level_2 used at the start of the simulation 
                                 "enstart",          # start-energy value at the start of the similuation
-                                "DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
+                                "DPL_mean",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
                                 # "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
                                 "DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
                                 "KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
@@ -350,11 +350,11 @@ nl@experiment <- experiment(expname = expname,
                                 # "turn_ang_sd",          # this one might be interesting though (but I haven't estimated the empirical ones yet)
                                 
                                 # additional movement variables
-                                "MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                                "MR_mean",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
                                 "MR_sd",
                                 # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
                                 # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
-                                "PT",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                                "PT_mean",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
                                 "PT_sd",
                                 # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                                 # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
