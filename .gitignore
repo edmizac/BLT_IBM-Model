@@ -116,6 +116,7 @@ Model_simulations/Exp7/**.png
 # Temporary files
 **/runtime
 runtime/
+temp/
 **.tmp.**
 /locations_*
 
