@@ -7,8 +7,14 @@
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
-#
-#
+
+
+#################################################################################################################
+
+## ###### ***** DO NOT FORGET TO COMMENT OUT CALC-SEED-AGGREGATION PROCEDURE IN THE NETLOGO MODEL ***** ###### ##
+
+#################################################################################################################
+
 
 ## Options -------------------------
 # (plotting, memory limit, decimal digits)
@@ -56,14 +62,15 @@ if(Sys.info()[["nodename"]] == "PC146") {
 }
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  # modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
+  # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
   outpath <- here("Model_analysis", "Genetic_analysis", "temp")
   user_scp = "\"Eduardo\""
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
-  modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
+  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
   outpath <- here("Model_analysis", "Genetic_analysis", "temp")
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
   user_scp = "\"LEEC\""
@@ -80,8 +87,8 @@ nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
 
 # Decide which area/month to run the optimization on:
-area_run <- "Taquara"
-month_run <- "Jan"
+area_run <- "Suzano"
+month_run <- "Dec"
 
 
 # Empirical data for parameterisation:
@@ -324,8 +331,36 @@ nl@experiment <- experiment(expname = expname,
                             idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
                             # reporters:
                             metrics = c(
-                              # "count feeding-trees with [visitations > 0] / count feeding trees" # the best set of parameters should make tamarins visit all the observed trees in the period
-                              # "count feeding-trees"
+                              
+                              # "g_energy_stored", # energy is reset to energy-start everyday, thus we take
+                              # "g_energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
+                              # "g_enlvl1",         # value of energy_level_1 used at the start of the simulation
+                              # "g_enlvl2",         # value of energy_level_2 used at the start of the simulation 
+                              # "g_enstart",          # start-energy value at the start of the similuation
+                              "g_DPL",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
+                              # "g_DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
+                              "g_DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
+                              "g_KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
+                              "g_KDE_50",      # final value                 # the best set of parameters should reproduce the observed core area
+                              "g_p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
+                              "g_p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
+                              "g_p_traveling", # final value                 # the best set of parameters should optimize the activity budget
+                              "g_p_resting",    # final value                 # the best set of parameters should optimize the activity budget
+                              # "g_step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              # "g_step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
+                              # "g_turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
+                              # "g_turn_ang_sd",          # this one might be interesting though (but I haven't estimated the empirical ones yet)
+                              
+                              # additional movement variables
+                              "g_MR",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
+                              "g_MR_sd",
+                              # "g_MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
+                              # "g_intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
+                              "g_PT",               # Highly recommended as it is the only unbiased estimator of tortuosity. Almost the same thing as intensity of use (IU). path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
+                              "g_PT_sd",
+                              # "g_straightness",   # straightness is being wrongly estimated. DON'T USE IT NOW (first make it to be calculated in daily basis). straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                              # "g_sinuosity"       # sinuosity can't be compared across scales. DON'T USE IT straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
+                              
                               "p-visited-trees"
                             ),
                             metrics.turtles = list(
@@ -335,30 +370,7 @@ nl@experiment <- experiment(expname = expname,
                                 "enlvl1",         # value of energy_level_1 used at the start of the simulation
                                 "enlvl2",         # value of energy_level_2 used at the start of the simulation 
                                 "enstart",          # start-energy value at the start of the similuation
-                                "DPL_mean",         # mean DPL (in case we don't want all the values -> good for bar and pointrange plots)
-                                # "DPL_d",       # DPL is set to 0 everyday    # the best set of parameters should reproduce the observed DPL
-                                "DPL_sd",      # sd DPL  (in case we don't want all the values -> good for bar and pointrange plots)
-                                "KDE_95",      # final value                 # the best set of parameters should reproduce the observed home range
-                                "KDE_50",      # final value                 # the best set of parameters should reproduce the observed core area
-                                "p_feeding",   # final value                 # the best set of parameters should optimize the activity budget
-                                "p_foraging",  # final value                 # the best set of parameters should optimize the activity budget
-                                "p_traveling", # final value                 # the best set of parameters should optimize the activity budget
-                                "p_resting",    # final value                 # the best set of parameters should optimize the activity budget
-                                # "step_length_mean",    # besides the parameterization, agents interactions make the observed step length and turning angles change
-                                # "step_length_sd",      # besides the parameterization, agents interactions make the observed step length and turning angles change
-                                # "turn_ang_mean",     # this one is quite consistent, so I don't think this one is necessary
-                                # "turn_ang_sd",          # this one might be interesting though (but I haven't estimated the empirical ones yet)
-                                
-                                # additional movement variables
-                                "MR_mean",               # movement rate (MR) is used to predict SDD by primates: http://doi.wiley.com/10.1002/ajp.22659
-                                "MR_sd",
-                                # "MSD",              # other modelling studies have used this one (https://doi.org/10.3390/ani12182412.), but I believe it is very similar to MR
-                                # "intensity_use",    # bether than MSD in my oppinion: read about it in: https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en
-                                "PT_mean",               # path twisting is used by Fuzessy et al 2017 to predict SDD among primates: http://doi.wiley.com/10.1002/ajp.22659
-                                "PT_sd",
-                                # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
-                                # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
-                                
+
                                 "n_visited_trees",
                                 "n_unvisited_trees"
                                 
@@ -406,7 +418,7 @@ nl@experiment <- experiment(expname = expname,
                             constants = list(
                               
                               "USER" = user_scp, #"\"Eduardo\"",
-                              # "patch_type" = patch_type_scp,     # only when using the model in Model_simulations
+                              # "patch_type" = "empirical", # only when using the model in Model_simulations
                               
                               'feedingbout-on?' = feedingbout,        # uses empirical values of time spent feeding on each tree species or a random one
                               "step-model-param?" = step_model_param, # uses observed mean step length and 75q turning angles
@@ -470,7 +482,11 @@ runs <- 0
 critfun <- function(nl) {
   
   # extract values from run from example nl object:
-  # db2 <- nlrx::getexp(nl, "variables") # or nl@experiment@variables
+  # # db2 <- nlrx::getexp(nl.x, "variables") # or nl@experiment@variables
+  # nl.x<- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
+  #                      "v1.1_Taquara_Jan_simple-74525742_tempRDS.Rdata"))
+  # db <- unnest_simoutput(nl.x)
+  
   db <- unnest_simoutput(nl)
   # colnames(db)
   
@@ -515,11 +531,11 @@ critfun <- function(nl) {
       normalize(min = energy_min, max = energy_max)
     
     # KDE95 <- db %>%  magrittr::extract("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
-    KDE95 <- db %>%  dplyr::select("KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
+    KDE95 <- db %>%  dplyr::select("g_KDE_95") %>% unlist() %>%  na.omit() %>% as.vector() %>%
       `/` (10000) %>%  #convert to hectares
       normalize(min = KDE95_min, max = KDE95_max)
     # KDE50 <- db %>%  magrittr::extract("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    KDE50 <- db %>%  dplyr::select("KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    KDE50 <- db %>%  dplyr::select("g_KDE_50") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
       `/` (10000) %>%  #convert to hectares
       normalize(min = KDE50_min, max = KDE50_max)
     
@@ -528,16 +544,16 @@ critfun <- function(nl) {
       normalize(min = visits_min, max = visits_max)
     
     # p_feeding <- db %>%  magrittr::extract("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
-    p_feeding <- db %>%  dplyr::select("p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
+    p_feeding <- db %>%  dplyr::select("g_p_feeding") %>% unlist()  %>% na.omit() %>% as.vector() %>% 
       normalize(min = p_feeding_min, max = p_feeding_max)
     # p_foraging <- db %>%  magrittr::extract("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    p_foraging <- db %>%  dplyr::select("p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    p_foraging <- db %>%  dplyr::select("g_p_foraging") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
       normalize(min = p_foraging_min, max = p_foraging_max)
     # p_traveling <- db %>%  magrittr::extract("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    p_traveling <- db %>%  dplyr::select("p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    p_traveling <- db %>%  dplyr::select("g_p_traveling") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
       normalize(min = p_traveling_min, max = p_traveling_max)
     # p_resting <- db %>%  magrittr::extract("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
-    p_resting <- db %>%  dplyr::select("p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
+    p_resting <- db %>%  dplyr::select("g_p_resting") %>% unlist() %>%  na.omit() %>% as.vector() %>% 
       normalize(min = p_resting_min, max = p_resting_max)
     
     # DPL_sd <- db$DPL_sd # check it
@@ -551,12 +567,12 @@ critfun <- function(nl) {
     #   map_dbl(mean, na.rm=TRUE)
     # db$DPL_mean <- DPL_mean
     
-    DPL_mean <- db$DPL %>%  na.omit() %>% as.vector() %>% normalize(min = dpl_mean_min, max = dpl_mean_max)
-    DPL_sd <- db$DPL_sd %>% na.omit() %>% as.vector() %>%normalize(min = dpl_sd_min, max = dpl_sd_max)
-    MR_mean <- db$MR %>% na.omit() %>% as.vector() %>% normalize(min = mr_min, max = mr_max)
-    MR_sd <- db$MR_sd  %>% na.omit() %>% as.vector() %>% normalize(min = mr_sd_min, max = mr_sd_max)
-    PT_mean <- db$PT  %>% na.omit() %>% as.vector() %>% normalize(min = pt_min, max = pt_max)
-    PT_sd <- db$PT_sd  %>% na.omit() %>% as.vector() %>% normalize(min = pt_sd_min, max = pt_sd_max)
+    DPL_mean <- db$g_DPL %>%  na.omit() %>% as.vector() %>% normalize(min = dpl_mean_min, max = dpl_mean_max)
+    DPL_sd <- db$g_DPL_sd %>% na.omit() %>% as.vector() %>%normalize(min = dpl_sd_min, max = dpl_sd_max)
+    MR_mean <- db$g_MR %>% na.omit() %>% as.vector() %>% normalize(min = mr_min, max = mr_max)
+    MR_sd <- db$g_MR_sd  %>% na.omit() %>% as.vector() %>% normalize(min = mr_sd_min, max = mr_sd_max)
+    PT_mean <- db$g_PT  %>% na.omit() %>% as.vector() %>% normalize(min = pt_min, max = pt_max)
+    PT_sd <- db$g_PT_sd  %>% na.omit() %>% as.vector() %>% normalize(min = pt_sd_min, max = pt_sd_max)
     
     
     # Get observed values (normalized)
@@ -659,12 +675,13 @@ critfun <- function(nl) {
 
 # Test the eval function:
 # # extract values from run from example objects for testing:
-# nl<- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
-#                      "v1.1_Taquara_Jan_simple-188585647_tempRDS.Rdata"))
-# # # params_run <- nl.x %>% nlrx::report_model_parameters()
-# # critfun(nl.x)
+# nl.x<- readRDS(here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp",
+#                      "v1.1_Taquara_Jan_simple-74525742_tempRDS.Rdata"))
+# # # # params_run <- nl.x %>% nlrx::report_model_parameters()
+# critfun(nl.x)
+# db <- nlrx::getexp(nl.x, "simoutput")
+# db1 <- nlrx::getexp(nl.x, "metrics.turtles")
 # db2 <- nlrx::getexp(nl.x, "variables")
-# db <- nlrx::getexp(nl.x, "metrics.turtles")
 # db3 <- report_model_parameters(nl.x)
 # db4 <- nl.x@experiment@variables
 
@@ -710,6 +727,7 @@ tictoc::toc()
 
 # 00_rep-ga_resuls results
 cat(summary(results))
+results
 
 setsim(nl, "simoutput") <- results
 
@@ -730,6 +748,8 @@ saveRDS(results, file.path(outpath, paste0("/", expname, "_results_feedingbouton
 # resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_feedingbouton.rds"))
 # nl <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_nl_feedingbouton.rds"))
 # resultsrbga <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_results_feedingbouton.rds"))
+# nl <- readRDS(paste0(outpath, "/GA_Suzano_Dec_nl_feedingbouton.rds"))
+# resultsrbga <- readRDS(paste0(outpath, "/GA_Suzano_Dec_results_feedingbouton.rds"))
 
 # resultsrbga <- results
 # resultsrbga <- resultsrbga@simdesign@simoutput

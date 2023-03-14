@@ -1087,7 +1087,7 @@ to go
         ; calc resource metrics
         NNdist
         SDDcalc
-        calc-seed-aggregation
+;        calc-seed-aggregation
       ]
       print "not enough days to calculate movement and seed dispersal metrics"
 
@@ -1136,7 +1136,7 @@ to go
       SDDcalc
 
       output-print "calculating R index for seeds"
-      calc-seed-aggregation
+;      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
@@ -3257,7 +3257,7 @@ to calc-movement-dead ; if tamarins die before days > no_days, their variables g
     ;      calc-movement-metrics ; these are being estimated within calc-homerange
     NNdist
     SDDcalc
-    calc-seed-aggregation
+;    calc-seed-aggregation
 
   ][
     print "not enough days to calculate movement metrics"

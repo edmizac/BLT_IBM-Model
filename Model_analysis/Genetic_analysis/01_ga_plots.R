@@ -23,6 +23,7 @@ library("ggplot2")
 # ggplot theme
 theme_set(theme_bw(base_size = 18))
 
+# path <- here("Model_analysis", "Genetic_analysis", "temp", "without_stored_energy")
 path <- here("Model_analysis", "Genetic_analysis", "temp")
 
 # suz <- filesga <- list.files(path, pattern = "Dec_nl.rds")
@@ -36,7 +37,7 @@ filesga <- paste0(path, "/", filesga)
 dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
 for (i in filesga) {
   # i <- filesga[2]
-  filei <- read.csv(i)
+  filei <- read.csv(i, encoding = "latin1")
   dfga <- dplyr::bind_rows(dfga, filei)
 }
 
@@ -51,6 +52,14 @@ dfga <- dfga %>%
 
 dfga %>% str()
 dfga$parameter %>% levels()
+
+dfga$expname %>% stringr::str_replace_all(.,"[^[:graph:]]", "") 
+guastr <- guastr[1]
+dfga <- dfga %>% 
+  dplyr::mutate(expname = dplyr::recode(expname, guastr = "Guarei_Jul"
+                                        # ,"Santa Maria" = "SantaMaria"
+                                        )
+                )
 
 # dfga_en <- dfga %>% 
 #   dplyr::filter(str_detect(parameter, "energy"))
@@ -187,7 +196,7 @@ dfga %>%
                 , width = 0.2
                 , size = 0.2) +
   geom_point(aes(x = parameter, y = value, color = expname),
-             size = 2
+             size = 3
              # , alpha = 0.5
              # , position = "jitter"
   ) +
@@ -201,6 +210,7 @@ dfga %>%
     , axis.title.x = element_blank()
     , legend.position = "bottom"
   ) +
+  # scale_color_manual(values = c("#C833EC", "#33A4EC")) +
   ggtitle("Optimization of model parameters") +
   facet_wrap(~param_category, scales = "free", nrow = 1)
 
