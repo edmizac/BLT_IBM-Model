@@ -143,6 +143,31 @@ dat.all.summary.feces <- dat.all %>%
 #             row.names = FALSE)
 
 
+# SDD for the same day for all areas (requested by Olivier on 2023-04-03d)
+dat.all.summary.GTT <- dat.all %>% 
+  # group_by(group, id_month, disp_day) %>% 
+  group_by(disp_day) %>% 
+  summarize(
+    defecation_events = n(),
+    nseeds_mean = mean((n_seeds)),
+    nseeds_sd = sd((n_seeds)),
+    # mean_SDD = mean(SDD), # THIS IS A VALIDATION VARIABLE, NOT A PARAMETRIZATION PARAMETER
+    # sd_SDD = sd(SDD), # Ibid
+    mean_GTT = mean(gut_transit_time),
+    sd_GTT = sd(gut_transit_time)
+  ) %>% 
+  mutate(across(where(is.numeric), round2))
+
+## Write csv
+# dat.all.summary.GTT %>%
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Summary_GTT_all-areas.csv"),
+#             row.names = FALSE)
+
+
+
+
+
+
 
 
 
