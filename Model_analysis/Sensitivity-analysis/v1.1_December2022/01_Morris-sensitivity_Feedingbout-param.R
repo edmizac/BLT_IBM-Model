@@ -90,7 +90,7 @@ month_run <- "Jun"  # because this months has the greates diversity of consumed 
 
 # Define feedinbout chooser to iterate through
 # feedingbout <- "true"
-feedingbout <- "false"
+feedingbout <- "true"
 
 if (feedingbout == "false") { 
   print("RUNNING WITH FEEDING BOUT PARAMETERIZATION OFF, COMMENT IN 'species_time' FROM EXPERIMENT")
@@ -248,8 +248,8 @@ nl@experiment <- experiment(expname = expname,
                               # "path-color-by-day?" = "false",
                               
                               ### resource scenario
-                              "study_area" = area_run_scp,               # "\"Taquara\"",   # we are optimizing with Taquara as it is the most natural condition
-                              "feeding-trees-scenario" = month_run_scp,  #"\"Jan\"",        # we are optimizing with Taquara as it is the most natural condition
+                              "study_area" = area_run_scp,               # "\"Taquara\"",   
+                              "feeding-trees-scenario" = month_run_scp,  #"\"Jan\"",        
                               'no_days' = no_days_run, # DON'T TRY no_days = 1
                               'simulation-time' = simultime_run
                               # 'feeding-trees?' = "true",
@@ -290,7 +290,7 @@ nl@simdesign <- simdesign_morris(nl = nl,
                                  morristype = "oat",
                                  morrislevels = 8, # sets the number of different values for each parameter (sampling density)
                                  morrisr = 10, # sets the number of repeated samplings (sampling size)
-                                 morrisgridjump = 4, # sets the number of levels that are increased/decreased for computing the elementary effects. . Morris recommendation is to set this value to levels / 2.
+                                 morrisgridjump = 8 / 2, # sets the number of levels that are increased/decreased for computing the elementary effects. . Morris recommendation is to set this value to levels / 2.
                                  nseeds = nseeds)
 
 
