@@ -275,6 +275,9 @@ dfga <- dfga %>%
       )
   )
 
+
+
+
 # Plot grid
 dfga %>% 
   ggplot() +
@@ -303,4 +306,150 @@ dfga %>%
 
 # Save plot
 # ggsave(paste0(path,  "/with_stored_energy/", '01_GA_optimized-params-feedingbout-on_wrap2.png'), height = 5, width = 10)
+
+
+
+
+
+
+
+
+
+
+# Plot per category with association lines ----
+
+
+# For plotting paired plots
+dfga_paired <- dfga %>% 
+  group_by(expname, parameter) %>%
+  # arrange(parameter=="fitness", .by_group = TRUE)
+  mutate(paired = 1:n())
+
+target <- c("start_energy", "energy_level_1", "energy_level_2")
+dfga_en <- dfga_paired %>% 
+  dplyr::filter(
+    parameter %in% target
+  )
+
+target <- c("energy_from_fruits", "energy_from_prey", "energy_loss_foraging", "energy_loss_traveling", "energy_loss_resting")
+dfga_en2 <- dfga_paired %>% 
+  dplyr::filter(parameter %in% target)
+
+target <- c("duration", "species_time", "prop_reset_memory"
+            # , "energy-loss-foraging", "energy-loss-traveling"
+)
+dfga_otr <- dfga_paired %>% 
+  dplyr::filter(parameter %in% target)
+
+## Plot showing how the optimization differed for each energy parameter
+dfga_en %>% 
+  ggplot(aes(x = parameter, y = value, group = interaction(expname, paired))) +
+  geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
+                , width = 0.2
+                , size = 0.5) +
+  geom_point(aes(x = parameter, y = value, color = expname),
+             size = 3
+             , alpha = 0.4
+             , position =  position_jitter(w = 0.05, seed=42)
+  ) +
+  geom_line(aes(color = expname)
+            , size = 0.7
+            
+            # , position = position_jitterdodge()
+            # , position =  position_jitter(w = 0.05, seed=42)
+  ) +
+  # stat_summary(fun=mean, geom="line", aes(group=expname, color = expname)
+  #              # , position = position_jitterdodge()
+  #              ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1,
+      size = 10
+    )
+    , axis.title.y = element_blank()
+  ) +
+  # ggtitle("Optimization of energy variables")
+  ggtitle("Optimization of energy levels")
+
+# Save plot
+# ggsave(paste0(path,  "/with_stored_energy/", '01_GA_optimized-params_feedingbout-on1_best5_connected.png'), height = 5, width = 7)
+
+
+## Plot showing how the optimization differed for each energy parameter
+dfga_en2 %>% 
+  ggplot(aes(x = parameter, y = value, group = interaction(expname, paired))) +
+  geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
+                , width = 0.2
+                , size = 0.5) +
+  geom_point(aes(x = parameter, y = value, color = expname),
+             size = 3
+             , alpha = 0.4
+             , position =  position_jitter(w = 0.05, seed=42)
+  ) +
+  geom_line(aes(color = expname)
+                , size = 0.7
+                
+            # , position = position_jitterdodge()
+            # , position =  position_jitter(w = 0.05, seed=42)
+            ) +
+  # stat_summary(fun=mean, geom="line", aes(group=expname, color = expname)
+  #              # , position = position_jitterdodge()
+  #              ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1,
+      size = 10
+    )
+    , axis.title.y = element_blank()
+  ) +
+  # ggtitle("Optimization of energy variables")
+  ggtitle("Optimization of energy gain and loss")
+
+# Save plot
+# ggsave(paste0(path,  "/with_stored_energy/", '01_GA_optimized-params_feedingbout-on2_connected.png'), height = 5, width = 7)
+
+
+## Plot showing how the optimization differed for each parameter (others)
+dfga_otr %>% 
+  ggplot(aes(x = parameter, y = value, group = interaction(expname, paired))) +
+  geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
+                , width = 0.2
+                , size = 0.5) +
+  geom_point(aes(x = parameter, y = value, color = expname),
+             size = 3
+             , alpha = 0.4
+             , position =  position_jitter(w = 0.05, seed=42)
+  ) +
+  geom_line(aes(color = expname)
+            , size = 0.7
+            
+            # , position = position_jitterdodge()
+            # , position =  position_jitter(w = 0.05, seed=42)
+  ) +
+  # stat_summary(fun=mean, geom="line", aes(group=expname, color = expname)
+  #              # , position = position_jitterdodge()
+  #              ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1,
+      size = 10
+    )
+    , axis.title.y = element_blank()
+  ) +
+  # ggtitle("Optimization of other parameters")
+  ggtitle("Optimization of non-energy parameters")
+
+# Save plot
+# ggsave(paste0(path,  "/with_stored_energy/", '01_GA_optimized-params_feedingbout-on3_connected.png'), height = 5, width = 7)
+
+
+
+
+
+
+
+
 
