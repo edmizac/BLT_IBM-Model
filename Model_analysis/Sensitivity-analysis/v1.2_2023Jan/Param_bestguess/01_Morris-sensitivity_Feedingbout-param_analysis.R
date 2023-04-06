@@ -18,7 +18,10 @@ library("here")
 library("dplyr")
 library("nlrx")
 # library("magrittr")
+library("stringr")
 library("ggplot2")
+library("Hmisc")
+library("ggh4x")
 
 # ggplot theme
 theme_set(theme_bw(base_size = 15))
@@ -126,315 +129,613 @@ for (f in nls_to_df) {
 }
 
 
+# Missing outputs (probably unviable runs where tamarins die):
+eval_simoutput(nl_file)
+
+
+### Recode parameters and Rename columns ----
+morris_db <- morris_db %>% 
+  dplyr::mutate(parameter =
+                str_replace_all(parameter, "-", "_"))
+
+morris_db <- morris_db %>% 
+  mutate(parameter = recode(parameter, 
+                            "prop_trees_to_reset_memory" = "prop_reset_memory",
+                            )
+         )
+
+morris_db <- morris_db %>%
+  mutate(
+    metric = str_replace(metric, "g_", "")
+    ) #%>% 
+  # mutate(parameter = recode(metric, 
+  #                           "p_feedinmean" = "p_feeding", 
+  #                           "p_foraging_mean"  = "p_foraging",
+  #                           "p_travelinmean" = "p_traveling",
+  #                           "p_restinmean" = "p_resting"
+  #                           )
+  # )
+  
+
+### Add categories ----
+morris_db <- morris_db %>% 
+  mutate(
+    var_category = case_when(
+      metric == "day_mean" ~ "simulation time",
+      metric == "timestep_mean" ~ "simulation time",
+      
+      metric == "NN_seeds_mean" ~ "resource aggregation",
+      metric == "NN_feeding_trees_mean" ~ "resource aggregation",
+      metric == "NN_sleeping_trees_mean" ~ "resource aggregation",
+      
+      metric == "energy_stored_mean" ~ "energy",
+      
+      metric == "KDE95" ~ "home range",
+      metric == "KDE50" ~ "home range",
+      
+      metric == "DPL_mean" ~ "movement",
+      metric == "DPL_sd_mean" ~ "movement",
+      metric == "MR_mean" ~ "movement",
+      metric == "MR_sd_mean" ~ "movement",
+      metric == "PT_mean" ~ "movement",
+      metric == "PT_sd_mean" ~ "movement",
+      
+      
+      metric == "p_feeding_mean" ~ "activity budget",
+      metric == "p_foraging_mean" ~ "activity budget",
+      metric == "p_traveling_mean" ~ "activity budget",
+      metric == "p_resting_mean" ~ "activity budget",
+
+            
+      metric == "p-visited-trees_mean" ~ "revisits",
+     
+    )
+  )
+
+morris_db <- morris_db %>% 
+  mutate(
+    param_category = case_when(
+      
+      parameter == "start_energy" ~ "energy levels",
+      parameter == "energy_level_1" ~ "energy levels",
+      parameter == "energy_level_2" ~ "energy levels",
+      
+      parameter == "duration" ~ "others",
+      parameter == "species_time_val" ~ "others",
+      parameter == "prop_reset_memory" ~ "others",
+      
+      parameter == "step_forget" ~ "revisits",
+      
+      parameter == "energy_from_fruits" ~ "energy gain/loss",
+      parameter == "energy_from_prey" ~ "energy gain/loss",
+      parameter == "energy_loss_foraging" ~ "energy gain/loss",
+      parameter == "energy_loss_traveling" ~ "energy gain/loss",
+      parameter == "energy_loss_resting" ~ "energy gain/loss"
+      
+    )
+  )
+
+### Define area/month order ----
+morris_db <- morris_db %>%
+  mutate(simulation_scenario = paste0(area_run, "_", month_run)) %>% 
+  mutate(
+    simulation_scenario = forcats::fct_relevel(simulation_scenario, 
+                                               "Suzano_Sep", "Suzano_Dec",
+                                               "Guareí_May", "Guareí_Jun", "Guareí_Jul", "Guareí_Aug",
+                                               "SantaMaria_Mar", "SantaMaria_Apr",
+                                               "Taquara_Jan"
+                                               )) 
+### Transform data ----
+morris_db <- morris_db %>% 
+  mutate(
+    value = ifelse(metric == "KDE_50_mean", value/10000, value), # to hectares
+    value = ifelse(metric == "KDE_95_mean", value/10000, value),
+    value = ifelse(metric == "DPL_mean", value/1000, value),     # to km
+    value = ifelse(metric == "DPL_sd_mean", value/1000, value),     
+    value = ifelse(metric == "MR_mean", value/1000, value),     
+    value = ifelse(metric == "MR_sd_mean", value/1000, value)
+  )
+
+
+### summary with mean + sd or ci
+morris_db_summary <- morris_db %>% 
+  # dplyr::filter(metric =="KDE_50_mean") %>%
+  # tidyr::pivot_wider(names_from = index, values_from = value) %>% 
+  group_by(simulation_scenario, metric, parameter, feedingbout, index) %>% 
+  summarise(
+    mean = mean(value),
+    sd = sd(value),
+    n = n(),
+    sqrt = sqrt(n)
+    # across(mustar:sigma,
+    #        list(
+    #          mean = mean,
+    #          sd = sd#,
+    #          # length = length
+    #          # sqrt = sqrt(length)
+    #       )
+    #       
+    , na.rm=TRUE
+  ) 
+
+
+### Now use the long format
+morris_db_long <- morris_db %>%
+  left_join(morris_db_summary) %>%
+  tidyr::pivot_wider(names_from = index, values_from = c(value, mean, sd, n, sqrt))
+
+se <- morris_db_long %>% 
+  group_by(simulation_scenario, metric, parameter, feedingbout) %>% 
+  summarise(
+    se = na.omit(value_sigma)/sqrt_sigma                   # standard error (as in https://www.sciencedirect.com/science/article/pii/S0304380020304592?via%3Dihub#fig0003)
+  )
+
+morris_db_long <- morris_db_long %>%
+  left_join(se)
 
 
 
+## Plots -----
 
-### Plot -----
+### Option 1: boxplots + points
 morris_db %>%
-  dplyr::filter(metric=="g_energy_stored_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
+  dplyr::filter(metric=="KDE_95_mean") %>%
+  # ggplot(aes(x=value, y=parameter, fill = index)) +
+  ggplot(aes(x=log1p(value), y=parameter, fill = index)) + # use log1p instead of log10 # https://stackoverflow.com/questions/48520517/how-to-solve-error-of-log-produces-nans-in-r
   geom_boxplot(lwd= 0.1) +
   geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  # facet_grid(~feedingbout) +
-  ggtitle("Morris effects on stored energy")
-
-
-morris_db %>%
-  dplyr::filter(metric=="g_KDE_95_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on KDE95")
-
-morris_db %>%
-  dplyr::filter(metric=="g_DPL_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on DPL")
-
-morris_db %>%
-  dplyr::filter(metric=="g_p_feeding_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on % frugivory")
-
-morris_db %>%
-  dplyr::filter(metric=="g_p_traveling_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on % traveling")
-
-morris_db %>%
-  dplyr::filter(metric=="g_p_resting_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on % resting")
-
-morris_db %>%
-  dplyr::filter(metric=="g_p_foraging_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on % foraging")
-
-morris_db %>%
-  dplyr::filter(metric=="g_MR_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on Movement Rate")
-
-morris_db %>%
-  dplyr::filter(metric=="g_PT_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on Path Twisting") # wrong?
-
-morris_db %>%
-  dplyr::filter(metric=="NN_seeds_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~area_run) +
-  ggtitle("Morris effects on seed aggregation")
-
-morris %>%
-  dplyr::filter(metric=="p-visited-trees_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(area_run = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on proportion of visited trees")
+  # facet_grid(~area_run) +
+  facet_nested(feedingbout ~ simulation_scenario) +
+  ggtitle("Morris effects on KDE95") +
+  xlab("log1p(Home range area in ha)") +
+  theme(legend.position="bottom")
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
-#             '01_Morris_n-visited-trees.png'), height = 7, width = 10)
+#               '01_Morris_KDE95_option1.png'), height = 7, width = 14, dpi = 600)
 
 
-morris %>%
-  dplyr::filter(metric =="R_seeds_mean" |
-                  metric == "R_seeds_p_mean") %>%
-  # tidyr::pivot_wider(names_from = "metric", values_from = c(value) ) %>%
-  # dplyr::filter(R_seeds_p_mean <= 0.05) %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on seed aggreation (R index)")
+# Option 2: as in this publication: https://www.researchgate.net/publication/309185108_Sensitivity_analysis_methods_for_building_energy_models_Comparing_computational_costs_and_extractable_information/figures?lo=1
+# strip <- ggh4x::strip_themed(background_x = elem_list_rect(fill = "viridis"))
+# set.seed(42)
+
+morris_db_long %>% 
+  dplyr::filter(metric =="KDE_50_mean") %>%
+  # dplyr::filter(area_run =="Guareí") %>%
+  # dplyr::filter(var_category =="home range") %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  # dplyr::filter(index =="mustar" | index =="mu") %>%
+  # ggplot(aes(x=log10(value_mustar), y=log10(value_mu)
+  ggplot(aes(x=value_mustar, y=value_sigma
+             # , shape = parameter
+             , color = parameter, shape = parameter)) + # position_jitterdodge() requires fill and color
+  # geom_point(size = 4
+  #            #            #, alpha = 0.8, 
+  #            #            #, geom = "point",
+  #            #            #, position = position_jitterdodge(dodge.width = 0.5, seed = 42
+  #            #            #preserve = "single")
+  # ) +
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5, #shape = 20
+             , alpha = 0.7
+             ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ simulation_scenario
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=log10(mean_sigma-sd_sigma), ymax=log10(mean_sigma+sd_sigma))
+  # geom_errorbar(aes(ymin=mean_sigma-2*se, ymax=mean_sigma+2*se)
+  #               #, position = position_dodge(.9)
+  #               , size = 0.5) +
+  # geom_errorbarh(aes(xmin=mean_mustar-2*se, xmax=mean_mustar+2*se)
+  #                #, position = position_dodge(.9)
+  #                , size = 0.5) +
+  theme(legend.position="bottom") +
+# theme(strip.background = element_rect(fill=strip))
+# scale_color_viridis_d()
+# facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris effects on KDE50") +
+  xlab("mustar - Home range area (ha)") +
+  ylab("sigma - Home range area (ha)") +
+  xlim(0, 15) +
+  ylim(0, 15)
+
+# Save plot
+# ggsave(paste0(outpath, "/",
+#               '01_Morris_KDE50_option2.png'), height = 7, width = 14, dpi = 600)
+
+# KDE95
+morris_db_long %>% 
+  dplyr::filter(metric =="KDE_95_mean") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma
+             , color = parameter, shape = parameter)) + 
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#shape = 20
+             , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ simulation_scenario
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=log10(mean_sigma-sd_sigma), ymax=log10(mean_sigma+sd_sigma))
+  # geom_errorbar(aes(ymin=mean_sigma-2*se, ymax=mean_sigma+2*se)
+  #               #, position = position_dodge(.9)
+  #               , size = 0.5) +
+  # geom_errorbarh(aes(xmin=mean_mustar-2*se, xmax=mean_mustar+2*se)
+  #                #, position = position_dodge(.9)
+  #                , size = 0.5) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris effects on KDE95") +
+  xlab("mustar - Home range area (ha)") +
+  ylab("sigma - Home range area (ha)") +
+  xlim(0, 25) +
+  ylim(0, 25)
+
+# Save plot
+# ggsave(paste0(outpath, "/",
+#               '01_Morris_KDE95_option2.png'), height = 7, width = 14, dpi = 600)
+
+
+
+
+### Movement patterns ----
+# DPL
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  dplyr::filter(var_category =="movement") %>%
+  dplyr::filter(metric == "DPL_mean") %>%
+  # dplyr::filter(index =="mustar" | index =="mu") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+    geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+               , alpha = 0.7
+    ) +
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  facet_nested(feedingbout ~ simulation_scenario) +
+  ggtitle("Morris effects on DPL") +
+  xlab("mustar - DPL (km)") +
+  ylab("sigma - DPL (km)") +
+  theme(legend.position="bottom") +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) + # add this to take shape + color into account (too many categories)
+  # define plot limits:
+  xlim(0, 4) +
+  ylim(0, 4)
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
-#               '01_Morris_R-index.png'), height = 7, width = 10)
+#               '01_Morris_DPL_option2.png'), height = 7, width = 14, dpi = 600)
 
-morris %>%
-  dplyr::filter(metric =="NN_seeds_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on seed aggreation (Nearest neighbor distance)")
+  
+# MR
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  dplyr::filter(var_category =="movement") %>%
+  dplyr::filter(metric == "MR_mean") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, group = parameter, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+             , alpha = 0.7
+  ) +
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario) +
+  facet_nested(feedingbout ~ simulation_scenario) +
+  theme(legend.position="bottom") +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # define plot limits:
+  xlim(0, 0.4) +
+  ylim(0, 0.4) +
+  xlab("mustar - MR (km/hours active)") +
+  ylab("sigma - MR (km/hours active") +
+  ggtitle("Morris effects on Movement rate")
+  
+# # Save plot
+# ggsave(paste0(outpath, "/",
+#               '01_Morris_MR_option2.png'), height = 7, width = 14, dpi = 600)
+
+
+# PT
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  dplyr::filter(var_category =="movement") %>%
+  dplyr::filter(metric == "PT_mean") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, group = parameter, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+             , alpha = 0.7
+  ) +
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  facet_nested(feedingbout ~ metric+simulation_scenario) +
+  theme(legend.position="bottom") +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # define plot limits:
+  xlim(0, 0.01) +
+  ylim(0, 0.01) +
+  ggtitle("Morris effects on Path twisting") +
+  xlab("mustar - PT (unitless)") +
+  ylab("sigma - PT (unitless)")
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
-#               '01_Morris_NN-distance.png'), height = 7, width = 10)
+#               '01_Morris_PT_option2.png'), height = 7, width = 14, dpi = 600)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Morris analysis of one area -----
-## Load -----
-nl_on <- readRDS(file.path(paste0(outpath, "/"
-                                  , "v1.2_Morris_Guareí_Jun_Feedingbout_on_2023-03-31.rds")))
-nl_off <- readRDS(file.path(paste0(outpath, "/"
-                                   , "morris_2022-12-23d_feedingbout-off.rds")))
-
-
-nl_on@simdesign@simoutput
-nl_on@simdesign@simoutput %>% colnames
-
-
-
-# nl <- readRDS(paste0(path, 
-#                      "v1.2_Morris_Guareí_Aug_Feedingbout_on_2023-04-01.rds"))
-# "v1.2_Taquara_Jan_simple-609482361_tempRDS.Rdata"))
-
-# db1  <-  nl@simdesign@simoutput ; class(db1)
-# db2 <- nl@simdesign@siminput
-
-## Merge -----
-morris_on <- analyze_nl(nl_on, "simoutput") ; rm(nl_on)
-morris_on$feedingbout <- if (feedingbout) {"feedingbout on"} else {"feedinbout off"}
-morris_off <- analyze_nl(nl_off) ; rm(nl_off)
-morris_off$feedingbout <- "feedingbout off"
-morris <- dplyr::bind_rows(morris_on, morris_off)
-rm(morris_on); rm(morris_off)
-
-## Plot -----
-morris_on %>%
-  dplyr::filter(metric=="g_energy_stored_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on stored energy")
-
-morris_on %>%
-  dplyr::filter(metric=="g_KDE_95_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on KDE95")
-
-morris_on %>%
-  dplyr::filter(metric=="g_DPL_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on DPL")
-
-morris_on %>%
-  dplyr::filter(metric=="g_p_feeding_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on % frugivory")
-
-morris_on %>%
-  dplyr::filter(metric=="g_p_traveling_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on % traveling")
-
-morris_on %>%
-  dplyr::filter(metric=="g_p_resting_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on % resting")
-
-morris_on %>%
-  dplyr::filter(metric=="g_p_foraging_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on % foraging")
-
-morris_on %>%
-  dplyr::filter(metric=="g_MR_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on Movement Rate")
-
-morris_on %>%
-  dplyr::filter(metric=="g_PT_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on Path Twisting") # deu errado
-
-morris_on %>%
-  dplyr::filter(metric=="NN_seeds_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on seed aggregation")
-
-morris %>%
-  dplyr::filter(metric=="p-visited-trees_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on proportion of visited trees")
+### Seed disperal -----
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  dplyr::filter(var_category =="resource aggregation") %>%
+  dplyr::filter(metric == "NN_seeds_mean" ) %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, group = parameter, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+             , alpha = 0.7
+  ) +
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario) +
+  facet_nested(feedingbout ~ simulation_scenario) +
+  theme(legend.position="bottom") +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # define plot limits:
+  xlim(0, 40) +
+  ylim(0, 40) +
+  ggtitle("Morris effects on Seed aggregation") +
+  xlab("mustar - Nearest neighbor distance (meters)") +
+  ylab("sigma - Nearest neighbor distance (meters)")
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
-#             '01_Morris_n-visited-trees.png'), height = 7, width = 10)
+#               '01_Morris_NNseeds_option2.png'), height = 7, width = 14, dpi = 600)
 
 
-morris %>%
-  dplyr::filter(metric =="R_seeds_mean" |
-                  metric == "R_seeds_p_mean") %>%
-  # tidyr::pivot_wider(names_from = "metric", values_from = c(value) ) %>%
-  # dplyr::filter(R_seeds_p_mean <= 0.05) %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on seed aggreation (R index)")
+
+
+
+### Activity budget -----
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  # dplyr::filter(var_category =="activity budget") %>%
+  dplyr::filter(metric == "p_feeding_mean" | metric == "p_foraging_mean" | metric == "p_resting_mean" | metric == "p_traveling_mean") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+             , alpha = 0.7
+  ) +
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  facet_nested(metric+feedingbout ~ simulation_scenario) +
+  # facet_nested(simulation_scenario ~ metric+feedingbout) +
+  theme(legend.position="bottom") +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # define plot limits:
+  xlim(0, 0.45) +
+  ylim(0, 0.45) +
+  ggtitle("Morris effects on Activity budget") +
+  xlab("mustar - Nearest neighbor distance (meters)") +
+  ylab("sigma - Nearest neighbor distance (meters)")
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
-#               '01_Morris_R-index.png'), height = 7, width = 10)
+#               '01_Morris_Activity-budget_option2.png'), height = 21, width = 21, dpi = 600)
 
-morris %>%
-  dplyr::filter(metric =="NN_seeds_mean") %>%
-  ggplot(aes(x=value, y=parameter, fill = index)) +
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  facet_grid(~feedingbout) +
-  ggtitle("Morris effects on seed aggreation (Nearest neighbor distance)")
+
+
+### Survival -----
+
+# Simulation time
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  # dplyr::filter(var_category =="simulation time") %>%
+  dplyr::filter(metric == "timestep_mean") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, group = parameter, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+             , alpha = 0.7
+  ) +
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario) +
+  facet_nested(feedingbout ~ simulation_scenario) +
+  theme(legend.position="bottom") +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # define plot limits:
+  xlim(0, 0.8) +
+  ylim(0, 1) +
+  ggtitle("Morris effect on hours active") +
+  xlab("mustar - hours active") +
+  ylab("sigma - hours active")
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
-#               '01_Morris_NN-distance.png'), height = 7, width = 10)
+#               '01_Morris_Hours-active_option2.png'), height = 7, width = 14, dpi = 600)
+
+
+
+
+# Stored energy
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  dplyr::filter(var_category =="energy") %>%
+  # dplyr::filter(metric == "p_feeding_mean" | metric == "p_foraging_mean" | metric == "p_resting_mean" | metric == "p_traveling_mean") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, group = parameter, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+             , alpha = 0.7
+  ) +
+  
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  facet_nested(feedingbout ~ metric+simulation_scenario) +
+  theme(legend.position="bottom") +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1,
+      size = 10
+    )) +
+  # define plot limits:
+  # xlim(0, 0.75) +
+  # ylim(0, 0.75) +
+  ggtitle("Morris effects on stored energy") +
+  xlab("mustar - energy (no unit)") +
+  ylab("sigma - energy (no unit)")
+
+
+# # Save plot
+# ggsave(paste0(outpath, "/",
+#               '01_Morris_Stored-energy_option2.png'), height = 7, width = 14, dpi = 600)
+
+
+
+### Revisits -----
+morris_db_long %>%
+  # dplyr::filter(param_category =="energy levels") %>%
+  dplyr::filter(var_category =="revisits") %>%
+  # dplyr::filter(metric == "p_feeding_mean" | metric == "p_foraging_mean" | metric == "p_resting_mean" | metric == "p_traveling_mean") %>%
+  ggplot(aes(x=value_mustar, y=value_sigma, group = parameter, shape = parameter, color = parameter)) +
+  # All observations:
+  # geom_point(alpha = 0.5, size = 2.5) +
+  # Mean values (summarizing n=6):
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5#, #shape = 20
+             , alpha = 0.7
+  ) +
+  # add reference lines:
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  facet_nested(feedingbout ~ metric+simulation_scenario) +
+  theme(legend.position="bottom") +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1,
+      size = 10
+    )) +
+  # add color+shape combination for every parameter:
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  # define plot limits:
+  xlim(0, 0.5) +
+  ylim(0, 0.5) +
+  ggtitle("Morris effects on Proportion of visited trees") +
+  xlab("mustar - proportion of trees (%)") +
+  ylab("sigma - proportion of trees (%)")
+
+
+# # Save plot
+# ggsave(paste0(outpath, "/",
+#               '01_Morris_P-visited-trees_option2.png'), height = 7, width = 14, dpi = 600)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # # Save plot
+# # ggsave(paste0(outpath, "/",
+# #               '01_Morris_NN-distance.png'), height = 7, width = 10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
