@@ -1,6 +1,8 @@
 # BLT---IBM-Model
 
-Current version: v1.2 (check branch)
+* Current version: v1.2 (check branch)
+* Some data are still not available (required for model runs)
+
 
 The project is entitled "Predicting seed shadows in different environmental contexts: a modelling approach applied to an arboreal frugivore". It is the Master's project of Eduardo Miguel Zanette (UNESP-Rio Claro) and aims at:
 1) Validating an agent-based model (ABM) of seed dispersal by black-lion-tamarins (BLT, Leontopithecus chrysopygus)
