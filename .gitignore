@@ -61,6 +61,14 @@
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_with_SantaMaria/temp/**.RData
 
 
+Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.RData
+Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.rds
+Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.png
+Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.RData
+Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.rds
+Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.png
+
+
 
 /Model_analysis/Genetic_analysis/temp/**.csv
 /Model_analysis/Genetic_analysis/temp/**.png
