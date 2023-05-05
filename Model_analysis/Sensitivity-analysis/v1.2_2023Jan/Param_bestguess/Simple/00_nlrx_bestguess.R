@@ -1,8 +1,8 @@
 ## Header --------------------------
 # Script name: 01_nlrx
-# Script purpose: Do simple runs for every siminputrow using calibrated parameters
-# from the genetic algorithm
-# Date created: 2023-01-26d
+# Script purpose: Do simple runs for every siminputrow using BEST GUESS parameters
+# Compare with simple runs on v1.1_November2022
+# Date created: 2023-05-05d
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
@@ -100,9 +100,12 @@ dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_sum
 
 ### Calibrated values for unknown parameters ----
 # If you want to use the calibrated parameters and not the model values defined by sliders
-calibrated_on <- "true"
+calibrated_on <- "false"
 
-if (calibrated_on == "true") {
+ifelse (calibrated_on == "false") {
+  
+  
+} else {
   
   path <- here("Model_analysis", "Genetic_analysis", "temp")
   
