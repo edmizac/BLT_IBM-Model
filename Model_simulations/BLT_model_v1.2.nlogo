@@ -1087,7 +1087,7 @@ to go
         ; calc resource metrics
         NNdist
         SDDcalc
-;        calc-seed-aggregation
+        calc-seed-aggregation
       ]
       print "not enough days to calculate movement and seed dispersal metrics"
 
@@ -1136,7 +1136,7 @@ to go
       SDDcalc
 
       output-print "calculating R index for seeds"
-;      calc-seed-aggregation
+      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
@@ -3476,10 +3476,10 @@ to store-as-globals
   set g_DPL DPL
   set g_DPL_sd DPL_sd
   set g_DPL_d DPL_d
-  set g_MR MR
+  set g_MR MR_mean
   set g_MR_sd MR_sd
   set g_MR_d MR_d
-  set g_PT PT
+  set g_PT PT_mean
   set g_PT_sd PT_sd
   set g_PT_d PT_d
   set g_MSD MSD

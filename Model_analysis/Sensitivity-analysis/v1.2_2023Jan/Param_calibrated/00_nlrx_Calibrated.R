@@ -63,14 +63,14 @@ if(Sys.getenv("JAVA_HOME") == "") {
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_2023Jan", "Param_calibrated", "temp")
+  modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023Jan", "Param_calibrated", "temp")
   user_scp = "\"Eduardo\""
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   # modelpath <- here("Model_development", "BLT_model_v1.1.nlogo")
-  modelpath <- here("Model_simulations", "BLT_model_v1.1.nlogo")
+  modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo")
   # outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.1_November2022", "temp", "Jan2023")
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
   user_scp = "\"LEEC\""
@@ -80,7 +80,7 @@ if(Sys.info()[["nodename"]] == "PC9") { # LEEC
 nl <- nl(nlversion = "6.2.2",
          nlpath = netlogopath,
          modelpath = modelpath,
-         jvmmem = 2048)
+         jvmmem = 1024)
 
 nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
@@ -92,7 +92,8 @@ nlogo_model_param
 
 ### Empirical data for parameterisation ----
 dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
-                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
+                        sep = ",", dec = ".", stringsAsFactors = TRUE,
+                        encoding = "UTF-8") %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí",
                                       "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
 
@@ -111,9 +112,17 @@ if (calibrated_on == "true") {
   dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
   for (i in filesga) {
     # i <- filesga[2]
-    filei <- read.csv(i)
+    filei <- read.csv(i, encoding = "latin1")
     dfga <- dplyr::bind_rows(dfga, filei)
   }
+  
+  dfga %>% str()
+  # dfga  <- dfga %>% 
+  #   mutate(
+  #     expname = recode(
+  #       "Guare\xed_Jul" = "Guareí"
+  #     )
+  #   )
   
   # dfga <- dfga %>% 
   #   dplyr::mutate(parameter, str_replace_all(., c("-" = "_", 
@@ -158,7 +167,7 @@ if (calibrated_on == "true") {
 ## Step 2: Attach an experiment
 exptype <- "simple"
 
-i <- 7
+i <- 2
 for (i in i:nrow(param.table)) {
   
   
@@ -359,7 +368,7 @@ nl@experiment <- experiment(expname = expname,
                                 # "straightness",   # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                                 # "sinuosity"       # straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                               )
-                              #,
+                              # 
                               # 
                               # "feeding-trees" = c(
                               #   "x_UTM", "y_UTM",
@@ -375,14 +384,15 @@ nl@experiment <- experiment(expname = expname,
                               #   "visitations"
                               # ),
                               # 
-                              # "seeds" = c(
-                              #   "SDD", 
-                              #   "x_UTM", "y_UTM",
-                              #   "id-seed", 
-                              #   "species", 
-                              #   "mother-tree", 
-                              #   "disp-day"
-                              # )
+                              ,
+                              "seeds" = c(
+                                "SDD",
+                                "x_UTM", "y_UTM",
+                                "id-seed",
+                                "species",
+                                "mother-tree",
+                                "disp-day"
+                              )
                               
                               # , "steps-moved"
                               
