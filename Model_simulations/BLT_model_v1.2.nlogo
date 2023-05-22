@@ -96,6 +96,9 @@ monkeys-own [
 ;  KDE_values ; not being used anymore
   KDE_95         ; output of amt package in calc-homerange
   KDE_50         ; output of amt package in calc-homerange
+  KDE_95_cropped ; cropped with st_intersect()
+  KDE_50_cropped ; cropped with st_intersect()
+
 
   ; activity budget
   p_feeding
@@ -132,8 +135,9 @@ monkeys-own [
   straightness    ; from amt
   sinuosity       ; from amt
 
-
-
+  ; defendability indices
+  DI_index
+  M_index
 ]
 
 breed [blobs blob]
@@ -201,6 +205,9 @@ globals [
   g_n_visited_trees
   g_n_unvisited_trees
 
+  ; defendability indexes
+  g_DI_index
+  g_M_index
 
 
   patch-scale
@@ -1073,6 +1080,9 @@ end
 ;--------------------------------------------------------------------------------------------
 to go
 
+  ; to print on the R console during multiple simulations:
+  if ticks = 1 [  type "running area = " type study_area type ", month = " print feeding-trees-scenario  ]
+
   if ticks > 10000 [stop]
 
   get_stored_energy
@@ -1080,16 +1090,17 @@ to go
   ask monkeys [
     if energy < 0 AND energy_stored < 0 [
       set survived? "no"
-      if day > 3 [
+      ifelse day > 3 [
         print "calculating from GO"
         calc-movement-dead
         store-as-globals
         ; calc resource metrics
         NNdist
         SDDcalc
-        calc-seed-aggregation
-      ]
+;        calc-seed-aggregation
+      ][
       print "not enough days to calculate movement and seed dispersal metrics"
+      ]
 
 ;      set day no_days + 999 ; to achieve the stop condition of nlrx
     ; only after calculating all variables and storing as globals otherwise nlrx does not take monkey variables. Instead, stop]
@@ -1136,7 +1147,7 @@ to go
       SDDcalc
 
       output-print "calculating R index for seeds"
-      calc-seed-aggregation
+;      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
@@ -2699,11 +2710,7 @@ to sleeping
 
 end
 
-to calc-movement-metrics
 
-
-
-end
 
 ;----- activate when NOT simulating sleeping trees (data from field) --------------
 to search-sleeping-defined
@@ -2945,6 +2952,7 @@ to calc-homerange
   r:eval "library(tidyr)"
   r:eval "library(amt)"
   r:eval "library(circular)"
+  r:eval "library(sf)"
 
   ;; create an empty data.frame"
   r:eval "turtles <- data.frame()"
@@ -2975,6 +2983,7 @@ to calc-homerange
 ;    show r:get "colnames(db_)"
 ;    show r:get "db_"
 
+  print " ------------- Home range size ------------------ "
   r:eval "db_KDE <- db_ %>% hr_kde(., levels = c(0.50, 0.95))"
   r:eval "db_KDE_area <- db_KDE %>% hr_area(.)"
 
@@ -2982,6 +2991,43 @@ to calc-homerange
   r:eval "db_KDE95 <- db_KDE_area %>% dplyr::filter(level == 0.95) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
   r:eval "db_KDE50 <- db_KDE_area %>% dplyr::filter(level == 0.50) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
 
+
+  ; Import shapefile of respective area and crop homerange UD with st_intersection()
+
+  if study_area = "Guareí" [
+    r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp' %>% sf::read_sf()"
+  ]
+  if study_area = "Suzano" [
+    r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
+  ]
+  if study_area = "SantaMaria" [
+    r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp' %>% sf::read_sf()"
+  ]
+  if study_area = "Taquara" [
+    r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp' %>%  sf::read_sf()"
+  ]
+
+;  r:eval "shp <- sf::read_sf(filepath)" ; make it an sf object
+  r:eval "forest_area <- shp %>% sf::st_area()" ; print total forest area
+  type "total forest area (ha) = " print r:get "forest_area / 10000"
+
+  ; Transform KDE to sf
+  r:eval "KDE_sf <- amt::hr_isopleths(db_KDE) %>% sf::st_as_sf(., crs = 32722)"
+;  print r:get "KDE_sf"
+
+  ; crop home range by the forest area
+  r:eval "cropped <- sf::st_intersection(KDE_sf, shp)"
+;  type "cropped HR values = " print r:get "cropped"
+  r:eval "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
+
+  ask monkeys [
+    set KDE_95_cropped r:get "sf_overlap[1] %>% as.numeric() / 10000"
+    set KDE_50_cropped r:get "sf_overlap[2] %>% as.numeric() / 10000"
+
+    ;    type "monkey " type who type " "
+    type "cropped KDE95 = " print KDE_95_cropped
+    type "cropped KDE50 = " print KDE_50_cropped
+  ]
 ;  show r:get "db_KDE95"
 ;  show r:get "db_KDE50"
 
@@ -3017,12 +3063,14 @@ to calc-homerange
   r:gc
 
   ; get hr values to agent variable
-  print " ------------- Home range size ------------------ "
+
   ask monkeys [
 
     ; if only one group was simulated:
     set KDE_95 r:get "db_KDE95"
     set KDE_50 r:get "db_KDE50"
+
+    type "*******" print precision ( KDE_95 / 10000 ) 4
 
 ;    ; if you used nested output (simulated multiple tamarin groups):
 ;    set KDE_95 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
@@ -3030,9 +3078,23 @@ to calc-homerange
 
 ;    type "KDE_95: " print round KDE_95
 ;    type "KDE_50: " print round KDE_50
+;    type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
 
-    type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
-    type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
+    ; update the KDE if it matches the cropped KDE (ie it didn't include non-habitat areas)
+    ifelse KDE_95 = KDE_95_cropped [
+;      type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
+    ][
+      print "home range was cropped"
+      set KDE_95 KDE_95_cropped
+;      type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
+    ]
+    ifelse KDE_50 = KDE_50_cropped [
+;      type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
+    ][
+      print "home range was cropped"
+      set KDE_50 KDE_50_cropped
+;      type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
+    ]
   ]
 
 
@@ -3134,6 +3196,15 @@ to calc-homerange
 
       set straightness precision straightness 6
       set sinuosity precision sinuosity 6
+
+
+      ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
+      set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 1000000 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
+      type "DI index = " print DI_index
+      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )
+      type "diameter of home range (d') =  " print d_
+      set M_index ( 1 * ( 0.150 * (DPL_mean / 1000) / (d_ ^ 2) ) )                                                                     ; (M = N(sv/d²) Lowen & Dunbar 1994
+      type "M index = " print M_index
 
     ]
 
@@ -3490,6 +3561,9 @@ to store-as-globals
   set g_n_visited_trees n_visited_trees
   set g_n_unvisited_trees n_unvisited_trees
 
+  set g_DI_index DI_index
+  set g_M_index M_index
+
 
 
 end
@@ -3615,8 +3689,8 @@ end
 GRAPHICS-WINDOW
 0
 20
-491
-416
+449
+380
 -1
 -1
 3.0
@@ -3629,10 +3703,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-73
+73
+-58
+58
 0
 0
 1
@@ -3827,7 +3901,7 @@ INPUTBOX
 604
 105
 no_days
-3.0
+5.0
 1
 0
 Number
@@ -3939,7 +4013,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+12
 
 CHOOSER
 1017
@@ -4371,7 +4445,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.21
 0.05
 1
 NIL
@@ -4740,7 +4814,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-0
+3
 
 BUTTON
 245
@@ -4861,7 +4935,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+51.2
 5
 1
 NIL
@@ -4876,7 +4950,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+0.883
 0.1
 1
 NIL
@@ -4891,7 +4965,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+1.7489999999999999
 0.1
 1
 NIL
@@ -4906,7 +4980,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+47.53
 1
 1
 NIL
