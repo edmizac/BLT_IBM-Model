@@ -12,6 +12,7 @@ extensions [ gis r palette pathdir] ; using the GIS extension of NetLogo
 turtles-own [
   x_UTM y_UTM
   X_coords Y_coords ; X and Y list of coordinates (x_UTM and y_UTM) for home range calculation with the r extension in the end of each run (days = n_days)
+  day_list          ; day of the event (to use in amt package with X_ and Y_coords)
   x_scaled y_scaled ; x and y * patch-scale for calc-seed-aggregation
 
   ;; BUILD_FOREST ;;
@@ -806,6 +807,7 @@ to setup-monkeys
     set Name word "BLT_" ( [who] of self )
     set X_coords [] ;( list x_UTM )
     set Y_coords [] ;( list y_UTM )
+    set day_list []
 
 ;    set shape "mlp-2"
 ;    set color black
@@ -1362,6 +1364,7 @@ to move-monkeys
       set X_coords lput (xcor * patch-scale) X_coords
       set Y_coords lput (ycor * patch-scale) Y_coords
     ]
+      set day_list lput day day_list
 
     ; Avoid matrix (for other implementations, check v1.1_matrix-avoidance branch):
 ;    avoid-matrix
@@ -2960,14 +2963,15 @@ to calc-homerange
   ;; merge the Name, X- and Y-lists of all animals to one big data.frame
   ask monkeys
   [
-    (r:putdataframe "turtle" "X" X_coords "Y" Y_coords)
+    (r:putdataframe "turtle" "X" X_coords "Y" Y_coords "day" day_list)
     r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
     r:eval "turtles <- rbind(turtles, turtle)"
-;    type "turtles data frame: " print r:get "turtles"
+;    type "*****turtles data frame: " print r:get "turtles"
   ]
 
   ;; split the data.frame into coordinates and factor variable
-  r:eval "xy <- turtles[,c('X','Y')]"
+;  r:eval "xy <- turtles[,c('X','Y')]"
+  r:eval "xy <- turtles %>% dplyr::select(X, Y, day)"
   r:eval "id <- turtles$Name"
 
   ;; calculate homerange (mcp method)
@@ -3131,17 +3135,33 @@ to calc-homerange
   ]
 
 
-  r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
-  r:eval "db_metr <- db_metr %>% summarise( MSD = msd(.),  intensity_use = intensity_use(.), straightness = straightness(.), sinuosity = sinuosity(.) )"
   print " ------------- Other movement metrics ------------------ "
+
+  ; nested by day
+  ;type "*******" print r:get "db"
+;  type "*******" print r:get "colnames(db)"
+  r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = day, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs',  all_cols = TRUE)"
+  r:eval "db_metr <- db_metr %>% amt::nest(data = -'day')  %>%   mutate( MSD = amt::map(data, ~ msd(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),  intensity_use = amt::map(data, ~ intensity_use(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),    straightness = amt::map(data, ~ straightness(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric() )  "
+  r:eval "db_metr <- db_metr %>% dplyr::select(-data)"
+  ; you can print all the movement matric variables by day:
+  print "movement metrics by day ---- " print r:get "colnames(db_metr)" print r:get "db_metr"
+
+  r:eval "db_metr <- db_metr %>% na.omit() %>% summarize_all(  list(mean = ~ mean(., na.rm = TRUE)  ) ) "
+
+
+  ; not nested by day (considers all days as one path) (WRONG)
+;  r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+;  r:eval "db_metr <- db_metr %>% summarise( MSD = msd(.),  intensity_use = intensity_use(.), straightness = straightness(.), sinuosity = sinuosity(.) )"
+
   print r:get "colnames(db_metr)"
   print r:get "db_metr"
 
   ask monkeys [
-    set MSD r:get "db_metr %>% dplyr::select(MSD) %>%  unlist() %>% as.vector()"
-    set intensity_use r:get "db_metr %>% dplyr::select(intensity_use) %>%  unlist() %>% as.vector()"
-    set straightness r:get "db_metr %>% dplyr::select(straightness) %>%  unlist() %>% as.vector()"
-    set sinuosity r:get "db_metr %>% dplyr::select(sinuosity) %>%  unlist() %>% as.vector()"
+    set MSD r:get "db_metr %>% dplyr::select(MSD_mean) %>%  unlist() %>% as.vector()"
+    set intensity_use r:get "db_metr %>% dplyr::select(intensity_use_mean) %>%  unlist() %>% as.vector()"
+    set straightness r:get "db_metr %>% dplyr::select(straightness_mean) %>%  unlist() %>% as.vector()"
+;    set sinuosity r:get "db_metr %>% dplyr::select(sinuosity_mean) %>%  unlist() %>% as.vector()"
+    set sinuosity "wrong"
   ]
 
   ; calculating mean and sd DPL, MR and PT ONLY IF THE MONKEYS RAN FOR MORE THAN 3 DAYS
@@ -3195,7 +3215,7 @@ to calc-homerange
       set intensity_use precision intensity_use 4
 
       set straightness precision straightness 6
-      set sinuosity precision sinuosity 6
+;      set sinuosity precision sinuosity 6
 
 
       ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
@@ -3689,11 +3709,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-449
-380
+526
+403
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -3703,10 +3723,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-129
+129
+-93
+93
 0
 0
 1
@@ -3901,7 +3921,7 @@ INPUTBOX
 604
 105
 no_days
-5.0
+3.0
 1
 0
 Number
@@ -4013,7 +4033,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-12
+1
 
 CHOOSER
 1017
@@ -4814,7 +4834,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-3
+2
 
 BUTTON
 245
@@ -4935,7 +4955,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-51.2
+43.02
 5
 1
 NIL
@@ -4950,7 +4970,7 @@ step_len_forage
 step_len_forage
 0
 20
-0.883
+3.089
 0.1
 1
 NIL
@@ -4965,7 +4985,7 @@ step_len_travel
 step_len_travel
 0
 20
-1.7489999999999999
+3.931
 0.1
 1
 NIL
@@ -4980,7 +5000,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-47.53
+17.85
 1
 1
 NIL
