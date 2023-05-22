@@ -1,5 +1,5 @@
 ; ==== Black lion tamarin model ============
-; Eduardo Zanette & Ronald Bialozyt. Dec. 2022
+; Eduardo Zanette & Ronald Bialozyt. May. 2023
 ; Two travel modes: long-distance (target selected when energy > lvl 2 and travels to this direction up to when energy < lvl 1) and short-distance (when energy < lvl 1)
 ; Parameterized step model: step length and turning angles
 ; Parameterized p_foraging_while_traveling: % foraging / ( %foraging + %traveling)
