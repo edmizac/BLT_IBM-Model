@@ -91,7 +91,7 @@ nlogo_model_param
 ## Parameterizations and calibrations -----
 
 ### Empirical data for parameterisation ----
-dat.summary <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
+param.table <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_summary_siminputrow.csv"),
                         sep = ",", dec = ".", stringsAsFactors = TRUE,
                         encoding = "UTF-8") %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí",
@@ -180,8 +180,8 @@ for (i in i:nrow(param.table)) {
   
   
   ### Define run and parameterisation: (all strings must use escaped quotes)
-  area_run <- paste0('\"', dat.summary$group[i], '\"')
-  month_run <- paste0('\"', dat.summary$id_month[i], '\"')
+  area_run <- paste0('\"', param.table$group[i], '\"')
+  month_run <- paste0('\"', param.table$id_month[i], '\"')
   
   # area_run <- '"Guareí"'
   # month_run <- '"Jun"'
@@ -196,13 +196,13 @@ for (i in i:nrow(param.table)) {
   # i <- i + 1
   #} # loop testing
   
-  no_days_run <- dat.summary %>% 
+  no_days_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(ndays) %>% 
-    pull() + 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
+    pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
   
-  simultime_run <- dat.summary %>% 
+  simultime_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(mean_timesteps) %>% 

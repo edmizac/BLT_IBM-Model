@@ -1,8 +1,8 @@
 # Script name: 02_analyze-simple.R
-# Script purpose: create validation plots with calibrated parameters 
+# Script purpose: create validation plots with bestguess parameters 
 # to compare with v1.1 results (dissertation plots)
 
-# Date created: 2023-04-23d
+# Date created: 2023-05-05d
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
@@ -25,7 +25,7 @@ library("sf")
 library("purrr")
 
 path <- here("Model_analysis", "Sensitivity-analysis",
-             "v1.2_2023Jan", "Param_calibrated", "temp")
+             "v1.2_2023Jan", "Param_bestguess", "Simple", "temp")
 
 
 # ggplot theme
@@ -525,7 +525,9 @@ db_sd <- db_sd %>%
   ) %>% 
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
-                                      "Jun", "Jul", "Aug", "Sep", "Dec")) 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated")) %>% 
+  mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day"))
 
 db_sd$disp_day %>% str()
 db_sd$source %>% str()
@@ -547,6 +549,9 @@ db_sd <- db_sd %>%
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                       "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated")) %>% 
+  mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day"))
+
 mutate_if(is.character, as.factor)
 
 db_sd$disp_day %>% str()
@@ -568,7 +573,11 @@ length(db_sd$group %>% is.na(.)) # no NAs
 
 db_sd <- db_sd %>% 
   dplyr::filter(!is.na(SDD)) %>% 
-  dplyr::filter(!is.na(disp_day))
+  dplyr::filter(!is.na(disp_day)) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated")) %>% 
+  mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day"))
 
 db_sd %>% str()
 
@@ -598,10 +607,13 @@ db_sd %>%
   theme(axis.text = element_text(size = 9))
 
 # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density.png'), height = 5, width = 7)
 
 
 # boxplot
+theme_update(
+  axis.text.x = element_text(size = 8)
+)
 db_sd %>%
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
   dplyr::filter(
@@ -622,17 +634,20 @@ db_sd %>%
   
   # others
   theme(axis.text = element_text(size = 9))
-# geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+# geom_point(position = position_jitterdodge(jitter.width = 0.7))
 
 
 # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_violin.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_violin.png'), height = 5, width = 7)
 
 
 
 #### By group and month ####
 
 # density
+theme_update(
+  axis.text.x = element_text(size = 11)
+)
 db_sd %>% 
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
   dplyr::filter(
@@ -659,7 +674,7 @@ db_sd %>%
   ggtitle("Distance of seeds dispersed on the same day")
 
 # # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_same-day_density_ridges.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_same-day_density_ridges.png'), height = 5, width = 7)
 
 
 db_sd %>% 
@@ -688,7 +703,7 @@ db_sd %>%
   ggtitle("Distance of seeds dispersed on the next day")
 
 # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_next-day_density_ridges.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_next-day_density_ridges.png'), height = 5, width = 7)
 
 
 db_sd %>% 
@@ -696,6 +711,8 @@ db_sd %>%
   dplyr::filter(
     group != "SantaMaria" | month != "Apr"
   ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
   ggplot(
     aes(x = SDD, y = month, fill = month) #, height = ..density..)
   ) +
@@ -715,7 +732,7 @@ db_sd %>%
   scale_fill_viridis_d()
 
 # # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1.png'), height = 5, width = 14)
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1.png'), height = 5, width = 10)
 
 
 db_sd %>% 
@@ -723,6 +740,8 @@ db_sd %>%
   dplyr::filter(
     group != "SantaMaria" | month != "Apr"
   ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
   ggplot(
     aes(x = SDD, y = month, fill = month) #, height = ..density..)
   ) +
@@ -740,18 +759,24 @@ db_sd %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day)")
+  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  theme(plot.title = element_text(size = 16))
 
 # # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2.png'), height = 5, width = 7)
 
 
 # boxplot
+theme_update(
+  axis.text.x = element_text(size = 8)
+)
 db_sd %>% 
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
   dplyr::filter(
     group != "SantaMaria" | month != "Apr"
   ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
   ggplot(
   aes(x = group, y = SDD, color = month)
 ) +
@@ -772,7 +797,7 @@ db_sd %>%
   #            aes(group = month)
   #            ) +
   # ylab("SDD (in meters)") +
-  ylim(0, 1000) +
+  ylim(0, 800) +
   facet_wrap(~disp_day, nrow = 2) +
   # scale_color_viridis_d() +
   # facet_wrap(vars(disp_day, source), nrow = 2) +
@@ -792,7 +817,7 @@ db_sd %>%
   ylab("SDD (m)")
 
 # # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-boxplot.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-boxplot.png'), height = 5, width = 7)
 
 
   
@@ -818,7 +843,7 @@ db1_mv %>% str()
 
 db1_mv  <-  db1_mv %>%
   dplyr::select(-c(
-    # "DPL", 
+    # "DPL",
     "SDD"))
 
   
@@ -827,8 +852,8 @@ db1_mv  <-  db1_mv %>%
 db1_mv <- db1_mv %>% 
   
 # dplyr::filter(breed == "monkeys") %>% 
-  rename_with(~ str_remove(.x, "g_"), starts_with("g_")
-  ) %>%
+  # rename_with(~ str_remove(.x, "g_"), starts_with("g_")
+  # ) %>%
   rename(
          KDE95 = KDE_95,
          KDE50 = KDE_50,
@@ -838,7 +863,7 @@ db1_mv <- db1_mv %>%
          # 
          # 
          ) #%>%
-  mutate(date = as.factor(date))
+  # mutate(date = as.factor(date))
 
 
 # load DPL empirical data
@@ -891,6 +916,7 @@ db1_mv <- db1_mv %>%
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                       "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated")) %>% 
   mutate(
     KDE95 = KDE95 / 10000,
     KDE50 = KDE50 / 10000
@@ -912,7 +938,9 @@ db1_mv <- db1_mv %>%
 
 
 ### DPL -------------------------
-
+theme_update(
+  axis.text.x = element_text(size = 8)
+)
 # Check data:
 # d <- db1_mv %>% dplyr::filter(source == "observed")
 # d <- a %>%  dplyr::filter(random_seed == "-1996108983") # por algum motivo essa simullação tem 16 dias em vez de 8 
@@ -940,25 +968,22 @@ db1_mv %>%
   guides(scale="none") +
   ylab("DPL (m)") +
   ylim(c(0,5000)) +
+  ggtitle("Daily Path Length (m)") +
   scale_colour_viridis_d() +
   # scale_fill_viridis_d() +
   facet_grid(~source) +
-  
   # others
   theme(axis.text = element_text(size = 9))
 # geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
-
-
 # db1_mv %>%
 #   ggplot(aes(x = group, y = DPL, color = month)) +
 #   geom_boxplot() +
 #   guides(scale="none") +
-#   ylab("DPL (m)") +
 #   ylim(c(0,5000)) +
 #   scale_colour_viridis_d()
 
 # # Save plot
-# ggsave(paste0(path,  "/", '02_simple_DPL_By-month_boxplot.png'), height = 3.5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_DPL_By-month_boxplot.png'), height = 3.5, width = 7)
 
 
 
@@ -999,7 +1024,7 @@ db1_mv %>%
   guides(fill=FALSE) +
   # ylim(0, 350) +
   ylab("Area (in ha)") +
-  ggtitle("KDE 95% (monthly area used") +
+  ggtitle("KDE 95% (monthly area used)") +
   scale_colour_viridis_d() +
   facet_grid(~source) +
   
@@ -1024,8 +1049,8 @@ db1_mv %>%
   geom_boxplot() +
   ylim(0, 2.5) +
   guides(fill=FALSE) +
-  ylab("Area (ha)") +
-  ggtitle("log10(Area in ha)") +
+  ylab("log10(Area in ha)") +
+  ggtitle("KDE 50% (Core area)") +
   scale_colour_viridis_d() +
   facet_grid(~source) +
   
@@ -1148,7 +1173,8 @@ db1_mv <- db1_mv %>%
   # )) %>% 
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
-                                      "Jun", "Jul", "Aug", "Sep", "Dec"))
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated"))
 
 db1_mv$group %>% levels()
 
@@ -1220,7 +1246,7 @@ ggplot(data=db1_mv_longer,aes(x=group ,y=percentage_mean
   facet_grid(behavior ~ source)
 
 # Save plot
-# ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_statsummary.png'), height = 5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_statsummary.png'), height = 5, width = 7)
 
 
 # Option 3
@@ -1248,7 +1274,7 @@ ggplot(data = db1_mv_sum, aes(x = factor(group), y = mean, fill = month)) +
   scale_fill_viridis_d()
 
 # Save plot
-# ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_errorbar.png'), height = 5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_errorbar.png'), height = 5, width = 7)
 
 
 
@@ -1273,7 +1299,7 @@ ggplot(data = db1_mv_longer, aes(x = group, y = percentage_mean, fill = month)) 
 #   dplyr::filter(group == "Guareí") 
   
 # Save plot
-# ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_option2.png'), height = 5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_option2.png'), height = 5, width = 7)
 
 
 
@@ -1314,13 +1340,13 @@ db1_mv_summarry <- db1_mv %>%
   dplyr::filter(source == "simulated")
 
 db1_mv_summarry <- db1_mv_summarry %>% 
-  bind_rows(obs.mv.metrics.summary)
+  bind_rows(obs.mv.metrics.summary) 
 
 db1_mv_summarry <- db1_mv_summarry %>% 
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                       "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
-  mutate(source = factor(source, levels = c("simulated", "observed")))
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated"))
 
 
 # Movement rate
@@ -1344,8 +1370,9 @@ db1_mv_summarry %>% ggplot(
     axis.title.x = element_blank()
   ) +
   guides(shape = FALSE) # drop legend of shape only
-# Save plot
-# ggsave(paste0(path,  "/", '02_simple_MR.png'), height = 3.5, width = 7)
+
+# # Save plot
+ggsave(paste0(path,  "/", '02_simple_MR.png'), height = 3.5, width = 7)
 
 
 
@@ -1372,8 +1399,9 @@ db1_mv_summarry %>% ggplot(
     axis.title.x = element_blank()
   )+
   guides(shape = FALSE) # drop legend of shape only
+
 # Save plot
-# ggsave(paste0(path,  "/", '02_simple_PT.png'), height = 3.5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_PT.png'), height = 3.5, width = 7)
 
 
 
@@ -1406,19 +1434,23 @@ R.all <- bind_rows(R.obs, R.sim) %>%
   mutate(
     point_pattern = case_when(
       R > 1 & p <= 0.05 ~ "ordered",
-      R < 1 & p <= 0.05 ~ "clustered",
+      R < 1 & p <= 0.05 ~ "clumped",
       TRUE ~ "random"
     )
   ) %>% 
+  mutate(group = recode(group,
+                        "Santa Maria" = "SantaMaria"
+  )) %>%
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
-                                      "Jun", "Jul", "Aug", "Sep", "Dec"))
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated")) 
 
 
 
 # Check why some R values are 0 (filtering them out for now)
-R.all <- R.all %>% 
-  dplyr::filter(R > 0.1)
+# R.all <- R.all %>%
+#   dplyr::filter(R > 0.1)
 
 
 R.all %>% ggplot(
@@ -1431,9 +1463,10 @@ R.all %>% ggplot(
   geom_point(
     aes(size = 1.5),
     # position = position_jitterdodge(jitter.width = 0.25)
-    position = position_dodge2(width = .5)
+    position = position_dodge2(width = .75)
              ) +
   scale_color_viridis_d() +
+  scale_shape_manual(values=c(17,16)) +
   # ylab(expression(DPL^{'2-'}/home range)) +
   ylim(0, 1.5) +
   ylab("R index") +
@@ -1449,5 +1482,5 @@ R.all %>% ggplot(
   guides(size = FALSE) # drop legend of size only
 
 # Save plot
-# ggsave(paste0(path,  "/", '02_simple_R-aggregation.png'), height = 5, width = 8)
+ggsave(paste0(path,  "/", '02_simple_R-aggregation.png'), height = 5, width = 8)
 

@@ -133,7 +133,9 @@ dfga <- dfga %>%
 
 dfga <- dfga %>% 
   mutate(parameter = recode(parameter, "prop_trees_to_reset_memory" = "prop_reset_memory")) #%>% 
-dfga <- dfga %>% 
+dfga <- dfga %>%
+  mutate(group = forcats::fct_relevel(expname, "Suzano_Dec", "Guareí_Jul", 
+                                      "SantaMaria_Mar", "Taquara_Jan")) %>% 
   mutate_if(is.character, as.factor)
 dfga <- dfga %>% 
   rename("min" = "stringMin",
@@ -171,12 +173,14 @@ dfga_otr <- dfga %>%
 
 
 # Plot showing how the optimization differed for each energy parameter
+set.seed(412)
+
 dfga_en %>% 
   ggplot() +
   # geom_pointrange(aes(ymin = min, ymax = max, x = parameter)) +
   geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
                 , width = 0.2
-                , size = 0.2) +
+                , linewidth = 0.2) +
   geom_point(aes(x = parameter, y = value, color = expname),
              size = 3
              , alpha = 0.4
@@ -203,7 +207,7 @@ dfga_en2 %>%
   # geom_pointrange(aes(ymin = min, ymax = max, x = parameter)) +
   geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
                 , width = 0.2
-                , size = 0.2) +
+                , linewidth = 0.2) +
   geom_point(aes(x = parameter, y = value, color = expname),
              size = 3
              , alpha = 0.4
@@ -305,7 +309,8 @@ dfga %>%
   facet_wrap(~param_category, scales = "free", nrow = 1)
 
 # Save plot
-# ggsave(paste0(path,  "/with_stored_energy/", '01_GA_optimized-params-feedingbout-on_wrap2.png'), height = 5, width = 10)
+ggsave(paste0(path,  "/with_stored_energy/", '01_GA_optimized-params-feedingbout-on_wrap2.png'), 
+       height = 5, width = 10)
 
 
 
@@ -324,6 +329,11 @@ dfga_paired <- dfga %>%
   group_by(expname, parameter) %>%
   # arrange(parameter=="fitness", .by_group = TRUE)
   mutate(paired = 1:n())
+
+dfga_paired <- dfga_paired %>% 
+  mutate(expname = forcats::fct_relevel(expname, "Suzano_Dec", "Guareí_Jul", 
+                                      "SantaMaria_Mar", "Taquara_Jan"))
+dfga_paired %>% str()
 
 target <- c("start_energy", "energy_level_1", "energy_level_2")
 dfga_en <- dfga_paired %>% 

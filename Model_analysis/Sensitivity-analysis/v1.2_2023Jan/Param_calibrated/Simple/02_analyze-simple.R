@@ -715,7 +715,7 @@ db_sd %>%
   scale_fill_viridis_d()
 
 # # Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1.png'), height = 5, width = 14)
+# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1.png'), height = 5, width = 10)
 
 
 db_sd %>% 
@@ -740,7 +740,8 @@ db_sd %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day)")
+  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  theme(plot.title = element_text(size = 16))
 
 # # Save plot
 # ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2.png'), height = 5, width = 7)
@@ -999,7 +1000,7 @@ db1_mv %>%
   guides(fill=FALSE) +
   # ylim(0, 350) +
   ylab("Area (in ha)") +
-  ggtitle("KDE 95% (monthly area used") +
+  ggtitle("KDE 95% (monthly area used)") +
   scale_colour_viridis_d() +
   facet_grid(~source) +
   
@@ -1024,8 +1025,8 @@ db1_mv %>%
   geom_boxplot() +
   ylim(0, 2.5) +
   guides(fill=FALSE) +
-  ylab("Area (ha)") +
-  ggtitle("log10(Area in ha)") +
+  ylab("log10(Area in ha)") +
+  ggtitle("KDE 50% (monthly area used)") +
   scale_colour_viridis_d() +
   facet_grid(~source) +
   
@@ -1417,8 +1418,8 @@ R.all <- bind_rows(R.obs, R.sim) %>%
 
 
 # Check why some R values are 0 (filtering them out for now)
-R.all <- R.all %>% 
-  dplyr::filter(R > 0.1)
+# R.all <- R.all %>% 
+#   dplyr::filter(R > 0.1)
 
 
 R.all %>% ggplot(

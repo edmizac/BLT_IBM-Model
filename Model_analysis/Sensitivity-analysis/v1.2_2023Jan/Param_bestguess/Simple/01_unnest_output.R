@@ -10,15 +10,12 @@ library("purrr")
 
 
 path <- here("Model_analysis", "Sensitivity-analysis",
-             "v1.2_2023Jan", "Param_calibrated", "temp")
+             "v1.2_2023Jan", "Param_bestguess", "Simple", "temp")
 
 # Example run:
-nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
-                    "v1.2_2023Jan",
-                   "Param_calibrated",
-                   "temp",
+nl <- readRDS(paste0(path, "/",
                    # "v1.1_Guareí_Aug_simple778458464_tempRDS.Rdata"))
-                    "v1.1_Guareí_Aug_simple-1235890495_tempRDS.Rdata"))
+                    "v1.1_Guareí_Aug_simple-205110432_tempRDS.Rdata"))
                     # "v1.1_November2022", "temp", "v1.1_Guareí_Aug_simple33642352_tempRDS.Rdata"))
 db_example  <-  unnest_simoutput(nl)
 eval_simoutput(nl)
@@ -29,8 +26,7 @@ eval_simoutput(nl)
 # db1$turn_ang_sd%>% str()
 
 # Grep files
-nls_to_df <- list.files(here("Model_analysis", "Sensitivity-analysis",
-                             "v1.2_2023Jan", "Param_calibrated", "temp"), 
+nls_to_df <- list.files(paste0(path, "/"), 
                         pattern = "tempRDS") #%>% # .RData does not work; "v1.1" works.
   # as.factor() 
   
