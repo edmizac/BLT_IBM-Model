@@ -22,12 +22,6 @@
 # 
 #
 
-## Options -------------------------
-# (plotting, memory limit, decimal digits)
-
-# ggplot theme
-theme_set(theme_bw(base_size = 15))
-
 ## Packages -------------------------
 library("here")
 library("dplyr")
@@ -37,6 +31,12 @@ library("lubridate")
 library("hms")
 library("amt")
 library("sf")
+
+## Options -------------------------
+# (plotting, memory limit, decimal digits)
+# ggplot theme
+theme_set(theme_bw(base_size = 15))
+
 
 
 # # Siminputrow matrix  -------------------------
@@ -128,34 +128,201 @@ dat.dpl.summary.mo <- dat.dpl.summary %>% group_by(group, id_month) %>%
 
 
 # Summarize Home range -------------------------
-# Read shapefiles for cropping home range by forest area
-shp <- sf::read_sf("D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp")
-shp <- sf::read_sf("D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp")
-
 
 dat.all.mv.tr <- dat.all.mv %>%
   mutate(
     id = paste0(group, " - ", id_month)
   ) %>% 
-  make_track(.x=x, .y=y, id = id, crs = our_crs, all_cols = TRUE) %>% 
+  make_track(.x=x, .y=y, id = id, crs = 32722, all_cols = TRUE) %>% 
   nest(data = -c(id, group, id_month))
 
-hrvalues <- dat.all.mv.tr %>% 
+KDE <- dat.all.mv.tr %>%
+# hrvalues <- dat.all.mv.tr %>%
   mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), 
           KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) 
   )
 
-hrvalues <- hrvalues %>%  
-  select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')
+# Transform KDE to sf
+# KDE_sf <- amt::hr_isopleths(hrvalues) %>% sf::st_as_sf(data, crs = 32722)
 
-hrvalues <- hrvalues %>% 
-  mutate(hr_area = map(hr, hr_area)) %>%
-  unnest(cols = hr_area)
+KDE_sf <- KDE %>% 
+  mutate(
+        isop_95 = amt::map(KDE95, ~hr_isopleths(.)) %>% 
+          purrr::map(., ~sf::st_as_sf(., 
+                                      coords = c("x_", "y_"),
+                                      crs = 32722)), #%>% 
+          # purrr::map(., ~sf::st_transform(., crs = 32722)),
+        isop_50 = amt::map(KDE50, ~hr_isopleths(.)) %>% 
+          purrr::map(., ~sf::st_as_sf(., 
+                                      coords = c("x_", "y_"),
+                                      crs = 32722)), # %>% 
+          # purrr::map(., ~sf::st_transform(., crs = 32722))
+  ) %>% 
+dplyr::select(-data) #%>% 
+  # amt::unnest()
 
-hrvalues <- hrvalues %>% dplyr::select(-c('what', 'hr'))
+KDE_sf$isop_95[[1]] %>% st_crs()
 
-hrvalues <- hrvalues %>% mutate(hr_area_ha = area / 10000)
+# Add shapefiles to crop
+KDE_sf <- KDE_sf %>% 
+  mutate(
+    shp = case_when(
+      group == "Suzano" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp",
+      group == "Guareí" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp",
+      group == "Santa Maria" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp",
+      group == "Taquara" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp",
+      )
+  ) %>% 
+  # read shp as sf
+  mutate(
+    shp = purrr::map(shp, ~ sf::read_sf(.)) #%>% 
+      # purrr::map(., ~ sf::st_set_crs(., 32722))
+  ) #%>% 
+  # KDE_sf$shp[[1]] %>% st_crs() #%>%   #checking crs
+  # set crs
+  # mutate(
+  #   shp = purrr::map(shp, ~ sf::st_set_crs(., 32722))
+  # )
+# (no need to set crs because it is 32722 already)
 
+# Intersecting only one line of the df:
+library("tmap")
+ex_shp <- KDE_sf$shp[[3]]
+ex_shp %>% st_crs()
+tm_shape(ex_shp) +
+  tm_polygons()
+
+ex_isop <- KDE_sf$isop_95[[3]]
+ex_isop %>% st_crs()
+tm_shape(ex_isop) +
+  tm_polygons()
+
+cropped_tm <- tm_shape(ex_shp) +
+  tm_polygons() +
+  tm_shape(ex_isop) +
+  tm_polygons(alpha = 0.2)
+cropped_tm
+
+# # Save tmap as example
+# tmap_save(
+#   tm = cropped_tm,
+#   filename = here("Data", "Movement", "Curated", "Validation", "Cropped_HR_example6.png"), dpi = 300
+# )
+
+cropped <- st_intersection(ex_isop, ex_shp)
+tm_shape(cropped) +
+  tm_polygons()
+# It works. Why it does not work inside map()?
+
+for (i in 1:nrow(KDE_sf)) {ex_shp <- KDE_sf$shp[i]
+  ex_isop <- KDE_sf$isop_50[i]
+  ex_isop95 <- KDE_sf$isop_95[i]
+  
+  print(st_crs(ex_shp) == st_crs(ex_isop))
+  print(st_crs(ex_shp) == st_crs(ex_isop95))
+  # sf::st_intersection(ex_isop, ex_shp) # the problem is within the st_intersection() function
+  # sf::st_intersection(ex_isop95, ex_shp) # the problem is within the st_intersection() function
+  
+  print(i)
+}
+
+# For all lines/groups:
+KDE_sf <- KDE_sf %>% 
+  mutate(
+    cropped_95 = purrr::map(isop_95, ~sf::st_intersection(., shp)),
+    cropped_50 = purrr::map(isop_50, ~sf::st_intersection(., shp))
+  )
+# OH MY GOSH WHY THIS DOES NOT WORK
+
+# I will just do it manually:
+KDE_sf$cropped95[[1]] <- sf::st_intersection(KDE_sf$isop_95[[1]], KDE_sf$shp[[1]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[2]] <- sf::st_intersection(KDE_sf$isop_95[[2]], KDE_sf$shp[[2]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[3]] <- sf::st_intersection(KDE_sf$isop_95[[3]], KDE_sf$shp[[3]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[4]] <- sf::st_intersection(KDE_sf$isop_95[[4]], KDE_sf$shp[[4]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[5]] <- sf::st_intersection(KDE_sf$isop_95[[5]], KDE_sf$shp[[5]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[6]] <- sf::st_intersection(KDE_sf$isop_95[[6]], KDE_sf$shp[[6]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[7]] <- sf::st_intersection(KDE_sf$isop_95[[7]], KDE_sf$shp[[7]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[8]] <- sf::st_intersection(KDE_sf$isop_95[[8]], KDE_sf$shp[[8]]) #%>% sf::st_area(.)
+KDE_sf$cropped95[[9]] <- sf::st_intersection(KDE_sf$isop_95[[9]], KDE_sf$shp[[9]]) #%>% sf::st_area(.)
+
+KDE_sf$cropped50[[1]] <- sf::st_intersection(KDE_sf$isop_50[[1]], KDE_sf$shp[[1]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[2]] <- sf::st_intersection(KDE_sf$isop_50[[2]], KDE_sf$shp[[2]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[3]] <- sf::st_intersection(KDE_sf$isop_50[[3]], KDE_sf$shp[[3]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[4]] <- sf::st_intersection(KDE_sf$isop_50[[4]], KDE_sf$shp[[4]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[5]] <- sf::st_intersection(KDE_sf$isop_50[[5]], KDE_sf$shp[[5]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[6]] <- sf::st_intersection(KDE_sf$isop_50[[6]], KDE_sf$shp[[6]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[7]] <- sf::st_intersection(KDE_sf$isop_50[[7]], KDE_sf$shp[[7]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[8]] <- sf::st_intersection(KDE_sf$isop_50[[8]], KDE_sf$shp[[8]]) #%>% sf::st_area(.)
+KDE_sf$cropped50[[9]] <- sf::st_intersection(KDE_sf$isop_50[[9]], KDE_sf$shp[[9]]) #%>% sf::st_area(.)
+
+tm_shape(KDE_sf$cropped50[[9]]) +
+  tm_polygons()
+
+# Visualize cropped plots
+i <- 1
+for (feature in 1:nrow(KDE_sf)) {
+  tm_obj <- KDE_sf$cropped95[[i]] %>% 
+   tm_shape() +
+    tm_polygons()
+  print(tm_obj)
+  
+ i <- i+1 
+}
+
+# Wrangle and select valuable columns
+KDE_sf %>% colnames()
+
+KDE_sf <- KDE_sf %>%
+  tidyr::pivot_longer(cropped95:cropped50, names_to = 'KDE_value', values_to = 'hr')
+KDE_sf <- KDE_sf %>%
+  dplyr::select(-c("KDE95", "KDE50", "isop_95", "isop_50", "shp"))
+
+
+# Calculate home range area from clipped sf
+KDE_sf <- KDE_sf %>%
+  mutate(
+    hr_area = purrr::map(hr, ~ sf::st_area(.))
+    ) %>% 
+  dplyr::select(-hr) #%>%
+  # unnest(cols = hr_area)
+
+# Transform to ha
+KDE_sf <- KDE_sf %>%
+  mutate(
+    hr_area_ha = hr_area %>% as.numeric() / 10000
+  ) %>% 
+  dplyr::select(-hr_area)
+
+# Match cropped with KDE names
+KDE_sf <- KDE_sf %>%
+  mutate(
+    KDE_value = case_when(
+      KDE_value == "cropped95" ~ "KDE95",
+      KDE_value == "cropped50" ~ "KDE50",
+      TRUE ~ KDE_value
+    )
+  )
+
+KDE_sf %>% str()
+
+# # Write csv
+# KDE_sf %>%
+#   write.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_Home-range_by-month.csv"),
+#             row.names = FALSE)
+
+
+
+# # Old procedure (without cropping):
+# hrvalues <- hrvalues %>%  
+#   select(-data) %>% tidyr::pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')
+# 
+# hrvalues <- hrvalues %>% 
+#   mutate(hr_area = map(hr, hr_area)) %>%
+#   unnest(cols = hr_area)
+# 
+# hrvalues <- hrvalues %>% dplyr::select(-c('what', 'hr'))
+# 
+# hrvalues <- hrvalues %>% mutate(hr_area_ha = area / 10000)
 # # Write csv
 # hrvalues %>%
 #   write.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_Home-range_by-month.csv"),
