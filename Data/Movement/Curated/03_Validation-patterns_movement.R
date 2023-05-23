@@ -36,6 +36,7 @@ library("readxl")
 library("lubridate")
 library("hms")
 library("amt")
+library("sf")
 
 
 # # Siminputrow matrix  -------------------------
@@ -127,6 +128,11 @@ dat.dpl.summary.mo <- dat.dpl.summary %>% group_by(group, id_month) %>%
 
 
 # Summarize Home range -------------------------
+# Read shapefiles for cropping home range by forest area
+shp <- sf::read_sf("D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp")
+shp <- sf::read_sf("D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp")
+
+
 dat.all.mv.tr <- dat.all.mv %>%
   mutate(
     id = paste0(group, " - ", id_month)
