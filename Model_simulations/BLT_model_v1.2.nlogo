@@ -1149,7 +1149,7 @@ to go
       SDDcalc
 
       output-print "calculating R index for seeds"
-;      calc-seed-aggregation
+      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
@@ -3219,10 +3219,11 @@ to calc-homerange
 
 
       ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
-      set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 1000000 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
+      set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 100 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
       type "DI index = " print DI_index
-      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )
-      type "diameter of home range (d') =  " print d_
+;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi ) ; in case KDE is in m² and not in ha
+      let d_ ( 4 * ( KDE_95 / 100 ) / pi ) ; in case KDE is in ha
+      type "diameter of home range (d' in km) =  " print d_
       set M_index ( 1 * ( 0.150 * (DPL_mean / 1000) / (d_ ^ 2) ) )                                                                     ; (M = N(sv/d²) Lowen & Dunbar 1994
       type "M index = " print M_index
 
@@ -3709,11 +3710,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-526
-403
+491
+416
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -3723,10 +3724,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -4033,7 +4034,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+5
 
 CHOOSER
 1017
@@ -4465,7 +4466,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.36
 0.05
 1
 NIL
@@ -4834,7 +4835,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 245
@@ -4955,7 +4956,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+68.98
 5
 1
 NIL
@@ -4970,7 +4971,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.4060000000000001
 0.1
 1
 NIL
@@ -4985,7 +4986,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.343
 0.1
 1
 NIL
@@ -5000,7 +5001,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+67.86
 1
 1
 NIL

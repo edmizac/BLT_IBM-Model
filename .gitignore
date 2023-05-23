@@ -60,13 +60,32 @@
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_with_SantaMaria/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_with_SantaMaria/temp/**.RData
 
+/Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.RData
+/Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.rds
+/Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.png
+/Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.RData
+/Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.rds
+/Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.png
 
-Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.RData
-Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.rds
-Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.png
-Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.RData
-Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.rds
-Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.png
+
+/Model_analysis/Sensitivity-analysis/v1.2_2023Jan/**.RData
+
+
+/Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/**.rds
+/Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_calibrated/temp/**.rds
+/Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_calibrated/temp/**.RData
+/Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_with_SantaMaria/temp/**.rds
+/Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_with_SantaMaria/temp/**.RData
+
+/Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/Morris/temp/**.RData
+/Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/Morris/temp/**.rds
+/Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/Morris/temp/**.png
+/Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/simple/temp/**.RData
+/Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/simple/temp/**.rds
+/Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/simple/temp/**.png
+
+
+
 
 
 
