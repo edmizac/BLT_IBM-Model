@@ -367,7 +367,8 @@ siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix_nextday_seeddis
 # By group
 dat.all.summary <- dat.all.sd %>% 
   mutate(
-    day = lubridate::ymd(as_date(def_datetime))
+    day = lubridate::ymd(as_date(def_datetime)), 
+    month = lubridate::month(as_date(def_datetime))
   ) %>% 
   group_by(group, day) %>% 
   summarize(
@@ -422,14 +423,15 @@ dat.all.summary %>%
 # ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 'n-defecations-per-day_By-group.png'), height = 5, width = 7)
 
 
+# By group
 dat.all.summary %>% 
   mutate(
     fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
   ) %>% 
   ggplot() +
-  geom_boxplot(aes(x = fragment, y = defecation_events, fill = group),
+  geom_boxplot(aes(x = fragment, y = defecation_events, fill = fragment),
                notch = TRUE) +
-  geom_point(aes(x = fragment, y = defecation_events, fill = group),
+  geom_point(aes(x = fragment, y = defecation_events, fill = fragment),
              position = position_jitter(width = .05)) + # position_dodge() does not work for geom_point: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
   # geom_dotplot(aes(x = group, y = defecation_events, fill = group)) + # didnt work: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
   theme(
@@ -441,6 +443,63 @@ dat.all.summary %>%
 
 # Save plot
 # ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 'n-defecations-per-day_By-fragment.png'), height = 5, width = 7)
+
+
+
+
+# By month
+dat.all.summary <- dat.all.sd %>% 
+  mutate(
+    day = lubridate::ymd(as_date(def_datetime)), 
+    month = lubridate::month(as_date(def_datetime), label = T, abbr = T)
+  ) %>% 
+  group_by(group, month, day) %>% 
+  summarize(
+    defecation_events = n()
+    # mean_SDD = mean(SDD),
+    # sd_SDD = sd(SDD)
+  )
+dat.all.summary <- dat.all.summary %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara"))
+
+# Relevel all fragment names to size categories
+dat.all.summary <- dat.all.summary %>% 
+  mutate(group = recode(group,
+                        "Santa Maria" = "SantaMaria"
+  )) %>% 
+  mutate(
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous",
+      TRUE ~ "check"
+    )
+  ) %>% 
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  )
+
+
+dat.all.summary %>% 
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  ) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = month, y = defecation_events, fill = month),
+               notch = F) +
+  geom_point(aes(x = month, y = defecation_events, fill = month), size = 2,
+             position = position_jitter(width = .05)) + # position_dodge() does not work for geom_point: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
+  # geom_dotplot(aes(x = group, y = defecation_events, fill = month)) + # didnt work: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 11)
+  ) +
+  ylab("number of defecations per day") #+
+# facet_wrap(~disp_event, nrow = 2)
+
+# Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 'n-defecations-per-day_By-month.png'), height = 5, width = 7)
 
 
 
