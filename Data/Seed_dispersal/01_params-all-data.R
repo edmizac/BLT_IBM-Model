@@ -274,13 +274,13 @@ dat.all.summary %>%
   # geom_dotplot(aes(x = group, y = defecation_events, fill = group)) + # didnt work: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
   theme(
     axis.title.x = element_blank(),
-    axis.text.x = element_text(size = 13)
+    axis.text.x = element_text(size = 11)
   ) +
   ylab("number of defecations per day") #+
   # facet_wrap(~disp_event, nrow = 2)
 
 # Save plot
-# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'n-defecations-per-day_By-group.png'), height = 5, width = 5)
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_all-data", 'n-defecations-per-day_By-group.png'), height = 5, width = 7)
 
 
 # By group and month

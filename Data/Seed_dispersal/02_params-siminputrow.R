@@ -50,8 +50,8 @@ mv <- dat.all.mv %>%
 # get HH:mm:ss of wakeup and sleeping times
   mutate(
     datetime = lubridate::as_datetime(datetime),
-    date = as_date(datetime),
-    time = as_hms(datetime)
+    date = lubridate::as_date(datetime),
+    time = hms::as_hms(datetime)
   ) 
 
 # Getting mean weaking hours by days, group and timeframe
@@ -121,7 +121,7 @@ mv.summary <- mv.summary %>%
 # Merge into siminputmatrix
 siminputmatrix <- dplyr::left_join(siminputmatrix, mv.summary)
 
-# Write csv
+0# Write csv
 # siminputmatrix %>% write.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",  "Siminputrow_activity-time_means.csv"),
 #                       row.names = FALSE)
 
@@ -363,36 +363,89 @@ siminputmatrix_nextday_seeddispersal <- left_join(siminputmatrix_nextday_seeddis
 
 
 
+#### n defecations per day ####
+# By group
+dat.all.summary <- dat.all.sd %>% 
+  mutate(
+    day = lubridate::ymd(as_date(def_datetime))
+  ) %>% 
+  group_by(group, day) %>% 
+  summarize(
+    defecation_events = n()
+    # mean_SDD = mean(SDD),
+    # sd_SDD = sd(SDD)
+  )
+
+dat.all.summary <- dat.all.summary %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara"))
+
+# Relevel all fragment names to size categories
+dat.all.summary <- dat.all.summary %>% 
+  mutate(group = recode(group,
+                        "Santa Maria" = "SantaMaria"
+  )) %>% 
+  mutate(
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous",
+      TRUE ~ "check"
+    )
+  ) %>% 
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  )
+
+### Write csv
+# dat.all.summary %>% 
+#   write.csv(here("Data", "Seed_dispersal", "Curated", "Param_all-data", "Table_n_defecations.csv"),
+#             row.names = FALSE)
+
+# dat.all.summary %>% str()
+
+dat.all.summary %>% 
+  ggplot() +
+  geom_boxplot(aes(x = group, y = defecation_events, fill = group),
+               notch = TRUE) +
+  geom_point(aes(x = group, y = defecation_events, fill = group),
+             position = position_jitter(width = .05)) + # position_dodge() does not work for geom_point: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
+  # geom_dotplot(aes(x = group, y = defecation_events, fill = group)) + # didnt work: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 11)
+  ) +
+  ylab("number of defecations per day") #+
+# facet_wrap(~disp_event, nrow = 2)
+
+# Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 'n-defecations-per-day_By-group.png'), height = 5, width = 7)
+
+
+dat.all.summary %>% 
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  ) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = fragment, y = defecation_events, fill = group),
+               notch = TRUE) +
+  geom_point(aes(x = fragment, y = defecation_events, fill = group),
+             position = position_jitter(width = .05)) + # position_dodge() does not work for geom_point: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
+  # geom_dotplot(aes(x = group, y = defecation_events, fill = group)) + # didnt work: https://stackoverflow.com/questions/17281027/dodge-not-working-when-using-ggplot2
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 11)
+  ) +
+  ylab("number of defecations per day") #+
+# facet_wrap(~disp_event, nrow = 2)
+
+# Save plot
+# ggsave(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow", 'n-defecations-per-day_By-fragment.png'), height = 5, width = 7)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+getwd()
+# ---------
 
 
 

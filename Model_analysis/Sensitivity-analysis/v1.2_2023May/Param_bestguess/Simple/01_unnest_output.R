@@ -20,7 +20,7 @@ db_example  <-  unnest_simoutput(nl)
 
 # the number of missing combinations shows up because I used nseeds and repetitions = 1
 # thus, with repetition = 1 and nseeds = 30, 30-1 = 29 'missing' combinations
-eval_simoutput(nl) 
+eval_simoutput(nl)# %>% write.csv("C:/Users/eduar/Desktop/v1.2_seeds_n-30.csv")
 # nl@simdesign@siminput
 # nl@simdesign@simoutput
 # 

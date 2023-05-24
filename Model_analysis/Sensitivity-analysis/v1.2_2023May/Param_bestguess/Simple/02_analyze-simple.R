@@ -645,18 +645,23 @@ db_sd %>%
   # droplevels() %>% 
   ggplot() +
   # aes(x = group, y = SDD, fill = group) +
-  aes(x = group, y = SDD, fill = fragment) +
+  aes(x = fragment, y = SDD, fill = fragment) +
   geom_violin() +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
   theme(axis.title.x = element_blank()) +
   facet_wrap(~disp_day, nrow = 2) +
   ylab("SDD (m)") +
   ylim(0, 1000) +
+  ggtitle("Seed dispersal distance by fragment") +
   # facet_wrap(vars(disp_day, source), nrow = 2) +
   facet_grid(disp_day ~ source) +
   
   # others
-  theme(axis.text = element_text(size = 9))
+  theme(
+    axis.text = element_text(size = 10), 
+    legend.position="bottom"
+    # legend.position="none"
+    )
 # geom_point(position = position_jitterdodge(jitter.width = 0.7))
 
 
@@ -688,16 +693,19 @@ db_sd %>%
     # position = "stack"
     # stat = "identity",
     # trim = TRUE,
+    bandwidth = 20,
     scale = 1.2, # heigth
     jittered_points = TRUE,
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
   xlab("SDD (in meters)") +
+  xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
-  ggtitle("Distance of seeds dispersed on the same day") #+
+  ggtitle("Distance of seeds dispersed on the same day") +
+  theme(plot.title = element_text(size = 14)) #+
   # theme_ridges()
 
 # # Save plot
@@ -719,16 +727,19 @@ db_sd %>%
     # position = "stack"
     # stat = "identity",
     # trim = TRUE,
+    bandwidth = 20,
     scale = 1.2, # heigth
     jittered_points = TRUE,
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
   xlab("SDD (in meters)") +
+  xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
-  ggtitle("Distance of seeds dispersed on the next day")
+  ggtitle("Distance of seeds dispersed on the next day") +
+  theme(plot.title = element_text(size = 14))
 
 # Save plot
 ggsave(paste0(path, "/", '02_simple_SDD_next-day_density_ridges.png'), height = 5, width = 7)
@@ -763,6 +774,42 @@ db_sd %>%
 ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1.png'), height = 5, width = 10)
 
 
+# ggrides with boxplot
+db_sd %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  ggplot(
+    aes(x = SDD, y = month, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( #alpha = 0.4,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    bandwidth = 20,
+    scale = 0.9, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.5, height = 0)
+  ) +
+  geom_boxplot(
+    width = .20, position = position_nudge(y = -.25) #, outlier.shape = NA
+  ) +
+  xlab("SDD (in meters)") +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(source ~ disp_day) +
+  scale_fill_viridis_d()
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1_withboxplot.png'), height = 5, width = 10)
+
+
+
+
 db_sd %>% 
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
   dplyr::filter(
@@ -792,6 +839,44 @@ db_sd %>%
 
 # # Save plot
 ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2.png'), height = 5, width = 7)
+
+
+
+## ggrides with boxplot
+db_sd %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  ggplot(
+    aes(x = SDD, y = month, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( #alpha = 0.4,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    bandwidth = 20,
+    scale = 0.9, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.5, height = 0)
+  ) +
+  geom_boxplot(
+    width = .15, position = position_nudge(y = -.15) #, outlier.shape = NA
+    ) +
+  xlab("SDD (in meters)") +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(~source) +
+  scale_fill_viridis_d() +
+  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  theme(plot.title = element_text(size = 16))
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2_withboxplot.png'), height = 5, width = 7)
+
 
 
 # boxplot
@@ -1505,8 +1590,8 @@ db1_mv_summarry <- db1_mv %>%
   dplyr::summarise(
     MR_mean = mean(MR, na.rm = TRUE),
     MR_sd = sd(MR, na.rm = TRUE),
-    PT_mean = mean(PT, na.rm = TRUE),
-    PT_sd = sd(PT, na.rm = TRUE)
+    PT_mean = mean(PT, na.rm = TRUE) /10000 ,  # to convert to m²
+    PT_sd = sd(PT, na.rm = TRUE)  /10000       # to convert to m²
   ) %>% 
   dplyr::filter(source == "simulated")
 
@@ -1529,7 +1614,9 @@ db1_mv_summarry <- db1_mv_summarry %>%
       group == "Taquara" ~ "Continuous",
       TRUE ~ "check"
     )
-  ) %>% 
+  )
+
+db1_mv_summarry <- db1_mv_summarry %>% 
   mutate(
     fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
   )
@@ -1594,7 +1681,6 @@ db1_mv_summarry %>% ggplot(
     # legend.position = "none",
     # axis.text.y = element_blank(),
     axis.text = element_text(size = 9),
-    axis.title.x = element_blank()
   )+
   guides(shape = FALSE) # drop legend of shape only
 
@@ -1784,12 +1870,14 @@ db1_mv_summaryDI %>% ggplot(
     # legend.position = "none",
     # axis.text.y = element_blank(),
     axis.text = element_text(size = 9),
-    axis.title.x = element_blank()
+    axis.title.x = element_blank(),
+    title = element_text(size = 13)
   ) +
+  scale_shape_manual(values = c(1, 4)) +
   geom_hline(yintercept=0.98, linetype="dashed", color = "red", linewidth = 1.5) +
-  scale_shape_manual(values = c(1, 4))
+  guides(shape = guide_legend(title = "territoriality", order = 1)) # = NULL to drop the title of territoriality (it is wrong)
   # guides(shape = FALSE) # drop legend of shape only
-
+  
 # # Save plot
 ggsave(paste0(path,  "/", '02_simple_DI_index.png'), height = 3.5, width = 7)
 
@@ -1822,11 +1910,16 @@ db1_mv_summaryDI %>% ggplot(
     # legend.position = "none",
     # axis.text.y = element_blank(),
     axis.text = element_text(size = 9),
-    axis.title.x = element_blank()
+    axis.title.x = element_blank(),
+    title = element_text(size = 13)
   ) +
   geom_hline(yintercept=0.08, linetype="dashed", color = "red", linewidth = 1.5) +
-  scale_shape_manual(values = c(1, 4))
+  scale_shape_manual(values = c(1, 4)) +
+  guides(shape = guide_legend(title = "territoriality", order = 1)) # = NULL to drop the title of territoriality (it is wrong)
+# guides(shape = FALSE) # drop legend of shape only
+
   # guides(shape = FALSE) # drop legend of shape only
 
 # # Save plot
 ggsave(paste0(path,  "/", '02_simple_M_index.png'), height = 3.5, width = 7)
+

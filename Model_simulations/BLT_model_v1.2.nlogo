@@ -1149,7 +1149,7 @@ to go
       SDDcalc
 
       output-print "calculating R index for seeds"
-      calc-seed-aggregation
+;      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
@@ -3176,7 +3176,7 @@ to calc-homerange
       ]
 
       foreach aux-list [
-        ax -> set PT_d lput (ax / KDE_95) PT_d
+        ax -> set PT_d lput (ax / (KDE_95 * 10000 ) ) PT_d ; PT = PL² (m)/HR (m²)
         ;     print PT_d
       ]
 
@@ -3340,7 +3340,6 @@ to calc-movement-dead ; if tamarins die before days > no_days, their variables g
 
   print "calculating movement from calc-movemement-dead"
   ifelse day > 3 [
-    print "from movemend-dead"
 ;    print day
     output-print "monkeys died"
     output-print "calculating metrics"
@@ -3350,6 +3349,7 @@ to calc-movement-dead ; if tamarins die before days > no_days, their variables g
     NNdist
     SDDcalc
 ;    calc-seed-aggregation
+    print "estimated from movemend-dead (>3 days)"
 
   ][
     print "not enough days to calculate movement metrics"
@@ -3710,11 +3710,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-491
-416
+526
+403
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -3724,10 +3724,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -3842,7 +3842,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-84.0
+78.0
 1
 1
 NIL
@@ -3922,7 +3922,7 @@ INPUTBOX
 604
 105
 no_days
-3.0
+7.0
 1
 0
 Number
@@ -3936,7 +3936,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-105.0
+90.0
 1
 1
 NIL
@@ -3951,7 +3951,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--32.0
+-16.0
 1
 1
 NIL
@@ -4034,7 +4034,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+1
 
 CHOOSER
 1017
@@ -4466,7 +4466,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.21
 0.05
 1
 NIL
@@ -4835,7 +4835,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 245
@@ -4956,7 +4956,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+43.02
 5
 1
 NIL
@@ -4971,7 +4971,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+3.089
 0.1
 1
 NIL
@@ -4986,7 +4986,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+3.931
 0.1
 1
 NIL
@@ -5001,7 +5001,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+17.85
 1
 1
 NIL
