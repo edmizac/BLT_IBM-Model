@@ -187,19 +187,19 @@ db1 %>% write.csv(
 # Split into tables
 
 # # Write csv (plants)
-db1 %>%
-  dplyr::select(-c("duration":"n_unvisited_trees")) %>%
+db_seeds <- db1 %>%
   dplyr::filter(breed != "monkeys") %>%
-  write.csv(paste0(path, "/", "02_Simoutput-simple_plants.csv"),
+  dplyr::select(-c("duration":"agent"))     ##### *** PAY ATTENTION HERE
+db_seeds %>%   write.csv(paste0(path, "/", "02_Simoutput-simple_plants.csv"),
             row.names = FALSE)
 
 # # Write csv (monkeys)
 
 db_monkeys <- db1 %>%
   dplyr::filter(breed == "monkeys") %>%
-  dplyr::select(-c("x":"disp_day")) %>%
+  dplyr::select(-c("x":"disp_day"))         ##### *** PAY ATTENTION HERE
   # mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
-  write.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv"),
+db_monkeys %>% write.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv"),
             row.names = FALSE)
 
 

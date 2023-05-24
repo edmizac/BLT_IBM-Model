@@ -25,7 +25,7 @@ library("sf")
 library("purrr")
 
 path <- here("Model_analysis", "Sensitivity-analysis",
-             "v1.2_2023Jan", "Param_bestguess", "Simple", "temp")
+             "v1.2_2023May", "Param_bestguess", "Simple", "temp")
 
 
 # ggplot theme
@@ -594,6 +594,10 @@ db_sd <- db_sd %>%
 db_sd$fragment %>% unique()
 
 
+
+
+
+
 ### Plots ------
 theme_update(
   axis.text.x = element_text(size = 11)
@@ -854,28 +858,27 @@ theme_update(
   )
 
 # define boxplot width
-bpw <- 6/length(unique(paste(db1$group, db1$month)))
-bpw # 0.44444
+# bpw <- 6/length(unique(paste(db1$group, db1$month)))
+# bpw # 0.44444
   
   
 # db1_mv <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds")) %>% 
-db1_mv <- read.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv")) %>% 
+db_mv <- read.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv")) %>% 
     # mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
     ungroup() %>% 
     as.data.frame()
   
-db1_mv %>% str()
+db_mv %>% str()
 
-db1_mv  <-  db1_mv %>%
-  dplyr::select(-c(
-    # "DPL",
-    "SDD"))
+# db1_mv  <-  db1_mv %>%
+#   dplyr::select(-c(
+#     # "DPL",
+#     "SDD"))
 
   
 # Wrangle data:
   
-db1_mv <- db1_mv %>% 
-  
+db_mv <- db_mv %>% 
 # dplyr::filter(breed == "monkeys") %>% 
   # rename_with(~ str_remove(.x, "g_"), starts_with("g_")
   # ) %>%
@@ -887,8 +890,12 @@ db1_mv <- db1_mv %>%
          # p_feeding = g_p_feeding,
          # 
          # 
-         ) #%>%
-  # mutate(date = as.factor(date))
+         ) #%>% 
+  # # only if HR is being output as m²
+  # mutate(
+  #   KDE95 = KDE95 / 10000,
+  #   KDE50 = KDE50 / 10000
+  # )
 
 
 # load DPL empirical data
@@ -918,20 +925,26 @@ obs.hr <- obs.hr %>%
   ) %>% 
   as.data.frame()
 
-obs <- obs.dpl %>% dplyr::left_join(obs.hr, by = c("group"="group", "month"= "month",
-                                                     "source"="source"
-                                                     # "KDE95" = "KDE95",
-                                                     # "KDE50" = "KDE50"
-))  %>% 
+
+# Load Defendability Index (DI)
+obs.DI <- read.csv(here("Data", "Movement", "Covariables_Territoriality_DI.csv"), sep = ";") %>% 
   mutate(
-    KDE95 = KDE95 / 10000,
-    KDE50 = KDE50 / 10000
+    source = "observed"
   )
 
-# Merge obserded data into db1_mv
-db1_mv <- dplyr::bind_rows(db1_mv, obs)
+# obs <- obs.dpl %>% dplyr::left_join(obs.hr, by = c("group"="group", "month"= "month",
+#                                                      "source"="source"
+#                                                      # "KDE95" = "KDE95",
+#                                                      # "KDE50" = "KDE50"
+# ))  %>% 
+obs <- obs.dpl %>% dplyr::left_join(obs.hr, by = c("group", "month", "source"))
+obs <- obs %>% dplyr::left_join(obs.DI, by = c("group", "month", "source"))
 
-db1_mv$group %>% levels()
+# Merge obserded data into db1_mv
+db1_mv <- dplyr::bind_rows(db_mv, obs)
+
+db1_mv$group %>% unique()
+db1_mv$source %>% unique()
 db1_mv %>% str()
 
 db1_mv <- db1_mv %>% 
@@ -967,7 +980,7 @@ db1_mv$fragment %>% unique()
 db1_mv$source %>% unique()
 
 db1_mv %>% summary()
-# db1_mv %>% group_by(source) %>% summarize(KDE95_mean = mean(KDE95))
+db1_mv %>% group_by(source) %>% summarize(KDE95_mean = mean(KDE95))
 
 # obs.hr$group
 # db1_mv$group
@@ -1542,7 +1555,7 @@ db1_mv_summarry %>% ggplot(
       shape = source
       )
   ) +
-  geom_pointrange(aes(shape = source), position = position_dodge2(width = .5)) +
+  geom_pointrange(aes(shape = source), position = position_dodge2(width = .5), size = 0.9) +
   scale_color_viridis_d() +
   ylab("DPL / hours active") +
   facet_grid(~source) +
@@ -1570,7 +1583,7 @@ db1_mv_summarry %>% ggplot(
       shape = source
   )
 ) +
-  geom_pointrange(aes(shape = source), position = position_dodge2(width = .5)) +
+  geom_pointrange(aes(shape = source), position = position_dodge2(width = .5), size = 0.9) +
   scale_color_viridis_d() +
   # ylab(expression(DPL^{'2-'}/home range)) +
   ylab(bquote(~DPL^2~'/home range size')) +
@@ -1696,3 +1709,124 @@ R.all %>%
 # Save plot
 ggsave(paste0(path,  "/", '02_simple_R-aggregation.png'), height = 5, width = 8)
 
+
+
+
+### DI and M index (defendability) -------------------------
+
+db1_mv_summaryDI <- db1_mv %>% 
+  group_by(group, month, source) %>% 
+  dplyr::summarise(
+    M_mean = mean(M_index, na.rm = TRUE),
+    M_sd = sd(M_index, na.rm = TRUE),
+    DI_mean = mean(DI_index, na.rm = TRUE),
+    DI_sd = sd(DI_index, na.rm = TRUE)
+  ) #%>% 
+  # dplyr::filter(source == "simulated")
+
+# db1_mv_summaryDI <- db1_mv_summaryDI %>% 
+#   bind_rows(obs.mv.metrics.summary) 
+
+db1_mv_summaryDI <- db1_mv_summaryDI %>% 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated"))
+
+# Relevel all fragment names to size categories
+db1_mv_summaryDI <- db1_mv_summaryDI %>% 
+  mutate(
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous",
+      TRUE ~ "check"
+    )
+  ) %>% 
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  )
+
+#check:
+db1_mv_summaryDI$fragment %>% unique()
+db1_mv_summaryDI$source %>% unique()
+
+db1_mv_summaryDI %>% summary()
+# db1_mv %>% group_by(source) %>% summarize(KDE95_mean = mean(KDE95))
+
+
+
+## DI index  -------------------------------
+db1_mv_summaryDI <- db1_mv_summaryDI %>% 
+  mutate(
+    territorial = case_when(
+      DI_mean > 0.98 & M_mean >= 0.08 ~ "territorial",
+      TRUE ~ "non-territorial"
+    )
+  )
+  
+db1_mv_summaryDI %>% ggplot(
+  # aes(x = group, y = MR_mean, 
+  aes(x = fragment, y = DI_mean, 
+      ymin = DI_mean - DI_sd,
+      ymax = DI_mean + DI_sd,
+      color = month,
+      shape = source
+  )
+) +
+  geom_pointrange(aes(shape = territorial), position = position_dodge2(width = .5), size = 0.9) +
+  scale_color_viridis_d() +
+  ylab("DI value") +
+  facet_grid(~source) +
+  ggtitle("Defendability Index (Mitani & Rodman 1979)")  +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
+    axis.title.x = element_blank()
+  ) +
+  geom_hline(yintercept=0.98, linetype="dashed", color = "red", linewidth = 1.5) +
+  scale_shape_manual(values = c(1, 4))
+  # guides(shape = FALSE) # drop legend of shape only
+
+# # Save plot
+ggsave(paste0(path,  "/", '02_simple_DI_index.png'), height = 3.5, width = 7)
+
+
+
+## M index  -------------------------------
+db1_mv_summaryDI <- db1_mv_summaryDI %>% 
+  mutate(
+    territorial = case_when(
+      DI_mean > 0.98 & M_mean >= 0.08 ~ "territorial",
+      TRUE ~ "non-territorial"
+    )
+  )
+
+db1_mv_summaryDI %>% ggplot(
+  # aes(x = group, y = MR_mean, 
+  aes(x = fragment, y = M_mean, 
+      ymin = M_mean - M_sd,
+      ymax = M_mean + M_sd,
+      color = month,
+      shape = source
+  )
+) +
+  geom_pointrange(aes(shape = territorial), position = position_dodge2(width = .5), size = 0.9) +
+  scale_color_viridis_d() +
+  ylab("M value") +
+  facet_grid(~source) +
+  ggtitle("Defendability index (Lowen & Dunbar 1994)")  +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
+    axis.title.x = element_blank()
+  ) +
+  geom_hline(yintercept=0.08, linetype="dashed", color = "red", linewidth = 1.5) +
+  scale_shape_manual(values = c(1, 4))
+  # guides(shape = FALSE) # drop legend of shape only
+
+# # Save plot
+ggsave(paste0(path,  "/", '02_simple_M_index.png'), height = 3.5, width = 7)
