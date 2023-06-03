@@ -647,11 +647,11 @@ db_sd %>%
   # aes(x = group, y = SDD, fill = group) +
   aes(x = fragment, y = SDD, fill = fragment) +
   geom_violin() +
-  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
+  geom_boxplot(width = 0.2, fill = "white", alpha = 0.5) +
   theme(axis.title.x = element_blank()) +
   facet_wrap(~disp_day, nrow = 2) +
   ylab("SDD (m)") +
-  ylim(0, 1000) +
+  ylim(0, 800) +
   ggtitle("Seed dispersal distance by fragment") +
   # facet_wrap(vars(disp_day, source), nrow = 2) +
   facet_grid(disp_day ~ source) +
@@ -1798,13 +1798,15 @@ ggsave(paste0(path,  "/", '02_simple_R-aggregation.png'), height = 5, width = 8)
 
 
 
-### DI and M index (defendability) -------------------------
+## DI and M index (defendability) -------------------------
 
 db1_mv_summaryDI <- db1_mv %>% 
   group_by(group, month, source) %>% 
   dplyr::summarise(
     M_mean = mean(M_index, na.rm = TRUE),
     M_sd = sd(M_index, na.rm = TRUE),
+    M_mean_log = mean(log10(M_index), na.rm = TRUE),
+    M_sd_log = sd(log10(M_index), na.rm = TRUE),
     DI_mean = mean(DI_index, na.rm = TRUE),
     DI_sd = sd(DI_index, na.rm = TRUE)
   ) #%>% 
@@ -1842,8 +1844,7 @@ db1_mv_summaryDI %>% summary()
 # db1_mv %>% group_by(source) %>% summarize(KDE95_mean = mean(KDE95))
 
 
-
-## DI index  -------------------------------
+# Define territorial based on both indices:
 db1_mv_summaryDI <- db1_mv_summaryDI %>% 
   mutate(
     territorial = case_when(
@@ -1851,7 +1852,10 @@ db1_mv_summaryDI <- db1_mv_summaryDI %>%
       TRUE ~ "non-territorial"
     )
   )
-  
+
+
+## DI index  -------------------------------
+
 db1_mv_summaryDI %>% ggplot(
   # aes(x = group, y = MR_mean, 
   aes(x = fragment, y = DI_mean, 
@@ -1875,6 +1879,7 @@ db1_mv_summaryDI %>% ggplot(
   ) +
   scale_shape_manual(values = c(1, 4)) +
   geom_hline(yintercept=0.98, linetype="dashed", color = "red", linewidth = 1.5) +
+  # theme(legend.position="bottom") + # drop legend
   guides(shape = guide_legend(title = "territoriality", order = 1)) # = NULL to drop the title of territoriality (it is wrong)
   # guides(shape = FALSE) # drop legend of shape only
   
@@ -1884,13 +1889,6 @@ ggsave(paste0(path,  "/", '02_simple_DI_index.png'), height = 3.5, width = 7)
 
 
 ## M index  -------------------------------
-db1_mv_summaryDI <- db1_mv_summaryDI %>% 
-  mutate(
-    territorial = case_when(
-      DI_mean > 0.98 & M_mean >= 0.08 ~ "territorial",
-      TRUE ~ "non-territorial"
-    )
-  )
 
 db1_mv_summaryDI %>% ggplot(
   # aes(x = group, y = MR_mean, 
@@ -1905,7 +1903,7 @@ db1_mv_summaryDI %>% ggplot(
   scale_color_viridis_d() +
   ylab("M value") +
   facet_grid(~source) +
-  ggtitle("Defendability index (Lowen & Dunbar 1994)")  +
+  ggtitle("M index (Lowen & Dunbar 1994)")  +
   theme(
     # legend.position = "none",
     # axis.text.y = element_blank(),
@@ -1916,10 +1914,58 @@ db1_mv_summaryDI %>% ggplot(
   geom_hline(yintercept=0.08, linetype="dashed", color = "red", linewidth = 1.5) +
   scale_shape_manual(values = c(1, 4)) +
   guides(shape = guide_legend(title = "territoriality", order = 1)) # = NULL to drop the title of territoriality (it is wrong)
-# guides(shape = FALSE) # drop legend of shape only
-
   # guides(shape = FALSE) # drop legend of shape only
 
 # # Save plot
 ggsave(paste0(path,  "/", '02_simple_M_index.png'), height = 3.5, width = 7)
+
+
+### M index log10 ------- 
+
+db1_mv_summaryDI %>% ggplot(
+  # aes(x = group, y = MR_mean, 
+  aes(x = fragment, y = M_mean_log, 
+      ymin = M_mean_log - M_sd_log,
+      ymax = M_mean_log + M_sd_log,
+      color = month,
+      shape = source
+  )
+) +
+  geom_pointrange(aes(shape = territorial), position = position_dodge2(width = .5), size = 0.9) +
+  scale_color_viridis_d() +
+  # ylab("log10 M value") +
+  facet_grid(~source) +
+  ggtitle("M index (Lowen & Dunbar 1994)")  +
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = "log10 M value",
+    # trans = scales::log10_trans(),
+    # labels = scales::trans_format("log10", scales::math_format(10^.x)),
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~ 10^(.), name="M value",
+                        breaks = c(0, 0.08, 0.25, 0.5, 1, 2, 5, 15, 30, 80)
+                        # breaks = scales::log_breaks(10),
+                        # labels = scales::label_number(scale_cut = scales::cut_short_scale())
+                        # labels = scales::label_number(accuracy = 1.00)
+                        # breaks = scales::pretty_breaks(n = 10)
+    )
+  ) +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
+    axis.title.x = element_blank(),
+    title = element_text(size = 13)
+  ) +
+  geom_hline(yintercept=log10(0.08), linetype="dashed", color = "red", linewidth = 1.5) +
+  scale_shape_manual(values = c(1, 4)) +
+  guides(shape = guide_legend(title = "territoriality", order = 1)) #+ # = NULL to drop the title of territoriality (it is wrong)
+  # theme(legend.position="none") # drop legend
+  # guides(shape = FALSE) # drop legend of shape only
+
+
+# # Save plot
+ggsave(paste0(path,  "/", '02_simple_M_index_secaxis.png'), height = 3.5, width = 7.5)
 
