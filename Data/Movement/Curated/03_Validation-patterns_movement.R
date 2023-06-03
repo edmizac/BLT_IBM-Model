@@ -65,7 +65,7 @@ dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminputrow",
 
 
 # Summarize activity budget -------------------------
-dat.all.mv$behavior %>% levels()
+dat.all.mv$behavior %>% unique()
 target_behav <- c("Frugivory", "Travel", "Foraging", "Resting")
 
 # By day
@@ -76,16 +76,32 @@ dat.ab.summary.day <- dat.all.mv %>%
   ) %>% 
   mutate(
     perc_behavior = 100 * (n / sum(n))
-  ) %>% 
-  
-  # filter only behaviors of interest of the model
-  dplyr::filter(behavior %in% target_behav
   )
 
+# filter only behaviors of interest of the model
+dat.ab.summary.day %>% 
+  dplyr::filter(behavior %in% target_behav
+  ) # %>% 
 # # Write csv 
-# dat.ab.summary.day %>%
 #   write.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_Activity-budget_By-day.csv"),
 #             row.names = FALSE)
+
+
+# check gummivory (not included in the model)
+dat.all.mv$behavior %>% unique()
+gumivory <- c("Gummivory")
+gum <- dat.all.mv %>% 
+  group_by(group, id_month, behavior) %>%
+  # group_by(group, id_month, date, behavior) %>%
+  summarise(
+    n = n()
+  ) %>% 
+  mutate(
+    perc_behavior = 100 * (n / sum(n))
+  ) %>%  
+  dplyr::filter(behavior %in% gumivory
+  )
+  
 
 # By month (first summarize by day and get average of percentages)
 dat.ab.summary <- dat.ab.summary.day %>% 
