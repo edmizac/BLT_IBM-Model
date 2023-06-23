@@ -1,12 +1,10 @@
 # Script name: 01_Morris-sensitivity_Feedingbout-param_analysis.R
 # Script purpose: Plot Morris analysis from 00_Morris-sensitivity
 
-# Date created: 2023-03-31d
+# Date created: 2023-06-22d
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
-# *** IMPORTANT NOTE: I STARTED USING THE MODEL VERSION IN MODEL_SIMULATIONS FOLDER FROM NOW ON
-# *** THIS MEANS MY PREVISOU CALIBRATIONS WERE DONE WITH THE MODEL VERSION THAT DIDN'T HAVE THE STORED ENERGY THING IMPLEMENTED
 #
 
 ## Options -------------------------
@@ -36,7 +34,7 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   # modelpath <- here("Model_development", "BLT_model_v1.2.nlogo")
   modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023Jan", "Param_bestguess", "Morris", "temp")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023May", "Param_bestguess", "Morris", "temp")
   user_scp = "\"Eduardo\""
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
@@ -56,9 +54,7 @@ path <- paste0(outpath, "/")
 
 
 ### Grep files -----
-# nls_to_df <- list.files(here("Model_analysis", "Sensitivity-analysis",
-#                              "v1.2_2023Jan", "temp"), pattern = "[0-9].rds") #%>% # .RData does not work
-nls_to_df <- list.files(path, pattern = "[0-9].rds") # .RData does not work
+nls_to_df <- list.files(path, pattern = "[0-9].rds")
 
 n <- 1 #counter
 for (f in nls_to_df) {
@@ -68,18 +64,20 @@ for (f in nls_to_df) {
   # test loop:
   # print(f)
   # }
-  # nl_file <- readRDS(paste0(path, "/", "v1.2_Taquara_Jan_simple1671135962_tempRDS.Rdata"))
-  # nl_file <- readRDS(paste0(path, "/", "v1.2_Suzano_Sep_simple453130432_tempRDS.Rdata"))
+  # nl_file <- readRDS(paste0(path, "/", "v1.2_Morris_Taquara_Jan_Feedingbout_on_2023-06-21.rds"))
   # f <- nls_to_df[9]
+  # db <- nl_file@simdesign@simoutput
 
-  
-  ### Remove runs where tamarins died (DPL or KDE = 0)
-  out <- nl_file@simdesign@simoutput %>% 
+ 
+  # ### Remove runs where tamarins died (DPL or KDE = 0)
+  out <- nl_file@simdesign@simoutput %>%
     dplyr::filter(g_DPL == 0) %>% as_tibble()
-  
-  nl_file@simdesign@simoutput <- nl_file@simdesign@simoutput %>% 
+
+  nl_file@simdesign@simoutput <- nl_file@simdesign@simoutput %>%
     dplyr::filter(g_DPL != 0) %>% as_tibble()
-  
+
+  ### Remove runs where tamarins died before finishing the run (energy?)
+
     
   ### For initializing the first dbl
   if (n == 1) {
@@ -95,15 +93,17 @@ for (f in nls_to_df) {
       morris_db$feedingbout <- "feedingbout off"
     }
     
-    # morris_db$area_run <- gsub(morris_db$area_run, pattern = ('\"'), replacement = '', fixed = T)
-    # morris_db$month_run <- gsub(morris_db$month_run, pattern = ('\"'), replacement = '', fixed = T)
+    # Assign number of unviable runs:
+    morris_db$unviable_runs <- nl_file %>% 
+      eval_simoutput() %>% 
+      nrow()
     
   } else {
     
     # f <- nls_to_df[2]
     # nl_file <- readRDS(paste0(path, "/", f))
     
-    ### Attatch data from following  dbl
+    ### Attatch data from following dbl
     morris_n <- analyze_nl(nl_file, "simoutput")
     
     # add identifiers
@@ -116,10 +116,13 @@ for (f in nls_to_df) {
       morris_n$feedingbout <- "feedingbout off"
     }
     
+    # Assign number of unviable runs:
+    morris_n$unviable_runs <- nl_file %>% 
+      eval_simoutput() %>% 
+      nrow()
     
-    
+    # Attach
     morris_db <- dplyr::bind_rows(morris_db, morris_n)
-    
     
   }
   
@@ -128,9 +131,23 @@ for (f in nls_to_df) {
   n <- n + 1
 }
 
-
 # Missing outputs (probably unviable runs where tamarins die):
 # eval_simoutput(nl_file)
+
+### Check missing rows (unviable runs) ----
+# check <- eval_simoutput(nl_file)
+# check
+# 
+# # Rerun missing combinations within check tibble:
+# rerun <- purrr::map_dfr(seq(nrow(check)), function(x) {
+#   res <- run_nl_one(nl, siminputrow=check$siminputrow[x], seed=check$seed[x])
+#     return(res)
+#     }) %>%
+#       dplyr::bind_rows(., nl@@simdesign@@simoutput)
+
+morris_db$unviable_runs %>% unique()
+# morris_db %>% ggplot() + 
+#   geom_density(aes(x = unviable_runs))
 
 
 ### Recode parameters and Rename columns ----
@@ -226,6 +243,10 @@ morris_db <- morris_db %>%
                                                "Taquara_Jan"
                                                )) 
 ### Transform data ----
+a <- morris_db %>% 
+  dplyr::filter(metric == "KDE_50_mean")
+  
+
 morris_db <- morris_db %>% 
   mutate(
     value = ifelse(metric == "KDE_50_mean", value/10000, value), # to hectares

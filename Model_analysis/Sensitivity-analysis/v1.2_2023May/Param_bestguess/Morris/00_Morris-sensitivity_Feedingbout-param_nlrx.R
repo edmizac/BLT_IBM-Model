@@ -78,13 +78,15 @@ param.table <- read.csv(here("Data", "Parameter_table.csv"),
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí",
                                "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
 
-
+# Substet runs if needed
+param.table <- param.table[7:8, ]
 
 ## Step 2: Attach an experiment and run ------------------------
 
 i <- 1
 for (i in i:nrow(param.table)) {
   
+  set.seed(42) # for having the same generated seeds everytime
 
   
   ### Loop (unblock for{} above) or decide which area/month to run the sensitivity on: ---
@@ -102,7 +104,7 @@ for (i in i:nrow(param.table)) {
     # choose which parameterizations should be on or off
   
   # Decide feedinbout parameterization to run the sensitivity on:
-  feedingbout <- "false"
+  feedingbout <- "true"
   
   if (feedingbout == "false") { 
     print("RUNNING WITH FEEDING BOUT PARAMETERIZATION OFF, COMMENT IN 'species_time' FROM EXPERIMENT")
@@ -427,7 +429,7 @@ for (i in i:nrow(param.table)) {
                                 'prop_trees_to_reset_memory' = list(min=2, max=5, qfun="qunif"),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                                 
                                 # 5. Feeding bout (only when "feedingbout-on?" = 'false')
-                                'species_time_val' = list(min = 1, max = 10, qfun="qunif"),
+                                # 'species_time_val' = list(min = 1, max = 10, qfun="qunif"),
                                 
                                 'duration' = list(min = 1, max = 10, qfun="qunif")      #
                                 
@@ -489,7 +491,13 @@ for (i in i:nrow(param.table)) {
   # install.packages("morris")
   # library("morris")
   
-  nseeds <- 30  #4  # (= num repetitions -> match with ncores)
+  nseeds <- 20  #4  # (= num repetitions -> match with n runs and ncores)
+  # Specify seeds manually (not needed if set.seed() is used at the start of the loop)
+  # nseeds = c(
+  #   184309146, -1836669376,  -143944772,  -687600015,   815694198,    60805450,    64093864,   195482662,
+  #   -225669049, -1787201002,  1847410139, -2076839226,  -368970335, -1172628750, -1719530584,   -73341398,
+  #   644797734,  1809597619,  -590120745,  1525293168
+  # )
   
   nl@simdesign <- simdesign_morris(nl = nl,
                                    morristype = "oat",
@@ -497,8 +505,10 @@ for (i in i:nrow(param.table)) {
                                    morrisr = 5, # 10, # sets the number of repeated samplings (sampling size)
                                    morrisgridjump = 4, # sets the number of levels that are increased/decreased for computing the elementary effects. . Morris recommendation is to set this value to levels / 2.
                                    nseeds = nseeds)
-  
-  
+
+  # Check seeds:  
+  print( nl@simdesign@simseeds)  ;  i <- i + 1  }
+
   # More information on the Morris specific parameters can be found in the description of the morris function in the sensitivity package (?morris).
   # ?morris
   report_model_parameters(nl)
@@ -524,7 +534,7 @@ for (i in i:nrow(param.table)) {
   progressr::handlers("progress")
   results %<-% progressr::with_progress(
     run_nl_all(nl = nl
-               , split = 2)
+               , split = 1)
   )
   tictoc::toc()
   print("================ Finished! =========================")
