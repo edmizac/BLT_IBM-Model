@@ -336,29 +336,30 @@ morris_db_long <- morris_db %>%
 
 ## Plots -----
 
-### Option 1: boxplots + points
-morris_db %>%
-  dplyr::filter(metric=="KDE_95_mean") %>%
-  # ggplot(aes(x=value, y=parameter, fill = index)) +
-  ggplot(aes(x=log1p(value), y=parameter, fill = index)) + # use log1p instead of log10 # https://stackoverflow.com/questions/48520517/how-to-solve-error-of-log-produces-nans-in-r
-  geom_boxplot(lwd= 0.1) +
-  geom_vline(xintercept = 0) +
-  # facet_grid(~area_run) +
-  facet_nested(feedingbout ~ simulation_scenario) +
-  ggtitle("Morris effects on KDE95") +
-  xlab("log1p(Home range area in ha)") +
-  theme(legend.position="bottom")
-
-# # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_KDE95_option1.png'), height = 7, width = 14, dpi = 600)
+# ### Option 1: boxplots + points
+# morris_db %>%
+#   dplyr::filter(metric=="KDE_95_mean") %>%
+#   # ggplot(aes(x=value, y=parameter, fill = index)) +
+#   ggplot(aes(x=log1p(value), y=parameter, fill = index)) + # use log1p instead of log10 # https://stackoverflow.com/questions/48520517/how-to-solve-error-of-log-produces-nans-in-r
+#   geom_boxplot(lwd= 0.1) +
+#   geom_vline(xintercept = 0) +
+#   # facet_grid(~area_run) +
+#   facet_nested(feedingbout ~ simulation_scenario) +
+#   ggtitle("Morris effects on KDE95") +
+#   xlab("log1p(Home range area in ha)") +
+#   theme(legend.position="bottom")
+# 
+# # # Save plot
+# # ggsave(paste0(outpath, "/",
+# #               '01_Morris_KDE95_option1.png'), height = 7, width = 14, dpi = 600)
 
 
 # Option 2: as in this publication: https://www.researchgate.net/publication/309185108_Sensitivity_analysis_methods_for_building_energy_models_Comparing_computational_costs_and_extractable_information/figures?lo=1
 # strip <- ggh4x::strip_themed(background_x = elem_list_rect(fill = "viridis"))
 # set.seed(42)
 
-# # Define number of succesful runs:
+
+### Define number of succesful runs: ------------
 n_runs <- morris_db_long %>%
   dplyr::select(feedingbout, simulation_scenario, 
                 # metric, parameter,
@@ -376,7 +377,6 @@ n_runs <- morris_db_long %>%
 #     )
 # 
 # n_runs <- left_join(n_runs, aux)
-
 
 
 ### SDD ----
@@ -481,7 +481,7 @@ morris_db_long %>%
 # First order
 morris_db_long %>%
   # dplyr::filter(param_category =="energy levels") %>%
-  dplyr::filter(var_category =="resource aggregation") %>%
+  # dplyr::filter(var_category =="resource aggregation") %>%
   dplyr::filter(metric == "NN_seeds_mean" ) %>%
   ggplot(aes(x=value_mustar, y=value_mu, group = parameter, shape = parameter, color = parameter)) +
   # All observations:
@@ -504,7 +504,11 @@ morris_db_long %>%
   # ylim(0, 40) +
   ggtitle("Morris first-order effects on Seed aggregation") +
   ylab(expression(paste(mu,      " - Nearest neighbor distance (meters)"))) +
-  xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)")))
+  xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)"))) +
+  ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  )
+
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
@@ -514,7 +518,7 @@ morris_db_long %>%
 # Interaction
 morris_db_long %>%
   # dplyr::filter(param_category =="energy levels") %>%
-  dplyr::filter(var_category =="resource aggregation") %>%
+  # dplyr::filter(var_category =="resource aggregation") %>%
   dplyr::filter(metric == "NN_seeds_mean" ) %>%
   ggplot(aes(x=value_mustar, y=value_sigma, group = parameter, shape = parameter, color = parameter)) +
   # All observations:
@@ -538,7 +542,11 @@ morris_db_long %>%
   # ylim(0, 40) +
   ggtitle("Morris interaction effects on Seed aggregation") +
   ylab(expression(paste(sigma, " - Nearest neighbor distance (meters)"))) +
-  xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)")))
+  xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)"))) +
+  ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  )
+
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
@@ -969,7 +977,7 @@ morris_db_long %>%
 
 # # Save plot
 # ggsave(paste0(outpath, "/",
-#               '01_Morris_Activity-budget_option2_first-order.png'), height = 21, width = 21, dpi = 600)
+#               '01_Morris_Activity-budget_option2_first-order.png'), height = 14, width = 14, dpi = 600)
 
 
 
@@ -1008,8 +1016,8 @@ morris_db_long %>%
   # 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_Activity-budget_option2_interaction.png'), height = 21, width = 21, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_Activity-budget_option2_interaction.png'), height = 14, width = 14, dpi = 600)
 
 
 
