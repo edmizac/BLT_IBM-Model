@@ -964,6 +964,12 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  theme(
+    axis.text.x = element_text(
+      # angle = 90,
+      # hjust = 1,
+      size = 12
+    )) +
   # define plot limits:
   # xlim(0, 0.45) +
   # ylim(0, 0.45) +
@@ -976,8 +982,8 @@ morris_db_long %>%
   # 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_Activity-budget_option2_first-order.png'), height = 14, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_Activity-budget_option2_first-order.png'), height = 12.5, width = 12.5, dpi = 600)
 
 
 
@@ -1230,7 +1236,7 @@ morris_db_long %>%
   # xlim(0, 0.5) +
   # ylim(0, 0.5) +
   ggtitle("Morris first-order effects on Proportion of visited trees") +
-  ylab(expression(paste(mu,      " - proportion of trees (%)"))) +
+  xlab(expression(paste(mu,      " - proportion of trees (%)"))) +
   ylab(expression(paste(sigma, " - proportion of trees (%)"))) +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)),
                       npcx = "center", npcy = "top"
