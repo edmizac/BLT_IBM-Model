@@ -27,6 +27,7 @@ library("readxl")
 library("sp")
 library("adehabitatLT")
 library("circular")
+library("ggplot2")
 
 
 # Read data (filtered by siminputrow on CurateData.R)
@@ -160,6 +161,20 @@ dat.mv.summary <- dat.mv.summary %>%
 
 # Summarize activity budget for calculating p_foraging_while_traveling
 dat.all.ltraj.df$behavior %>% levels()
+dat.all.ltraj.df$behavior %>% unique()
+
+# First make idle = resting (the model does not distinguish them)
+dat.all.ltraj.df <- dat.all.ltraj.df %>% 
+  mutate(
+    behavior = case_when(
+      behavior == "Inactive" ~ "Resting",
+      TRUE ~ behavior
+    )
+  )
+# Check:
+dat.all.ltraj.df$behavior %>% unique()
+
+# Select target behaviors:
 target_behav <- c("Frugivory", "Travel", "Foraging", "Resting")
 
 # By day
@@ -215,6 +230,20 @@ dat.ab.summary.p_travel <- dat.ab.summary %>%
 # dat.ab.summary.p_travel %>%
 #   write.csv(here("Data", "Movement", "Curated", "Param_siminputrow", "Siminputrow_Activity-budget_p-foraging.csv"),
 #             row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## Load siminputrow matrix from simulation time data -------------------

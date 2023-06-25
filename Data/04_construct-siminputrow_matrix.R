@@ -24,7 +24,7 @@ library("hms")
 #### Siminputrow matrix  -------------------------
 
 # 1) Load siminputrow matrix from simulation timeas base -------------------------
-siminputmatrix <- read.csv(here("Data", "Movement", "Curated", "Param_Simulation-time",
+siminputmatrix <- read.csv(here("Data", "Movement", "Curated", #"Param_Simulation-time",
                                 "BLT_groups_data_summary_siminputrow.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
@@ -182,10 +182,15 @@ siminputmatrix_others <- dat.mv %>%
                      names_glue = "{.value}_{behavior}")
   
 
+# Derive p_resting (idle+resting/all behaviors)
+siminputmatrix <- siminputmatrix %>% 
+  mutate(p_resting = count_rest/timesteps)
+
 
 # 5) Merge all parameter tables together into one siminputrow table -------------------------
 siminputmatrix_complete <- left_join(siminputmatrix_mv, siminputmatrix_sd)
 siminputmatrix_complete <- left_join(siminputmatrix_complete, siminputmatrix_others)
+siminputmatrix_complete <- left_join(siminputmatrix_complete, siminputmatrix)
 
 
 # 6) Input number of tamarins by hand -------------------------

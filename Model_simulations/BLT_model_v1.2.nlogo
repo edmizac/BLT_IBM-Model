@@ -220,7 +220,9 @@ globals [
   meanxcoord ; translating the geo coordinates to world coordinates
   meanycoord ; translating the geo coordinates to world coordinates
   ;step_forget ; amount of timesteps until the tamarin forgets to be in that tree
-  midday ; the time of the middle of the day (important for resting)
+  midday ; the time of the middle of the day (important for resting) ; now depends on simulation-time slider
+  midday_start ; depends on midday
+  midday_end ; depends on midday
 
   ;; patch sets:
   forest_set
@@ -383,7 +385,13 @@ to setup
 ;  create-legend
 
   set day 1
-  set midday 58
+;  set midday 58 ; do not hardwire this one
+  set midday simulation-time / 2
+  set midday_start round ( p-timesteps-to-rest * simulation-time )
+  set midday_end round ( ( 1 - p-timesteps-to-rest) * simulation-time )
+  type "*************** midday_start at: timestep " print midday_start
+  type "*************** midday_end at: timestep " print midday_end
+
   set timestep 0
 ;  set gut_transit_time round (gut_transit_time)
 ;  set travel_speed travel_speed
@@ -609,6 +617,7 @@ to get-patch-scale
     ]
   ]
 end
+
 
 ; TREES INPUT
 to setup-trees
@@ -1090,7 +1099,7 @@ to go
   get_stored_energy
 
   ask monkeys [
-    if energy < 0 AND energy_stored < 0 [
+    if energy <= 0 AND energy_stored <= 0 [
       set survived? "no"
       ifelse day > 3 [
         print "calculating from GO"
@@ -1431,7 +1440,7 @@ to move-monkeys
             if tree_current = -1 [
              set travel_mode "long_distance"
             ]
-            ifelse (timestep > (midday - 10) and timestep < (midday + 10)) [
+            ifelse (timestep > midday_start AND timestep < midday_end) [
               resting
             ][
               random-action
@@ -1449,6 +1458,7 @@ to move-monkeys
           ][
 ;            print " *********** 1"
             set action-time action-time + 1
+            if action = "resting" [ store_energy ] ; if tamarins reached up to 2*duration of repeated behaviors, make energy come back to energy_level_1 (suppose they have stored it as glucogen or similar)
             last-action-again
           ]
 
@@ -2116,11 +2126,14 @@ to search-feeding-tree
       ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
       set candidate_ld_targets feeding-trees with [member? who let_pot_list]
       ;    print candidate_ld_targets
-      while [ count candidate_ld_targets <= n_disputed_trees ] [ enhance_memory_list ] ; if available trees are few, enhance memory list
-      set candidate_ld_targets max-n-of n_disputed_trees candidate_ld_targets [dist-to-homerange-center]
+      while [ count candidate_ld_targets <= ( p_disputed_trees * count feeding-trees ) ] [ enhance_memory_list ] ; if available trees are few, enhance memory list
+      set candidate_ld_targets max-n-of ( p_disputed_trees * count feeding-trees ) candidate_ld_targets [dist-to-homerange-center]
       ;    print candidate_ld_targets
-      ask candidate_ld_targets [ set color yellow ]
-      ;    set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] WORKS
+      ask candidate_ld_targets [
+        set color yellow
+        if study_area = "Taquara" [ set size 5 ]
+      ]
+;          set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] ; WORKS but not as intended
       set ld_tree_target one-of candidate_ld_targets
       ;    print ld_tree_target
       ;    print distance ld_tree_target
@@ -2133,7 +2146,7 @@ to search-feeding-tree
       search-feeding-tree
     ]
 
-    ask tree_target [ set color blue ]    ; make long distance target blue
+    ask tree_target [ set color blue set size 5 ]    ; make long distance target blue
 
     set tree_target_species [ species ] of ld_tree_target
 ;    print ld_tree_target    ; debugging
@@ -2707,7 +2720,13 @@ to sleeping
   ]
 
   if all? monkeys [action = "sleeping"] [
-        output-print "AHOY"
+
+    store_energy
+;    if energy > start-energy [
+;      set energy_stored energy_stored + (energy - start-energy)
+;    ]
+
+    output-print "AHOY"
 
   ]
 
@@ -2781,15 +2800,18 @@ to last-action-again
 ;    if travel_mode = "long_distance" AND distance ld_tree_target > travel_speed * 0.8 [
 ;      travel
 ;    ]
-;
 ;    if travel_mode = "short_distance" AND distance tree_target > travel_speed * 0.8 [
 ;      travel
 ;;      set color grey ; in case the tamarin has foraged, it became magenta
 ;    ]
 ;  ]
 
-  if action = "resting" [ resting ]
-  if action = "travel" OR action = "forage" [ frugivory ]
+;  if action = "resting" AND random-float 1 < p-resting-while-resting [ resting ] ; if the last action was resting, have x % chance of resting again
+  if action = "resting" [  ; if the last action was resting, rest again
+    resting
+  ]
+
+  if action = "travel" OR action = "forage" [ frugivory ]    ; if action was travel or foraging, go back to the frugivory loop
 
 end
 
@@ -2833,8 +2855,25 @@ to get_stored_energy
   ; Avoid that tamarins die by making them use their stored energy from other days
   ask monkeys [
     if energy < ( 0.7 * start-energy ) [
-      set energy energy + (0.2 * energy_stored) ; take 20% of stored energy
-      set energy_stored energy_stored - (0.2 * energy_stored) ; diminish 20% of stored energy
+
+      ifelse ( ( energy_stored - (0.2 * energy_stored) ) > 0 ) [
+        set energy energy + (0.2 * energy_stored)                    ; take 20% of stored energy
+        set energy_stored ( energy_stored - (0.2 * energy_stored) )  ; diminish 20% of stored energy
+      ][
+       set energy energy + energy_stored
+        set energy_stored 0
+       print "stored energy over"
+      ]
+    ]
+  ]
+
+end
+
+to store_energy
+  ask monkeys [
+    if energy > start-energy [
+      let spared_energy energy - start-energy
+      set energy_stored energy_stored + spared_energy
     ]
   ]
 
@@ -2966,7 +3005,7 @@ to calc-homerange
     (r:putdataframe "turtle" "X" X_coords "Y" Y_coords "day" day_list)
     r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
     r:eval "turtles <- rbind(turtles, turtle)"
-;    type "*****turtles data frame: " print r:get "turtles"
+    type "*****turtles data frame: " print r:get "turtles"
   ]
 
   ;; split the data.frame into coordinates and factor variable
@@ -3710,11 +3749,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-526
-403
+492
+417
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -3724,10 +3763,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -3743,7 +3782,7 @@ start-energy
 start-energy
 100
 2000
-980.0
+900.0
 1
 1
 NIL
@@ -3827,7 +3866,7 @@ simulation-time
 simulation-time
 0
 170
-110.0
+118.0
 1
 1
 NIL
@@ -3842,7 +3881,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-78.0
+73.0
 1
 1
 NIL
@@ -3922,7 +3961,7 @@ INPUTBOX
 604
 105
 no_days
-7.0
+6.0
 1
 0
 Number
@@ -3936,7 +3975,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-90.0
+60.0
 1
 1
 NIL
@@ -3951,7 +3990,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--16.0
+-15.0
 1
 1
 NIL
@@ -3966,7 +4005,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--34.0
+-10.0
 1
 1
 NIL
@@ -3981,7 +4020,7 @@ energy-loss-resting
 energy-loss-resting
 -100
 0
--65.0
+-5.0
 1
 1
 NIL
@@ -3999,10 +4038,10 @@ timestep
 11
 
 OUTPUT
-450
-633
-674
-746
+292
+621
+516
+734
 11
 
 TEXTBOX
@@ -4018,7 +4057,7 @@ Tamarin
 INPUTBOX
 135
 630
-409
+288
 716
 runtime
 ./runtime/
@@ -4034,7 +4073,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+6
 
 CHOOSER
 1017
@@ -4066,7 +4105,7 @@ step_forget
 step_forget
 0
 500
-160.0
+130.0
 1
 1
 NIL
@@ -4093,10 +4132,10 @@ TEXTBOX
 1
 
 SLIDER
-957
-667
-1108
-700
+564
+724
+715
+757
 gut_transit_time
 gut_transit_time
 0
@@ -4136,7 +4175,7 @@ energy_level_1
 energy_level_1
 100
 2000
-1584.0
+900.0
 1
 1
 NIL
@@ -4151,27 +4190,27 @@ energy_level_2
 energy_level_2
 100
 2000
-1897.0
+999.0
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-967
-615
-1094
-651
+574
+672
+701
+708
 6. seed dispersal
 14
 15.0
 1
 
 SLIDER
-957
-707
-1106
-740
+564
+764
+713
+797
 n_seeds_hatched
 n_seeds_hatched
 0
@@ -4280,7 +4319,7 @@ SWITCH
 275
 print-step?
 print-step?
-1
+0
 1
 -1000
 
@@ -4458,16 +4497,16 @@ output-print?
 -1000
 
 SLIDER
-957
-567
-1161
-600
+946
+565
+1125
+598
 p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
-0.05
+0.47
+0.01
 1
 NIL
 HORIZONTAL
@@ -4580,7 +4619,8 @@ false
 PENS
 "default" 1.0 0 -1184463 true "" "ask monkeys [ plot energy ]"
 "pen-1" 1.0 0 -16777216 true "" "plot energy_level_1"
-"pen-2" 1.0 0 -955883 true "" "plot energy_level_2"
+"pen-2" 1.0 0 -11053225 true "" "plot energy_level_2"
+"pen-3" 1.0 0 -2674135 true "" "ask monkeys [ plot energy_stored ]"
 
 TEXTBOX
 942
@@ -4715,7 +4755,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-2.0
+3.0
 1
 1
 NIL
@@ -4835,7 +4875,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 245
@@ -4950,13 +4990,13 @@ step-model-param?
 SLIDER
 940
 412
-1134
+1119
 445
 max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+78.99
 5
 1
 NIL
@@ -4971,7 +5011,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.214
 0.1
 1
 NIL
@@ -4986,7 +5026,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.544
 0.1
 1
 NIL
@@ -4995,13 +5035,13 @@ HORIZONTAL
 SLIDER
 940
 382
-1129
+1119
 415
 max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+75.63
 1
 1
 NIL
@@ -5033,10 +5073,10 @@ max timesteps feeding on the same tree species
 1
 
 SWITCH
-962
-537
-1092
-570
+967
+529
+1097
+562
 p-forage-param?
 p-forage-param?
 0
@@ -5044,10 +5084,10 @@ p-forage-param?
 -1000
 
 SWITCH
-972
-635
-1089
-668
+579
+692
+696
+725
 gtt-param?
 gtt-param?
 0
@@ -5079,12 +5119,12 @@ SLIDER
 557
 919
 590
-n_disputed_trees
-n_disputed_trees
+p_disputed_trees
+p_disputed_trees
+0
 1
-20
-5.0
-1
+0.5
+0.05
 1
 NIL
 HORIZONTAL
@@ -5106,7 +5146,7 @@ SWITCH
 535
 ld-target-random?
 ld-target-random?
-0
+1
 1
 -1000
 
@@ -5299,6 +5339,32 @@ Guareí = May, Jun, Jul, Aug\nSanta Maria = Mar, Apr\nTaquara = Jan\nSuzano = Se
 6
 0.0
 1
+
+SWITCH
+964
+628
+1097
+661
+p-resting-param?
+p-resting-param?
+1
+1
+-1000
+
+SLIDER
+946
+666
+1118
+699
+p-timesteps-to-rest
+p-timesteps-to-rest
+0
+1
+0.15
+0.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

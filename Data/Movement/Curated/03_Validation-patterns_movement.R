@@ -66,6 +66,19 @@ dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminputrow",
 
 # Summarize activity budget -------------------------
 dat.all.mv$behavior %>% unique()
+
+# First make idle = resting (the model does not distinguish them)
+dat.all.mv <- dat.all.mv %>% 
+  mutate(
+    behavior = case_when(
+      behavior == "Inactive" ~ "Resting",
+      TRUE ~ behavior
+    )
+  )
+# Check:
+dat.all.mv$behavior %>% unique()
+
+# Select target behaviors:
 target_behav <- c("Frugivory", "Travel", "Foraging", "Resting")
 
 # By day

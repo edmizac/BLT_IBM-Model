@@ -17,6 +17,8 @@ library("here")
 library("tidyverse")
 library("dplyr")
 library("ggplot2")
+library("hms")
+library("lubridate")
 
 
 # Read data
@@ -30,14 +32,123 @@ dat.all <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data.csv")
 dat.all$id_day_all %>% levels()
 dat.all$id_month %>% levels()
 
+# Derive resting probabilities based on 2023-06-24d conversation with Ronald:
+dat.all$behavior %>% unique()
+
+# Explore when tamarins rest
+target <- c("Resting", "Inactive")
+rest_data <- dat.all %>% 
+  mutate(
+    datetime = ymd_hms(datetime)
+  ) %>% 
+  mutate(
+    date = as.Date(datetime),
+    time = hms::as_hms(datetime)
+  ) %>% 
+  # group_by(group, id_month, date) %>% 
+  group_by(group, id_month) %>% 
+  mutate(
+    count = n() # timesteps
+  ) %>% 
+  dplyr::filter(behavior %in% target) %>% 
+  mutate(
+    count_rest = n()
+  )
+
+
+lims <-  c("06:00:00", "18:00:00") %>% hms::as_hms()
+
+# Option 1: Resting and idle separated
+rest_data %>% 
+  ggplot() +
+  geom_density(aes(x = time, color = behavior), 
+               # adjust = 5,
+               linewidth = 0.7) +
+  # geom_jitter(aes(x= time, y = 0, height = 0.001, color = behavior), 
+  # geom_point(aes(x= time, y = 0, color = behavior), 
+  #             size = 0.7, alpha = 0.5) +
+  geom_rug(aes(x = time, color = behavior), linewidth = 0.4,
+           length = unit(0.05, "npc")
+  ) +
+  facet_wrap(~group+id_month) +
+  ggtitle("Probability of resting or idle") +
+  scale_x_time(breaks = scales::breaks_width("2 hours"), limits = lims) +
+  theme(
+    axis.text.x = element_text(
+      # size = 12,
+      angle = 90
+    )
+  ) +
+  scale_color_manual(values = c("#2E86C1", "#D35400")) +
+  ggpp::geom_text_npc(aes(label=paste("n=", count_rest, "/", count)),
+                      npcx = "center", npcy = "top"
+  )
+
+# # Save plot
+# ggsave(here("Data", "Movement", "Curated", "Param_siminputrow",
+#             '00_Resting_probability1.png'), height = 7, width = 10, dpi = 600)
+
+# Option 2: resting = idle + resting
+rest_data <- rest_data %>% 
+  mutate(
+    behavior = case_when(behavior == "Inactive" ~ "Resting",
+                       TRUE ~ behavior)
+  )
+
+rest_data$behavior %>% unique()
+
+rest_data %>% 
+  ggplot() +
+  geom_density(aes(x = time, color = behavior), 
+               # adjust = 5,
+               linewidth = 0.7) +
+  # geom_jitter(aes(x= time, y = 0, height = 0.001, color = behavior), 
+  # geom_point(aes(x= time, y = 0, color = behavior), 
+  #             size = 0.7, alpha = 0.5) +
+  geom_rug(aes(x = time, color = behavior), linewidth = 0.4,
+           length = unit(0.05, "npc")
+  ) +
+  facet_wrap(~group+id_month) +
+  ggtitle("Probability of resting (resting + idle)") +
+  scale_x_time(breaks = scales::breaks_width("2 hours"), limits = lims) +
+  theme(
+    axis.text.x = element_text(
+      # size = 12,
+      angle = 90
+    )
+  ) +
+  # scale_color_manual(values = c("black")) + #, "#D35400")) +
+  scale_color_manual(values = c("#2E86C1")) + #, "#D35400")) +
+  ggpp::geom_text_npc(aes(label=paste("n=", count_rest, "/", count)),
+                      npcx = "center", npcy = "top"
+  )
+
+# # Save plot
+# ggsave(here("Data", "Movement", "Curated", "Param_siminputrow",
+#             '00_Resting_probability2.png'), height = 7, width = 10, dpi = 600)
+
+
+
 # Summarise important variables
 dat.summary <- dat.all %>% 
-  group_by(group, id_month) %>% 
+  group_by(group, id_month) %>%
   dplyr::summarise(
     timesteps = n(),
     ndays = n_distinct(id_day_all),
-    mean_timesteps = round(timesteps/ndays)
-  ) 
+    mean_timesteps = round(timesteps/ndays),
+    midday = round(mean_timesteps/2),
+    midday_start = round(0.15 * mean_timesteps), # 15% of 
+    midday_end = round(0.85 * mean_timesteps)
+  )
+
+# Attach resting+idle counts
+rest_data_summary <- rest_data %>% 
+  dplyr::select(group, id_month, count_rest) %>% 
+  distinct()
+
+dat.summary <- dat.summary %>% 
+  dplyr::left_join(rest_data_summary, by = c("group", "id_month")) %>% 
+  mutate(prob_rest = count_rest/timesteps)
 
 # Save csv:
 # dat.summary %>%
@@ -66,11 +177,11 @@ dat.all.siminputrow <- dat.all %>%
   
 # dat.all$group %in% dat.summary.siminputrow$group
 
-# Save csv
-dat.all.siminputrow %>% 
-  write.csv(here("Data","Movement",  "Curated", "BLT_groups_data_siminputrow.csv"),
-            row.names = FALSE)
-  
+# # Save csv
+# dat.all.siminputrow %>% 
+#   write.csv(here("Data","Movement",  "Curated", "BLT_groups_data_siminputrow.csv"),
+#             row.names = FALSE)
+#   
   
   
   
