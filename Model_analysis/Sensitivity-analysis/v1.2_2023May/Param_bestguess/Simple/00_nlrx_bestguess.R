@@ -5,6 +5,10 @@
 # Author: Eduardo Zanette
 
 ## Notes --------------------------- 
+# Last additions: 
+# ********* p-timesteps-to-rest -> new midday values parameterized
+# ********* ld_target_random + proportion of denfeded trees 
+#
 # *** IMPORTANT NOTE: THIS VERSION HAS THE MITANI AND RODMAN 1979 DEFENDABILITY INDEX BEING OUTPUT
 # I ALSO HAVE FIXED THE OTHER MOVEMENT METRICS (STRAIGHTNESS, MSD, ETC) WHICH PREVIOUSLY WERE BEING
 # ESTIMATED AS THE RUN AS ONE SINGLE DAY (NOW IT IS OUTPUTTED AS AN AVERAGE OF SIMULATED DAYS)
@@ -13,6 +17,7 @@
 # - set.seed(42) prior to the run loop for allowing similar runs to be made *check again if this makes sense
 # - outputting 30 runs (nseeds)
 # - outputting if tamarins have survived ('survived?' slot)
+
 
 
 ## Packages -------------------------
@@ -103,11 +108,22 @@ if (feedingbout == "false") {
   print("RUNNING WITH FEEDING BOUT PARAMETERIZATION ON, COMMENT OUT 'species_time' FROM CONSTANTS")
 }
 
+ld_target_random <- "false"   # no long distance random target. Instead, uses the ones further from the home range core
+p_disputed_trees <- 0.25    # percentage of trees on the simulation that are defended at territory borders
 
-set.seed(42)
+if (ld_target_random == "false") { 
+  print(paste0("RUNS WITH RESOURCE DEFENSE and "
+               , p_disputed_trees, "% defended trees!"))
+               }
+p_timesteps_to_rest <- 0.15 # resting not allowed on the 15% of the start and end of simulation-time 
+
+
+
 
 i <- 1
 for (i in i:nrow(param.table)) {
+  
+  set.seed(42)
   
   ### Define area and month  -----
   # (all strings must use escaped quotes) 
@@ -116,9 +132,9 @@ for (i in i:nrow(param.table)) {
   area_run <- paste0('\"', param.table$group[i], '\"')
   month_run <- paste0('\"', param.table$id_month[i], '\"')
   
-  # area_run <- '"Guareí"'
-  # month_run <- '"Jun"'
-  expname <-  paste0("v1.2_", 
+  # area_run <- '"Taquara"'
+  # month_run <- '"Jan"'
+  expname <-  paste0("v1.2_",
                      gsub(area_run, pattern = ('\"'), replacement = '', fixed = T), 
                      "_", 
                      gsub(month_run, pattern = ('\"'), replacement = '', fixed = T), 
@@ -143,8 +159,13 @@ for (i in i:nrow(param.table)) {
                   id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(mean_timesteps) %>% 
     pull()
-  simultime_run <- round(simultime_run * 0.9) # that's the timestep when tamarins should start looking for the sleeping site
+  # simultime_run <- round(simultime_run * 0.9) # that's the timestep when tamarins should start looking for the sleeping site
   
+  duration <- param.table %>% 
+    dplyr::filter(group == gsub(area_run, pattern = ('\"'), replacement = '', fixed = T),
+                  id_month == gsub(month_run, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+    dplyr::select(duration) %>% 
+    pull()
   
   
   ### Define parameters:
@@ -152,16 +173,22 @@ for (i in i:nrow(param.table)) {
   # available in "Table2_Parameter_table.xlsx". Files available in: Sensitivity-analysis/v1.1_November2022/Simple/
   
   energy_from_fruits <- 73
-  energy_from_prey <- 30								
-  energy_loss_traveling <- -10								
+  energy_from_prey <- 30 #60								
+  energy_loss_traveling <- -15								
   energy_loss_foraging <- -10
-  energy_loss_resting <- -6
+  energy_loss_resting <- -5
   start_energy <- 900
   energy_level_1 <- 999
-  energy_level_2 <- 1430
-  step_forget <- 87
-  p_memory <- 2
-  duration <- 4
+  energy_level_2 <- 1325
+  energy_stored_val <- 1000
+  step_forget <- 130
+  p_memory <- 3
+  visual <- 0
+  # duration <- 4 # duration of resting # now area-specific
+  # duration <- if (study_area == "Suzano") { 8 }
+  # duration <- if (study_area == "Guareí") { 4 }
+  # duration <- if (study_area == "SantaMaria") { 5 }
+  # duration <- if (study_area == "Taquara") { 5 }
   
   # alternatively, one could use the calibrated parameters. For this, go to:
   # v1.2_2023May/Param_calibrated/
@@ -342,7 +369,7 @@ for (i in i:nrow(param.table)) {
                                 
                                 ### memory
                                 'duration' = duration,
-                                'visual' = 0,                # does not matter
+                                'visual' = visual,                # does not matter
                                 "step_forget" = step_forget,
                                 
                                 ### energy
@@ -353,8 +380,8 @@ for (i in i:nrow(param.table)) {
                                 "energy-from-prey" = energy_from_prey,
                                 "energy-loss-traveling" = energy_loss_traveling,
                                 "energy-loss-foraging" = energy_loss_foraging,
-                                "energy-loss-resting" = energy_loss_resting
-                                
+                                "energy-loss-resting" = energy_loss_resting,
+                                "energy_stored_val" = energy_stored_val
                                 
                                 # Seed dispersal
                                 # "gut_transit_time_val" = 15   # not needed when gtt-param = true
@@ -371,11 +398,13 @@ for (i in i:nrow(param.table)) {
 
 
 # Step 3: Attach a simulation design.
-  nseeds <- 30 # repetitions (ideally n = 30)
+  nseeds <- 20 # repetitions (ideally n = 30)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
   nl@simdesign <- simdesign_simple(nl, nseeds = nseeds)
+  
+  nl@simdesign@simseeds
   
   # Step 4: Run simulations
   # Evaluate nl object:

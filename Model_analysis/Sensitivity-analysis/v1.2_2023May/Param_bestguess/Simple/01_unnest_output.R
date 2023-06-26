@@ -51,13 +51,14 @@ for (f in nls_to_df) {
    db$breed %>% unique()
   }
   
-  db <- dplyr::bind_rows(db, unnest_simoutput(nl_file) #%>%
-                           # mutate(
+  db <- dplyr::bind_rows(db, unnest_simoutput(nl_file) %>%
+                           mutate(
+                             `survived?` = as.character(`survived?`)
                              # turn_ang_sd = as.character(turn_ang_sd)
                          
                          #     turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA),
                          #     turn_ang_sd = as.numeric(turn_ang_sd)
-                           # )
+                           )
                          )
   
   i <- i + 1

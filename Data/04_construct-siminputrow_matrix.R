@@ -199,6 +199,7 @@ siminputmatrix_complete$n_tamarins <- c(5, 5, 5, 5, 2, 2, 6, 4, 4) # values from
 
 # 7)  Write csv -------------------------
 siminputmatrix_complete %>% str()
+
 # siminputmatrix_complete %>%
 #   write.csv(here("Data", "Parameter_table.csv"),
 #             row.names = FALSE)

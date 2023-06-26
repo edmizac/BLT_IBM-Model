@@ -23,6 +23,7 @@ library("ggridges")
 library("ggspatial")
 library("sf")
 library("purrr")
+library("stringr")
 
 path <- here("Model_analysis", "Sensitivity-analysis",
              "v1.2_2023May", "Param_bestguess", "Simple", "temp")
@@ -495,7 +496,8 @@ theme_update(
 # 2) Validation plots only:  -----
 
 ## SDD -------------------------
-rm(group)
+
+# rm(group)
 
 # Load empirical data
 obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminputrow_SDD.csv"),
@@ -510,6 +512,9 @@ obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminpu
 # Simulated data
 db_sd <- read.csv(paste0(path, "/", "02_Simoutput-simple-all.csv"))
 db_sd %>% str()
+
+db_sd <- db_sd %>% 
+  dplyr::filter(`survived.` == "yes")
 
 db_sd <- db_sd %>% 
   # rename(group = study_area) %>% 
@@ -1555,7 +1560,7 @@ ggplot(data = db1_mv_longer, aes(x = fragment, y = percentage_mean, fill = month
 #   dplyr::filter(group == "Guareí") 
   
 # Save plot
-# ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_option2.png'), height = 5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_ActivityBudget_barplot_option2.png'), height = 5, width = 7)
 
 
 
