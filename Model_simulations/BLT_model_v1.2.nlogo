@@ -1401,16 +1401,16 @@ to move-monkeys
     ]
 
     if timestep >= (0.95 * simulation-time) [
-;            if timestep = simulation-time [
-;        set tree_target -1
-;        set tree_target_dist 0
+      ;if timestep = simulation-time [
+      ;set tree_target -1
+      ;set tree_target_dist 0
       set going-sleeping? TRUE
-;    ] ; force monkey select a sleeping site
-;      print " ------------ CALLING FROM set going-sleeping? TRUE ----------- "
+      ;] ; force monkey select a sleeping site
+      ;print " ------------ CALLING FROM set going-sleeping? TRUE ----------- "
       sleeping
-    if output-print? = TRUE [
-      output-day-stats
-            ]
+      if output-print? = TRUE [
+        output-day-stats
+      ]
 
     ]
 
@@ -1434,6 +1434,8 @@ to move-monkeys
       if tree_target = nobody [ enhance_memory_list search-feeding-tree ]
       if tree_target != -1 [ set tree_target_dist distance tree_target ]
 
+;      print "CHECKPOINT HERE"
+
       ifelse energy < energy_level_1 [ ; energy < level 1
         set travel_mode "short_distance"
         if ld_tree_target = tree_target [
@@ -1441,14 +1443,16 @@ to move-monkeys
           set tree_target -1 ; remove tree_target when coming from "long_distance"
           set ld_tree_target -1  ; if this is not here it will make the tamarin lose the target very close to the tree when coming from long distance bc of the condition ld_tree_target = tree_target (Ronald debugged on the 14th of July 2022)
         ]
-;        print " **** BEING CALLED FROM FRUGIVORY 1 ***** "
+        print " **** BEING CALLED FROM FRUGIVORY 1 ***** "
         frugivory
       ][ ; energy > level 1
+;        print "CHECKPOINT HERE"
 ;        ifelse (action = "feeding" or action = "travel") [              ;; v1.0 version
         ifelse (travel_mode = "short_distance" ) [                       ;; v1.1 version (long and short-distance travel)
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
             if tree_current = -1 [
              set travel_mode "long_distance"
+              print "TEST HERE ****** "
             ]
             ifelse (timestep > midday_start AND timestep < midday_end) [
               resting
@@ -1456,11 +1460,12 @@ to move-monkeys
               random-action
             ]
           ][ ; energy_level_1 < energy < energy_level_2
-;            print " **** BEING CALLED FROM FRUGIVORY 2 ***** "
+            print " **** BEING CALLED FROM FRUGIVORY 2 ***** "
             frugivory
           ] ;; energy > level 2 ==> other activities
         ][ ; travel_mode = "long_distance"
 
+;          print "CHECKPOINT HERE A"
 
           ifelse random (duration) < action-time [ ; action time for other than feeding
             ; set ld_tree_target -1  ;; commented out by Ronnald on 14th of July ;; has to be set to -1 otherwise tamarins will come back in the next ld travel cycle
@@ -1469,10 +1474,10 @@ to move-monkeys
             ; if tamarins reached up to 2*duration resting, make energy come back to energy_level_1 (suppose they have stored it as glucogen or similar)
             set action-time 0 ; restart the resting counter (action-time)
 ;            store_energy
-;            print " **** BEING CALLED FROM FRUGIVORY 3 ***** "
+            print " **** BEING CALLED FROM FRUGIVORY 3 ***** "
             frugivory
           ][
-;            print " *********** 1"
+            print " LAST-ACTION-AGAIN"
 ;            set action-time action-time + 1
             last-action-again
           ]
@@ -1644,7 +1649,7 @@ end
 ;--------------------------------------------------------------------------------
 to frugivory
 
-;  print "frugivory"  ; debugging
+  print "FRUGIVORY BEING CALLED *******"  ; debugging
 
   avoid-patch-set ; bump on the territory borders
 
@@ -1655,15 +1660,15 @@ to frugivory
     ifelse on-feeding-tree? [
       ifelse species_time > frugivory-time [
 ;      ifelse random (2 * species_time ) > frugivory-time [
-;        print "I'm feeding 1!" ; for debugging
+        print "SD_I'm feeding 1!" ; for debugging
         feeding
       ][
         set tree_current -1
-;        print "time over -- New feeding tree" ; for debugging
+        print "SD_time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-;      print "New feeding tree" ; for debugging
+      print "SD_New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1673,15 +1678,15 @@ to frugivory
     ifelse on-feeding-tree? [
       ifelse species_time > frugivory-time [
 ;      ifelse random (2 * species_time ) > frugivory-time [
-;        print "I'm feeding! 2" ; for debugging
+        print "LD_I'm feeding! 2" ; for debugging
         feeding
       ][
         set tree_current -1
-;        print "time over -- New feeding tree" ; for debugging
+        print "LD_time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-;      print "New long distance feeding tree" ; for debugging
+      print "LD_New long distance feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1723,22 +1728,22 @@ to-report on-feeding-tree?
 ;        type "tree_current: " print tree_current
 ;        type "tree_target: " print tree_target
 ;        print "on-feeding-tree? TRUE" ; for debugging
-;        print "ON tree"
+        print "short distance: ON tree 1"
         report true
 
       ][
 ;        print "on-feeding-tree? FALSE" ; for debugging
 ;        print tree_target
-;        print "NOT on tree"
+        print "short distance: NOT on tree 1"
         report false
       ]
     ][
 ;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
-;        print "ON tree"
+        print "short distance: ON tree 2"
         report true
       ][
-;        print "NOT on tree"
+        print "short distance: NOT on tree 2"
         report false
       ]
     ]
@@ -1769,24 +1774,25 @@ to-report on-feeding-tree?
         set tree_target -1
         if ld_tree_target != -1 [ set tree_target_mem2 ld_tree_target ]            ; to avoid losing the ld_tree_target on its way
         set ld_tree_target -1
+
 ;        set tree_target ld_tree_target ;; IMPORTANT FOR NOT HAAVING TO CHANGE ALL THE FEEDING PROCESS
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time species_time_val ]
-;        print "ON tree"
+        print "long distance: ON tree 1"
         report true
       ][
-;        print "NOT on tree"
+       print "long distance: NOT on tree 1"
         report false
       ]
     ][
 ;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
-;        print "ON tree"
+        print "long distance: ON tree 1"
         report true
       ][
-;        print "NOT on tree"
+        print "long distance: NOT on tree 2"
         report false
       ]
     ]
@@ -1796,7 +1802,7 @@ end
 ;----------------------------------------
 
 to feeding
-;  print "feeding"    ; debugging
+  print " ==> FEEDING IS HAPPENING ===================="    ; debugging
 ;  if travel_mode = "long_distance" [ print "FEEDING IS HAPPENING" ]
 
   set action "feeding"
@@ -1926,7 +1932,7 @@ end
 
 to to-feeding-tree
 
-;  print "TO-FEEDING-TREE"
+  print "TO-FEEDING-TREE"
 ;  if tree_target != -1 [ type "distance to target = " print distance tree_target ]
 
 
@@ -1934,7 +1940,7 @@ to to-feeding-tree
     if tree_target = -1 [
 
 ;      ; check if there is an old target on memory:
-;      if tree_target_mem2 != -1 [ set ld_tree_target tree_target_mem2 ]
+      if tree_target_mem2 != -1 [ set ld_tree_target tree_target_mem2 ]
 
       set frugivory-time 0
       search-feeding-tree
@@ -1957,6 +1963,7 @@ to to-feeding-tree
       set tree_current tree_target
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
+
       ; make UTM of tamarins match UTM of trees (like empirical data collection):
 ;      set x_UTM [ x_UTM ] of tree_current
 ;      set y_UTM [ y_UTM ] of tree_current
@@ -1973,7 +1980,7 @@ to to-feeding-tree
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
-;      print "ON tree NEW PROCEDURE"
+      print "ON tree NEW PROCEDURE"
 
       set action "feeding"
 
@@ -2059,6 +2066,7 @@ to to-feeding-tree
       ask ld_tree_target [ set visitations visitations + 1 ]
       set ld_tree_target -1
       set tree_target_mem2 -1  ; it was visited already
+
       ifelse feedingbout-on?
       [ set species_time [ species_time ] of tree_current ] ;Dec 2022: this procedure is wrong because species_time is a global
       ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
@@ -2066,13 +2074,17 @@ to to-feeding-tree
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
-;      print "ON tree NEW PROCEDURE"
+      print "ON tree NEW PROCEDURE LD"
 
       set action "feeding"
+
+;      print "I AM HERE!!!!"
 
       set energy energy + ( energy-loss-traveling * dist-traveled )
 
     ][
+
+;      print "I AM HERE!!!!"
 
       ifelse ( action = "travel" OR action = "forage" ) [
 
@@ -2111,6 +2123,8 @@ to to-feeding-tree
     ]
 
   ]
+
+  print "I AM HERE!!!!"
 
 
 
@@ -2177,7 +2191,9 @@ to search-feeding-tree
         if study_area = "Taquara" [ set size 5 ]
       ]
 
+
       ; Option 1: select any of the candidate_ld_targets
+
       ; check if there was a ld_target before
       ifelse tree_target_mem2 != -1 [
         set ld_tree_target tree_target_mem2
@@ -2190,22 +2206,25 @@ to search-feeding-tree
       ]
 ;      set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] ; WORKS but not as intended
 
+
       ; Option 2: select the farthest tree among the candidate_ld_targets
-      ; check if there was a ld_target before
-      ifelse tree_target_mem2 != -1 [
-        set ld_tree_target tree_target_mem2
-      ] [
-        ask candidate_ld_targets [ set dist-to-ld-tamarins distance myself ]
-        ;      set candidate_ld_targets n-of 5 candidate_ld_targets
-        set ld_tree_target max-one-of candidate_ld_targets [ dist-to-ld-tamarins ]
 
-              ask ld_tree_target [ set size 15 ] ; debugging
-
-        ;    print ld_tree_target
-        ;    print distance ld_tree_target
-      ]
+;      ; check if there was a ld_target before
+;      ifelse tree_target_mem2 != -1 [
+;        set ld_tree_target tree_target_mem2
+;      ] [
+;        ask candidate_ld_targets [ set dist-to-ld-tamarins distance myself ]
+;        ;      set candidate_ld_targets n-of 5 candidate_ld_targets
+;        set ld_tree_target max-one-of candidate_ld_targets [ dist-to-ld-tamarins ]
+;
+;
+;        ;    print ld_tree_target
+;        ;    print distance ld_tree_target
+;      ]
 
     ]
+
+    ask ld_tree_target [ set size 15 ] ; debugging
 
     set tree_target ld_tree_target ; VERY IMPORTANT FOR NOT HAVING TO CHANGE ALL THE FEEDING PROCEDURE
     if tree_target = nobody [
@@ -2675,7 +2694,7 @@ end
 to sleeping
 
   ;save tree target for next day
-  if tree_target != -1 [ set tree_target_mem2 tree_target ]
+  if tree_target != -1 [ set tree_target_mem2 ld_tree_target ]
 
   ifelse tree_target = -1 [
 
@@ -2804,6 +2823,9 @@ to sleeping
 
   ]
 
+  ask feeding-trees [ set size 3 ]
+  ask sleeping-trees [ set size 3 ]
+
 end
 
 
@@ -2865,7 +2887,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-;  print "last-action-again"   ; debugging
+  print "last-action-again"   ; debugging
 
 ;  if action = "forage" [
 ;    forage
@@ -2887,6 +2909,10 @@ to last-action-again
   ]
 
   if action = "travel" OR action = "forage" [ frugivory ]    ; if action was travel or foraging, go back to the frugivory loop
+;  if action = "travel" OR action = "forage" OR action = "frugivory" [ frugivory ]
+
+  ; when monkeys arrive on a ld_tree_target, they might get stuck in the last-action being called through frugivory. That happens because once they arrive at a long_distance_target, the travel mode should be set to
+  if action = "feeding" [ set travel_mode "short_distance" frugivory ]
 
 end
 
@@ -3824,8 +3850,8 @@ end
 GRAPHICS-WINDOW
 0
 20
-526
-403
+527
+404
 -1
 -1
 2.0
@@ -3941,7 +3967,7 @@ simulation-time
 simulation-time
 0
 170
-140.0
+116.0
 1
 1
 NIL
@@ -3968,7 +3994,7 @@ BUTTON
 664
 240
 STEP
-;ask monkeys [ type \"tree_target = \" print tree_target ]\n\nstep\n\n\n; debug species_time:\ntype \"species_time = \" print species_time\ntype \"frugivory_time = \" print [frugivory-time] of monkeys\n\ntype \"ld_target_mem2 = \" print [tree_target_mem2] of monkeys\n\nprint \" ================ \"
+;ask monkeys [ type \"tree_target = \" print tree_target ]\n\nstep\n\n\n; debug species_time:\n;type \"species_time = \" print species_time\n;type \"frugivory_time = \" print [frugivory-time] of monkeys\n;\n;type \"tree_target_mem2 = \" print [tree_target_mem] of monkeys\n\nprint \" ================ NEXT STEP ==============\"
 NIL
 1
 T
@@ -4148,7 +4174,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+3
 
 CHOOSER
 1017
@@ -4265,7 +4291,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1150.0
+1100.0
 1
 1
 NIL
@@ -4465,8 +4491,8 @@ SLIDER
 duration
 duration
 0
-20
-16.0
+30
+21.0
 1
 1
 NIL
@@ -4950,7 +4976,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-2
+1
 
 BUTTON
 245
@@ -5131,7 +5157,7 @@ species_time_val
 species_time_val
 1
 20
-15.0
+20.0
 1
 1
 NIL

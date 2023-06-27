@@ -123,7 +123,7 @@ p_timesteps_to_rest <- 0.15 # resting not allowed on the 15% of the start and en
 i <- 1
 for (i in i:nrow(param.table)) {
   
-  set.seed(42)
+  set.seed(42) # generate always the same set of seeds
   
   ### Define area and month  -----
   # (all strings must use escaped quotes) 
