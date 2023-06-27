@@ -1045,51 +1045,6 @@ to create-legend
 
 end
 
-to output-files
-  if output-files? = TRUE [
-    ;; OUTPUT FILE NAMES
-    set output-locations word ( runtime ) "locations_monkey.txt"               ;; word (date-and-time "_" "e-" start-energy) for adding the day and start-energy to the filename
-    set output-seeds-locations word ( runtime ) "locations_seeds.txt"
-    set output-trees-locations word ( runtime ) "locations_trees.txt"
-    set output-rest-locations word ( runtime ) "locations_rest.txt"
-    set output-sleep-locations word ( runtime ) "locations_sleep.txt"
-
-    ;; CHECK MILLES ET AL 2020 FOR NOT NEEDING TO DELETE FILES
-    if ( file-exists? output-locations ) [ file-delete output-locations ]
-    if ( file-exists? output-seeds-locations ) [ file-delete output-seeds-locations ]
-    if ( file-exists? output-trees-locations ) [ file-delete output-trees-locations ]
-    if ( file-exists? output-rest-locations ) [ file-delete output-rest-locations ]
-    if ( file-exists? output-sleep-locations ) [ file-delete output-sleep-locations ]
-
-    ;; DEFINE OUTPUT FILE HEADERS
-    file-open output-locations
-    ;  file-print (word "ticks" "," "day" "," "timestep" "," "x" "," "y" "," "energy" "," "action" "," "behavior) ;; FOR CSV
-    file-print (word " " "ticks" " " "day" " " "timestep" " " "x" " " "y" " " "energy" " " "action" " " "behavior") ;; FOR TXT
-    file-close
-
-    file-open output-seeds-locations
-    ;  file-print ("id-seed" "," ) ;; FOR CSV
-    ;  file-print (word " " "id-seed" " " "x" " " "y" " " "species" " " "mother-tree") ;; FOR TXT
-    file-close
-
-    file-open output-trees-locations
-    ;  file-print ("x" "," ) ;; FOR CSV
-    file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
-    file-close
-
-    file-open output-rest-locations
-    ;  file-print ("x" "," ) ;; FOR CSV
-    file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
-    file-close
-
-    file-open output-sleep-locations
-    ;  file-print ("x" "," ) ;; FOR CSV
-    file-print (word " " "x" " " "y" " " "species" " " "id-tree") ;; FOR TXT
-    file-close
-  ]
-
-end
-
 
 
 ;--------------------------------------------------------------------------------------------
@@ -1182,9 +1137,6 @@ to go
 
   set timestep timestep + 1
   tick
-  if output-files? = TRUE [
-    write-to-file ;; WRITE-FILE IS CALLED AGAIN IN next_day() AND step()
-  ]
 
   ; create a gif (adapted from Milles et al 2020)
   if export-png = TRUE [
@@ -1229,7 +1181,6 @@ to step ; FOR DEBUG PURPOSES ONLY
   repeat 1 [ move-monkeys ]
   set timestep timestep + 1
   tick
-  if output-files? = TRUE [ write-to-file ]
 
   ;; DEBUGGING
   if print-step? = TRUE [
@@ -1273,12 +1224,6 @@ to run_days
 
   repeat no_days [ next_day ]
 
-  if output-files? = TRUE [
-    write-seeds
-    write-rest
-    write-sleep
-    write-trees
-  ]
 end
 
 
@@ -1443,7 +1388,7 @@ to move-monkeys
           set tree_target -1 ; remove tree_target when coming from "long_distance"
           set ld_tree_target -1  ; if this is not here it will make the tamarin lose the target very close to the tree when coming from long distance bc of the condition ld_tree_target = tree_target (Ronald debugged on the 14th of July 2022)
         ]
-        print " **** BEING CALLED FROM FRUGIVORY 1 ***** "
+;        print " **** BEING CALLED FROM FRUGIVORY 1 ***** "
         frugivory
       ][ ; energy > level 1
 ;        print "CHECKPOINT HERE"
@@ -1452,7 +1397,7 @@ to move-monkeys
           ifelse energy > energy_level_2 [ ; energy > level 2 ==> other activities
             if tree_current = -1 [
              set travel_mode "long_distance"
-              print "TEST HERE ****** "
+;              print "TEST HERE ****** "
             ]
             ifelse (timestep > midday_start AND timestep < midday_end) [
               resting
@@ -1460,7 +1405,7 @@ to move-monkeys
               random-action
             ]
           ][ ; energy_level_1 < energy < energy_level_2
-            print " **** BEING CALLED FROM FRUGIVORY 2 ***** "
+;            print " **** BEING CALLED FROM FRUGIVORY 2 ***** "
             frugivory
           ] ;; energy > level 2 ==> other activities
         ][ ; travel_mode = "long_distance"
@@ -1474,10 +1419,10 @@ to move-monkeys
             ; if tamarins reached up to 2*duration resting, make energy come back to energy_level_1 (suppose they have stored it as glucogen or similar)
             set action-time 0 ; restart the resting counter (action-time)
 ;            store_energy
-            print " **** BEING CALLED FROM FRUGIVORY 3 ***** "
+;            print " **** BEING CALLED FROM FRUGIVORY 3 ***** "
             frugivory
           ][
-            print " LAST-ACTION-AGAIN"
+;            print " LAST-ACTION-AGAIN"
 ;            set action-time action-time + 1
             last-action-again
           ]
@@ -1649,7 +1594,7 @@ end
 ;--------------------------------------------------------------------------------
 to frugivory
 
-  print "FRUGIVORY BEING CALLED *******"  ; debugging
+;  print "FRUGIVORY BEING CALLED *******"  ; debugging
 
   avoid-patch-set ; bump on the territory borders
 
@@ -1660,15 +1605,15 @@ to frugivory
     ifelse on-feeding-tree? [
       ifelse species_time > frugivory-time [
 ;      ifelse random (2 * species_time ) > frugivory-time [
-        print "SD_I'm feeding 1!" ; for debugging
+;        print "SD_I'm feeding 1!" ; for debugging
         feeding
       ][
         set tree_current -1
-        print "SD_time over -- New feeding tree" ; for debugging
+;        print "SD_time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-      print "SD_New feeding tree" ; for debugging
+;      print "SD_New feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1678,15 +1623,15 @@ to frugivory
     ifelse on-feeding-tree? [
       ifelse species_time > frugivory-time [
 ;      ifelse random (2 * species_time ) > frugivory-time [
-        print "LD_I'm feeding! 2" ; for debugging
+;        print "LD_I'm feeding! 2" ; for debugging
         feeding
       ][
         set tree_current -1
-        print "LD_time over -- New feeding tree" ; for debugging
+;        print "LD_time over -- New feeding tree" ; for debugging
         to-feeding-tree
       ]
     ][
-      print "LD_New long distance feeding tree" ; for debugging
+;      print "LD_New long distance feeding tree" ; for debugging
       to-feeding-tree
     ]
   ]
@@ -1728,22 +1673,22 @@ to-report on-feeding-tree?
 ;        type "tree_current: " print tree_current
 ;        type "tree_target: " print tree_target
 ;        print "on-feeding-tree? TRUE" ; for debugging
-        print "short distance: ON tree 1"
+;        print "short distance: ON tree 1"
         report true
 
       ][
 ;        print "on-feeding-tree? FALSE" ; for debugging
 ;        print tree_target
-        print "short distance: NOT on tree 1"
+;        print "short distance: NOT on tree 1"
         report false
       ]
     ][
 ;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
-        print "short distance: ON tree 2"
+;        print "short distance: ON tree 2"
         report true
       ][
-        print "short distance: NOT on tree 2"
+;        print "short distance: NOT on tree 2"
         report false
       ]
     ]
@@ -1780,19 +1725,19 @@ to-report on-feeding-tree?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
         [ set species_time species_time_val ]
-        print "long distance: ON tree 1"
+;        print "long distance: ON tree 1"
         report true
       ][
-       print "long distance: NOT on tree 1"
+;       print "long distance: NOT on tree 1"
         report false
       ]
     ][
 ;      print "Action != travel OR tree_target = -1" ; for debugging
       ifelse action = "feeding" [
-        print "long distance: ON tree 1"
+;        print "long distance: ON tree 1"
         report true
       ][
-        print "long distance: NOT on tree 2"
+;        print "long distance: NOT on tree 2"
         report false
       ]
     ]
@@ -1802,7 +1747,7 @@ end
 ;----------------------------------------
 
 to feeding
-  print " ==> FEEDING IS HAPPENING ===================="    ; debugging
+;  print " ==> FEEDING IS HAPPENING ===================="    ; debugging
 ;  if travel_mode = "long_distance" [ print "FEEDING IS HAPPENING" ]
 
   set action "feeding"
@@ -1932,7 +1877,7 @@ end
 
 to to-feeding-tree
 
-  print "TO-FEEDING-TREE"
+;  print "TO-FEEDING-TREE"
 ;  if tree_target != -1 [ type "distance to target = " print distance tree_target ]
 
 
@@ -1980,7 +1925,7 @@ to to-feeding-tree
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
-      print "ON tree NEW PROCEDURE"
+;      print "ON tree NEW PROCEDURE"
 
       set action "feeding"
 
@@ -2074,7 +2019,7 @@ to to-feeding-tree
       ;      type "tree_current: " print tree_current
       ;      type "tree_target: " print tree_target
       ;        print "on-feeding-tree? TRUE" ; for debugging
-      print "ON tree NEW PROCEDURE LD"
+;      print "ON tree NEW PROCEDURE LD"
 
       set action "feeding"
 
@@ -2124,7 +2069,7 @@ to to-feeding-tree
 
   ]
 
-  print "I AM HERE!!!!"
+;  print "I AM HERE!!!!"
 
 
 
@@ -2168,10 +2113,10 @@ to search-feeding-tree
       ifelse tree_target_mem2 != -1 [
         set ld_tree_target tree_target_mem2
         set tree_target_mem2 -1 ; reset
-        print "last ld target reutilized 1"
+;        print "last ld target reutilized 1"
       ] [
         set ld_tree_target one-of feeding-trees with [member? who let_pot_list]
-        print "random ld target defined 1"
+;        print "random ld target defined 1"
       ]
 
     ]
@@ -2198,11 +2143,11 @@ to search-feeding-tree
       ifelse tree_target_mem2 != -1 [
         set ld_tree_target tree_target_mem2
         set tree_target_mem2 -1
-        print "last ld target reutilized 2"
+;        print "last ld target reutilized 2"
         print ld_tree_target
       ] [
         set ld_tree_target one-of candidate_ld_targets
-        print "random ld target defined 1"
+;        print "random ld target defined 1"
       ]
 ;      set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] ; WORKS but not as intended
 
@@ -2995,99 +2940,6 @@ to output-day-stats
 
 end
 
-;---------------------------------------------------------------
-to write-to-file
-  file-open output-locations
-  foreach sort monkeys [ ?1 ->
-    ask ?1 [
-      file-write ticks
-      file-write day
-      file-write timestep
-      ; write back the true geographical coordinates
-      file-write precision first gis:envelope-of self 2
-      file-write precision  last gis:envelope-of self 2
-      file-write precision energy 1
-      file-write action
-      file-write behavior
-    ]
-  ]
-  file-print " "
-  file-close
-end
-
-;-----------------------------------------------------------------
-to write-seeds
-  file-open output-seeds-locations
-  foreach sort seeds [ ?1 ->
-    ask ?1 [
-      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
-      file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      file-write id-seed
-      file-write precision first gis:envelope-of self 2
-      file-write precision  last gis:envelope-of self 2
-      file-write species
-      file-write mother-tree
-    ] file-print " "
-  ]
-  file-print " "
-  file-close
-end
-
-;---------------------------------------------------------------
-to write-trees
-  file-open output-trees-locations
-  foreach sort feeding-trees [ ?1 ->
-    ask ?1 [
-      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
-      ;file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      ;file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      file-write precision first gis:envelope-of self 2
-      file-write precision  last gis:envelope-of self 2
-      file-write species
-      file-write id-tree
-    ] file-print " "
-  ]
-  file-print " "
-  file-close
-end
-
-;---------------------------------------------------------------
-to write-rest
-  file-open output-rest-locations
-  foreach sort resting-trees [ ?1 ->
-    ask ?1 [
-      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
-      ;file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      ;file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      file-write precision first gis:envelope-of self 2
-      file-write precision  last gis:envelope-of self 2
-      file-write species
-      file-write id-tree
-    ] file-print " "
-  ]
-  file-print " "
-  file-close
-end
-
-;---------------------------------------------------------------
-to write-sleep
-  file-open output-sleep-locations
-  foreach sort sleeping-trees [ ?1 ->
-    ask ?1 [
-      ;file-write ticks     ; AS THIS IS ONLY BEING CALLED IN run_days PROCEDURE, IT ONLY WRITES THE LAST TICK VALUE
-      ;file-write day       ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      ;file-write timestep  ; IT DOES NOT MAKE SENSE BECAUSE THIS PROCEDURE OUTPUTS EVERYTHING IN THE LANDSCAPE, NOT THE SEEDS FROM EACH DAY
-      file-write precision first gis:envelope-of self 2
-      file-write precision  last gis:envelope-of self 2
-      file-write species
-      file-write id-tree
-    ] file-print " "
-  ]
-  file-print " "
-  file-close
-end
-;-----------------------------------------------------------------
 
 to calc-homerange
 ;  r:eval "library(adehabitat)"
@@ -3106,7 +2958,7 @@ to calc-homerange
     (r:putdataframe "turtle" "X" X_coords "Y" Y_coords "day" day_list)
     r:eval (word "turtle <- data.frame(turtle, Name = '" Name "')")
     r:eval "turtles <- rbind(turtles, turtle)"
-    type "*****turtles data frame: " print r:get "turtles"
+;    type "*****turtles data frame: " print r:get "turtles"
   ]
 
   ;; split the data.frame into coordinates and factor variable
@@ -3850,11 +3702,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-527
-404
+617
+440
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -3864,10 +3716,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-101
+101
+-68
+68
 0
 0
 1
@@ -4565,17 +4417,6 @@ OUTPUT:
 15.0
 1
 
-SWITCH
-0
-517
-118
-550
-output-files?
-output-files?
-1
-1
--1000
-
 CHOOSER
 0
 465
@@ -4606,7 +4447,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.59
 0.01
 1
 NIL
@@ -5097,7 +4938,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+89.73
 5
 1
 NIL
@@ -5112,7 +4953,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.6949999999999998
 0.1
 1
 NIL
@@ -5127,7 +4968,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+3.2369999999999997
 0.1
 1
 NIL
@@ -5142,7 +4983,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+68.99
 1
 1
 NIL

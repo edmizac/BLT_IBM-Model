@@ -181,7 +181,7 @@ for (i in i:nrow(param.table)) {
   energy_level_1 <- 999
   energy_level_2 <- 1325
   energy_stored_val <- 1000
-  step_forget <- 130
+  step_forget <- 400
   p_memory <- 3
   visual <- 0
   # duration <- 4 # duration of resting # now area-specific
@@ -366,6 +366,10 @@ for (i in i:nrow(param.table)) {
                                 # 'sleeping-trees?' = "true",
                                 'patch-type' = "\"empirical\"",
                                 # 'empirical-trees-choice' = "\"closest\"",
+                                
+                                'ld-target-random?' = ld_target_random,
+                                'p_disputed_trees'= p_disputed_trees,
+                                'p-timesteps-to-rest' = p_timesteps_to_rest,
                                 
                                 ### memory
                                 'duration' = duration,
