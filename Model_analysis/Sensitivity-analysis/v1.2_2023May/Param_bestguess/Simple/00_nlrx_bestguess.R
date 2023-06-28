@@ -179,7 +179,7 @@ for (i in i:nrow(param.table)) {
   energy_loss_resting <- -5
   start_energy <- 900
   energy_level_1 <- 999
-  energy_level_2 <- 1325
+  energy_level_2 <- 1350
   energy_stored_val <- 1000
   step_forget <- 400
   p_memory <- 3

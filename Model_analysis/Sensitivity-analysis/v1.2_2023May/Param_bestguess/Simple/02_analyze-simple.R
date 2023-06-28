@@ -1434,12 +1434,23 @@ db1_mv %>% summary()
 # db1_mv %>% group_by(source) %>% summarize(KDE95_mean = mean(KDE95))
 
 
+# Take other variables to another dataset
+# db1_mv_others <- db1_mv %>% 
+#   dplyr::select(c(p_visited_trees, energy_stored))
+
+
 # Make it longer
 db1_mv_longer <- db1_mv %>% 
+  # dplyr::select(-c(p_disputed_trees, p_timesteps_to_rest)) %>%  # these ones also starts with "p_"
   tidyr::pivot_longer(cols = starts_with("p_"), names_to = "behavior", values_to = "percentage_mean") %>% 
   dplyr::filter(behavior != "p_visited_trees" & behavior!= "p_forage_param."
-  )
-  # group_by(group, month, source)
+  ) 
+
+# Remove other columns starting with "p_":
+targetb <- c("p_disputed_trees", "p_timesteps_to_rest")
+db1_mv_longer <- db1_mv_longer %>% 
+  dplyr::filter(!(behavior %in% targetb))
+
 
 db1_mv_longer <- db1_mv_longer %>% 
   mutate(percentage_mean = stringr::str_replace_all(percentage_mean, c("\\[" = "", "\\]" = "")),
@@ -1595,8 +1606,8 @@ db1_mv_summarry <- db1_mv %>%
   dplyr::summarise(
     MR_mean = mean(MR, na.rm = TRUE),
     MR_sd = sd(MR, na.rm = TRUE),
-    PT_mean = mean(PT, na.rm = TRUE) /10000 ,  # to convert to m²
-    PT_sd = sd(PT, na.rm = TRUE)  /10000       # to convert to m²
+    PT_mean = mean(PT, na.rm = TRUE), #/10000 ,  # to convert to m²
+    PT_sd = sd(PT, na.rm = TRUE)  #/10000       # to convert to m²
   ) %>% 
   dplyr::filter(source == "simulated")
 
@@ -1777,12 +1788,15 @@ R.all %>%
   # geom_boxplot() +
   geom_point(
     aes(size = 1.5),
-    # alpha = 0.8,
+    alpha = 0.8,
     # position = position_jitterdodge(jitter.width = 0.25)
-    position = position_dodge2(width = .75)
+    position = position_dodge2(width = .9)
              ) +
   scale_color_viridis_d() +
-  scale_shape_manual(values=c(17,16)) +
+  # scale_shape_manual(values=c(17,16)) +
+  # scale_shape_manual(values=c(1, 0, 2)) +
+  scale_shape_manual(values=c(17, 15, 16)) +
+  # scale_shape_manual(values=c(1, 0, 2)) +
   # ylab(expression(DPL^{'2-'}/home range)) +
   ylim(0, 1.5) +
   ylab("R index") +
@@ -1889,7 +1903,7 @@ db1_mv_summaryDI %>% ggplot(
   # guides(shape = FALSE) # drop legend of shape only
   
 # # Save plot
-ggsave(paste0(path,  "/", '02_simple_DI_index.png'), height = 3.5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_DI_index.png'), height = 4, width = 7)
 
 
 
@@ -1922,7 +1936,7 @@ db1_mv_summaryDI %>% ggplot(
   # guides(shape = FALSE) # drop legend of shape only
 
 # # Save plot
-ggsave(paste0(path,  "/", '02_simple_M_index.png'), height = 3.5, width = 7)
+ggsave(paste0(path,  "/", '02_simple_M_index.png'), height = 4, width = 7)
 
 
 ### M index log10 ------- 
@@ -1972,5 +1986,5 @@ db1_mv_summaryDI %>% ggplot(
 
 
 # # Save plot
-ggsave(paste0(path,  "/", '02_simple_M_index_secaxis.png'), height = 3.5, width = 7.5)
+ggsave(paste0(path,  "/", '02_simple_M_index_secaxis.png'), height = 4, width = 7.5)
 

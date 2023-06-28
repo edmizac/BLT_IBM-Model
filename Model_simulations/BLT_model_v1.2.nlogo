@@ -1069,7 +1069,7 @@ to go
         ; calc resource metrics
         NNdist
         SDDcalc
-;        calc-seed-aggregation
+        calc-seed-aggregation
       ][
       print "not enough days to calculate movement and seed dispersal metrics"
       ]
@@ -1119,7 +1119,7 @@ to go
       SDDcalc
 
       output-print "calculating R index for seeds"
-;      calc-seed-aggregation
+      calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
@@ -2669,8 +2669,9 @@ to sleeping
       ask tree_target [ set visitations visitations + 1 ]
 
       set tree_current tree_target
-      print "*** I am sleeping ****"
       set tree_target -1
+
+      print "*** I am sleeping ****"
       set action "sleeping"
       set behavior "sleeping"
       set action-time 0
@@ -2736,7 +2737,7 @@ to sleeping
     set behavior "travel"
     ;--------------------
 
-      print "******************* sleeping debugging "
+;      print "******************* sleeping debugging "
 
     ][
 ;      print "straight line false"
@@ -2832,7 +2833,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-  print "last-action-again"   ; debugging
+;  print "last-action-again"   ; debugging
 
 ;  if action = "forage" [
 ;    forage
