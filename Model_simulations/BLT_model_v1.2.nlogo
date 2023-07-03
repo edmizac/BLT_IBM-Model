@@ -373,6 +373,10 @@ to setup
   [set local-path "D:/EDUARDO_LAP"]
   if USER = "LEEC"
   [set local-path "D:/Eduardo_LaP/"]
+
+  if USER = "PC02"
+  [ set local-path "D:/Eduardo_LaP/" ]
+
   if USER = "Others"
   [ set local-path "~/" ]
 
@@ -473,16 +477,14 @@ to setup-gis
 
     if study_area = "Suzano" [
 
-      if USER = "Eduardo" [
+      ifelse USER = "Eduardo" [
         ; load .prj and .asc (raster 10 x 10 m)
         gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj" ; WGS_1984_UTM_Zone_22S
         set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
         ; load the poligon (.shp) to determine forest and matrix patches
         set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ; fragment/study area polygon
-      ]
-
-      if USER = "LEEC" [
+      ][
         gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.prj"
         set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_rasterized_reproj.asc"
         set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp"
@@ -493,16 +495,14 @@ to setup-gis
     if study_area = "Taquara" [ ;;
       set-patch-size floor (0.8 * patch-size) ; Taquara large raster is too big for the world
 
-      if USER = "Eduardo" [
+      ifelse USER = "Eduardo" [
         ; load .prj and .asc (raster 10 x 10 m)
         gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
         set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
         ; load the poligon (.shp) to determine forest and matrix patches
         set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ; fragment/study area polygon
-      ]
-
-      if USER = "LEEC" [
+      ][
         gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.prj"
         set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only4_rec_rasterized_reproj.asc"
         set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp"
@@ -513,16 +513,14 @@ to setup-gis
     if study_area = "SantaMaria" [
       set-patch-size floor (1 * patch-size) ; SantaMaria large raster results in a large world
 
-      if USER = "Eduardo" [
+      ifelse USER = "Eduardo" [
         ; load .prj and .asc (raster 10 x 10 m)
         gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj" ; WGS_1984_UTM_Zone_22S
         set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc" ; fragment/study area raster (reprojected***)
 
         ; load the poligon (.shp) to determine forest and matrix patches
         set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ; fragment/study area polygon
-      ]
-
-      if USER = "LEEC" [
+      ][
         gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.prj"
         set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_recortado_rasterized_reproj.asc"
         set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp"
@@ -1166,6 +1164,19 @@ end
 
 to step ; FOR DEBUG PURPOSES ONLY
 
+  ask monkeys [
+    if energy <= 0 AND energy_stored <= 0 [
+      set survived? "no"
+      die
+      stop
+    ]
+  ]
+
+  if not any? monkeys [
+    print "MONKEY IS DEAD!"
+    stop
+  ]
+
   if all? monkeys [action = "sleeping"] [
     ask monkeys [
       set action-time 0
@@ -1231,6 +1242,11 @@ end
 
 ;-------------------------------------------------------------
 to next_day
+
+  if not any? monkeys [
+    print "MONKEY IS DEAD!"
+    stop
+  ]
 
   ;; DEBUGGING
   output-type "===== Day: "
@@ -1299,7 +1315,7 @@ to move-monkeys
     ]
     [ set label "" ]
 
-    if energy < 0 AND energy_stored < 0 [
+    if energy < 0 AND energy_stored <= 0 [
       if day > 3 [
         print "calculating from move-monkeys"
         calc-movement-dead
@@ -2906,16 +2922,28 @@ to get_stored_energy
 
   ; Avoid that tamarins die by making them use their stored energy from other days
   ask monkeys [
-    if energy < ( 0.7 * start-energy ) [
+    if energy > 0 AND energy < ( 0.7 * start-energy ) [
 
-      ifelse ( ( energy_stored - (0.2 * energy_stored) ) > 0 ) [
-        set energy energy + (0.2 * energy_stored)                    ; take 20% of stored energy
-        set energy_stored ( energy_stored - (0.2 * energy_stored) )  ; diminish 20% of stored energy
+;      ifelse ( ( energy_stored - (0.1 * energy_stored) ) > 0 ) [     ; if there's more than 10% start-energy
+;        set energy energy + (0.1 * energy_stored)                    ; take 10% of stored energy
+;        set energy_stored ( energy_stored - (0.1 * energy_stored) )  ; diminish 10% of stored energy
+;        print "energy debug 1 ********"
+;      ][
+;       set energy energy + energy_stored
+;        set energy_stored 0
+;       print "stored energy over" print "" print "" print "" print "" print ""
+;      ]
+
+      ifelse ( ( energy_stored - (0.1 * energy_stored) ) > (0.1 * start-energy) ) [     ; if there's more stored energy than 10% of start-energy
+        set energy energy + (0.1 * start-energy)                    ; take 10% of start-energy from stored energy
+        set energy_stored ( energy_stored - (0.1 * start-energy) )  ; diminish 10% of start-energy from stored energy
+        print "energy debug 1 ********"
       ][
-       set energy energy + energy_stored
+        set energy energy + energy_stored
         set energy_stored 0
-       print "stored energy over"
+        print "stored energy over" print "" print "" print "" print "" print ""
       ]
+
     ]
   ]
 
@@ -3100,18 +3128,34 @@ to calc-homerange
 
 
     ; Import shapefile of respective area and crop homerange UD with st_intersection()
-
-    if study_area = "Guareí" [
-      r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp' %>% sf::read_sf()"
-    ]
-    if study_area = "Suzano" [
-      r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
-    ]
-    if study_area = "SantaMaria" [
-      r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp' %>% sf::read_sf()"
-    ]
-    if study_area = "Taquara" [
-      r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp' %>%  sf::read_sf()"
+    ifelse USER = "Eduardo" [
+      if study_area = "Guareí" [
+        r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp' %>% sf::read_sf()"
+      ]
+      if study_area = "Suzano" [
+        r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
+      ]
+      if study_area = "SantaMaria" [
+        r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp' %>% sf::read_sf()"
+      ]
+      if study_area = "Taquara" [
+        r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp' %>%  sf::read_sf()"
+      ]
+    ][
+      if study_area = "Guareí" [
+        r:put "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp"
+        r:eval "shp <- wpath %>% sf::read_sf()"
+      ]
+      if study_area = "Suzano" [
+        r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
+      ]
+      if study_area = "SantaMaria" [
+        r:put "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp"
+        r:eval "shp <- wpath %>% sf::read_sf()"
+      ]
+      if study_area = "Taquara" [
+        r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp' %>%  sf::read_sf()"
+      ]
     ]
 
     ;  r:eval "shp <- sf::read_sf(filepath)" ; make it an sf object
@@ -3550,7 +3594,7 @@ to calc-seed-aggregation
     r:eval "limitsOwin <- as.owin(limitsOwin)"
 
     ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
-    r:eval "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
+    r:eval "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
     r:eval "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
 
     ;; calc Nearest Neighbor distance
@@ -3560,8 +3604,8 @@ to calc-seed-aggregation
     (r:putagentdf  "ftrees" feeding-trees "who" "x_UTM" "y_UTM")
     (r:putagentdf  "strees" sleeping-trees "who" "x_UTM" "y_UTM")
 
-;    r:eval "ftrees <- ftrees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
-;    r:eval "strees <- strees %>%  dplyr::select(x_UTM, y_UTM)  %>%  distinct()"
+;    r:eval "ftrees <- ftrees %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
+;    r:eval "strees <- strees %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
 ;    r:eval "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
 ;    r:eval "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
 ;    r:eval "NN_feeding_trees <- mean(nndist(simf))"
@@ -3773,7 +3817,27 @@ to test-long-distance
   ]
 end
 
+to set-ref-values
+  set energy_level_1 999
+  set energy_level_2 1100
+  set energy_stored_val 1000
+  set start-energy 905
+  set energy-from-fruits 30
+  set energy-from-prey 30
+  set energy-loss-traveling -10
+  set energy-loss-foraging -10
+  set energy-loss-resting -5
 
+  set step_forget 400
+  set visual 0
+  set prop_trees_to_reset_memory 3
+  set p-timesteps-to-rest 0.15
+  set duration 21
+  set p_disputed_trees 0.25
+
+  set species_time_val 5
+
+end
 
 ;;; ----------------------------------- ;;;
 ;;;    GENERATED FORESTS' REPORTERS     ;;;
@@ -3815,8 +3879,8 @@ end
 GRAPHICS-WINDOW
 0
 20
-617
-440
+491
+416
 -1
 -1
 3.0
@@ -3829,10 +3893,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--101
-101
--68
-68
+-80
+80
+-64
+64
 0
 0
 1
@@ -4139,7 +4203,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-3
+5
 
 CHOOSER
 1017
@@ -4171,7 +4235,7 @@ step_forget
 step_forget
 0
 500
-401.0
+400.0
 1
 1
 NIL
@@ -4560,7 +4624,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.59
+0.36
 0.01
 1
 NIL
@@ -4930,7 +4994,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-1
+0
 
 BUTTON
 245
@@ -5051,7 +5115,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-89.73
+68.98
 5
 1
 NIL
@@ -5066,7 +5130,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.6949999999999998
+1.4060000000000001
 0.1
 1
 NIL
@@ -5081,7 +5145,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.2369999999999997
+2.343
 0.1
 1
 NIL
@@ -5096,7 +5160,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-68.99
+67.86
 1
 1
 NIL
@@ -5111,7 +5175,7 @@ species_time_val
 species_time_val
 1
 20
-20.0
+5.0
 1
 1
 NIL
@@ -5418,7 +5482,7 @@ CHOOSER
 R_EXTENSION
 R_EXTENSION
 "R" "SimpleR"
-1
+0
 
 BUTTON
 220
@@ -5444,6 +5508,23 @@ BUTTON
 101
 print var
   ask one-of monkeys [\n      print \"==== SR debugging ==== \"\n\n      let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr\n      let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr\n      let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr\n      let Name_sr [Name] of self            print Name_sr  ;print length Name_sr\n]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+576
+279
+684
+312
+set ref values
+set-ref-values
 NIL
 1
 T

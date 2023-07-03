@@ -507,7 +507,7 @@ for (i in i:nrow(param.table)) {
                                    nseeds = nseeds)
 
   # Check seeds:  
-  print( nl@simdesign@simseeds)  ;  i <- i + 1  }
+  # print( nl@simdesign@simseeds)  ;  i <- i + 1  }
 
   # More information on the Morris specific parameters can be found in the description of the morris function in the sensitivity package (?morris).
   # ?morris
