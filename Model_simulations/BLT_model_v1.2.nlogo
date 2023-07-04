@@ -440,6 +440,8 @@ to setup
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set p_foraging_while_traveling 0.21 ]
   ]
 
+  print-parameters
+
   reset-ticks
 end
 
@@ -784,10 +786,26 @@ to setup-trees
   ]
 
 
-
-
 end
 
+to print-parameters
+  type "start-energy:  "               print start-energy
+  type "energy_level_1:  "             print energy_level_1
+  type "energy_level_2:  "             print energy_level_2
+  type "energy-from-fruits:  "         print energy-from-fruits
+  type "energy-from-prey:  "           print energy-from-prey
+  type "energy-loss-traveling:  "      print energy-loss-traveling
+  type "energy-loss-foraging:  "       print energy-loss-foraging
+  type "energy-loss-resting:  "        print energy-loss-resting
+  type "energy_stored_val:  "          print energy_stored_val
+  type "step_forget:  "                print step_forget
+  type "prop_trees_to_reset_memory:  " print prop_trees_to_reset_memory
+  type "species_time_val:  "           print species_time_val
+  type "duration:  "                   print duration
+  type "p-timesteps-to-rest:  "        print p-timesteps-to-rest
+  type "p_disputed_trees:  "           print p_disputed_trees
+
+end
 
 
 ; TAMARINS
