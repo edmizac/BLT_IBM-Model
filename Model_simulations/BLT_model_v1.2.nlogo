@@ -3239,7 +3239,8 @@ to calc-homerange
         r:eval "shp <- wpath %>% sf::read_sf()"
       ]
       if study_area = "Taquara" [
-        r:eval "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp' %>%  sf::read_sf()"
+        r:put "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp"
+        r:eval "shp <- wpath %>% sf::read_sf()"
       ]
     ]
 
