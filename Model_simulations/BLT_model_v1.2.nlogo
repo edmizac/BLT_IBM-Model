@@ -397,8 +397,8 @@ to setup
   set day 1
 ;  set midday 58 ; do not hardwire this one
   set midday simulation-time / 2
-  set midday_start round ( p-timesteps-to-rest * simulation-time )
-  set midday_end round ( ( 1 - p-timesteps-to-rest) * simulation-time )
+  set midday_start round ( p-timesteps-to-rest / 2 * simulation-time )
+  set midday_end round ( ( 1 - p-timesteps-to-rest / 2) * simulation-time )
   type "*************** midday_start at: timestep " print midday_start
   type "*************** midday_end at: timestep " print midday_end
 
@@ -457,16 +457,14 @@ to setup-gis
 
     if study_area = "Guareí" [
 
-      if USER = "Eduardo" [
+      ifelse USER = "Eduardo" [
         ; load .prj and .asc (raster 10 x 10 m)
         gis:load-coordinate-system "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj" ; WGS_1984_UTM_Zone_22S
         set bb-gis gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc" ; fragment/study area raster (reprojected***)
 
         ; load the poligon (.shp) to determine forest and matrix patches
         set bb-gis-shp gis:load-dataset "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ; fragment/study area polygon
-      ]
-
-      if USER = "LEEC" [
+      ][
         gis:load-coordinate-system word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei-poligono.prj"
         set bb-gis gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei-poligono2_reproj.asc"
         set bb-gis-shp gis:load-dataset word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp"
@@ -1162,6 +1160,40 @@ to go
 end
 
 
+to print-step
+  ask monkeys [
+    type "---- STEP ---- " print timestep
+    type " ---- MODE: " print travel_mode
+    type "tree_target: " type tree_target type " "
+    type "ld_tree_target: " type ld_tree_target type " "
+    type "tree_current: " type tree_current type " "
+    type "behavior: " type behavior type " "
+    type "action: " print action
+    ;      type "tree_pot_list: " print length tree_pot_list print tree_pot_list
+    ;      type "tree_ate_list: " print length tree_ate_list print tree_ate_list
+    ;      type "tree_mem_list: " print length tree_mem_list print tree_mem_list
+    ;    type "tree_add_list " print length tree_add_list print tree_add_list
+    type "action-time: " print action-time
+    type "energy: " print energy
+    ;      if patch-type = "empirical" [ type "x: " print x_UTM type "y: " print y_UTM ]
+    if tree_target != -1 [
+      type "distance: " print distance tree_target
+      type "target_species: " print tree_target_species
+    ]
+    type "DPL_d: " print DPL_d
+    type "DPL (m): " print DPL * 10
+    type "dist-traveled: " print dist-traveled
+    ;      ifelse travel_mode = "short_distance" [
+    ;        ; print distance tree_target
+    ;      ][
+    ;        print distance ld_tree_target
+    ;      ]
+    ;      print " ----------------step end------------------------"
+  ]
+
+end
+
+
 to step ; FOR DEBUG PURPOSES ONLY
 
   ask monkeys [
@@ -1197,35 +1229,7 @@ to step ; FOR DEBUG PURPOSES ONLY
 
   ;; DEBUGGING
   if print-step? = TRUE [
-    ask monkeys [
-      type "---- STEP ---- " print timestep
-      type " ---- MODE: " print travel_mode
-      type "tree_target: " type tree_target type " "
-      type "ld_tree_target: " type ld_tree_target type " "
-      type "tree_current: " type tree_current type " "
-      type "behavior: " type behavior type " "
-      type "action: " print action
-;      type "tree_pot_list: " print length tree_pot_list print tree_pot_list
-      type "tree_ate_list: " print length tree_ate_list print tree_ate_list
-;      type "tree_mem_list: " print length tree_mem_list print tree_mem_list
-      ;    type "tree_add_list " print length tree_add_list print tree_add_list
-      type "action-time: " print action-time
-      type "energy: " print energy
-      if patch-type = "empirical" [ type "x: " print x_UTM type "y: " print y_UTM ]
-      if tree_target != -1 [
-        type "distance: " print distance tree_target
-        type "target_species: " print tree_target_species
-      ]
-      type "DPL_d: " print DPL_d
-      type "DPL (m): " print DPL * 10
-      type "dist-traveled: " print dist-traveled
-;      ifelse travel_mode = "short_distance" [
-;        ; print distance tree_target
-;      ][
-;        print distance ld_tree_target
-;      ]
-      print " ----------------step end------------------------"
-    ]
+    print-step
   ]
 
 end
@@ -1285,6 +1289,9 @@ to next_day
       stop
     ]
     go
+;    if print-step? = TRUE [
+;      print-step
+;    ]
 
   ]
 
@@ -1296,6 +1303,7 @@ to next_day
    export-view world-name
 ;   export-interface world-name
   ]
+
 
 end
 
@@ -1874,13 +1882,19 @@ end
 
 to enhance_memory_list
 
-    ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
-    ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
-  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) - 2 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find other trees in the pot_list while avoiding returning to visited trees ;
+  ;; make pot_list increase again if it is too small (otherwise will return an error) -> revisitation to trees is more common when primates are in small fragments (less trees availble) (Boyle et al 2009);
+  ;; don't make prop_trees_to_reset_memory bigger than 8 otherwise the potential list will get very very small (high chances to return an error)
+    let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) + 3 ; don't know what should be the number exactly. The smaller it is, more the tamarins will travel around to find other trees in the pot_list while avoiding returning to visited trees ;
+;  let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) ; testing on 2023-07-04d: removed '- 2' (line above)
+;  type "length tree_pot_list before = " print length tree_pot_list
+;  type "length tree_ate_list before = " print length tree_ate_list
+;  type "n_trees = " print n_trees
+
+  ; modulating memory procedure
   if ( length tree_pot_list <= n_trees ) [
     print "ENHANCING MEMORY"
     let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
-;    print tree_bucket
+;        print tree_bucket
 
     ; enhance potential list
     ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
@@ -1891,6 +1905,24 @@ to enhance_memory_list
     set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
   ]
 
+  ; modulating while [] loop in search-feeding-tree procedure for finding a new tree on the border
+    if ( length tree_pot_list <= round ( p_disputed_trees * count feeding-trees ) - 1 ) [
+    print "ENHANCING MEMORY TO FIND BORDER TREES"
+    let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
+;        print tree_bucket
+
+    ; enhance potential list
+    ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
+
+    ; reduce mem_list and add_list
+    set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
+    set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
+    set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
+  ]
+
+;  print "called enhance_memory_list"
+;  type "length tree_pot_list after = " print length tree_pot_list
+;  type "length tree_ate_list after = " print length tree_ate_list
 end
 
 
@@ -2006,6 +2038,8 @@ to to-feeding-tree
         set tree_target_mem2 -1
       ]
 
+;      print "LD_1"
+
       set frugivory-time 0
       search-feeding-tree
     ]
@@ -2016,7 +2050,7 @@ to to-feeding-tree
     ]
 
     ifelse distance ld_tree_target < step_len_travel [
-;      print "NEW PROCEDURE"
+;      print "LD_NEW PROCEDURE"
 
       set tree_current ld_tree_target
       set dist-traveled dist-traveled + distance ld_tree_target
@@ -2044,13 +2078,13 @@ to to-feeding-tree
 
       set action "feeding"
 
-;      print "I AM HERE!!!!"
+;      print "I AM HERE!!!! 1"
 
       set energy energy + ( energy-loss-traveling * dist-traveled )
 
     ][
 
-;      print "I AM HERE!!!!"
+;      print "I AM HERE!!!! 2"
 
       ifelse ( action = "travel" OR action = "forage" ) [
 
@@ -2068,6 +2102,8 @@ to to-feeding-tree
             set behaviorsequence lput 2 behaviorsequence
           ]
 
+;          print "I AM HERE!!!! forage"
+
         ][
 
           if step-model-param? = TRUE  AND distance ld_tree_target > 1.5 [
@@ -2078,6 +2114,8 @@ to to-feeding-tree
           set behavior "travel"
           set behaviorsequence lput 3 behaviorsequence
 
+;          print "I AM HERE!!!! travel"
+
         ]
       ][
         travel
@@ -2085,12 +2123,14 @@ to to-feeding-tree
         set behavior "travel"
         set behaviorsequence lput 3 behaviorsequence
 
+;        print "I AM HERE!!!! travel2"
+
       ]
     ]
 
   ]
 
-;  print "I AM HERE!!!!"
+;  print "I AM HERE!!!! 3"
 
 
 
@@ -2112,7 +2152,7 @@ end
 
 to search-feeding-tree
 
-;   print "SEARCHING FEEDING TREE"
+;   print "SEARCHING FEEDING TREE PROCEDURE"
 
   ask feeding-trees with [color = red OR color = blue] [ set color green ]  ; make last target (short or long distance) green again
 
@@ -2125,19 +2165,22 @@ to search-feeding-tree
 ;    print tree_target   ; debugging
   ]
 
+
+
+
   if travel_mode = "long_distance" [
     let let_pot_list tree_pot_list
 
     if ld-target-random? = TRUE [
       ;; RANDOM TREE
       ; check if there was a ld_target before
-      ifelse tree_target_mem2 != -1 [
+      ifelse tree_target_mem2 = -1 [
+        set ld_tree_target one-of feeding-trees with [member? who let_pot_list]
+;        print "random ld target defined 1"
+      ] [
         set ld_tree_target tree_target_mem2
         set tree_target_mem2 -1 ; reset
 ;        print "last ld target reutilized 1"
-      ] [
-        set ld_tree_target one-of feeding-trees with [member? who let_pot_list]
-;        print "random ld target defined 1"
       ]
 
     ]
@@ -2146,9 +2189,21 @@ to search-feeding-tree
     if ld-target-random? = FALSE [
       ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
       set candidate_ld_targets feeding-trees with [member? who let_pot_list]
-      ;    print candidate_ld_targets
-      while [ count candidate_ld_targets <= ( p_disputed_trees * count feeding-trees ) ] [ enhance_memory_list ] ; if available trees are few, enhance memory list
-      set candidate_ld_targets max-n-of ( p_disputed_trees * count feeding-trees ) candidate_ld_targets [dist-to-homerange-center]
+
+;      print "LD_CHECK"
+
+
+      ; while loops are always dangerous:
+       while [ count candidate_ld_targets <= round ( p_disputed_trees * count feeding-trees ) - 1 ] [
+        print "LD_CHECK 2"
+        enhance_memory_list
+        set let_pot_list tree_pot_list
+        set candidate_ld_targets feeding-trees with [member? who let_pot_list]
+        print "increased candidate_ld_targets"
+        type "candidate_ld_targets = " print count candidate_ld_targets
+      ] ; if available trees are few, enhance memory list
+
+      set candidate_ld_targets max-n-of ( round (p_disputed_trees * count feeding-trees) ) candidate_ld_targets [dist-to-homerange-center]
 
 
       ;    print candidate_ld_targets
@@ -2692,7 +2747,7 @@ to sleeping
       set tree_current tree_target
       set tree_target -1
 
-      print "*** I am sleeping ****"
+;      print "*** I am sleeping ****"
       set action "sleeping"
       set behavior "sleeping"
       set action-time 0
@@ -2738,6 +2793,8 @@ to sleeping
   ]
 
   if action != "sleeping" [
+
+;    print "BEING CALLED FROM SLEEPING"
 
     avoid-patch-set
 
@@ -2872,14 +2929,42 @@ to last-action-again
 ;  if action = "resting" AND random-float 1 < p-resting-while-resting [ resting ] ; if the last action was resting, have x % chance of resting again
   if action = "resting" [  ; if the last action was resting, rest again
     set action-time action-time + 1
+;    print "111111111111111111111------------"
+;    type " ---- MODE: " print travel_mode
+;    type "tree_target: " type tree_target type " "
+;    type "ld_tree_target: " type ld_tree_target type " "
+;    type "tree_current: " type tree_current type " "
+;    type "behavior: " type behavior type " "
+;    type "action: " print action
     resting
   ]
 
-  if action = "travel" OR action = "forage" [ frugivory ]    ; if action was travel or foraging, go back to the frugivory loop
-;  if action = "travel" OR action = "forage" OR action = "frugivory" [ frugivory ]
+  ; if action was travel or foraging, go back to the frugivory loop
+  if action = "travel" OR action = "forage" [
+    frugivory
+;    print "222222222222222222222------------"
+;    type " ---- MODE: " print travel_mode
+;    type "tree_target: " type tree_target type " "
+;    type "ld_tree_target: " type ld_tree_target type " "
+;    type "tree_current: " type tree_current type " "
+;    type "behavior: " type behavior type " "
+;    type "action: " print action
+  ]
 
   ; when monkeys arrive on a ld_tree_target, they might get stuck in the last-action being called through frugivory. That happens because once they arrive at a long_distance_target, the travel mode should be set to
-  if action = "feeding" [ set travel_mode "short_distance" frugivory ]
+  if action = "feeding" [
+;    print "333333333333333333333------------"
+;    type " ---- MODE: " print travel_mode
+;    type "tree_target: " type tree_target type " "
+;    type "ld_tree_target: " type ld_tree_target type " "
+;    type "tree_current: " type tree_current type " "
+;    type "behavior: " type behavior type " "
+;    type "action: " print action
+;    type "action-time: " print action-time
+
+    set travel_mode "short_distance"      ; leave it here!
+    frugivory
+  ]
 
 end
 
@@ -2977,101 +3062,101 @@ end
 
 to calc-homerange
 
-  ;  setup SimpleR (mandatory):
-  sr:setup
-  print "= simpleR extension setted up ="
-
-
-;  ; test
-;  (sr:set
-;    "library('tidyverse')"
-;    "y < - iris %>% summary()"
-;  )
-;  show sr:runresult "iris"
-;  sr:run "iris"
-
-
-  if R_EXTENSION = "SimpleR" [
-    ; sr:run to run code in R
-    ; sr:runresult to get values back to netlogo
-
-;    (sr:run
-;;      "library(adehabitat)"
-;      "library(dplyr)"
-;      "library(tidyr)"
-;      "library(amt)"
-;      "library(circular)"
-;      "library(sf)"
-;      )
-
-    ;; create an empty data.frame"
-;    sr:run "monkeys_df <- data.frame()"
-;    sr:run "print(monkeys_df)"
-;    print "==== SR debugging ==== "
-
-    ;; merge the Name, X- and Y-lists of all animals to one big data.frame
-    ask one-of monkeys [
-      print "==== SR debugging ==== "
-
-      let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr
-      let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr
-      let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr
-      let Name_sr [Name] of self            print Name_sr  ;print length Name_sr
-
-    print "==== SR debugging 2 ==== "
-
-;      stop
-
-      (sr:set-data-frame "df1" "X_coords" X_coords_sr "Y_coords" Y_coords_sr "day_list" day_list_sr)
-      sr:run "print(df1)"
-
-      sr:set "Name_sr" Name_sr
-      sr:run "df1 <- data.frame(df1, Name = Name_sr)"
-      sr:run "print(df1)"
-
-
-;      (sr:set-agent-data-frame "turtles_data_frame" turtles "who" "color" "xcor" "hidden?")
-;      sr:run "print(typeof(turtles_data_frame))"
-
-
-      ;      stop
-
-      ;      sr:run "turtle <- data.frame(turtle, Name = 'Name')"
-      ;      sr:run "turtles <- rbind(turtles, turtle)"
-      ;          type "*****turtles data frame: " print r:get "turtles"
-    ]
-
-    print "DEBUGGING SR"
-
-  ]
-
-    stop
-
-
-
-    ;; split the data.frame into coordinates and factor variable
-    ;  r:eval "xy <- turtles[,c('X','Y')]"
-    sr:run "xy <- turtles %>% dplyr::select(X, Y, day)"
-    sr:run "id <- turtles$Name"
-
-    ;; calculate homerange (mcp method)
-    ;  sr:run "homerange <- mcp(xy, id)"
-
-    ;; calculate homerange (amt package)
-    sr:run "db <- cbind(xy, id)"
-    ;    show r:get "colnames(db)"
-    ;    show r:get "db"
-
-    ; Using non-nested data as we only have one group. When multiple tamarin groups are simulated, we will need to call nest():
-    sr:run "db_ <- db %>% make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')" ;%>% nest(data = -c(id))"
-                                                                                                                                          ;    show r:get "colnames(db_)"
-                                                                                                                                          ;    show r:get "db_"
-
-    print " ------------- Home range size ------------------ "
-
-
-
+;  ;  setup SimpleR (mandatory):
+;  sr:setup
+;  print "= simpleR extension setted up ="
+;
+;
+;;  ; test
+;;  (sr:set
+;;    "library('tidyverse')"
+;;    "y < - iris %>% summary()"
+;;  )
+;;  show sr:runresult "iris"
+;;  sr:run "iris"
+;
+;
+;  if R_EXTENSION = "SimpleR" [
+;    ; sr:run to run code in R
+;    ; sr:runresult to get values back to netlogo
+;
+;;    (sr:run
+;;;      "library(adehabitat)"
+;;      "library(dplyr)"
+;;      "library(tidyr)"
+;;      "library(amt)"
+;;      "library(circular)"
+;;      "library(sf)"
+;;      )
+;
+;    ;; create an empty data.frame"
+;;    sr:run "monkeys_df <- data.frame()"
+;;    sr:run "print(monkeys_df)"
+;;    print "==== SR debugging ==== "
+;
+;    ;; merge the Name, X- and Y-lists of all animals to one big data.frame
+;    ask one-of monkeys [
+;      print "==== SR debugging ==== "
+;
+;      let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr
+;      let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr
+;      let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr
+;      let Name_sr [Name] of self            print Name_sr  ;print length Name_sr
+;
+;    print "==== SR debugging 2 ==== "
+;
+;;      stop
+;
+;      (sr:set-data-frame "df1" "X_coords" X_coords_sr "Y_coords" Y_coords_sr "day_list" day_list_sr)
+;      sr:run "print(df1)"
+;
+;      sr:set "Name_sr" Name_sr
+;      sr:run "df1 <- data.frame(df1, Name = Name_sr)"
+;      sr:run "print(df1)"
+;
+;
+;;      (sr:set-agent-data-frame "turtles_data_frame" turtles "who" "color" "xcor" "hidden?")
+;;      sr:run "print(typeof(turtles_data_frame))"
+;
+;
+;      ;      stop
+;
+;      ;      sr:run "turtle <- data.frame(turtle, Name = 'Name')"
+;      ;      sr:run "turtles <- rbind(turtles, turtle)"
+;      ;          type "*****turtles data frame: " print r:get "turtles"
+;    ]
+;
+;    print "DEBUGGING SR"
+;
 ;  ]
+;
+;    stop
+;
+;
+;
+;    ;; split the data.frame into coordinates and factor variable
+;    ;  r:eval "xy <- turtles[,c('X','Y')]"
+;    sr:run "xy <- turtles %>% dplyr::select(X, Y, day)"
+;    sr:run "id <- turtles$Name"
+;
+;    ;; calculate homerange (mcp method)
+;    ;  sr:run "homerange <- mcp(xy, id)"
+;
+;    ;; calculate homerange (amt package)
+;    sr:run "db <- cbind(xy, id)"
+;    ;    show r:get "colnames(db)"
+;    ;    show r:get "db"
+;
+;    ; Using non-nested data as we only have one group. When multiple tamarin groups are simulated, we will need to call nest():
+;    sr:run "db_ <- db %>% make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')" ;%>% nest(data = -c(id))"
+;                                                                                                                                          ;    show r:get "colnames(db_)"
+;                                                                                                                                          ;    show r:get "db_"
+;
+;    print " ------------- Home range size ------------------ "
+;
+;
+;
+;;  ]
 
   if R_EXTENSION = "R" [
 
@@ -3879,11 +3964,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-491
-416
+526
+403
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -3893,10 +3978,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -3912,7 +3997,7 @@ start-energy
 start-energy
 100
 2000
-905.0
+950.0
 1
 1
 NIL
@@ -3996,7 +4081,7 @@ simulation-time
 simulation-time
 0
 170
-116.0
+119.0
 1
 1
 NIL
@@ -4105,7 +4190,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-30.0
+32.0
 1
 1
 NIL
@@ -4203,7 +4288,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+1
 
 CHOOSER
 1017
@@ -4428,10 +4513,10 @@ make all trees from study period available:
 BUTTON
 687
 242
-763
+812
 275
-108 steps
-repeat 108 [ step ]
+middayend steps
+repeat midday_end [ step ]
 NIL
 1
 T
@@ -4471,7 +4556,7 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "ask monkeys [ plot length tree_pot_list ]"
 "pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
-"pen-2" 1.0 0 -955883 true "" ";ask monkeys [ plot length tree_ate_list ]"
+"pen-2" 1.0 0 -1184463 true "" "ask monkeys [ plot length tree_ate_list ]"
 "pen-3" 1.0 0 -13840069 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) + 2 ]"
 "pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory )\nplot n_trees"
 
@@ -4601,7 +4686,7 @@ CHOOSER
 510
 USER
 USER
-"Ronald" "Eduardo" "LEEC" "LASi" "Others"
+"Ronald" "Eduardo" "LEEC" "LASi" "PC02" "Others"
 1
 
 SWITCH
@@ -4624,7 +4709,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.21
 0.01
 1
 NIL
@@ -4994,7 +5079,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 245
@@ -5115,7 +5200,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+43.02
 5
 1
 NIL
@@ -5130,7 +5215,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+3.089
 0.1
 1
 NIL
@@ -5145,7 +5230,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+3.931
 0.1
 1
 NIL
@@ -5160,7 +5245,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+17.85
 1
 1
 NIL
@@ -5242,7 +5327,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.25
+0.5
 0.05
 1
 NIL
@@ -5485,10 +5570,10 @@ R_EXTENSION
 0
 
 BUTTON
-220
-30
-371
-63
+247
+365
+398
+398
 calc-homerange
 ;repeat 3 [ next_day ]\n;ask monkeys [ print DPL_d ]\n\ncalc-homerange
 NIL
@@ -5502,10 +5587,10 @@ NIL
 1
 
 BUTTON
-258
-68
-337
-101
+157
+365
+236
+398
 print var
   ask one-of monkeys [\n      print \"==== SR debugging ==== \"\n\n      let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr\n      let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr\n      let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr\n      let Name_sr [Name] of self            print Name_sr  ;print length Name_sr\n]
 NIL
