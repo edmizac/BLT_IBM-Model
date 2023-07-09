@@ -5,11 +5,9 @@
 .png
 ~*
 *~
-
 # rmd related:
 *.log
 # *.tex
-
 # GIS related:
 .cpg
 .qpj
@@ -18,10 +16,8 @@
 .prj
 .shp
 .asc
-
 # drawio related
 .bkp
-
 # Folders:
 /Data/Shapefiles/*
 /Data/Movement/Trees-Guarei/*
@@ -31,7 +27,6 @@
 !*/Tree-points-unique.R
 !*/Tree-points-to-shapefile.R
 /Model_development/Model-cleaning/runtime
-
 # Specific files in specific folders:
 /Documentation/2022-05-12_Talk-EcoMod/
 /Documentation/Brazilian_Congress_of_Primatology/
@@ -42,86 +37,62 @@
 /Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/HR_values_FF_2022-08-06d.csv
 /Model_analysis/Sensitivity-analysis/v1.1_August2022/**.rds
 /Model_analysis/Sensitivity-analysis/v1.1_August2022/temp/Model_v1.1_Sensitivity_FullFact_2022-08-04d/**.rds
-
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/temp/**
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/**.rds
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/**.RData
 /Model_analysis/Sensitivity-analysis/v1.1_November2022/**.png
-
 /Model_analysis/Sensitivity-analysis/v1.1_December2022/temp/**
 /Model_analysis/Sensitivity-analysis/v1.1_December2022/**.rds
 /Model_analysis/Sensitivity-analysis/v1.1_December2022/**.RData
 /Model_analysis/Sensitivity-analysis/v1.1_December2022/**.png
-
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/**.RData
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_calibrated/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_calibrated/temp/**.RData
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_with_SantaMaria/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_with_SantaMaria/temp/**.RData
-
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.RData
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/Morris/temp/**.png
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.RData
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/Param_bestguess/simple/temp/**.png
-
-
 /Model_analysis/Sensitivity-analysis/v1.2_2023Jan/**.RData
-
-
 /Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/**.rds
 /Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_calibrated/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_calibrated/temp/**.RData
 /Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_with_SantaMaria/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.v1.2_2023May/Param_with_SantaMaria/temp/**.RData
-
 /Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/Morris/temp/**.RData
 /Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/Morris/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/Morris/temp/**.png
 /Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/simple/temp/**.RData
 /Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/simple/temp/**.rds
 /Model_analysis/Sensitivity-analysis/v1.2_2023May/Param_bestguess/simple/temp/**.png
-
-
-
-
-
-
 /Model_analysis/Genetic_analysis/temp/**.csv
 /Model_analysis/Genetic_analysis/temp/**.png
 /Model_analysis/Genetic_analysis/temp/**.rds
 /Model_analysis/Genetic_analysis/temp/**.RData
 /Model_analysis/Genetic_analysis/temp/
-
-
-
 Data/Movement/Resource-trees/**.dbf
 Data/Movement/Resource-trees/**.prj
 Data/Movement/Resource-trees/**.shp
 Data/Movement/Resource-trees/**.shx
-
 Data/Seed_dispersal/Curated/**.png
 Data/Seed_dispersal/Curated/Param_siminputrow/**.png
 Data/Seed_dispersal/Curated/Param_all-data/**.png
 Data/Seed_dispersal/Curated/Validation/**.png
-
 Data/Movement/Curated/**.png
 Data/Movement/Curated/Param_siminputrow/**.png
 Data/Movement/Curated/Param_all-data/**.png
 Data/Movement/Curated/Validation/**.png
-
 Model_analysis/Sensitivity-analysis/v1.1_August2022/**.txt
-
-
 # Scenario simulations
 Model_simulations/**.png
 Model_simulations/**.Rdata
 Model_simulations/**.rds
 Model_simulations/**.csv
 Model_simulations/patch_examples/
-
 Model_simulations/Exp1/**.rds
 Model_simulations/Exp2/**.rds
 Model_simulations/Exp3/**.rds
@@ -129,7 +100,6 @@ Model_simulations/Exp4/**.rds
 Model_simulations/Exp5/**.rds
 Model_simulations/Exp6/**.rds
 Model_simulations/Exp7/**.rds
-
 Model_simulations/Exp1/**.png
 Model_simulations/Exp2/**.png
 Model_simulations/Exp3/**.png
@@ -137,18 +107,12 @@ Model_simulations/Exp4/**.png
 Model_simulations/Exp5/**.png
 Model_simulations/Exp6/**.png
 Model_simulations/Exp7/**.png
-
-
-
 # Temporary files
 **/runtime
 runtime/
 temp/
 **.tmp.**
 /locations_*
-
-
-
-
 Model_analysis/Sensitivity-analysis/v1.1_November2022/tempSDD_disp_day_By-group_density_sim.png
 Model_analysis/Sensitivity-analysis/v1.1_November2022/tempSDD_disp_day_By-group_violin.png
+n_trees

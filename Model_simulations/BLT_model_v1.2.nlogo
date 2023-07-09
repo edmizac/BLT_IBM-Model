@@ -1852,6 +1852,8 @@ to feeding
 
   ]
 
+  ask feeding-trees with [color = yellow] [ set color green set size 3 if study_area = "Taquara" [set size 5] ]
+
 end
 
 ;-----------------------------------------
@@ -1911,28 +1913,37 @@ to enhance_memory_list
     set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
     set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
     set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
+
+    set tree_bucket [] ; empty the list
+
   ]
 
-  ; modulating while [] loop in search-feeding-tree procedure for finding a new tree on the border
-    if ( length tree_pot_list <= round ( p_disputed_trees * count feeding-trees ) - 1 ) [
-    print "ENHANCING MEMORY TO FIND BORDER TREES"
-    ifelse length tree_ate_list >= n_trees [
-      set tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
-    ][
-      set tree_bucket sublist tree_ate_list ( 0 ) ( length tree_ate_list)
-    ]
-;        print tree_bucket
+;  ; modulating while [] loop in search-feeding-tree procedure for finding a new tree on the border
+;  let n_trees2 round ( p_disputed_trees * count feeding-trees ) - 1
+;  print n_trees2
+;
+;    if ( length tree_pot_list < n_trees2 ) [
+;    print "ENHANCING MEMORY TO FIND BORDER TREES"
+;;    set tree_bucket sublist tree_ate_list ( 0 ) ( n_trees2 )
+;    ifelse length tree_ate_list >= n_trees2 [
+;      set tree_bucket sublist tree_ate_list ( 0 ) ( n_trees2 )
+;    ][
+;      set tree_bucket sublist tree_ate_list ( 0 ) ( length tree_ate_list)
+;    ]
+;;        print tree_bucket
+;
+;    ; enhance potential list
+;    ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
+;
+;    ; reduce mem_list and add_list
+;    set tree_mem_list sublist tree_mem_list ( n_trees2 ) ( length tree_mem_list)
+;    set tree_add_list sublist tree_add_list ( n_trees2 ) ( length tree_add_list)
+;    set tree_ate_list sublist tree_ate_list ( n_trees2 ) ( length tree_ate_list)
+;
+;    set tree_bucket [] ; empty the list
+;
+;  ]
 
-    ; enhance potential list
-    ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
-
-    ; reduce mem_list and add_list
-    set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
-    set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
-    set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
-  ]
-
-  set tree_bucket [] ; empty the list
 
 ;  print "called enhance_memory_list"
 ;  type "length tree_pot_list after = " print length tree_pot_list
@@ -2202,23 +2213,32 @@ to search-feeding-tree
 
     if ld-target-random? = FALSE [
       ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
+      set let_pot_list tree_pot_list
       set candidate_ld_targets feeding-trees with [member? who let_pot_list]
+      type "candidate_ld_targets = " print candidate_ld_targets
+
 
 ;      print "LD_CHECK"
 
 
-      ; while loops are always dangerous:
-       while [ count candidate_ld_targets <= round ( p_disputed_trees * count feeding-trees ) - 1 ] [
-        print "LD_CHECK 2"
-        enhance_memory_list
-        set let_pot_list tree_pot_list
-        set candidate_ld_targets feeding-trees with [member? who let_pot_list]
-        print "increased candidate_ld_targets"
-        type "candidate_ld_targets = " print count candidate_ld_targets
-      ] ; if available trees are few, enhance memory list
+      ; DROPPED OUT (2023-07-09d): this procedure was causing lots of errors for the sensitivity analysis (stress test).
+      ; Now enhance_memory_list is called only in the end of this procedure (if tree_target = nobody)
+;      ; while loops are always dangerous:
+;       while [ count candidate_ld_targets <= round ( p_disputed_trees * count feeding-trees ) - 1 ] [
+;        print "LD_CHECK 2"
+;        enhance_memory_list
+;        set let_pot_list tree_pot_list
+;        set candidate_ld_targets feeding-trees with [member? who let_pot_list]
+;        print "increased candidate_ld_targets"
+;        type "candidate_ld_targets = " print count candidate_ld_targets
+;      ] ; if available trees are few, enhance memory list
 
-      set candidate_ld_targets max-n-of ( round (p_disputed_trees * count feeding-trees) ) candidate_ld_targets [dist-to-homerange-center]
+      set candidate_ld_targets max-n-of ( round (p_disputed_trees * (length let_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center]
+      ; debugging:
+;      ask monkeys [ ask max-n-of ( round (p_disputed_trees * (length tree_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center] [ set color pink ] ]
 
+;      if length candidate_ld_targets = 0 [ set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center] ]
+;      set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center]
 
       ;    print candidate_ld_targets
       ask candidate_ld_targets [
@@ -2236,8 +2256,11 @@ to search-feeding-tree
 ;        print "last ld target reutilized 2"
         print ld_tree_target
       ] [
-        set ld_tree_target one-of candidate_ld_targets
-;        print "random ld target defined 1"
+        ; this procedure avoids an error if the list of candidate_ld_targets is empty (might happen when p_disputed_trees is too low)
+        ifelse candidate_ld_targets = nobody [ set candidate_ld_targets let_pot_list with-max [dist-to-homerange-center] ] [
+          set ld_tree_target one-of candidate_ld_targets
+          ;        print "random ld target defined 1"
+        ]
       ]
 ;      set ld_tree_target one-of candidate_ld_targets with-min [distance [homerange-center] of myself] ; WORKS but not as intended
 
@@ -3519,6 +3542,11 @@ to calc-homerange
 ;
 ;  ]
 
+  ; SET RESOURCE REVISITATION
+  set n_visited_trees count feeding-trees with [visitations > 0]
+  set n_unvisited_trees count feeding-trees with [visitations = 0]
+
+
 end
 
 
@@ -3762,9 +3790,6 @@ to calc-seed-aggregation
     type "Nearest neighbor distance = " type NN_seeds print " meters"
 
   ask seeds [ set size 3 set color orange ]
-
-  set n_visited_trees count feeding-trees with [visitations > 0]
-  set n_unvisited_trees count feeding-trees with [visitations = 0]
 
 
 end
@@ -4036,7 +4061,7 @@ start-energy
 start-energy
 100
 2000
-1210.526
+1473.684
 1
 1
 NIL
@@ -4054,7 +4079,7 @@ NIL
 T
 OBSERVER
 NIL
-NIL
+P
 NIL
 NIL
 1
@@ -4135,7 +4160,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-142.6316
+147.0
 1
 1
 NIL
@@ -4229,7 +4254,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-268.5263
+111.1579
 1
 1
 NIL
@@ -4244,7 +4269,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--68.73684
+-35.0
 1
 1
 NIL
@@ -4259,7 +4284,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--21.84211
+-1.0
 1
 1
 NIL
@@ -4274,7 +4299,7 @@ energy-loss-resting
 energy-loss-resting
 -100
 0
--47.89474
+-100.0
 1
 1
 NIL
@@ -4429,7 +4454,7 @@ energy_level_1
 energy_level_1
 100
 2000
-952.6316
+905.2632
 1
 1
 NIL
@@ -4444,7 +4469,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1316.474
+1263.895
 1
 1
 NIL
@@ -4573,7 +4598,7 @@ SWITCH
 275
 print-step?
 print-step?
-0
+1
 1
 -1000
 
@@ -4645,7 +4670,7 @@ duration
 duration
 0
 30
-25.0
+4.789474
 1
 1
 NIL
@@ -4998,7 +5023,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-3.421053
+4.684211
 1
 1
 NIL
@@ -5366,7 +5391,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.1
+0.4
 0.05
 1
 NIL
@@ -5567,7 +5592,7 @@ energy_stored_val
 energy_stored_val
 0
 10000
-1900.0
+400.0
 1
 1
 NIL
@@ -5592,7 +5617,7 @@ p-timesteps-to-rest
 p-timesteps-to-rest
 0
 1
-0.8105263
+0.6315789
 0.01
 1
 NIL
