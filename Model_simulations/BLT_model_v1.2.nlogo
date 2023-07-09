@@ -101,6 +101,7 @@ monkeys-own [
   ; OUPUT MONKEY VARIABLES
   Name ; monkey who number for home range calculation with the r extension in case there's more than one group
 ;  KDE_values ; not being used anymore
+  MCP_100         ; output of amt package in calc-homerange
   KDE_95         ; output of amt package in calc-homerange
   KDE_50         ; output of amt package in calc-homerange
   KDE_95_cropped ; cropped with st_intersect()
@@ -439,8 +440,6 @@ to setup
     if study_area = "Suzano" AND feeding-trees-scenario = "Dec"[ set p_foraging_while_traveling 0.21 ]
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set p_foraging_while_traveling 0.21 ]
   ]
-
-  print-parameters
 
   reset-ticks
 end
@@ -786,26 +785,10 @@ to setup-trees
   ]
 
 
-end
 
-to print-parameters
-  type "start-energy:  "               print start-energy
-  type "energy_level_1:  "             print energy_level_1
-  type "energy_level_2:  "             print energy_level_2
-  type "energy-from-fruits:  "         print energy-from-fruits
-  type "energy-from-prey:  "           print energy-from-prey
-  type "energy-loss-traveling:  "      print energy-loss-traveling
-  type "energy-loss-foraging:  "       print energy-loss-foraging
-  type "energy-loss-resting:  "        print energy-loss-resting
-  type "energy_stored_val:  "          print energy_stored_val
-  type "step_forget:  "                print step_forget
-  type "prop_trees_to_reset_memory:  " print prop_trees_to_reset_memory
-  type "species_time_val:  "           print species_time_val
-  type "duration:  "                   print duration
-  type "p-timesteps-to-rest:  "        print p-timesteps-to-rest
-  type "p_disputed_trees:  "           print p_disputed_trees
 
 end
+
 
 
 ; TAMARINS
@@ -1114,9 +1097,10 @@ to go
     set day day + 1
     set timestep 0
     ask monkeys [
-      set action ""
+      set action "travel"
     ]
     if day > no_days [ ; if the simulation has ended
+      ask monkeys [ set action "" ]
       output-print "run-days click finished"
       output-print "calculating home range with r extension"
       calc-homerange
@@ -1444,6 +1428,7 @@ to move-monkeys
 ;              print "TEST HERE ****** "
             ]
             ifelse (timestep > midday_start AND timestep < midday_end) [
+              print "resting 1"
               resting
             ][
               random-action
@@ -2732,7 +2717,10 @@ end
 ;---------------------------------------------------------------------------------------------
 to sleeping
 
-  ;save tree target for next day
+  print "calling sleeping procedure"
+
+
+  ;save fruiting tree target for next day
   if tree_target != -1 [ set tree_target_mem2 ld_tree_target ]
 
   ifelse tree_target = -1 [
@@ -2765,7 +2753,7 @@ to sleeping
       set tree_current tree_target
       set tree_target -1
 
-;      print "*** I am sleeping ****"
+      print "*** I am sleeping ****"
       set action "sleeping"
       set behavior "sleeping"
       set action-time 0
@@ -2812,7 +2800,7 @@ to sleeping
 
   if action != "sleeping" [
 
-;    print "BEING CALLED FROM SLEEPING"
+    print "BEING CALLED FROM SLEEPING"
 
     avoid-patch-set
 
@@ -2833,10 +2821,10 @@ to sleeping
     set behavior "travel"
     ;--------------------
 
-;      print "******************* sleeping debugging "
+      print "******************* sleeping debugging "
 
     ][
-;      print "straight line false"
+      print "straight line false"
       face patch_avoid_matrix
       forward 2 * step_len_travel ; travel speed basically doubles when tamrarins are going to the sleeping site
       set dist-traveled ( 2 * step_len_travel )
@@ -2865,8 +2853,13 @@ to sleeping
 
   ]
 
-  ask feeding-trees [ set size 3 ]
-  ask sleeping-trees [ set size 3 ]
+  ifelse study_area = "Taquara" [
+    ask feeding-trees [ set size 5 ]
+    ask sleeping-trees [ set size 5 ]
+  ][
+    ask feeding-trees [ set size 3 ]
+    ask sleeping-trees [ set size 3 ]
+  ]
 
 end
 
@@ -2929,7 +2922,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-;  print "last-action-again"   ; debugging
+  print "last-action-again"   ; debugging
 
 ;  if action = "forage" [
 ;    forage
@@ -2947,6 +2940,7 @@ to last-action-again
 ;  if action = "resting" AND random-float 1 < p-resting-while-resting [ resting ] ; if the last action was resting, have x % chance of resting again
   if action = "resting" [  ; if the last action was resting, rest again
     set action-time action-time + 1
+    print "resting 2"
 ;    print "111111111111111111111------------"
 ;    type " ---- MODE: " print travel_mode
 ;    type "tree_target: " type tree_target type " "
@@ -3040,7 +3034,7 @@ to get_stored_energy
       ifelse ( ( energy_stored - (0.1 * energy_stored) ) > (0.1 * start-energy) ) [     ; if there's more stored energy than 10% of start-energy
         set energy energy + (0.1 * start-energy)                    ; take 10% of start-energy from stored energy
         set energy_stored ( energy_stored - (0.1 * start-energy) )  ; diminish 10% of start-energy from stored energy
-        print "energy debug 1 ********"
+;        print "energy debug 1 ********"
       ][
         set energy energy + energy_stored
         set energy_stored 0
@@ -3222,13 +3216,24 @@ to calc-homerange
                                                                                                                                           ;    show r:get "db_"
 
     print " ------------- Home range size ------------------ "
+
+    ; MCP ===================================================
+    r:eval "db_MCP <- db_ %>% hr_mcp(., levels = c(0.50, 1.0))"
+    r:eval "db_MCP_area <- db_MCP %>% hr_area(.)"
+;    print r:get "db_MCP_area"
+
+    r:eval "db_MCP_area <- db_MCP_area %>% dplyr::select(-what)"
+    r:eval "db_MCP100 <- db_MCP_area %>% dplyr::filter(level == 1.0) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
+;    type "MCP100 = " print r:get "db_MCP100 / 10000" stop
+
+
+    ; KDE ===================================================
     r:eval "db_KDE <- db_ %>% hr_kde(., levels = c(0.50, 0.95))"
     r:eval "db_KDE_area <- db_KDE %>% hr_area(.)"
 
     r:eval "db_KDE_area <- db_KDE_area %>% dplyr::select(-what)"
     r:eval "db_KDE95 <- db_KDE_area %>% dplyr::filter(level == 0.95) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
     r:eval "db_KDE50 <- db_KDE_area %>% dplyr::filter(level == 0.50) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
-
 
     ; Import shapefile of respective area and crop homerange UD with st_intersection()
     ifelse USER = "Eduardo" [
@@ -3276,6 +3281,7 @@ to calc-homerange
     r:eval "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
 
     ask monkeys [
+      set MCP_100 r:get "db_MCP100 / 10000"
       set KDE_95_cropped r:get "sf_overlap[1] %>% as.numeric() / 10000"
       set KDE_50_cropped r:get "sf_overlap[2] %>% as.numeric() / 10000"
 
@@ -3404,15 +3410,18 @@ to calc-homerange
     ;  r:eval "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
     ;  r:eval "db_metr <- db_metr %>% summarise( MSD = msd(.),  intensity_use = intensity_use(.), straightness = straightness(.), sinuosity = sinuosity(.) )"
 
-    print r:get "colnames(db_metr)"
-    print r:get "db_metr"
+;    print r:get "colnames(db_metr)"
+;    print r:get "db_metr"
+
+    print "checkpoint 1"
+
 
     ask monkeys [
       set MSD r:get "db_metr %>% dplyr::select(MSD_mean) %>%  unlist() %>% as.vector()"
       set intensity_use r:get "db_metr %>% dplyr::select(intensity_use_mean) %>%  unlist() %>% as.vector()"
       set straightness r:get "db_metr %>% dplyr::select(straightness_mean) %>%  unlist() %>% as.vector()"
-      ;    set sinuosity r:get "db_metr %>% dplyr::select(sinuosity_mean) %>%  unlist() %>% as.vector()"
-      set sinuosity "wrong"
+;          set sinuosity r:get "db_metr %>% dplyr::select(sinuosity_mean) %>%  unlist() %>% as.vector()"
+;      set sinuosity "wrong"
     ]
 
     ; calculating mean and sd DPL, MR and PT ONLY IF THE MONKEYS RAN FOR MORE THAN 3 DAYS
@@ -3983,11 +3992,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-526
-403
+491
+416
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -3997,10 +4006,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -4016,7 +4025,7 @@ start-energy
 start-energy
 100
 2000
-950.0
+1475.0
 1
 1
 NIL
@@ -4115,7 +4124,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-30.0
+174.105263157895
 1
 1
 NIL
@@ -4209,7 +4218,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-32.0
+268.526315789474
 1
 1
 NIL
@@ -4224,7 +4233,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--10.0
+-37.4736842105263
 1
 1
 NIL
@@ -4239,7 +4248,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--10.0
+-1.0
 1
 1
 NIL
@@ -4254,7 +4263,7 @@ energy-loss-resting
 energy-loss-resting
 -100
 0
--5.0
+-100.0
 1
 1
 NIL
@@ -4307,7 +4316,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+5
 
 CHOOSER
 1017
@@ -4339,7 +4348,7 @@ step_forget
 step_forget
 0
 500
-400.0
+191.052631578947
 1
 1
 NIL
@@ -4409,7 +4418,7 @@ energy_level_1
 energy_level_1
 100
 2000
-999.0
+431.578947368421
 1
 1
 NIL
@@ -4424,7 +4433,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1100.0
+1263.89473684211
 1
 1
 NIL
@@ -4625,7 +4634,7 @@ duration
 duration
 0
 30
-21.0
+4.78947368421053
 1
 1
 NIL
@@ -4728,7 +4737,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.36
 0.01
 1
 NIL
@@ -4978,7 +4987,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-3.0
+8.0
 1
 1
 NIL
@@ -5098,7 +5107,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 245
@@ -5219,7 +5228,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+68.98
 5
 1
 NIL
@@ -5234,7 +5243,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.4060000000000001
 0.1
 1
 NIL
@@ -5249,7 +5258,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.343
 0.1
 1
 NIL
@@ -5264,7 +5273,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+67.86
 1
 1
 NIL
@@ -5346,7 +5355,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.5
+0.336842105263158
 0.05
 1
 NIL
@@ -5547,7 +5556,7 @@ energy_stored_val
 energy_stored_val
 0
 10000
-1000.0
+1400.0
 1
 1
 NIL
@@ -5572,7 +5581,7 @@ p-timesteps-to-rest
 p-timesteps-to-rest
 0
 1
-0.15
+0.631578947368421
 0.01
 1
 NIL
