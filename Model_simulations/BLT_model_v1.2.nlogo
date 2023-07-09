@@ -91,6 +91,7 @@ monkeys-own [
   tree_ate_list   ; list of trees the tamarins did eat
   tree_mem_list   ; list of timesteps since the tamarin feeded on that tree
   tree_add_list   ; helper list to increase the mem list
+  tree_bucket     ; list of ate trees that are coming back to tree_pot_list by the enhance_memory_list procedure
 
   seed_ate_list   ; list of trees they fed on ([who] of tree_current)
   seed_mem_list   ; list of timesteps since the tamarin ate the seed
@@ -1118,9 +1119,9 @@ to go
       NNdist
       SDDcalc
 
-      output-print "calculating R index for seeds"
-      calc-seed-aggregation
-      output-print "calculating R index for seeds finished"
+;      output-print "calculating R index for seeds"
+;      calc-seed-aggregation
+;      output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
 
@@ -1428,7 +1429,7 @@ to move-monkeys
 ;              print "TEST HERE ****** "
             ]
             ifelse (timestep > midday_start AND timestep < midday_end) [
-              print "resting 1"
+;              print "resting 1"
               resting
             ][
               random-action
@@ -1896,7 +1897,11 @@ to enhance_memory_list
   ; modulating memory procedure
   if ( length tree_pot_list <= n_trees ) [
     print "ENHANCING MEMORY"
-    let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
+    ifelse length tree_ate_list >= n_trees [
+      set tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
+    ][
+      set tree_bucket sublist tree_ate_list ( 0 ) ( length tree_ate_list)
+    ]
 ;        print tree_bucket
 
     ; enhance potential list
@@ -1911,7 +1916,11 @@ to enhance_memory_list
   ; modulating while [] loop in search-feeding-tree procedure for finding a new tree on the border
     if ( length tree_pot_list <= round ( p_disputed_trees * count feeding-trees ) - 1 ) [
     print "ENHANCING MEMORY TO FIND BORDER TREES"
-    let tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
+    ifelse length tree_ate_list >= n_trees [
+      set tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
+    ][
+      set tree_bucket sublist tree_ate_list ( 0 ) ( length tree_ate_list)
+    ]
 ;        print tree_bucket
 
     ; enhance potential list
@@ -1922,6 +1931,8 @@ to enhance_memory_list
     set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
     set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
   ]
+
+  set tree_bucket [] ; empty the list
 
 ;  print "called enhance_memory_list"
 ;  type "length tree_pot_list after = " print length tree_pot_list
@@ -2717,7 +2728,7 @@ end
 ;---------------------------------------------------------------------------------------------
 to sleeping
 
-  print "calling sleeping procedure"
+;  print "calling sleeping procedure"
 
 
   ;save fruiting tree target for next day
@@ -2800,7 +2811,7 @@ to sleeping
 
   if action != "sleeping" [
 
-    print "BEING CALLED FROM SLEEPING"
+;    print "BEING CALLED FROM SLEEPING"
 
     avoid-patch-set
 
@@ -2821,10 +2832,10 @@ to sleeping
     set behavior "travel"
     ;--------------------
 
-      print "******************* sleeping debugging "
+;      print "******************* sleeping debugging "
 
     ][
-      print "straight line false"
+;      print "straight line false"
       face patch_avoid_matrix
       forward 2 * step_len_travel ; travel speed basically doubles when tamrarins are going to the sleeping site
       set dist-traveled ( 2 * step_len_travel )
@@ -2922,7 +2933,7 @@ end
 ;-------------------------------------------------------------
 to last-action-again
 
-  print "last-action-again"   ; debugging
+;  print "last-action-again"   ; debugging
 
 ;  if action = "forage" [
 ;    forage
@@ -2940,7 +2951,7 @@ to last-action-again
 ;  if action = "resting" AND random-float 1 < p-resting-while-resting [ resting ] ; if the last action was resting, have x % chance of resting again
   if action = "resting" [  ; if the last action was resting, rest again
     set action-time action-time + 1
-    print "resting 2"
+;    print "resting 2"
 ;    print "111111111111111111111------------"
 ;    type " ---- MODE: " print travel_mode
 ;    type "tree_target: " type tree_target type " "
@@ -3413,7 +3424,7 @@ to calc-homerange
 ;    print r:get "colnames(db_metr)"
 ;    print r:get "db_metr"
 
-    print "checkpoint 1"
+;    print "checkpoint 1"
 
 
     ask monkeys [
@@ -4025,7 +4036,7 @@ start-energy
 start-energy
 100
 2000
-1475.0
+1210.526
 1
 1
 NIL
@@ -4124,7 +4135,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-174.105263157895
+142.6316
 1
 1
 NIL
@@ -4218,7 +4229,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-268.526315789474
+268.5263
 1
 1
 NIL
@@ -4233,7 +4244,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--37.4736842105263
+-68.73684
 1
 1
 NIL
@@ -4248,7 +4259,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--1.0
+-21.84211
 1
 1
 NIL
@@ -4263,7 +4274,7 @@ energy-loss-resting
 energy-loss-resting
 -100
 0
--100.0
+-47.89474
 1
 1
 NIL
@@ -4348,7 +4359,7 @@ step_forget
 step_forget
 0
 500
-191.052631578947
+400.0
 1
 1
 NIL
@@ -4418,7 +4429,7 @@ energy_level_1
 energy_level_1
 100
 2000
-431.578947368421
+952.6316
 1
 1
 NIL
@@ -4433,7 +4444,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1263.89473684211
+1316.474
 1
 1
 NIL
@@ -4586,7 +4597,7 @@ PENS
 "pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
 "pen-2" 1.0 0 -1184463 true "" "ask monkeys [ plot length tree_ate_list ]"
 "pen-3" 1.0 0 -13840069 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) + 2 ]"
-"pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory )\nplot n_trees"
+"pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) + 3\nplot n_trees"
 
 TEXTBOX
 1007
@@ -4634,7 +4645,7 @@ duration
 duration
 0
 30
-4.78947368421053
+25.0
 1
 1
 NIL
@@ -4987,7 +4998,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-8.0
+3.421053
 1
 1
 NIL
@@ -5355,7 +5366,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.336842105263158
+0.1
 0.05
 1
 NIL
@@ -5556,7 +5567,7 @@ energy_stored_val
 energy_stored_val
 0
 10000
-1400.0
+1900.0
 1
 1
 NIL
@@ -5581,7 +5592,7 @@ p-timesteps-to-rest
 p-timesteps-to-rest
 0
 1
-0.631578947368421
+0.8105263
 0.01
 1
 NIL
