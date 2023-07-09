@@ -547,21 +547,21 @@ for (i in i:nrow(param.table)) {
   par <- nl@simdesign@siminput
   
   
-  # Test each parameter combination
-  tictoc::tic()
-  progressr::handlers("progress")
-  p <- 1
-  for (p in 1:nrow(nl@simdesign@siminput)) {
-  results %<-% progressr::with_progress(
-    run_nl_one(nl = nl
-               , seed = getsim(nl, "simseeds")[1]
-               , siminputrow = p)
-  )
-  tictoc::toc()
-  print("================ One siminputrow Finished! =========================")
-  parp <- par[p ,]
-  p <- p + 1
-  }
+  # # Test each parameter combination
+  # tictoc::tic()
+  # progressr::handlers("progress")
+  # p <- 1
+  # for (p in 1:nrow(nl@simdesign@siminput)) {
+  # results %<-% progressr::with_progress(
+  #   run_nl_one(nl = nl
+  #              , seed = getsim(nl, "simseeds")[1]
+  #              , siminputrow = p)
+  # )
+  # tictoc::toc()
+  # print("================ One siminputrow Finished! =========================")
+  # parp <- par[p ,]
+  # p <- p + 1
+  # }
   
   # Run all simulations (loop over all siminputrows and simseeds)
   

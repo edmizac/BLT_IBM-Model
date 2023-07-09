@@ -442,6 +442,8 @@ to setup
     if study_area = "Taquara" AND feeding-trees-scenario = "Jan"[ set p_foraging_while_traveling 0.21 ]
   ]
 
+  print-parameters
+
   reset-ticks
 end
 
@@ -1047,13 +1049,15 @@ end
 
 
 
+
+
 ;--------------------------------------------------------------------------------------------
 ; Activities commands
 ;--------------------------------------------------------------------------------------------
 to go
 
   ; to print on the R console during multiple simulations:
-  if ticks = 1 [  type "running area = " type study_area type ", month = " print feeding-trees-scenario  ]
+  if ticks = 1 [  type "running area = " type study_area type ", month = " print feeding-trees-scenario ]
 
   if ticks > 10000 [stop]
 
@@ -2215,7 +2219,7 @@ to search-feeding-tree
       ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)
       set let_pot_list tree_pot_list
       set candidate_ld_targets feeding-trees with [member? who let_pot_list]
-      type "candidate_ld_targets = " print candidate_ld_targets
+;      type "candidate_ld_targets = " print candidate_ld_targets
 
 
 ;      print "LD_CHECK"
@@ -3963,6 +3967,29 @@ to test-long-distance
   ask monkeys [
     set energy energy_level_1 + 100
     set travel_mode "long_distance"
+  ]
+end
+
+to print-parameters
+  type "energy_level_1 = "             print energy_level_1
+  type "energy_level_2 = "             print energy_level_2
+  type "energy_stored_val = "          print energy_stored_val
+  type "start-energy = "               print start-energy
+  type "energy-from-frui = "           print energy-from-fruits
+  type "energy-from-prey = "           print energy-from-prey
+  type "energy-loss-traveling = "      print energy-loss-traveling
+  type "energy-loss-foraging = "       print energy-loss-foraging
+  type "energy-loss-resting = "        print energy-loss-resting
+
+  type "step_forget = "                print step_forget
+  type "visualevel_1 = "               print visual
+  type "prop_trees_to_reset_memory = " print prop_trees_to_reset_memory
+  type "p-timesteps-to-rest = "        print p-timesteps-to-rest
+  type "duration = "                   print duration
+  type "p_disputed_trees = "           print p_disputed_trees
+
+  if feedingbout-on? = "FALSE" [
+    type "species_time_val = "           print species_time_val
   ]
 end
 
