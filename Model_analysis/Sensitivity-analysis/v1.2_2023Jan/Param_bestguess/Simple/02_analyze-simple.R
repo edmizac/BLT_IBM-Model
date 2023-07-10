@@ -552,7 +552,7 @@ db_sd <- db_sd %>%
   mutate(source = forcats::fct_relevel(source, "observed", "simulated")) %>% 
   mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day"))
 
-mutate_if(is.character, as.factor)
+# mutate_if(is.character, as.factor)
 
 db_sd$disp_day %>% str()
 db_sd$disp_day %>% levels()
@@ -628,7 +628,7 @@ db_sd %>%
   theme(axis.title.x = element_blank()) +
   facet_wrap(~disp_day, nrow = 2) +
   ylab("SDD (m)") +
-  ylim(0, 1500) +
+  ylim(0, 800) +
   # facet_wrap(vars(disp_day, source), nrow = 2) +
   facet_grid(disp_day ~ source) +
   
@@ -862,8 +862,12 @@ db1_mv <- db1_mv %>%
          # p_feeding = g_p_feeding,
          # 
          # 
-         ) #%>%
-  # mutate(date = as.factor(date))
+  ) %>% 
+  mutate(
+    KDE95 = KDE95 / 10000,
+    KDE50 = KDE50 / 10000
+  ) #%>%
+# mutate(date = as.factor(date))
 
 
 # load DPL empirical data
@@ -893,12 +897,12 @@ obs.hr <- obs.hr %>%
   ) %>% 
   as.data.frame()
 
+
 obs <- obs.dpl %>% dplyr::left_join(obs.hr, by = c("group"="group", "month"= "month",
                                                      "source"="source"
                                                      # "KDE95" = "KDE95",
                                                      # "KDE50" = "KDE50"
-))
-
+)) 
 # Merge obserded data into db1_mv
 db1_mv <- dplyr::bind_rows(db1_mv, obs)
 
@@ -916,12 +920,12 @@ db1_mv <- db1_mv %>%
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                       "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
-  mutate(source = forcats::fct_relevel(source, "observed", "simulated")) %>% 
-  mutate(
-    KDE95 = KDE95 / 10000,
-    KDE50 = KDE50 / 10000
-  )
-                  
+  mutate(source = forcats::fct_relevel(source, "observed", "simulated"))# %>% 
+  # mutate(
+  #   KDE95 = KDE95 / 10000,
+  #   KDE50 = KDE50 / 10000
+  # )
+  #                 
 
 
 # obs.hr$group
