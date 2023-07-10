@@ -50,13 +50,14 @@ for (f in nls_to_df) {
      # )
    db$breed %>% unique()
    # get seed
-   db$seed <- str_extract(f, "[:digit:]{8,10}(?=_tempRDS)")
+   # str_extract(f, "-{0,1}([[:digit:]]{8,10}(?=_tempRDS))")
+   db$seed <- str_extract(f, "-{0,1}([[:digit:]]{8,10}(?=_tempRDS))")
   }
   
   db <- dplyr::bind_rows(db, unnest_simoutput(nl_file) %>%
                            mutate(
                              # get seed
-                             seed = str_extract(f, "[:digit:]{8,10}(?=_tempRDS)"),
+                             seed = str_extract(f, "-{0,1}([[:digit:]]{8,10}(?=_tempRDS))"),
                              `survived?` = as.character(`survived?`)
                              # turn_ang_sd = as.character(turn_ang_sd)
                          

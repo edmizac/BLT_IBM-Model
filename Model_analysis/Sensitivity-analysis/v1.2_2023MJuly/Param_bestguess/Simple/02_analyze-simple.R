@@ -504,10 +504,23 @@ obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminpu
                     sep = ",", stringsAsFactors = TRUE)  %>%  
   # mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
   mutate(source = as.factor("observed")) %>% 
-  rename(month = id_month) %>% 
+  rename(
+    month = id_month,
+    SDD_seeds = SDD
+    ) %>% 
+  group_by(group, month) %>% 
+  mutate(
+    SDD = mean(SDD_seeds, na.rm = TRUE),
+    SDD_sd = sd(SDD_seeds, na.rm = TRUE)
+    ) %>% 
+  # group_by(group, month, disp_day) %>% 
+  # mutate(
+  #   SDD_sameday = SDD_seeds
+  # )
   ungroup() %>% 
   as.data.frame() %>% 
   mutate_if(is.character, as.factor)
+obs %>% str()
 
 # Simulated data
 db_sd <- read.csv(paste0(path, "/", "02_Simoutput-simple-all.csv"))
@@ -614,9 +627,9 @@ theme_update(
 db_sd %>%
 # a <- db_sd %>%
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
-  # dplyr::filter(
-  #   group != "SantaMaria" | month != "Apr"
-  # ) %>%
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
   # dplyr::select(fragment, group, month, source, seed, disp_day, SDD) %>%
   # dplyr::distinct() %>%
   # droplevels() %>%
@@ -634,7 +647,7 @@ db_sd %>%
   # facet_grid(disp_day ~ source) +
   facet_wrap(~source) +
   # ggtitle("Density plot with adjustment = 2") +
-  
+
   # others
   theme(axis.text = element_text(size = 9))
 
@@ -844,7 +857,7 @@ db_sd %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Mean seed dispersal distance of all events (same and next day)") +
+  ggtitle("Mean SDD all events (same and next day)") +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -881,7 +894,7 @@ db_sd %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Mean seed dispersal distance of all events (same and next day)") +
+  ggtitle("Mean SDD all events (same and next day)") +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -1003,7 +1016,7 @@ db_sd_example %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
-  ggtitle("Distance of seeds dispersed on the same day (example run)") +
+  ggtitle(paste0("Ex. run: Distance of seeds dispersed on the same day", "\nrseed: ", ex_seed)) +
   theme(plot.title = element_text(size = 14)) #+
 # theme_ridges()
 
@@ -1038,7 +1051,7 @@ db_sd_example %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
-  ggtitle("Distance of seeds dispersed on the next day (example run)") +
+  ggtitle(paste0("Ex. run: Distance of seeds dispersed on the next day", "\nrseed: ", ex_seed)) +
   theme(plot.title = element_text(size = 14))
 
 # Save plot
@@ -1067,6 +1080,7 @@ db_sd_example %>%
     position = position_points_jitter(width = 0.5, height = 0)
   ) +
   xlab("SDD (m)") +
+  ggtitle(paste0("rseed = ", ex_seed)) +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -1101,6 +1115,7 @@ db_sd_example %>%
     width = .20, position = position_nudge(y = -.25) #, outlier.shape = NA
   ) +
   xlab("SDD (m)") +
+  ggtitle(paste0("rseed = ", ex_seed)) +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -1135,7 +1150,7 @@ db_sd_example %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day - example run)") +
+  ggtitle("Ex. run: SDD of all events (same and next day\nrseed:", ex_seed) +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -1172,7 +1187,7 @@ db_sd_example %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day - example run)") +
+  ggtitle(paste0("Ex. run: SDD all events (same and next day)", "\nrseed: ", ex_seed)) +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -1229,7 +1244,8 @@ db_sd_example %>%
   # facet_grid(cols = vars(disp_day), rows = vars(source)) +
   facet_grid(cols = vars(source), rows = vars(disp_day)) +
   scale_color_viridis_d() +
-  ylab("SDD (m)")
+  ylab("SDD (m)") +
+  ggtitle(paste0("rseed = ", ex_seed))
 
 # # Save plot
 ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-boxplot_example.png'), height = 5, width = 7)

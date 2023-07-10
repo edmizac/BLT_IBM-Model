@@ -214,6 +214,7 @@ for (i in 1:nrow(param.table)) {
                                 "timestep",
                                 "survived?",
                                 
+                                "g_SDD",
                                 "g_SDD_sameday",
                                 "g_SDD_nextday",
                                 "g_SDD_sd_sameday",
