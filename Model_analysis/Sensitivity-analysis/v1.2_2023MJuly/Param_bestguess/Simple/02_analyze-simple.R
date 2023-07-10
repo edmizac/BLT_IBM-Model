@@ -513,9 +513,11 @@ obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminpu
 db_sd <- read.csv(paste0(path, "/", "02_Simoutput-simple-all.csv"))
 db_sd %>% str()
 
+# Filter unviable runs
 db_sd <- db_sd %>% 
   dplyr::filter(`survived.` == "yes")
 
+# Filter seed data
 db_sd <- db_sd %>% 
   # rename(group = study_area) %>% 
   dplyr::filter(breed == "seeds") %>%
@@ -532,7 +534,8 @@ db_sd <- db_sd %>%
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                       "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
   mutate(source = forcats::fct_relevel(source, "observed", "simulated")) %>% 
-  mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day"))
+  mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day")) %>% 
+  ungroup()
 
 db_sd$disp_day %>% str()
 db_sd$source %>% str()
@@ -561,6 +564,7 @@ db_sd <- db_sd %>%
 
 db_sd$disp_day %>% str()
 db_sd$disp_day %>% levels()
+db_sd$source %>% levels()
 db_sd$group %>% levels()
 length(db_sd$disp_day %>% is.na(.)) # one NA?
 a <- db_sd[db_sd$disp_day %>% is.na(.), ] # whatever
@@ -607,15 +611,15 @@ theme_update(
 
 #### Mean SDD By group ####
 # density
-# db_sd %>%
-a <- db_sd %>%
+db_sd %>%
+# a <- db_sd %>%
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
-  dplyr::filter(
-    group != "SantaMaria" | month != "Apr"
-  ) %>%
-  dplyr::select(fragment, group, month, source, seed, disp_day, SDD) %>%
-  dplyr::distinct() #%>%
-  droplevels() %>% 
+  # dplyr::filter(
+  #   group != "SantaMaria" | month != "Apr"
+  # ) %>%
+  # dplyr::select(fragment, group, month, source, seed, disp_day, SDD) %>%
+  # dplyr::distinct() %>%
+  # droplevels() %>%
   ggplot(
   # aes(x = SDD, fill = group, group = group)
   aes(x = SDD, fill = fragment, group = fragment)
@@ -624,10 +628,11 @@ a <- db_sd %>%
     alpha = 0.5
     # , adjust = 1.5
     ) +
-  xlab("Mean SDD (in meters)") +
+  xlab("Mean SDD (m)") +
   # facet_grid(. ~ disp_day, rows = 2)
   # facet_wrap(vars(source, disp_day), nrow = 2) +
-  facet_grid(disp_day ~ source) +
+  # facet_grid(disp_day ~ source) +
+  facet_wrap(~source) +
   # ggtitle("Density plot with adjustment = 2") +
   
   # others
@@ -655,9 +660,9 @@ db_sd %>%
   geom_boxplot(width = 0.2, fill = "white", alpha = 0.5) +
   theme(axis.title.x = element_blank()) +
   facet_wrap(~disp_day, nrow = 2) +
-  ylab("SDD (m)") +
+  ylab("Mean SDD (m)") +
   ylim(0, 800) +
-  ggtitle("Seed dispersal distance by fragment") +
+  ggtitle("Mean seed dispersal distance by fragment") +
   # facet_wrap(vars(disp_day, source), nrow = 2) +
   facet_grid(disp_day ~ source) +
   
@@ -704,12 +709,12 @@ db_sd %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("Mean SDD (m)") +
   # xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
-  ggtitle("Distance of seeds dispersed on the same day") +
+  ggtitle("Mean distance of seeds dispersed on the same day") +
   theme(plot.title = element_text(size = 14)) #+
   # theme_ridges()
 
@@ -738,12 +743,12 @@ db_sd %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("Mean SDD (m)") +
   # xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
-  ggtitle("Distance of seeds dispersed on the next day") +
+  ggtitle("Mean distance of seeds dispersed on the next day") +
   theme(plot.title = element_text(size = 14))
 
 # Save plot
@@ -770,7 +775,7 @@ db_sd %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.5, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("Mean SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -804,7 +809,7 @@ db_sd %>%
   geom_boxplot(
     width = .20, position = position_nudge(y = -.25) #, outlier.shape = NA
   ) +
-  xlab("SDD (in meters)") +
+  xlab("Mean SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -835,11 +840,11 @@ db_sd %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.5, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("Mean SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  ggtitle("Mean seed dispersal distance of all events (same and next day)") +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -872,11 +877,11 @@ db_sd %>%
   geom_boxplot(
     width = .15, position = position_nudge(y = -.15) #, outlier.shape = NA
     ) +
-  xlab("SDD (in meters)") +
+  xlab("Mean SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  ggtitle("Mean seed dispersal distance of all events (same and next day)") +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -993,7 +998,7 @@ db_sd_example %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("SDD (m)") +
   # xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
@@ -1028,7 +1033,7 @@ db_sd_example %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("SDD (m)") +
   # xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
@@ -1061,7 +1066,7 @@ db_sd_example %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.5, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -1095,7 +1100,7 @@ db_sd_example %>%
   geom_boxplot(
     width = .20, position = position_nudge(y = -.25) #, outlier.shape = NA
   ) +
-  xlab("SDD (in meters)") +
+  xlab("SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -1126,11 +1131,11 @@ db_sd_example %>%
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.5, height = 0)
   ) +
-  xlab("SDD (in meters)") +
+  xlab("SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  ggtitle("Seed dispersal distance of all events (same and next day - example run)") +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -1163,11 +1168,11 @@ db_sd_example %>%
   geom_boxplot(
     width = .15, position = position_nudge(y = -.15) #, outlier.shape = NA
   ) +
-  xlab("SDD (in meters)") +
+  xlab("SDD (m)") +
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  ggtitle("Seed dispersal distance of all events (same and next day - example run)") +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -1207,7 +1212,7 @@ db_sd_example %>%
   #            aes(group = month)
   #            ) +
 # ylab("SDD (in meters)") +
-ylim(0, 800) +
+# ylim(0, 800) +
   facet_wrap(~disp_day, nrow = 2) +
   # scale_color_viridis_d() +
   # facet_wrap(vars(disp_day, source), nrow = 2) +

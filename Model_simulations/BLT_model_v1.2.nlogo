@@ -184,6 +184,8 @@ globals [
   n_unvisited_trees ; number of unvisited trees in the end of the run (calculate proportion afterwards instead of giving a very long metric to nlrx)
 
   ; THESE ARE MONKEY VARIABLES THAT WE TAKE AS GLOBAL TO AVOID NLRX ERRORS (OR DEAD AGENTS OUTPUTING EMPTY VALUES)
+  g_SDD                   ; mean seed dispersal distance for all events (same and next day)
+  g_SDD_sd                ; sd of SDD for all events (same and next day)
   g_SDD_sameday
   g_SDD_nextday
   g_SDD_sd_sameday
@@ -2696,7 +2698,6 @@ to defecation
   ]
 
 
-
 end
 
 ;----------------------------------------------------
@@ -3853,6 +3854,12 @@ to NNdist
 end
 
 to SDDcalc
+
+  ask seeds with [ species = ["Syagrus romanzoffiana"] ] [ die ]
+
+  set g_SDD mean [SDD] of seeds
+  set g_SDD_sd standard-deviation [SDD] of seeds
+
   set g_SDD_sameday mean [SDD] of seeds with [disp-day = "same day"]
   set g_SDD_nextday mean [SDD] of seeds with [disp-day = "next day"]
 
@@ -3864,10 +3871,12 @@ to SDDcalc
   ask nd-seeds [ ask mother-tree-agent [ set color blue set size 10 ]]
   ask nd-seeds [ set size 12 ]
 
-  type "g_SDD_sameday = " print mean [SDD] of seeds with [disp-day = "same day"]
-  type "g_SDD_sd_sameday = " print standard-deviation [SDD] of seeds with [disp-day = "same day"]
-  type "g_SDD_nextday = " print mean [SDD] of seeds with [disp-day = "next day"]
-  type "g_SDD_sd_nextday = " print standard-deviation [SDD] of seeds with [disp-day = "next day"]
+  type "g_SDD = " print g_SDD
+  type "g_SDD_sd = " print g_SDD_sd
+  type "g_SDD_sameday = " print g_SDD_sameday
+  type "g_SDD_sd_sameday = " print g_SDD_sd_sameday
+  type "g_SDD_nextday = " print g_SDD_nextday
+  type "g_SDD_sd_nextday = " print g_SDD_sd_nextday
 
 end
 
