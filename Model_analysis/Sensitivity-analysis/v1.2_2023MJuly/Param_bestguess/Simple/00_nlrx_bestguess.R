@@ -122,7 +122,7 @@ p_timesteps_to_rest <- 0.15 # resting not allowed on the 15% of the start and en
 
 i <- 1
 # for (i in i:nrow(param.table)) {
-for (i in 4:nrow(param.table)) {
+for (i in 1:nrow(param.table)) {
   
   set.seed(42) # generate always the same set of seeds
   
@@ -214,8 +214,10 @@ for (i in 4:nrow(param.table)) {
                                 "timestep",
                                 "survived?",
                                 
-                                "g_SDD",
-                                "g_SDD_sd",
+                                "g_SDD_sameday",
+                                "g_SDD_nextday",
+                                "g_SDD_sd_sameday",
+                                "g_SDD_sd_nextday",
                                 "n",
                                 "p-visited-trees",
                                 "R_seeds",        

@@ -49,7 +49,7 @@ breed [legend-trees legend-tree] ; to set up a legend with the color of trees
 
 breed [seeds seed]
 seeds-own [
-  id-seed species mother-tree mother-tree-who
+  id-seed species mother-tree mother-tree-who mother-tree-agent
   disp-day
   SDD
 ]
@@ -184,8 +184,10 @@ globals [
   n_unvisited_trees ; number of unvisited trees in the end of the run (calculate proportion afterwards instead of giving a very long metric to nlrx)
 
   ; THESE ARE MONKEY VARIABLES THAT WE TAKE AS GLOBAL TO AVOID NLRX ERRORS (OR DEAD AGENTS OUTPUTING EMPTY VALUES)
-  g_SDD
-  g_SDD_sd
+  g_SDD_sameday
+  g_SDD_nextday
+  g_SDD_sd_sameday
+  g_SDD_sd_nextday
   g_energy_stored
   g_KDE_95
   g_KDE_50
@@ -2624,6 +2626,7 @@ to defecation
             set x_scaled (xcor * patch-scale)
             set y_scaled (ycor * patch-scale)
             set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
+            set mother-tree-agent feeding-trees with [ who = loc_who ]
 ;            set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
             set species [species] of feeding-trees with [ who = loc_who ]
             set id-seed who
@@ -2667,6 +2670,7 @@ to defecation
           set y_scaled (ycor * patch-scale)
           set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
 ;          set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
+          set mother-tree-agent feeding-trees with [ who = loc_who ]
           set species [species] of feeding-trees with [ who = loc_who ]
           set id-seed who
           set disp-day "same day"
@@ -2708,6 +2712,7 @@ to morning-defecation
       set x_scaled (xcor * patch-scale)
       set y_scaled (ycor * patch-scale)
       set mother-tree [id-tree] of feeding-trees with [ who = ax ]
+      set mother-tree-agent feeding-trees with [ who = ax ]
 ;      set mother-tree-who [who] of feeding-trees with [ who = loc_who ] ; loc_who has to be redefined
       set species [species] of feeding-trees with [ who = ax ]
       set id-seed who
@@ -3848,8 +3853,21 @@ to NNdist
 end
 
 to SDDcalc
-  set g_SDD mean [SDD] of seeds
-  set g_SDD_sd standard-deviation [SDD] of seeds ;should be the same as sd() in R
+  set g_SDD_sameday mean [SDD] of seeds with [disp-day = "same day"]
+  set g_SDD_nextday mean [SDD] of seeds with [disp-day = "next day"]
+
+  set g_SDD_sd_sameday standard-deviation [SDD] of seeds with [disp-day = "same day"] ;should be the same as sd() in R
+  set g_SDD_sd_nextday standard-deviation [SDD] of seeds with [disp-day = "next day"] ;should be the same as sd() in R
+
+  ;debugging:
+  let nd-seeds seeds with [disp-day = "next day"]
+  ask nd-seeds [ ask mother-tree-agent [ set color blue set size 10 ]]
+  ask nd-seeds [ set size 12 ]
+
+  type "g_SDD_sameday = " print mean [SDD] of seeds with [disp-day = "same day"]
+  type "g_SDD_sd_sameday = " print standard-deviation [SDD] of seeds with [disp-day = "same day"]
+  type "g_SDD_nextday = " print mean [SDD] of seeds with [disp-day = "next day"]
+  type "g_SDD_sd_nextday = " print standard-deviation [SDD] of seeds with [disp-day = "next day"]
 
 end
 

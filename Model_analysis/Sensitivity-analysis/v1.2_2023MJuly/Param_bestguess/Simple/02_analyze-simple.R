@@ -607,14 +607,14 @@ theme_update(
 
 #### Mean SDD By group ####
 # density
-db_sd %>%
-# a <- db_sd %>% 
+# db_sd %>%
+a <- db_sd %>%
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
   dplyr::filter(
     group != "SantaMaria" | month != "Apr"
   ) %>%
-  dplyr::select(fragment, group, month, source, seed, disp_day, SDD_seeds) %>% 
-  dplyr::distinct() %>% 
+  dplyr::select(fragment, group, month, source, seed, disp_day, SDD) %>%
+  dplyr::distinct() #%>%
   droplevels() %>% 
   ggplot(
   # aes(x = SDD, fill = group, group = group)
