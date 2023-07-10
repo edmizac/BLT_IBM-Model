@@ -1123,9 +1123,9 @@ to go
       NNdist
       SDDcalc
 
-;      output-print "calculating R index for seeds"
-;      calc-seed-aggregation
-;      output-print "calculating R index for seeds finished"
+      output-print "calculating R index for seeds"
+      calc-seed-aggregation
+      output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
 
@@ -1371,7 +1371,7 @@ to move-monkeys
       set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
       set tree_current -1
       set going-sleeping? FALSE
-      remove_trees_surrounding ; to avoid feeding in the closest tree
+;      remove_trees_surrounding ; to avoid feeding in the closest tree
     ]
 
     if timestep = random 2 [ ; morning-defecation can happen a few timesteps after waking up (check Param-table.csv)
@@ -1817,7 +1817,7 @@ to feeding
     set tree_mem_list lput 0 tree_mem_list
     set tree_add_list lput 1 tree_add_list
     ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (25m ?)
-    remove_trees_surrounding
+;    remove_trees_surrounding
   ]
 
 
@@ -1861,34 +1861,34 @@ to feeding
 end
 
 ;-----------------------------------------
-to remove_trees_surrounding
-  ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (1 patch = 10 m)
-  let trees_remove filter [ s -> member? s [ who ] of feeding-trees with [ distance myself < visual] ] tree_pot_list
-
-;  ;; testing agentset selected by visual:
-;  ; Option 1) (does not work properly)  (trees_remove is just the who number and require more code):
-;  let trees_remove_agents feeding-trees with [ distance myself < visual]
-;  type "+++++++TREES SURROUNDING: " print trees_remove_agents
-;  type "======= trees_remove: " print trees_remove
+;to remove_trees_surrounding
+;  ;; HERE REMOVE ADDITIONAL TREES within the visual range of the tamarins (1 patch = 10 m)
+;  let trees_remove filter [ s -> member? s [ who ] of feeding-trees with [ distance myself < visual] ] tree_pot_list
 ;
-;  foreach trees_remove [ x -> ask patch-here [ ask neighbors [ set pcolor red] ] ]
+;;  ;; testing agentset selected by visual:
+;;  ; Option 1) (does not work properly)  (trees_remove is just the who number and require more code):
+;;  let trees_remove_agents feeding-trees with [ distance myself < visual]
+;;  type "+++++++TREES SURROUNDING: " print trees_remove_agents
+;;  type "======= trees_remove: " print trees_remove
+;;
+;;  foreach trees_remove [ x -> ask patch-here [ ask neighbors [ set pcolor red] ] ]
+;;
+;;   Option 2) (does not work) asking the agentset:
+;;  ask trees_remove_agents [
+;;    ask patch-here [ set pcolor red]
+;;  ]
 ;
-;   Option 2) (does not work) asking the agentset:
-;  ask trees_remove_agents [
-;    ask patch-here [ set pcolor red]
+;  let l length trees_remove
+;;  print l ; for debugging
+;  while [ l > 0 ]
+;  [
+;    set l l - 1
+;    set tree_pot_list remove-item ( position (item l trees_remove) tree_pot_list ) tree_pot_list
+;    set tree_ate_list lput (item l trees_remove) tree_ate_list
+;    set tree_mem_list lput 0 tree_mem_list
+;    set tree_add_list lput 1 tree_add_list
 ;  ]
-
-  let l length trees_remove
-;  print l ; for debugging
-  while [ l > 0 ]
-  [
-    set l l - 1
-    set tree_pot_list remove-item ( position (item l trees_remove) tree_pot_list ) tree_pot_list
-    set tree_ate_list lput (item l trees_remove) tree_ate_list
-    set tree_mem_list lput 0 tree_mem_list
-    set tree_add_list lput 1 tree_add_list
-  ]
-end
+;end
 
 to enhance_memory_list
 
@@ -4715,10 +4715,10 @@ Energy
 11
 
 SLIDER
-747
-405
-911
-438
+0
+853
+164
+886
 visual
 visual
 0
@@ -4740,11 +4740,11 @@ How many timesteps BLTs take to reconsider revisiting a tree:
 1
 
 TEXTBOX
-742
-392
-909
-412
-exclude trees in radii from pot list:
+4
+826
+171
+852
+(not being used) exclude trees in radii from pot list:
 10
 0.0
 1

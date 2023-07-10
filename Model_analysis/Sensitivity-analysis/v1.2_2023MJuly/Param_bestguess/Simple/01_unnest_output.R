@@ -10,7 +10,7 @@ library("purrr")
 
 
 path <- here("Model_analysis", "Sensitivity-analysis",
-             "v1.2_2023May", "Param_bestguess", "Simple", "temp")
+             "v1.2_2023MJuly", "Param_bestguess", "Simple", "temp")
 
 # Example run:
 nl <- readRDS(paste0(path, "/",
@@ -37,7 +37,7 @@ for (f in nls_to_df) {
   
   # nl_file <- paste0("nl_", i)
   nl_file <- readRDS(paste0(path, "/", f))
-  # nl_file <- readRDS(paste0(path, "/", "v1.1_Taquara_Jan_simple1671135962_tempRDS.Rdata"))
+  # nl_file <- readRDS(paste0(path, "/", "v1.2_Suzano_Sep_simple941079955_tempRDS.Rdata"))
   # nl_file <- readRDS(paste0(path, "/", "v1.1_Suzano_Sep_simple453130432_tempRDS.Rdata"))
   
   # paste0("df_", i)
@@ -49,10 +49,14 @@ for (f in nls_to_df) {
      #   turn_ang_sd = as.numeric(turn_ang_sd)
      # )
    db$breed %>% unique()
+   # get seed
+   db$seed <- str_extract(f, "[:digit:]{8,10}(?=_tempRDS)")
   }
   
   db <- dplyr::bind_rows(db, unnest_simoutput(nl_file) %>%
                            mutate(
+                             # get seed
+                             seed = str_extract(f, "[:digit:]{8,10}(?=_tempRDS)"),
                              `survived?` = as.character(`survived?`)
                              # turn_ang_sd = as.character(turn_ang_sd)
                          
@@ -60,6 +64,7 @@ for (f in nls_to_df) {
                          #     turn_ang_sd = as.numeric(turn_ang_sd)
                            )
                          )
+
   
   i <- i + 1
 }
@@ -68,6 +73,8 @@ for (f in nls_to_df) {
 db %>% str()
 db$turn_ang_sd %>% unique()
 db$study_area %>% unique()
+db$seed %>% unique()
+
 
 ### Repair data
 db$species %>% as.factor() %>% levels()
@@ -86,15 +93,14 @@ db$`random-seed`
 db1 <- db %>% 
   dplyr::rename_all(~str_replace_all(., c("-" = "_", "\\s+" = "_"))) %>% # Remove - and space characters.
   rename("group" = "study_area",
-         "month" = "feeding_trees_scenario") %>% 
-  dplyr::select(-c(
-    #"DPL", 
-    "SDD"
-    )) %>% 
+         "month" = "feeding_trees_scenario",
+         "SDD_seeds" = "SDD") %>% 
+  # dplyr::select(-c(
+  #   #"DPL", 
+  #   )) %>% 
   # dplyr::filter(breed == "monkeys") %>% 
   rename_with(~ str_remove(.x, "g_"), starts_with("g_")
   )
-
 
 # fix species names: 
 db1 %>% str()
@@ -156,6 +162,11 @@ db1 <- db1 %>%
          "y" = "y_UTM"
   )
 
+
+# Filter out Syagrus as this one is not dispersed:
+db1$species %>% unique()
+db1 <- db1 %>% 
+  dplyr::filter(species != "Syagrus romanzoffiana")
 
 db1 %>% str()
 db1$species %>% as.factor() %>% levels()

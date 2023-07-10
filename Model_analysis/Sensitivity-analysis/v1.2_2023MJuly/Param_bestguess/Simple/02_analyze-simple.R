@@ -26,7 +26,7 @@ library("purrr")
 library("stringr")
 
 path <- here("Model_analysis", "Sensitivity-analysis",
-             "v1.2_2023May", "Param_bestguess", "Simple", "temp")
+             "v1.2_2023MJuly", "Param_bestguess", "Simple", "temp")
 
 
 # ggplot theme
@@ -600,21 +600,21 @@ db_sd$fragment %>% unique()
 
 
 
-
-
-
 ### Plots ------
 theme_update(
   axis.text.x = element_text(size = 11)
 )
 
-#### By group ####
+#### Mean SDD By group ####
 # density
-db_sd %>% 
+db_sd %>%
+# a <- db_sd %>% 
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
   dplyr::filter(
     group != "SantaMaria" | month != "Apr"
   ) %>%
+  dplyr::select(fragment, group, month, source, seed, disp_day, SDD_seeds) %>% 
+  dplyr::distinct() %>% 
   droplevels() %>% 
   ggplot(
   # aes(x = SDD, fill = group, group = group)
@@ -624,7 +624,7 @@ db_sd %>%
     alpha = 0.5
     # , adjust = 1.5
     ) +
-  xlab("SDD (in meters)") +
+  xlab("Mean SDD (in meters)") +
   # facet_grid(. ~ disp_day, rows = 2)
   # facet_wrap(vars(source, disp_day), nrow = 2) +
   facet_grid(disp_day ~ source) +
@@ -675,7 +675,7 @@ ggsave(paste0(path, "/", '02_simple_SDD_disp_day_violin.png'), height = 5, width
 
 
 
-#### By group and month ####
+#### Mean SDD By group and month ####
 
 # density
 theme_update(
@@ -705,7 +705,7 @@ db_sd %>%
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
   xlab("SDD (in meters)") +
-  xlim(0, 800) +
+  # xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
@@ -739,7 +739,7 @@ db_sd %>%
     position = position_points_jitter(width = 0.1, height = 0)
   ) +
   xlab("SDD (in meters)") +
-  xlim(0, 800) +
+  # xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
@@ -937,6 +937,330 @@ db_sd %>%
 
 # # Save plot
 ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-boxplot.png'), height = 5, width = 7)
+
+
+
+#### Example run density By group and month ####
+
+ex_seed <- db_sd$seed %>%
+  na.exclude() %>%
+  sample(size = 1)
+
+# Reduce seed dispersal dataset to plot good ggridges and boxplots:
+db_sd_example <- db_sd %>% 
+  # group_by(group, month, feedingbout_on., seed) %>% 
+  group_by(group, month, feedingbout_on.) %>% 
+  dplyr::filter(seed == ex_seed | source == "observed") %>% 
+  # make SDD = SDD_seeds for observed values
+  mutate(
+    SDD_seeds = case_when(
+      SDD_seeds == is.na(SDD_seeds) ~ SDD,
+      TRUE ~ SDD_seeds
+    )
+  )
+
+# check:
+db_sd_example$seed %>% unique()
+db_sd_example$source %>% unique()
+db_sd_example$SDD_seeds %>% unique()
+
+
+
+# density
+theme_update(
+  axis.text.x = element_text(size = 11)
+)
+db_sd_example %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  dplyr::filter(disp_day == "same day") %>% 
+  ggplot(
+    # aes(x = SDD, y = group, fill = month) #, height = ..density..)
+    aes(x = SDD_seeds, y = fragment, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( 
+    # bandwidth = 5, # specify global bandwidth. Problem: we have more simulation data
+    alpha = 0.8,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    bandwidth = 20,
+    scale = 1.2, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.1, height = 0)
+  ) +
+  xlab("SDD (in meters)") +
+  # xlim(0, 800) +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(rows = vars(source)) +
+  scale_fill_viridis_d() +
+  ggtitle("Distance of seeds dispersed on the same day (example run)") +
+  theme(plot.title = element_text(size = 14)) #+
+# theme_ridges()
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_same-day_density_ridges_example.png'), height = 5, width = 7)
+
+
+db_sd_example %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  dplyr::filter(disp_day == "next day") %>% 
+  ggplot(
+    # aes(x = SDD, y = group, fill = month) #, height = ..density..)
+    aes(x = SDD_seeds, y = fragment, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( 
+    alpha = 0.8,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    bandwidth = 20,
+    scale = 1.2, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.1, height = 0)
+  ) +
+  xlab("SDD (in meters)") +
+  # xlim(0, 800) +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(rows = vars(source)) +
+  scale_fill_viridis_d() +
+  ggtitle("Distance of seeds dispersed on the next day (example run)") +
+  theme(plot.title = element_text(size = 14))
+
+# Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_next-day_density_ridges_example.png'), height = 5, width = 7)
+
+
+db_sd_example %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  ggplot(
+    aes(x = SDD_seeds, y = month, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( 
+    alpha = 0.8,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    scale = 1.5, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.5, height = 0)
+  ) +
+  xlab("SDD (in meters)") +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(source ~ disp_day) +
+  scale_fill_viridis_d()
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1_example.png'), height = 5, width = 10)
+
+
+# ggrides with boxplot
+db_sd_example %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  ggplot(
+    aes(x = SDD_seeds, y = month, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( #alpha = 0.4,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    bandwidth = 20,
+    scale = 0.9, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.5, height = 0)
+  ) +
+  geom_boxplot(
+    width = .20, position = position_nudge(y = -.25) #, outlier.shape = NA
+  ) +
+  xlab("SDD (in meters)") +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(source ~ disp_day) +
+  scale_fill_viridis_d()
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges1_withboxplot_example.png'), height = 5, width = 10)
+
+
+
+
+db_sd_example %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  ggplot(
+    aes(x = SDD_seeds, y = month, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( #alpha = 0.4,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    scale = 1.5, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.5, height = 0)
+  ) +
+  xlab("SDD (in meters)") +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(~source) +
+  scale_fill_viridis_d() +
+  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  theme(plot.title = element_text(size = 16))
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2_example.png'), height = 5, width = 7)
+
+
+
+## ggrides with boxplot
+db_sd_example %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  ggplot(
+    aes(x = SDD_seeds, y = month, fill = month) #, height = ..density..)
+  ) +
+  geom_density_ridges( #alpha = 0.4,
+    # adjust = 5,
+    # position = "stack"
+    # stat = "identity",
+    # trim = TRUE,
+    bandwidth = 20,
+    scale = 0.9, # heigth
+    jittered_points = TRUE,
+    point_shape = "|", point_size = 2,
+    position = position_points_jitter(width = 0.5, height = 0)
+  ) +
+  geom_boxplot(
+    width = .15, position = position_nudge(y = -.15) #, outlier.shape = NA
+  ) +
+  xlab("SDD (in meters)") +
+  # facet_grid(source ~ disp_day) +
+  facet_grid(~source) +
+  scale_fill_viridis_d() +
+  ggtitle("Seed dispersal distance of all events (same and next day)") +
+  theme(plot.title = element_text(size = 16))
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2_withboxplot_example.png'), height = 5, width = 7)
+
+
+
+# boxplot
+theme_update(
+  axis.text.x = element_text(size = 8)
+)
+db_sd_example %>% 
+  # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
+  dplyr::filter(
+    group != "SantaMaria" | month != "Apr"
+  ) %>%
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+  ggplot(
+    # aes(x = group, y = SDD_seeds, color = month)
+    aes(x = fragment, y = SDD_seeds, color = month)
+  ) +
+  geom_boxplot() +
+  geom_point(
+    size = 0.5,
+    position = position_jitterdodge(jitter.width = .65) # only way of dodging the points and jitter it
+  ) +
+  
+  # geom_boxplot(position=position_dodge2(preserve = "single"),
+  #              aes(group = month)) + # to preserve SantaMaria April missing
+  # # geom_point(
+  # #   position = position_jitterdodge(jitter.width = .05) # only way of dodging the points and jitter it
+  # #   # position = position_dodge2(0.1, preserve = "total")
+  # # ) +
+  # geom_point(position = position_jitterdodge(jitter.width = .6),
+  #            # size = 3, 
+  #            aes(group = month)
+  #            ) +
+# ylab("SDD (in meters)") +
+ylim(0, 800) +
+  facet_wrap(~disp_day, nrow = 2) +
+  # scale_color_viridis_d() +
+  # facet_wrap(vars(disp_day, source), nrow = 2) +
+  
+  # others
+  theme(axis.text = element_text(size = 9)) +
+  # geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+  
+  
+  # Save plot
+  # ggsave(paste0(path, "/", '02_simple_SDD_disp_day_boxplot.png'), height = 5, width = 7)
+  
+  
+  # facet_grid(cols = vars(disp_day), rows = vars(source)) +
+  facet_grid(cols = vars(source), rows = vars(disp_day)) +
+  scale_color_viridis_d() +
+  ylab("SDD (m)")
+
+# # Save plot
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-boxplot_example.png'), height = 5, width = 7)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   

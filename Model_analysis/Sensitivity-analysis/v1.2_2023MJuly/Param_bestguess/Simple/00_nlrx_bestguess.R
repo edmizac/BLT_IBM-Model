@@ -55,7 +55,7 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   # modelpath <- here("Model_development", "BLT_model_v1.2.nlogo")
   modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023May", 
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023MJuly", 
                   "Param_bestguess", "Simple", "temp")
   user_scp = "\"Eduardo\""
 }
@@ -121,7 +121,8 @@ p_timesteps_to_rest <- 0.15 # resting not allowed on the 15% of the start and en
 
 
 i <- 1
-for (i in i:nrow(param.table)) {
+# for (i in i:nrow(param.table)) {
+for (i in 4:nrow(param.table)) {
   
   set.seed(42) # generate always the same set of seeds
   
