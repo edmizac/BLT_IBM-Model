@@ -178,7 +178,7 @@ for (i in 1:nrow(param.table)) {
   energy_loss_traveling <- -15								
   energy_loss_foraging <- -10
   energy_loss_resting <- -5
-  start_energy <- 900
+  # start_energy <- 900
   energy_level_1 <- 999
   energy_level_2 <- 1350
   energy_stored_val <- 1000

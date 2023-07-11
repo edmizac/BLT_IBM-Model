@@ -811,7 +811,7 @@ to setup-monkeys
 
     set enlvl1 energy_level_1
     set enlvl2 energy_level_2
-    set enstart start-energy
+;    set enstart start-energy
     set energy_stored energy_stored_val
 
     ; for the behaviorsequence plot
@@ -872,7 +872,8 @@ to setup-monkeys
     set action "travel"
     set behavior ""
     set going-sleeping? FALSE
-    set energy start-energy
+;    set energy start-energy
+    set energy energy_level_1
 
     ; create empty lists
     set tree_ate_list []
@@ -1371,8 +1372,11 @@ to move-monkeys
   ;; BLT ROUTINE
 
     if timestep = 0 [
-      set energy_stored energy_stored + (energy - start-energy)
-      set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
+;      set energy_stored energy_stored + (energy - start-energy)
+;      set energy start-energy ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
+      ; removing start-energy from the model (2023-07-11d):
+      set energy_stored energy_stored + (energy - energy_level_1)
+      set energy energy_level_1 ; we want the tamarins to flutuate between level 1 and 2; only take this out if you calibrate the energy values
       set tree_current -1
       set going-sleeping? FALSE
 ;      remove_trees_surrounding ; to avoid feeding in the closest tree
@@ -2889,9 +2893,6 @@ to sleeping
   if all? monkeys [action = "sleeping"] [
 
     store_energy
-;    if energy > start-energy [
-;      set energy_stored energy_stored + (energy - start-energy)
-;    ]
 
     output-print "AHOY"
 
@@ -3063,7 +3064,8 @@ to get_stored_energy
 
   ; Avoid that tamarins die by making them use their stored energy from other days
   ask monkeys [
-    if energy > 0 AND energy < ( 0.7 * start-energy ) [
+;    if energy > 0 AND energy < ( 0.7 * start-energy ) [
+    if energy > 0 AND energy < ( 0.7 * energy_level_1 ) [
 
 ;      ifelse ( ( energy_stored - (0.1 * energy_stored) ) > 0 ) [     ; if there's more than 10% start-energy
 ;        set energy energy + (0.1 * energy_stored)                    ; take 10% of stored energy
@@ -3075,9 +3077,12 @@ to get_stored_energy
 ;       print "stored energy over" print "" print "" print "" print "" print ""
 ;      ]
 
-      ifelse ( ( energy_stored - (0.1 * energy_stored) ) > (0.1 * start-energy) ) [     ; if there's more stored energy than 10% of start-energy
-        set energy energy + (0.1 * start-energy)                    ; take 10% of start-energy from stored energy
-        set energy_stored ( energy_stored - (0.1 * start-energy) )  ; diminish 10% of start-energy from stored energy
+;      ifelse ( ( energy_stored - (0.1 * energy_stored) ) > (0.1 * start-energy) ) [     ; if there's more stored energy than 10% of start-energy
+      ifelse ( ( energy_stored - (0.1 * energy_stored) ) > (0.1 * energy_level_1) ) [     ; if there's more stored energy than 10% of energy_level_1
+;        set energy energy + (0.1 * start-energy)                    ; take 10% of start-energy from stored energy
+        set energy energy + (0.1 * energy_level_1)                    ; take 10% of energy_level_1 from stored energy
+;        set energy_stored ( energy_stored - (0.1 * start-energy) )  ; diminish 10% of start-energy from stored energy
+        set energy_stored ( energy_stored - (0.1 * energy_level_1) )  ; diminish 10% of energy_level_1 from stored energy
 ;        print "energy debug 1 ********"
       ][
         set energy energy + energy_stored
@@ -4001,7 +4006,7 @@ to print-parameters
   type "energy_level_1 = "             print energy_level_1
   type "energy_level_2 = "             print energy_level_2
   type "energy_stored_val = "          print energy_stored_val
-  type "start-energy = "               print start-energy
+;  type "start-energy = "               print start-energy
   type "energy-from-frui = "           print energy-from-fruits
   type "energy-from-prey = "           print energy-from-prey
   type "energy-loss-traveling = "      print energy-loss-traveling
@@ -4022,9 +4027,9 @@ end
 
 to set-ref-values
   set energy_level_1 999
-  set energy_level_2 1100
+  set energy_level_2 1150
   set energy_stored_val 1000
-  set start-energy 905
+;  set start-energy 905
   set energy-from-fruits 30
   set energy-from-prey 30
   set energy-loss-traveling -10
@@ -4107,10 +4112,10 @@ ticks
 30.0
 
 SLIDER
-547
-332
-719
-365
+0
+893
+172
+926
 start-energy
 start-energy
 100
@@ -4199,17 +4204,17 @@ simulation-time
 simulation-time
 0
 170
-119.0
+116.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-547
-367
-719
-400
+553
+469
+725
+502
 energy-from-fruits
 energy-from-fruits
 0
@@ -4300,10 +4305,10 @@ no_days
 Number
 
 SLIDER
-547
-405
-719
-438
+553
+507
+725
+540
 energy-from-prey
 energy-from-prey
 0
@@ -4315,10 +4320,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-547
-442
-720
-475
+553
+544
+726
+577
 energy-loss-traveling
 energy-loss-traveling
 -100
@@ -4330,10 +4335,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-547
-477
-720
-510
+553
+579
+726
+612
 energy-loss-foraging
 energy-loss-foraging
 -100
@@ -4345,10 +4350,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-547
-517
-720
-550
+553
+619
+726
+652
 energy-loss-resting
 energy-loss-resting
 -100
@@ -4500,10 +4505,10 @@ TEXTBOX
 1
 
 SLIDER
-567
-557
-703
-590
+571
+353
+707
+386
 energy_level_1
 energy_level_1
 100
@@ -4515,10 +4520,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-567
-592
-703
-625
+571
+388
+707
+421
 energy_level_2
 energy_level_2
 100
@@ -5069,10 +5074,10 @@ NIL
 1
 
 SLIDER
-747
-452
-911
-485
+742
+401
+906
+434
 prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
@@ -5084,10 +5089,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-747
-442
-897
-460
+742
+391
+892
+409
 don't choose 1:
 9
 0.0
@@ -5437,10 +5442,10 @@ PENS
 "pen-2" 1.0 0 -2674135 true "" "plot max [SDD] of seeds"
 
 SLIDER
-747
-557
-919
-590
+748
+526
+920
+559
 p_disputed_trees
 p_disputed_trees
 0
@@ -5452,20 +5457,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-742
-532
-892
-554
+743
+501
+893
+523
 random or border ld trees\ndepends on n feeding-trees:
 9
 0.0
 1
 
 SWITCH
-757
-502
-895
-535
+754
+466
+892
+499
 ld-target-random?
 ld-target-random?
 1
@@ -5638,10 +5643,10 @@ energy_stored
 11
 
 SLIDER
-550
-625
-722
-658
+554
+421
+726
+454
 energy_stored_val
 energy_stored_val
 0
@@ -5728,6 +5733,23 @@ BUTTON
 312
 set ref values
 set-ref-values
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+762
+560
+903
+593
+color disputed trees
+ask monkeys [\n  if travel_mode = \"long_distance\" [\n    let let_pot_list tree_pot_list\n\n    if ld-target-random? = TRUE [\n      ifelse tree_target_mem2 = -1 [\n        set ld_tree_target one-of feeding-trees with [member? who let_pot_list]\n      ] [\n        set ld_tree_target tree_target_mem2\n        set tree_target_mem2 -1 ; reset\n      ]\n\n    ]\n\n\n    if ld-target-random? = FALSE [\n      ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)\n      set let_pot_list tree_pot_list\n      set candidate_ld_targets feeding-trees with [member? who let_pot_list]\n      type \"candidate_ld_targets = \" print candidate_ld_targets\n\n\n;      print \"LD_CHECK\"\n\n      set candidate_ld_targets max-n-of ( round (p_disputed_trees * (length let_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center]\n      ; debugging:\n;      ask monkeys [ ask max-n-of ( round (p_disputed_trees * (length tree_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center] [ set color pink ] ]\n\n;      if length candidate_ld_targets = 0 [ set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center] ]\n;      set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center]\n\n      ;    print candidate_ld_targets\n      ask candidate_ld_targets [\n        set color yellow\n        if study_area = \"Taquara\" [ set size 5 ]\n      ]\n     ]\n    ]\n   ]
 NIL
 1
 T
