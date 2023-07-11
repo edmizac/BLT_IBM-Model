@@ -4082,8 +4082,8 @@ end
 GRAPHICS-WINDOW
 0
 20
-491
-416
+617
+440
 -1
 -1
 3.0
@@ -4096,10 +4096,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-101
+101
+-68
+68
 0
 0
 1
@@ -4115,7 +4115,7 @@ start-energy
 start-energy
 100
 2000
-1473.684
+905.0
 1
 1
 NIL
@@ -4214,7 +4214,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-147.0
+30.0
 1
 1
 NIL
@@ -4308,7 +4308,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-111.1579
+30.0
 1
 1
 NIL
@@ -4323,7 +4323,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--35.0
+-10.0
 1
 1
 NIL
@@ -4338,7 +4338,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--1.0
+-10.0
 1
 1
 NIL
@@ -4353,7 +4353,7 @@ energy-loss-resting
 energy-loss-resting
 -100
 0
--100.0
+-5.0
 1
 1
 NIL
@@ -4406,7 +4406,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+3
 
 CHOOSER
 1017
@@ -4508,7 +4508,7 @@ energy_level_1
 energy_level_1
 100
 2000
-905.2632
+999.0
 1
 1
 NIL
@@ -4523,7 +4523,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1263.895
+1100.0
 1
 1
 NIL
@@ -4652,7 +4652,7 @@ SWITCH
 275
 print-step?
 print-step?
-1
+0
 1
 -1000
 
@@ -4724,7 +4724,7 @@ duration
 duration
 0
 30
-4.789474
+21.0
 1
 1
 NIL
@@ -4827,7 +4827,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.59
 0.01
 1
 NIL
@@ -4848,7 +4848,7 @@ PLOT
 352
 1410
 476
-duration and action-time (red) / species_time and frugivory-time (blue)
+species_time (black) / frugivory-time (blue)
 NIL
 NIL
 0.0
@@ -4859,10 +4859,10 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -5298144 true "" "ask monkeys [ plot 2 * duration ]"
-"pen-1" 1.0 0 -14070903 true "" ";plot species_time"
-"pen-2" 1.0 0 -2139308 true "" "ask monkeys [ plot action-time ]"
-"pen-3" 1.0 0 -10649926 true "" ";ask monkeys [ plot frugivory-time ]"
+"default" 1.0 0 -5298144 true "" ";ask monkeys [ plot 2 * duration ]"
+"pen-1" 1.0 0 -16777216 true "" "ask monkeys [\n  if tree_target != -1 [\n    plotxy ( ticks ) ( [species_time] of tree_target )\n    ]\n  ]\n  \n;ask monkeys [ ifelse tree_current != -1 [ plot [ species_time ] of tree_current ] [ plot 0 ] ]"
+"pen-2" 1.0 0 -2139308 true "" ";ask monkeys [ plot action-time ]"
+"pen-3" 1.0 0 -10649926 true "" "ask monkeys [ plot frugivory-time ]"
 
 PLOT
 1415
@@ -5077,7 +5077,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-4.684211
+3.0
 1
 1
 NIL
@@ -5108,7 +5108,7 @@ PLOT
 477
 1410
 597
-duration (red) / species_time (blue)
+duration (red) / action_time (blue)
 NIL
 NIL
 0.0
@@ -5119,7 +5119,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -13345367 true "" "ask monkeys [ ifelse tree_current != -1 [ plot [ species_time ] of tree_current ] [ plot 0 ] ]"
+"default" 1.0 0 -13345367 true "" "ask monkeys [ plot action-time ]"
 "pen-1" 1.0 0 -2674135 true "" ";ask monkeys [ ifelse tree_current != -1 [ plot [ duration ] of tree_current ] [ plot 0 ] ]\n\nplot duration\n\n"
 
 BUTTON
@@ -5197,7 +5197,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-0
+1
 
 BUTTON
 245
@@ -5318,7 +5318,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+89.73
 5
 1
 NIL
@@ -5333,7 +5333,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+1.6949999999999998
 0.1
 1
 NIL
@@ -5348,7 +5348,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+3.2369999999999997
 0.1
 1
 NIL
@@ -5363,7 +5363,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+68.99
 1
 1
 NIL
@@ -5445,7 +5445,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.4
+0.25
 0.05
 1
 NIL
@@ -5646,7 +5646,7 @@ energy_stored_val
 energy_stored_val
 0
 10000
-400.0
+1000.0
 1
 1
 NIL
@@ -5671,7 +5671,7 @@ p-timesteps-to-rest
 p-timesteps-to-rest
 0
 1
-0.6315789
+0.15
 0.01
 1
 NIL

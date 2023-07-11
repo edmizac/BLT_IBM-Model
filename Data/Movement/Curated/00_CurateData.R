@@ -62,8 +62,10 @@ dat.sma <- dat.sma %>%
 
 # Rename and select cols
 dat.sma <- dat.sma %>% 
-  dplyr::rename(x = original_longitude_x,
-                y = original_latitude_y,
+  dplyr::rename(x = longitude_x_GAL,        # these were corrected by Felipe
+                y = latitude_y_GAL,         # these were corrected by Felipe
+                # x = original_longitude_x, # these were not
+                # y = original_latitude_y,  # these were not
                 behavior = group_behav,
                 month_number = id_month,
                 species = sp #,
@@ -100,6 +102,16 @@ dat.sma <- dat.sma %>%
   dplyr::mutate(species = recode(species, 
                                   "Myrcia splendens (Sw.) DC." = "Myrcia splendens"))  
 
+# Check number of feeding and sleeping-trees
+dat.sma.fruslp <- dat.sma %>% filter(behavior %in% c("Frugivory", "Sleeping site"))
+
+dat.sma.fruslp %>% 
+  dplyr::select(x, y, id_month, behavior, species, id) %>% 
+  distinct() %>%
+  group_by(id_month, behavior) %>% 
+  summarize(
+    count = n()
+  ) 
 
 # Write csv
 # dat.sma %>% write.csv(here("Data", "Movement", "Curated","SantaMaria.csv"),
