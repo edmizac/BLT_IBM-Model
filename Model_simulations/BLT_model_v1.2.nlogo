@@ -3525,10 +3525,10 @@ to calc-homerange
         ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
         set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 100 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
         type "DI index = " print DI_index
-        ;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi ) ; in case KDE is in m² and not in ha
-        let d_ ( 4 * ( KDE_95 / 100 ) / pi ) ; in case KDE is in ha
+        ;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                     ; in case KDE is in m² and not in ha
+        let d_ ( 4 * ( KDE_95 / 100 ) / pi )                                                ; in case KDE is in ha
         type "diameter of home range (d' in km) =  " print d_
-        set M_index ( 1 * ( 0.150 * (DPL_mean / 1000) / (d_ ^ 2) ) )                                                                     ; (M = N(sv/d²) Lowen & Dunbar 1994
+        set M_index ( 1 * ( 0.120 * (DPL_mean / 1000) / (d_ ^ 2) ) )                        ; (M = N(sv/d²) Lowen & Dunbar 1994. s value from Ruiz-Miranda et al. 2019 MLD
         type "M index = " print M_index
 
       ]
