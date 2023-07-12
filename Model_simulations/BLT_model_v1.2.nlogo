@@ -4393,10 +4393,10 @@ Tamarin
 1
 
 INPUTBOX
-135
-630
-288
-716
+133
+635
+286
+721
 runtime
 ./runtime/
 1
@@ -4450,10 +4450,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-577
-312
-713
-348
+586
+330
+722
+366
 2. energy related
 14
 15.0
@@ -4581,10 +4581,10 @@ day
 11
 
 SWITCH
-852
-257
-971
-290
+849
+265
+968
+298
 sleeping-trees?
 sleeping-trees?
 0
@@ -4592,10 +4592,10 @@ sleeping-trees?
 -1000
 
 SWITCH
-852
-225
-971
-258
+849
+233
+968
+266
 feeding-trees?
 feeding-trees?
 0
@@ -4634,10 +4634,10 @@ make all trees from study period available:
 1
 
 BUTTON
-687
-242
-812
-275
+133
+607
+258
+640
 middayend steps
 repeat midday_end [ step ]
 NIL
@@ -5232,10 +5232,10 @@ MODEL VERIFICATION:
 1
 
 TEXTBOX
-842
-212
-991
-236
+838
+222
+987
+246
 1.2 Create tree resources
 11
 0.0
@@ -5727,10 +5727,10 @@ NIL
 1
 
 BUTTON
-576
-279
-684
-312
+273
+403
+381
+436
 set ref values
 set-ref-values
 NIL
