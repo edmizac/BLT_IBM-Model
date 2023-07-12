@@ -179,17 +179,13 @@ for (i in 1:nrow(param.table)) {
   energy_loss_foraging <- -10
   energy_loss_resting <- -5
   # start_energy <- 900
-  energy_level_1 <- 999
+  # energy_level_1 <- 999
+  energy_level_1 <- 900
   energy_level_2 <- 1150
   energy_stored_val <- 1000
   step_forget <- 400
   p_memory <- 3
   # visual <- 0
-  # duration <- 4 # duration of resting # now area-specific
-  # duration <- if (study_area == "Suzano") { 8 }
-  # duration <- if (study_area == "Guareí") { 4 }
-  # duration <- if (study_area == "SantaMaria") { 5 }
-  # duration <- if (study_area == "Taquara") { 5 }
   
   # alternatively, one could use the calibrated parameters. For this, go to:
   # v1.2_2023May/Param_calibrated/
@@ -377,11 +373,11 @@ for (i in 1:nrow(param.table)) {
                                 
                                 ### memory
                                 'duration' = duration,
-                                'visual' = visual,                # does not matter
+                                # 'visual' = visual,                # does not matter
                                 "step_forget" = step_forget,
                                 
                                 ### energy
-                                'start-energy' = start_energy,
+                                # 'start-energy' = start_energy,
                                 "energy_level_1" = energy_level_1,
                                 "energy_level_2" = energy_level_2,
                                 "energy-from-fruits" = energy_from_fruits,

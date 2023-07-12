@@ -530,6 +530,10 @@ db_sd %>% str()
 db_sd <- db_sd %>% 
   dplyr::filter(`survived.` == "yes")
 
+# Remove runs that presented issues: 
+db_sd <- db_sd %>% dplyr::filter(DPL > 100) # most of them Guareí May and Suzano Sep 
+
+
 # Filter seed data
 db_sd <- db_sd %>% 
   # rename(group = study_area) %>% 
@@ -1305,6 +1309,9 @@ db_mv <- read.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv")) %>%
   
 db_mv %>% str()
 
+# Remove runs that presented issues: 
+db_mv <- db_mv %>% dplyr::filter(DPL > 100) # most of them Guareí May and Suzano Sep 
+
 # db1_mv  <-  db1_mv %>%
 #   dplyr::select(-c(
 #     # "DPL",
@@ -1467,8 +1474,8 @@ db1_mv %>%
   # scale_fill_viridis_d() +
   facet_grid(~source) +
   # others
-  theme(axis.text = element_text(size = 9))
-# geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
+  theme(axis.text = element_text(size = 9)) #+
+  # geom_point(position = position_jitterdodge(jitter.width = 0.7))
 # db1_mv %>%
 #   ggplot(aes(x = group, y = DPL, color = month)) +
 #   geom_boxplot() +
@@ -2115,8 +2122,8 @@ R.all %>% summary()
 
 
 # Check why some R values are 0 (filtering them out for now)
-# R.all <- R.all %>%
-#   dplyr::filter(R > 0.1)
+R.all <- R.all %>%
+  dplyr::filter(R > 0.1)
 
 R.all %>% 
   # Santa Maria April is missing from observed data (not enough observations), so we drop the simulations
@@ -2138,9 +2145,8 @@ R.all %>%
     position = position_dodge2(width = .9)
              ) +
   scale_color_viridis_d() +
-  # scale_shape_manual(values=c(17,16)) +
-  # scale_shape_manual(values=c(1, 0, 2)) +
-  scale_shape_manual(values=c(17, 15, 16)) +
+  scale_shape_manual(values=c(17,16)) +
+  # scale_shape_manual(values=c(17, 15, 16)) +
   # scale_shape_manual(values=c(1, 0, 2)) +
   # ylab(expression(DPL^{'2-'}/home range)) +
   ylim(0, 1.5) +
