@@ -180,11 +180,11 @@ for (i in 1:nrow(param.table)) {
   energy_loss_resting <- -5
   # start_energy <- 900
   energy_level_1 <- 999
-  energy_level_2 <- 1350
+  energy_level_2 <- 1150
   energy_stored_val <- 1000
   step_forget <- 400
   p_memory <- 3
-  visual <- 0
+  # visual <- 0
   # duration <- 4 # duration of resting # now area-specific
   # duration <- if (study_area == "Suzano") { 8 }
   # duration <- if (study_area == "Guareí") { 4 }

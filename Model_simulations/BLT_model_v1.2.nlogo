@@ -4087,8 +4087,8 @@ end
 GRAPHICS-WINDOW
 0
 20
-617
-440
+491
+416
 -1
 -1
 3.0
@@ -4101,10 +4101,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--101
-101
--68
-68
+-80
+80
+-64
+64
 0
 0
 1
@@ -4204,7 +4204,7 @@ simulation-time
 simulation-time
 0
 170
-116.0
+112.0
 1
 1
 NIL
@@ -4219,7 +4219,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-30.0
+73.0
 1
 1
 NIL
@@ -4299,7 +4299,7 @@ INPUTBOX
 604
 105
 no_days
-6.0
+4.0
 1
 0
 Number
@@ -4328,7 +4328,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--10.0
+-15.0
 1
 1
 NIL
@@ -4411,7 +4411,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-3
+5
 
 CHOOSER
 1017
@@ -4495,10 +4495,10 @@ TEXTBOX
 1
 
 TEXTBOX
-780
-612
-920
-648
+777
+587
+917
+623
 5. feeding bout
 14
 15.0
@@ -4513,7 +4513,7 @@ energy_level_1
 energy_level_1
 100
 2000
-999.0
+900.0
 1
 1
 NIL
@@ -4528,7 +4528,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1100.0
+1350.0
 1
 1
 NIL
@@ -4729,7 +4729,7 @@ duration
 duration
 0
 30
-21.0
+5.0
 1
 1
 NIL
@@ -4832,7 +4832,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.59
+0.36
 0.01
 1
 NIL
@@ -4995,10 +4995,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "ask monkeys [ histogram travelmodelist ]"
 
 SWITCH
-757
-632
-904
-665
+754
+607
+901
+640
 feedingbout-on?
 feedingbout-on?
 0
@@ -5099,10 +5099,10 @@ don't choose 1:
 1
 
 TEXTBOX
-757
-667
-907
-689
+754
+642
+904
+664
 energy and time spent feeding for each tree species. If not:
 9
 0.0
@@ -5202,7 +5202,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-1
+0
 
 BUTTON
 245
@@ -5323,7 +5323,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-89.73
+68.98
 5
 1
 NIL
@@ -5338,7 +5338,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.6949999999999998
+1.4060000000000001
 0.1
 1
 NIL
@@ -5353,7 +5353,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.2369999999999997
+2.343
 0.1
 1
 NIL
@@ -5368,17 +5368,17 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-68.99
+67.86
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-752
-695
-900
-728
+754
+670
+902
+703
 species_time_val
 species_time_val
 1
@@ -5390,10 +5390,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-772
-732
-896
-761
+769
+707
+893
+736
 max timesteps feeding on the same tree species
 10
 0.0
@@ -5442,10 +5442,10 @@ PENS
 "pen-2" 1.0 0 -2674135 true "" "plot max [SDD] of seeds"
 
 SLIDER
-748
-526
-920
-559
+744
+510
+916
+543
 p_disputed_trees
 p_disputed_trees
 0
@@ -5457,20 +5457,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-743
-501
-893
-523
+745
+487
+895
+509
 random or border ld trees\ndepends on n feeding-trees:
 9
 0.0
 1
 
 SWITCH
-754
-466
-892
-499
+756
+452
+894
+485
 ld-target-random?
 ld-target-random?
 1
@@ -5744,12 +5744,12 @@ NIL
 1
 
 BUTTON
-762
-560
-903
-593
+760
+543
+901
+576
 color disputed trees
-ask monkeys [\n  if travel_mode = \"long_distance\" [\n    let let_pot_list tree_pot_list\n\n    if ld-target-random? = TRUE [\n      ifelse tree_target_mem2 = -1 [\n        set ld_tree_target one-of feeding-trees with [member? who let_pot_list]\n      ] [\n        set ld_tree_target tree_target_mem2\n        set tree_target_mem2 -1 ; reset\n      ]\n\n    ]\n\n\n    if ld-target-random? = FALSE [\n      ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)\n      set let_pot_list tree_pot_list\n      set candidate_ld_targets feeding-trees with [member? who let_pot_list]\n      type \"candidate_ld_targets = \" print candidate_ld_targets\n\n\n;      print \"LD_CHECK\"\n\n      set candidate_ld_targets max-n-of ( round (p_disputed_trees * (length let_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center]\n      ; debugging:\n;      ask monkeys [ ask max-n-of ( round (p_disputed_trees * (length tree_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center] [ set color pink ] ]\n\n;      if length candidate_ld_targets = 0 [ set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center] ]\n;      set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center]\n\n      ;    print candidate_ld_targets\n      ask candidate_ld_targets [\n        set color yellow\n        if study_area = \"Taquara\" [ set size 5 ]\n      ]\n     ]\n    ]\n   ]
+ask feeding-trees [ set color green ]\n\ntest-long-distance\n\n ask monkeys [\n  \n  if travel_mode = \"long_distance\" [\n    let let_pot_list tree_pot_list\n\n    if ld-target-random? = TRUE [\n      ifelse tree_target_mem2 = -1 [\n        set ld_tree_target one-of feeding-trees with [member? who let_pot_list]\n      ] [\n        set ld_tree_target tree_target_mem2\n        set tree_target_mem2 -1 ; reset\n      ]\n\n    ]\n\n\n    if ld-target-random? = FALSE [\n      ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)\n      set let_pot_list tree_pot_list\n      set candidate_ld_targets feeding-trees with [member? who let_pot_list]\n      type \"candidate_ld_targets = \" print candidate_ld_targets\n\n\n;      print \"LD_CHECK\"\n\n      set candidate_ld_targets max-n-of ( round (p_disputed_trees * (length let_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center]\n      ; debugging:\n;      ask monkeys [ ask max-n-of ( round (p_disputed_trees * (length tree_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center] [ set color pink ] ]\n\n;      if length candidate_ld_targets = 0 [ set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center] ]\n;      set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center]\n\n      ;    print candidate_ld_targets\n      ask candidate_ld_targets [\n        set color yellow\n        if study_area = \"Taquara\" [ set size 5 ]\n      ]\n     ]\n    ]\n       \n   ]
 NIL
 1
 T
