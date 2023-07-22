@@ -656,7 +656,7 @@ db_sd %>%
   theme(axis.text = element_text(size = 9))
 
 # Save plot
-ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density.png'), height = 5, width = 7)
+# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density.png'), height = 5, width = 7)
 
 
 # boxplot
