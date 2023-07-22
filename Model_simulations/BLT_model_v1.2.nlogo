@@ -3146,29 +3146,29 @@ to calc-homerange
     ;    sr:run "library('dplyr', quietly = T)"
     ;    sr:run "library('tidyr', quietly = T)"
     sr:run "library('amt', quietly = T)"
-    sr:run "library('sf', quietly = T)"
-    sr:run "library('st', quietly = T)"
+    sr:run "library('sf')"
+;    sr:run "library('st', quietly = T)"
 
     print "==== packages loaded ==== "
 
-    ;    stop
+;        stop
 
     ;; create an empty data.frame"
     sr:run "monkeys_df <- data.frame()"
     ;sr:run "print(monkeys_df)"
-    print "==== SR debugging 0 ==== "
+;    print "==== SR debugging 0 ==== "
 
     if count monkeys = 1 [
       ;; merge the Name, X- and Y-lists of all animals to one big data.frame
       ask monkeys [
-        print "==== SR debugging 1 ==== "
+;        print "==== SR debugging 1 ==== "
 
         let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr
         let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr
         let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr
         let Name_sr [Name] of self            print Name_sr  ;print length Name_sr
 
-        print "==== SR debugging 2 ==== "
+;        print "==== SR debugging 2 ==== "
 
         ;      stop
 
@@ -3181,9 +3181,7 @@ to calc-homerange
         sr:set "Name_sr" Name_sr
         sr:run "df1 <- data.frame(df1, Name = Name_sr)"
 
-        if ticks < 110 [
-          show sr:runresult "df1"
-        ]
+        if ticks < 110 [ show sr:runresult "df1"    ]
 
         ;      stop
 
@@ -3195,7 +3193,7 @@ to calc-homerange
 
         print "==== SR debugging 4 ==== "
         ;      sr:set "tamarins" "data.frame(tamarins, Name = 'Name')"
-        sr:run "print(head(tamarins))"
+;        sr:run "print(head(tamarins))"
         sr:run "names(tamarins) <- c('Name', 'X', 'Y')"
 
 
@@ -3211,7 +3209,7 @@ to calc-homerange
         ;        "id <- turtles$Name"
         ;        )
 
-        print "==== SR debugging 5 ==== "
+;        print "==== SR debugging 5 ==== "
 
         ;    ;;; calculate homerange (mcp method, needs a SpatialPointDataFrame)
         ;      sr:run "homerange <- mcp(xy, id)"
@@ -3219,8 +3217,8 @@ to calc-homerange
         ;
         ; calculate homerange (amt package)
         sr:run "db_ <- cbind(xy, id)"
-        if ticks < 110 [  print sr:runresult "colnames(db_)" ]
-        if ticks < 110 [  print sr:runresult "db_" ]
+;        if ticks < 110 [  print sr:runresult "colnames(db_)" ]
+;        if ticks < 110 [  print sr:runresult "db_" ]
 
         ; Using non-nested data as we only have one group. When multiple tamarin groups are simulated, we will need to call nest():
         (
@@ -3229,7 +3227,7 @@ to calc-homerange
         ;    show r:get "colnames(db_)"
         ;    show r:get "db_"
 
-        print "==== SR debugging 6 ==== "
+;        print "==== SR debugging 6 ==== "
 
 
         print " ------------- Home range size ------------------ "
@@ -3237,7 +3235,7 @@ to calc-homerange
 ;        ;MCP ===================================================
         sr:run "db_MCP <- db_ %>% hr_mcp(., levels = c(0.50, 1.0))"
         sr:run "db_MCP_area <- db_MCP %>% hr_area(.)"
-        print sr:runresult "db_MCP_area"
+;        print sr:runresult "db_MCP_area"
 
         sr:run "db_MCP_area <- db_MCP_area %>% dplyr::select(-what)"
         sr:run "db_MCP100 <- db_MCP_area %>% dplyr::filter(level == 1.0) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
@@ -3252,12 +3250,15 @@ to calc-homerange
         sr:run "db_KDE95 <- db_KDE_area %>% dplyr::filter(level == 0.95) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
         sr:run "db_KDE50 <- db_KDE_area %>% dplyr::filter(level == 0.50) %>% dplyr::select(area) %>% unlist() %>% as.vector()" ; %>% round(2) "
 
-        print "==== SR debugging 7 ===="
+;        print "==== SR debugging 7 ===="
 
         ; Import shapefile of respective area and crop homerange UD with st_intersection()
         ifelse USER = "Eduardo" [
           if study_area = "Guareí" [
             sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp' %>% sf::read_sf()"
+;            print sr:runresult "shp"
+;            print "===== read_sf debug ====="
+;            stop
           ]
           if study_area = "Suzano" [
             sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
@@ -3274,7 +3275,8 @@ to calc-homerange
             sr:run "shp <- wpath %>% sf::read_sf()"
           ]
           if study_area = "Suzano" [
-            sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
+            sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp"
+            sr:run "shp <- wpath %>% sf::read_sf()"
           ]
           if study_area = "SantaMaria" [
             sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp"
@@ -3286,31 +3288,40 @@ to calc-homerange
           ]
         ]
 
-        print "==== SR debugging 8 ==== "
+;        print "==== SR debugging 8 ==== "
 
         ;  sr:run "shp <- sf::read_sf(filepath)" ; make it an sf object
         sr:run "forest_area <- shp %>% sf::st_area()" ; print total forest area
         type "total forest area (ha) = " print sr:runresult "forest_area / 10000"
 
+;        stop
 
         ; Transform KDE to sf
         sr:run "KDE_sf <- amt::hr_isopleths(db_KDE) %>% sf::st_as_sf(., crs = 32722)"
-        ;  print r:get "KDE_sf"
+;        print sr:runresult "KDE_sf"
+;        print sr:runresult "str(KDE_sf)"
 
-        print "==== SR debugging 9 ==== "
+;        print "==== SR debugging 9 ==== "
 
-        ; crop home range by the forest area
-        sr:run "cropped <- sf::st_intersection(KDE_sf, shp)"
-        ;  type "cropped HR values = " print r:get "cropped"
-        print "==== before sf_overlap ==== "
-        sr:run "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
+;        stop
+
+        ;; NOT WORKING ;; =========================================================================
+;        ; crop home range by the forest area
+;        sr:run "cropped <- sf::st_intersection(KDE_sf, shp)"
+;        type "cropped HR values = " print sr:runresult "cropped"
+;        print "==== before sf_overlap ==== "
+;        sr:run "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
+        ;; NOT WORKING ;; =========================================================================
 
         print "==== SR debugging 10 ==== "
 
         ask monkeys [
           set MCP_100 sr:runresult "db_MCP100 / 10000"
-          set KDE_95_cropped sr:runresult "sf_overlap[1] %>% as.numeric() / 10000"
-          set KDE_50_cropped sr:runresult "sf_overlap[2] %>% as.numeric() / 10000"
+;          set KDE_95_cropped sr:runresult "sf_overlap[1] %>% as.numeric() / 10000"
+;          set KDE_50_cropped sr:runresult "sf_overlap[2] %>% as.numeric() / 10000"
+          ;; THESE ARE NOT THE CROPPED VALUES:
+          set KDE_95_cropped sr:runresult "db_KDE95 / 10000"
+          set KDE_50_cropped sr:runresult "db_KDE50 / 10000"
 
           ;    type "monkey " type who type " "
           type "cropped KDE95 = " print KDE_95_cropped
@@ -3321,106 +3332,136 @@ to calc-homerange
 
         ;  print sr:runresult "db_"
 
-;
-;
-;    ;  ; Using nested data with multiple tamarin groups are simulated (we will need to call nest())
-;    ;  sr:run "db_nest <- db %>% make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs') %>% nest(data = -c(id))"
-;    ;  ; calculate HR metrics for every list (=id = run) using map()
-;    ;  sr:run "db_nest <- db_nest %>% mutate( KDE95 = amt::map(data, ~ hr_kde(., level = 0.95)), KDE50 = amt::map(data, ~ hr_kde(., level = 0.50)) )"
-;    ;  sr:run "db_nest <- db_nest %>%  dplyr::select(-data) %>% pivot_longer(KDE95:KDE50, names_to = 'KDE_value', values_to = 'hr')"
-;    ;  sr:run "db_nest <- db_nest %>% mutate(hr_area = map(hr, hr_area)) %>%  unnest(cols = hr_area)"
-;    ;;  sr:run "db_nest <- db_nest %>% filter(KDE_value == 'KDE95') %>% dplyr::select(-c(3, 4))"
-;    ;  sr:run "db_nest <- db_nest %>% dplyr::select(-c('what', 'hr'))"
-;    ;;  sr:run "db_nest <- db_nest %>% mutate(hr_area_ha = area / 10000)" ; values in ha
-;
-;    ;  print sr:runresult "db_nest"
-;
-;    ; for outputting on nlrx:
-;    ; home range
-;    ;  sr:run "db_nest$hr_area_ha <- paste0(db_nest$hr_area_ha, '_')"
-;    ; coordinates
-;    ;  sr:run "db$X <- paste0(db$X, '_')"
-;    ;  sr:run "db$Y <- paste0(db$Y, '_')"
-;    ;  sr:run "db$id <- paste(db$id, '_')"
-;
-;    ;  print "db: "
-;    ;  print sr:runresult "db"
-;
-;    ;  print "db_nest: "
-;    ;  print sr:runresult "db_nest"
-;
-;    r:gc
-;
-;    ; get hr values to agent variable
-;
+
+
+        ; calculating other movement metrics:
+        sr:run "mov1 <- db_ %>% mutate( step_length = step_lengths(., append_last = TRUE), turn_ang = direction_rel(., append_last = TRUE) )" ;,  turn_ang = as_degree(turn_ang) )"
+                                                                                                                                                  ;  print r:get "length(db_metr$step_length)"
+
+        print " ------------- Step lengths/Turning angles ------------------ "
+        ;  print r:get "colnames(mov1)"
+        ;  print r:get "mov1"
+        ;  print r:get "length(mov1$step_length)"
+        sr:run "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE),  step_length_sd = sd(step_length, na.rm = TRUE),  turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE),  turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
+        ;  print r:get "colnames(mov1)"
+        ;  print r:get "mov1"
+
+        ask monkeys [
+          set step_length_mean sr:runresult "mov1 %>% dplyr::select(step_length_mean) %>%  unlist() %>% as.vector()"
+          set step_length_sd sr:runresult "mov1 %>% dplyr::select(step_length_sd) %>%  unlist() %>% as.vector()"
+          set turn_ang_mean sr:runresult "mov1 %>% dplyr::select(turn_ang_mean) %>%  unlist() %>% as.vector()"
+          set turn_ang_sd sr:runresult "mov1 %>% dplyr::select(turn_ang_sd) %>%  unlist() %>% as.vector()"
+        ]
+
+
+        print " ------------- Other movement metrics ------------------ "
+
+        ; nested by day
+        ;type "*******" print sr:runresult "db"
+        ;  type "*******" print sr:runresult "colnames(db)"
+        sr:run "db_metr <- db %>%  make_track(.x=Y, .y=X, id = day, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs',  all_cols = TRUE)"
+        sr:run "db_metr <- db_metr %>% amt::nest(data = -'day')  %>%   mutate( MSD = amt::map(data, ~ msd(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),  intensity_use = amt::map(data, ~ intensity_use(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),    straightness = amt::map(data, ~ straightness(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric() )  "
+        sr:run "db_metr <- db_metr %>% dplyr::select(-data)"
+        ; you can print all the movement matric variables by day:
+        print "movement metrics by day ---- " print sr:runresult "colnames(db_metr)" print sr:runresult "db_metr"
+
+        sr:run "db_metr <- db_metr %>% na.omit() %>% summarize_all(  list(mean = ~ mean(., na.rm = TRUE)  ) ) "
+
+        print "==== SR debugging 11 ==== "
+
+    ; not nested by day (considers all days as one path) (WRONG)
+    ;  sr:run "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+    ;  sr:run "db_metr <- db_metr %>% summarise( MSD = msd(.),  intensity_use = intensity_use(.), straightness = straightness(.), sinuosity = sinuosity(.) )"
+
+;    print sr:runresult "colnames(db_metr)"
+;    print sr:runresult "db_metr"
+
+;    print "checkpoint 1"
+
+
 ;    ask monkeys [
+;      set MSD sr:runresult "db_metr %>% dplyr::select(MSD_mean) %>%  unlist() %>% as.vector()"
+;      set intensity_use sr:runresult "db_metr %>% dplyr::select(intensity_use_mean) %>%  unlist() %>% as.vector()"
+;      set straightness sr:runresult "db_metr %>% dplyr::select(straightness_mean) %>%  unlist() %>% as.vector()"
+;;          set sinuosity sr:runresult "db_metr %>% dplyr::select(sinuosity_mean) %>%  unlist() %>% as.vector()"
+;;      set sinuosity "wrong"
+;    ]
 ;
-;      ; if only one group was simulated:
-;      set KDE_95 r:get "db_KDE95"
-;      set KDE_50 r:get "db_KDE50"
+;    ; calculating mean and sd DPL, MR and PT ONLY IF THE MONKEYS RAN FOR MORE THAN 3 DAYS
 ;
-;      type "*******" print precision ( KDE_95 / 10000 ) 4
+;    if day > 3 [
+;      ask monkeys [
+;        let aux-list []
+;        foreach DPL_d [
+;          ax -> ;print x
+;          set aux-list lput (ax ^ 2) aux-list
+;          ;     print aux-list
+;        ]
 ;
-;      ;    ; if you used nested output (simulated multiple tamarin groups):
-;      ;    set KDE_95 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE95') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
-;      ;    set KDE_50 r:get "db_nest %>%  dplyr::filter(KDE_value == 'KDE50') %>%  dplyr::select(area) %>%  unlist() %>% as.vector()" ; %>% round(2)"
+;        foreach aux-list [
+;          ax -> set PT_d lput (ax / (KDE_95 * 10000 ) ) PT_d ; PT = PL² (m)/HR (m²)
+;                                                             ;     print PT_d
+;        ]
 ;
-;      ;    type "KDE_95: " print round KDE_95
-;      ;    type "KDE_50: " print round KDE_50
-;      ;    type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
+;        set MR_mean mean (MR_d)
+;        set MR_mean precision MR_mean 4
+;        set MR_sd standard-deviation (MR_d)
+;        set MR_sd precision MR_sd 4
 ;
-;      ; update the KDE if it matches the cropped KDE (ie it didn't include non-habitat areas)
-;      ifelse KDE_95 = KDE_95_cropped [
-;        ;      type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
-;      ][
-;        print "home range was cropped"
-;        set KDE_95 KDE_95_cropped
-;        ;      type "KDE_95: " print precision ( KDE_95 / 10000 ) 4
+;        set PT_mean mean (PT_d)
+;        set PT_mean precision PT_mean 4
+;        set PT_sd standard-deviation (PT_d)
+;        set PT_sd precision PT_sd 4
+;
+;        set DPL_mean mean (DPL_d)
+;        set DPL_mean precision DPL_mean 4
+;        set DPL_sd standard-deviation (DPL_d)
+;        set DPL_sd precision DPL_sd 4
+;
+;        type "MR mean = " print MR_mean
+;        type "PT mean = " print PT_mean
+;        type "DPL mean = " print DPL_mean
+;
+;        ;round also other outputs
+;        set KDE_95 precision KDE_95 4
+;        set KDE_50 precision KDE_50 4
+;        set p_feeding precision p_feeding 4
+;        set p_foraging precision p_foraging 4
+;        set p_traveling precision p_traveling 4
+;        set p_resting precision p_resting 4
+;
+;        set step_length_mean precision step_length_mean 4
+;        set step_length_sd precision step_length_sd 4
+;        set turn_ang_mean precision turn_ang_mean 4
+;        set turn_ang_sd precision turn_ang_sd 4
+;        set MSD precision MSD 4
+;        set intensity_use precision intensity_use 4
+;
+;        set straightness precision straightness 6
+;        ;      set sinuosity precision sinuosity 6
+;
+;
+;        ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
+;        set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 100 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
+;        type "DI index = " print DI_index
+;        ;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                     ; in case KDE is in m² and not in ha
+;        let d_ ( 4 * ( KDE_95 / 100 ) / pi )                                                ; in case KDE is in ha
+;        type "diameter of home range (d' in km) =  " print d_
+;        set M_index ( 1 * ( 0.120 * (DPL_mean / 1000) / (d_ ^ 2) ) )                        ; (M = N(sv/d²) Lowen & Dunbar 1994. s value from Ruiz-Miranda et al. 2019 MLD
+;        type "M index = " print M_index
+;
 ;      ]
-;      ifelse KDE_50 = KDE_50_cropped [
-;        ;      type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
-;      ][
-;        print "home range was cropped"
-;        set KDE_50 KDE_50_cropped
-;        ;      type "KDE_50: " print precision ( KDE_50 / 10000 ) 4
-;      ]
+;
 ;    ]
 ;
 ;
-;    ;  ; Merge HR to db and save
-;    ;  sr:run "db <- left_join(db, db_nest)"
-;    ;  sr:run "db <- db %>% mutate(hr_area_ha = area / 10000)"
-;    ;
-;    ;  ; drop columns
-;    ;  sr:run "db <- db %>%    select(-c(KDE_value, area))"
-;    ;  print "db: "
-;    ;  print sr:runresult "db"
+;  ]
 ;
-;    ; calculating other movement metrics
-;    sr:run "db_metr <- db %>%  make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
-;    print r:get "colnames(db_metr)"
-;    ;  print r:get "db_metr"
-;    ;  print r:get "dim(db_metr)"
-;    sr:run "mov1 <- db_metr %>% mutate( step_length = step_lengths(., append_last = TRUE), turn_ang = direction_rel(., append_last = TRUE) )" ;,  turn_ang = as_degree(turn_ang) )"
-;                                                                                                                                              ;  print r:get "length(db_metr$step_length)"
-;
-;    print " ------------- Step lengths/Turning angles ------------------ "
-;    ;  print r:get "colnames(mov1)"
-;    ;  print r:get "mov1"
-;    ;  print r:get "length(mov1$step_length)"
-;    sr:run "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE),  step_length_sd = sd(step_length, na.rm = TRUE),  turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE),  turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
-;    ;  print r:get "colnames(mov1)"
-;    ;  print r:get "mov1"
-;
-;    ask monkeys [
-;      set step_length_mean r:get "mov1 %>% dplyr::select(step_length_mean) %>%  unlist() %>% as.vector()"
-;      set step_length_sd r:get "mov1 %>% dplyr::select(step_length_sd) %>%  unlist() %>% as.vector()"
-;      set turn_ang_mean r:get "mov1 %>% dplyr::select(turn_ang_mean) %>%  unlist() %>% as.vector()"
-;      set turn_ang_sd r:get "mov1 %>% dplyr::select(turn_ang_sd) %>%  unlist() %>% as.vector()"
-;    ]
-;
-;
-;    print " ------------- Other movement metrics ------------------ "
+
+
+
+
+
 
       ]
     ]
