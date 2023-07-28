@@ -4031,6 +4031,126 @@ to calc-seed-aggregation
 
     if sr-extension-set? = FALSE [ start-r-extension ]
 
+    sr:run "library(spatstat)"
+    sr:run "library(maptools)"
+    sr:run "library(sf)"
+    sr:run "library(adehabitatHR)"
+
+
+    ;; send agent variables into a R data-frame
+
+    if patch-type = "generated" [
+
+
+
+      (sr:set-agent-data-frame  "seeds" seeds "who" "x_scaled" "y_scaled")
+      ;    (r:putagentdf  "seeds" seeds "who" "xcor" "ycor")
+      ;    print r:get "colnames(seeds)"
+      ;    print r:get "seeds"
+
+      ;; use all turtle locations as owin (MCP)
+      (sr:set-agent-data-frame "bbox" turtles "who" "x_scaled" "y_scaled")
+      ;    (r:putagentdf "trees" feeding-trees "who" "xcor" "ycor")
+      ;    print r:get "trees"
+      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
+      ;    print r:get "xy"
+      ;    type "xy = " print r:get "xy <- SpatialPoints(trees[ , 2:3])"
+
+      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
+      sr:run "limitsOwin <- as.owin(limitsOwin)"
+
+      ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
+      sr:run "seeds <- seeds %>%  dplyr::select(x_scaled, y_scaled)  %>%  dplyr::distinct()"
+      ;    sr:run "seeds <- seeds %>%  dplyr::select(xcor, ycor)  %>%  dplyr::distinct()"
+      ;    print r:get "seeds"
+      sr:run "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+
+      ;; calc Nearest Neighbor distance within R
+      ;    sr:run "NN_seeds <- mean(nndist(sim))"
+      ;
+      ;    ; same for trees and sleeping trees
+      ;    (r:putagentdf  "ftrees" feeding-trees "who" "x_scaled" "y_scaled")
+      ;    (r:putagentdf  "strees" sleeping-trees "who" "x_scaled" "y_scaled")
+      ;
+      ;    sr:run "ftrees <- ftrees %>%  dplyr::select(x_scaled, y_scaled)  %>%  distinct()"
+      ;    sr:run "strees <- strees %>%  dplyr::select(x_scaled, y_scaled)  %>%  distinct()"
+      ;    sr:run "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
+      ;    sr:run "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
+      ;    sr:run "NN_feeding_trees <- mean(nndist(simf))"
+      ;    sr:run "NN_sleeping_trees <- mean(nndist(sims))"
+      ;
+      ;    set NN_seeds r:get "NN_seeds"
+      ;    set NN_feeding_trees r:get "NN_feeding_trees"
+      ;    set NN_sleeping_trees r:get "NN_sleeping_trees"
+      ;
+      ;        type "NN_seeds = " print NN_seeds
+      ;        type "NN_feeding_trees = " print NN_feeding_trees
+      ;        type "NN_sleeping_trees = " print NN_sleeping_trees
+
+    ]
+
+    if patch-type = "empirical" [
+      (sr:set-agent-data-frame "seeds" seeds "who" "x_UTM" "y_UTM")
+      ;    print r:get "colnames(seeds)"
+      ;    print r:get "seeds"
+
+      ; load the poligon (.shp) to determine the window (owin) ;; IDEALLY SHOULD BE THE MCP OF THE GROUP
+      ;  if study_area = "Guareí" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ]
+      ;  if study_area = "Suzano" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ]
+      ;  if study_area = "Taquara" [ set limitsOwin      "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ]
+      ;  if study_area = "SantaMaria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
+      ;  r:put "limitsOwin" limitsOwin
+      ;  print r:get "limitsOwin"
+      ;  sr:run "limitsOwin) <- sf::st_read(limitsOwin)"
+      ;  sr:run "limitsOwin <- as.owin(limitsOwin))"
+
+      ;; use agents' locations locations as owin (MCP)
+      (sr:set-agent-data-frame "bbox" turtles "who" "x_UTM" "y_UTM")
+      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
+      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
+      sr:run "limitsOwin <- as.owin(limitsOwin)"
+
+      ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
+      sr:run "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
+      sr:run "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+
+      ;; calc Nearest Neighbor distance
+      sr:run "NN_seeds <- mean(nndist(sim))"
+
+      ; same for trees and sleeping trees
+      (sr:set-agent-data-frame  "ftrees" feeding-trees "who" "x_UTM" "y_UTM")
+      (sr:set-agent-data-frame  "strees" sleeping-trees "who" "x_UTM" "y_UTM")
+
+      ;    sr:run "ftrees <- ftrees %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
+      ;    sr:run "strees <- strees %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
+      ;    sr:run "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
+      ;    sr:run "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
+      ;    sr:run "NN_feeding_trees <- mean(nndist(simf))"
+      ;    sr:run "NN_sleeping_trees <- mean(nndist(sims))"
+
+      ;    set NN_seeds r:get "NN_seeds"
+      ;    set NN_feeding_trees r:get "NN_feeding_trees"
+      ;    set NN_sleeping_trees r:get "NN_sleeping_trees"
+
+      ;    type "NN_seeds = " print NN_seeds
+      ;    type "NN_feeding_trees = " print NN_feeding_trees
+      ;    type "NN_sleeping_trees = " print NN_sleeping_trees
+    ]
+
+
+
+    ; print r:get "colnames(sim)" ; ppp objects do not have colnames
+    ;  type "sim object in R = " print r:get "sim"
+
+    print " ------------- Seed/defecation aggregation ------------------ "
+    ;; calc R index (Clark-Evans test)
+    sr:run"sim.clark <- clarkevans.test(sim,correction = 'cdf', alternative=c('two.sided'))"
+
+    set R_seeds sr:runresult "sim.clark$statistic %>% as.numeric"
+    set R_seeds_p sr:runresult "sim.clark$p.value %>% as.numeric"
+    ;    set NN_seeds sr:runresult "NN_seeds"
+
 
 
   ]
