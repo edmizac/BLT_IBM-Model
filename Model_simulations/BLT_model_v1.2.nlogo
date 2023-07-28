@@ -1112,6 +1112,9 @@ to go
     if day > no_days [ ; if the simulation has ended
       ask monkeys [ set action "" ]
       output-print "run-days click finished"
+
+      start-r-extension
+
       output-print "calculating home range with r extension"
       calc-homerange
       output-print "home range calculation with r extension finished"
@@ -3121,9 +3124,8 @@ to output-day-stats
 end
 
 
-to calc-homerange
+to start-r-extension
 
-; ############################################# start of SimpleR extension code ############################################# ;
   if R_EXTENSION = "SimpleR" [
     ; use sr:run to run code in R
     ; use sr:runresult to get values back to netlogo
@@ -3152,6 +3154,15 @@ to calc-homerange
     print "==== packages loaded ==== "
 
 ;        stop
+
+  ]
+
+end
+
+to calc-homerange
+
+; ############################################# start of SimpleR extension code ############################################# ;
+  if R_EXTENSION = "SimpleR" [
 
     ;; create an empty data.frame"
     sr:run "monkeys_df <- data.frame()"
@@ -3244,6 +3255,8 @@ to calc-homerange
 
 ;        ; KDE ===================================================
         sr:run "db_KDE <- db_ %>% hr_kde(., levels = c(0.50, 0.95))"
+;        print sr:runresult "db_KDE"
+;        stop
         sr:run "db_KDE_area <- db_KDE %>% hr_area(.)"
 
         sr:run "db_KDE_area <- db_KDE_area %>% dplyr::select(-what)"
@@ -3288,7 +3301,7 @@ to calc-homerange
           ]
         ]
 
-;        print "==== SR debugging 8 ==== "
+        print "==== SR debugging 8 ==== "
 
         ;  sr:run "shp <- sf::read_sf(filepath)" ; make it an sf object
         sr:run "forest_area <- shp %>% sf::st_area()" ; print total forest area
@@ -3296,42 +3309,74 @@ to calc-homerange
 
 ;        stop
 
-        ; Transform KDE to sf
-        sr:run "KDE_sf <- amt::hr_isopleths(db_KDE) %>% sf::st_as_sf(., crs = 32722)"
-;        print sr:runresult "KDE_sf"
-;        print sr:runresult "str(KDE_sf)"
-
-;        print "==== SR debugging 9 ==== "
-
-;        stop
 
         ;; NOT WORKING ;; =========================================================================
+        ; (with st_interesect()) -> NetLogo freezes
+         ; Transform KDE to sf
+;        sr:run "KDE_sf <- amt::hr_isopleths(db_KDE) %>% sf::st_as_sf(., crs = 32722)"
+;        print sr:runresult "KDE_sf"
+;        print sr:runresult "str(KDE_sf)"
+;        print "==== SR debugging 9 ==== "
 ;        ; crop home range by the forest area
-;        sr:run "cropped <- sf::st_intersection(KDE_sf, shp)"
+;        sr:run "cropped <- sf::st_intersection(KDE_sf[1], shp)"
 ;        type "cropped HR values = " print sr:runresult "cropped"
 ;        print "==== before sf_overlap ==== "
 ;        sr:run "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
         ;; NOT WORKING ;; =========================================================================
 
+        ;; WORKING ;; =========================================================================
+;        ; INSTEAD, use st_intersection to crop home range by the forest area
+        ; (with amt::hr_overlap_feature())
+;        sr:run "KDE_iso <- amt::hr_isopleths(db_KDE)"
+;        sr:run "KDE_iso$area[1] %>% as.numeric() / 10000"
+;        show sr:runresult "KDE_iso"
+;        sr:run "KDE_sf <- amt::hr_isopleths(db_KDE) %>% sf::st_as_sf(., crs = 32722)"
+;        sr:run "cropped <- sf::st_intersection(KDE_sf, shp)"
+;        sr:run "sf_overlap <- cropped %>% sf::st_area()"
+
+
+        print "==== SR debugging 9 ==== "
+;        stop
+
+        sr:run "amt_overlap <- amt::hr_overlap_feature(db_KDE, shp)"
+        sr:run "amt_overlap[1,3] %>% as.numeric()"  ; 0.5 overlap
+        sr:run "amt_overlap[2,3] %>% as.numeric()"  ; 0.95 overlap
+;        type "overlap (forest-HR) values = " print sr:runresult "amt_overlap"
+;        print "==== before hr_overlap ==== "
+;        sr:run "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
+        ;; WORKING ;; =========================================================================
+
         print "==== SR debugging 10 ==== "
+
+;        stop
 
         ask monkeys [
           set MCP_100 sr:runresult "db_MCP100 / 10000"
-;          set KDE_95_cropped sr:runresult "sf_overlap[1] %>% as.numeric() / 10000"
-;          set KDE_50_cropped sr:runresult "sf_overlap[2] %>% as.numeric() / 10000"
-          ;; THESE ARE NOT THE CROPPED VALUES:
+
+          set KDE_95_cropped sr:runresult "amt_overlap[1,3] %>% as.numeric() * db_KDE95"
+          set KDE_50_cropped sr:runresult "amt_overlap[2,3] %>% as.numeric() * db_KDE50"
+
+          ; validate interescted values (in m²):
+          ;    type "monkey " type who type " "
+          type "KDE95 = " print sr:runresult "db_KDE95"
+          type "cropped KDE95 = " print KDE_95_cropped
+          type "KDE50 = " print sr:runresult "db_KDE50"
+          type "cropped KDE50 = " print KDE_50_cropped
+
+          ; set values in hectares
           set KDE_95_cropped sr:runresult "db_KDE95 / 10000"
           set KDE_50_cropped sr:runresult "db_KDE50 / 10000"
 
-          ;    type "monkey " type who type " "
-          type "cropped KDE95 = " print KDE_95_cropped
-          type "cropped KDE50 = " print KDE_50_cropped
         ]
         ;  print sr:runresult "db_KDE95"
         ;  print sr:runresult "db_KDE50"
 
         ;  print sr:runresult "db_"
 
+
+        print "==== SR debugging 11 ==== "
+
+        stop
 
 
         ; calculating other movement metrics:
@@ -3914,6 +3959,7 @@ to calc-movement-dead ; if tamarins die before days > no_days, their variables g
 ;    print day
     output-print "monkeys died"
     output-print "calculating metrics"
+    start-r-extension
     calc-homerange
     calc-activity-budget
     ;      calc-movement-metrics ; these are being estimated within calc-homerange
