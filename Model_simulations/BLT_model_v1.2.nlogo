@@ -2604,7 +2604,7 @@ end
 to defecation
 ;  output-print "voiding seeds ****************** "
 
-  ifelse ( timestep < simulation-time * 90 / 100 ) [ ; if the time is below 90% of the simulation-time, seeds should be defecated (check parameterization);   Mayara's model: 84 timesteps is for 7 hours after waking up (after 3pm)
+  ifelse ( timestep < simulation-time * 0.9 ) [ ; if the time is below 90% of the simulation-time, seeds should be defecated (check parameterization);   Mayara's model: 84 timesteps is for 7 hours after waking up (after 3pm)
 
     ; testing if the monkey defecates the seeds AND put the seeds to the seeds' agent list
 
@@ -3136,8 +3136,8 @@ to start-r-extension
 
     ;; setup SimpleR (mandatory):
     sr:setup
-    print "= simpleR extension setted up ="
     set sr-extension-set? TRUE
+    print "= simpleR extension setted up ="
 
     ; test:
     ;    sr:run "iris"
@@ -3146,16 +3146,16 @@ to start-r-extension
 
     ;    stop
 
-    sr:run "library(adehabitatHR, quietly = T)" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
+    sr:run "suppressMessages(library(adehabitatHR, quietly = T))" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
                                                 ;  sr:run "library(udunits2)"
                                                 ;  sr:run "library(units)"
-    sr:run "library('tidyverse', quietly = T)"
+    sr:run "suppressMessages(library('tidyverse', quietly = T))"
     ;    sr:run "library('dplyr', quietly = T)"
     ;    sr:run "library('tidyr', quietly = T)"
-    sr:run "library('amt', quietly = T)"
-    sr:run "library('sf')"
-    sr:run "library('circular')"
-;    sr:run "library('st', quietly = T)"
+    sr:run "suppressMessages(library('amt', quietly = T))"
+    sr:run "suppressMessages(library('sf'))"
+;    sr:run "suppressMessages(library('circular'))"
+;    sr:run "suppressMessages(library('st', quietly = T))"
 
     print "==== packages loaded ==== "
 
@@ -3171,10 +3171,10 @@ to start-r-extension
       ask monkeys [
         ;        print "==== SR debugging 1 ==== "
 
-        let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr
-        let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr
-        let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr
-        let Name_sr [Name] of self            print Name_sr  ;print length Name_sr
+        let X_coords_sr [X_coords] of self    ;print X_coords_sr  print length X_coords_sr
+        let Y_coords_sr [Y_coords] of self    ;print Y_coords_sr  print length Y_coords_sr
+        let day_list_sr [day_list] of self    ;print day_list_sr  print length day_list_sr
+        let Name_sr [Name] of self            ;print Name_sr      print length Name_sr
 
         ;        print "==== SR debugging 2 ==== "
 
@@ -3193,13 +3193,15 @@ to start-r-extension
 
         ;      stop
 
-        print "==== SR debugging 3 ==== "
+;        print "==== SR debugging 3 ==== "
+
         (sr:set-agent-data-frame "tamarins" monkeys "who" "x_coords" "y_coords" "day_list")
-        sr:run "print(typeof(tamarins))"
+;        sr:run "print(typeof(tamarins))"
 
         ;      stop
 
-        print "==== SR debugging 4 ==== "
+;        print "==== SR debugging 4 ==== "
+
         ;      sr:set "tamarins" "data.frame(tamarins, Name = 'Name')"
         ;        sr:run "print(head(tamarins))"
         sr:run "names(tamarins) <- c('Name', 'X', 'Y', 'day')"
@@ -3309,7 +3311,7 @@ to calc-homerange
           ]
         ]
 
-        print "==== SR debugging 8 ==== "
+;        print "==== SR debugging 8 ==== "
 
         ;  sr:run "shp <- sf::read_sf(filepath)" ; make it an sf object
         sr:run "forest_area <- shp %>% sf::st_area()" ; print total forest area
@@ -3358,7 +3360,7 @@ to calc-homerange
 ;        sr:run "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
         ;; WORKING ;; =========================================================================
 
-        print "==== SR debugging 10 ==== "
+;        print "==== SR debugging 10 ==== "
 
 ;        stop
 
@@ -3372,9 +3374,9 @@ to calc-homerange
           ; validate interescted values (in m²):
           ;    type "monkey " type who type " "
           type "KDE95 = " print sr:runresult "db_KDE95"
-          type "cropped KDE95 = " print KDE_95_cropped
+          type "cropped KDE95 = " type KDE_95_cropped / 10000 print " hectares"
           type "KDE50 = " print sr:runresult "db_KDE50"
-          type "cropped KDE50 = " print KDE_50_cropped
+          type "cropped KDE50 = " type KDE_50_cropped / 10000 print " hectares"
 
           ; set values in hectares:
           set KDE_95_cropped sr:runresult "db_KDE95 / 10000"
@@ -3388,7 +3390,7 @@ to calc-homerange
         ;  print sr:runresult "db_KDE50"
 
 
-        print "==== SR debugging 11 ==== "
+;        print "==== SR debugging 11 ==== "
 
 ;        stop
 
@@ -3405,12 +3407,12 @@ to calc-homerange
 ;  if R_EXTENSION = "R" [ ; dropped this out after upgrading to NetLogo 6.3 ; https://github.com/NetLogo/R-Extension/issues/27
 ;
 ;    ; load up libraries:
-;    ;  r:eval "library(adehabitat)"
-;    r:eval "library(dplyr)"
-;    r:eval "library(tidyr)"
-;    r:eval "library(amt)"
-;    r:eval "library(circular)"
-;    r:eval "library(sf)"
+;    ;  r:eval "suppressMessages(library(adehabitat))"
+;    r:eval "suppressMessages(library(dplyr))"
+;    r:eval "suppressMessages(library(tidyr))"
+;    r:eval "suppressMessages(library(amt))"
+;    r:eval "suppressMessages(library(circular))"
+;    r:eval "suppressMessages(library(sf))"
 ;
 ;    ;; create an empty data.frame"
 ;    r:eval "turtles <- data.frame()"
@@ -3638,18 +3640,19 @@ to calc-movement-metrics
                                                                                                                                           ;  print r:get "length(db_metr$step_length)"
 
     print " ------------- Step lengths/Turning angles ------------------ "
-    print sr:runresult "colnames(mov1)"
-    print sr:runresult "mov1"
 
-    print " ====== SR calc-movement-metrics debugging 1 ====== "
+;    print sr:runresult "colnames(mov1)"
+;    print sr:runresult "mov1"
+
+;    print " ====== SR calc-movement-metrics debugging 1 ====== "
 ;    stop
 
     ;  print sr:runresult "length(mov1$step_length)"
     sr:run "mov1 <- mov1 %>% dplyr::summarise( step_length_mean = mean(step_length, na.rm = TRUE),  step_length_sd = sd(step_length, na.rm = TRUE),  turn_ang_mean = mean(turn_ang, na.rm = TRUE),  turn_ang_sd = sd(turn_ang, na.rm = TRUE) )"
     ;  print sr:runresult "colnames(mov1)"
-      print sr:runresult "mov1"
+;      print sr:runresult "mov1"
 
-    print " ====== SR calc-movement-metrics debugging 2 ====== "
+;    print " ====== SR calc-movement-metrics debugging 2 ====== "
 ;    stop
 
 
@@ -3670,12 +3673,13 @@ to calc-movement-metrics
     sr:run "db_ <- db %>%  make_track(.x=Y, .y=X, id = day, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs',  all_cols = TRUE)"
     sr:run "db_metr <- db_ %>% amt::nest(data = -'day')  %>%   mutate( MSD = amt::map(data, ~ msd(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),  intensity_use = amt::map(data, ~ intensity_use(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),    straightness = amt::map(data, ~ straightness(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric() )  "
     sr:run "db_metr <- db_metr %>% dplyr::select(-data)"
+
     ; you can print all the movement matric variables by day:
-    print "movement metrics by day ---- " print sr:runresult "colnames(db_metr)" print sr:runresult "db_metr"
+;    print "movement metrics by day ---- " print sr:runresult "colnames(db_metr)" print sr:runresult "db_metr"
 
     sr:run "db_metr <- db_metr %>% na.omit() %>% summarize_all(  list(mean = ~ mean(., na.rm = TRUE)  ) ) "
 
-    print "==== SR debugging 11 ==== "
+;    print "==== SR debugging 11 ==== "
 
     ; not nested by day (considers all days as one path) (WRONG)
     ;  sr:run "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
@@ -4031,10 +4035,10 @@ to calc-seed-aggregation
 
     if sr-extension-set? = FALSE [ start-r-extension ]
 
-    sr:run "library(spatstat)"
-    sr:run "library(maptools)"
-    sr:run "library(sf)"
-    sr:run "library(adehabitatHR)"
+    sr:run "suppressMessages(library(spatstat))"
+    sr:run "suppressMessages(library(maptools))"
+    sr:run "suppressMessages(library(sf))"
+    sr:run "suppressMessages(library(adehabitatHR))"
 
 
     ;; send agent variables into a R data-frame
@@ -4358,7 +4362,7 @@ to SDDcalc
   ]
 
   set g_SDD_sd_sameday standard-deviation [SDD] of seeds with [disp-day = "same day"] ;should be the same as sd() in R
-   ifelse ( any? seeds with [disp-day = "next day"] ) [
+   ifelse ( count seeds with [disp-day = "next day"] > 1 ) [
     set g_SDD_sd_nextday standard-deviation [SDD] of seeds with [disp-day = "next day"] ;should be the same as sd() in R
   ] [
     set g_SDD_sd_nextday 0
@@ -4762,7 +4766,7 @@ INPUTBOX
 604
 105
 no_days
-3.0
+6.0
 1
 0
 Number
@@ -5883,7 +5887,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.25
+0.05
 0.05
 1
 NIL
