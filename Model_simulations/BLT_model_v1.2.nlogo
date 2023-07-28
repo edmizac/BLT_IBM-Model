@@ -1124,7 +1124,7 @@ to go
       output-print "calculating activity budget finished"
 
       output-print "calculating other movement metrics"
-;      calc-movement-metrics ; these are being estimated within calc-homerange
+      calc-movement-metrics ; these are being estimated within calc-homerange
       output-print "calculating movement metrics finished"
 
       ; calc near neighbor distance (in NetLogo)
@@ -3153,33 +3153,24 @@ to start-r-extension
 
     print "==== packages loaded ==== "
 
-;        stop
-
-  ]
-
-end
-
-to calc-homerange
-
-; ############################################# start of SimpleR extension code ############################################# ;
-  if R_EXTENSION = "SimpleR" [
+    ;        stop
 
     ;; create an empty data.frame"
     sr:run "monkeys_df <- data.frame()"
     ;sr:run "print(monkeys_df)"
-;    print "==== SR debugging 0 ==== "
+    ;    print "==== SR debugging 0 ==== "
 
     if count monkeys = 1 [
       ;; merge the Name, X- and Y-lists of all animals to one big data.frame
       ask monkeys [
-;        print "==== SR debugging 1 ==== "
+        ;        print "==== SR debugging 1 ==== "
 
         let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr
         let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr
         let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr
         let Name_sr [Name] of self            print Name_sr  ;print length Name_sr
 
-;        print "==== SR debugging 2 ==== "
+        ;        print "==== SR debugging 2 ==== "
 
         ;      stop
 
@@ -3204,7 +3195,7 @@ to calc-homerange
 
         print "==== SR debugging 4 ==== "
         ;      sr:set "tamarins" "data.frame(tamarins, Name = 'Name')"
-;        sr:run "print(head(tamarins))"
+        ;        sr:run "print(head(tamarins))"
         sr:run "names(tamarins) <- c('Name', 'X', 'Y')"
 
 
@@ -3220,7 +3211,7 @@ to calc-homerange
         ;        "id <- turtles$Name"
         ;        )
 
-;        print "==== SR debugging 5 ==== "
+        ;        print "==== SR debugging 5 ==== "
 
         ;    ;;; calculate homerange (mcp method, needs a SpatialPointDataFrame)
         ;      sr:run "homerange <- mcp(xy, id)"
@@ -3228,8 +3219,8 @@ to calc-homerange
         ;
         ; calculate homerange (amt package)
         sr:run "db_ <- cbind(xy, id)"
-;        if ticks < 110 [  print sr:runresult "colnames(db_)" ]
-;        if ticks < 110 [  print sr:runresult "db_" ]
+        ;        if ticks < 110 [  print sr:runresult "colnames(db_)" ]
+        ;        if ticks < 110 [  print sr:runresult "db_" ]
 
         ; Using non-nested data as we only have one group. When multiple tamarin groups are simulated, we will need to call nest():
         (
@@ -3238,8 +3229,19 @@ to calc-homerange
         ;    show r:get "colnames(db_)"
         ;    show r:get "db_"
 
-;        print "==== SR debugging 6 ==== "
+        ;        print "==== SR debugging 6 ==== "
 
+
+      ]
+    ]
+  ]
+
+end
+
+to calc-homerange
+
+; ############################################# start of SimpleR extension code ############################################# ;
+  if R_EXTENSION = "SimpleR" [
 
         print " ------------- Home range size ------------------ "
 
@@ -3310,9 +3312,9 @@ to calc-homerange
 ;        stop
 
 
-        ;; NOT WORKING ;; =========================================================================
-        ; (with st_interesect()) -> NetLogo freezes
-         ; Transform KDE to sf
+;        ;; NOT WORKING ;; =========================================================================
+;        ; (with st_interesect()) -> NetLogo freezes
+;         ; Transform KDE to sf
 ;        sr:run "KDE_sf <- amt::hr_isopleths(db_KDE) %>% sf::st_as_sf(., crs = 32722)"
 ;        print sr:runresult "KDE_sf"
 ;        print sr:runresult "str(KDE_sf)"
@@ -3322,22 +3324,26 @@ to calc-homerange
 ;        type "cropped HR values = " print sr:runresult "cropped"
 ;        print "==== before sf_overlap ==== "
 ;        sr:run "sf_overlap <- cropped %>% sf::st_area()" ; first value = KDE95; second value = KD50
-        ;; NOT WORKING ;; =========================================================================
+;        ;; NOT WORKING ;; =========================================================================
 
-        ;; WORKING ;; =========================================================================
-;        ; INSTEAD, use st_intersection to crop home range by the forest area
-        ; (with amt::hr_overlap_feature())
+
+;        ;; NOT WORKING ;; =========================================================================
+;        ; (with amt::hr_isopleths() and st_interestc()) -> NetLogo freezes
 ;        sr:run "KDE_iso <- amt::hr_isopleths(db_KDE)"
 ;        sr:run "KDE_iso$area[1] %>% as.numeric() / 10000"
 ;        show sr:runresult "KDE_iso"
 ;        sr:run "KDE_sf <- amt::hr_isopleths(db_KDE) %>% sf::st_as_sf(., crs = 32722)"
 ;        sr:run "cropped <- sf::st_intersection(KDE_sf, shp)"
 ;        sr:run "sf_overlap <- cropped %>% sf::st_area()"
+;        ;; NOT WORKING ;; =========================================================================
 
 
-        print "==== SR debugging 9 ==== "
-;        stop
+;    print "==== SR debugging 9 ==== "
+;    stop
 
+
+        ;; WORKING ;; =========================================================================
+        ; (with amt::hr_overlap_feature()) -> NetLogo does not freeze
         sr:run "amt_overlap <- amt::hr_overlap_feature(db_KDE, shp)"
         sr:run "amt_overlap[1,3] %>% as.numeric()"  ; 0.5 overlap
         sr:run "amt_overlap[2,3] %>% as.numeric()"  ; 0.95 overlap
@@ -3353,6 +3359,7 @@ to calc-homerange
         ask monkeys [
           set MCP_100 sr:runresult "db_MCP100 / 10000"
 
+          ; correct hr values by the overlap percentage:
           set KDE_95_cropped sr:runresult "amt_overlap[1,3] %>% as.numeric() * db_KDE95"
           set KDE_50_cropped sr:runresult "amt_overlap[2,3] %>% as.numeric() * db_KDE50"
 
@@ -3363,7 +3370,7 @@ to calc-homerange
           type "KDE50 = " print sr:runresult "db_KDE50"
           type "cropped KDE50 = " print KDE_50_cropped
 
-          ; set values in hectares
+          ; set values in hectares:
           set KDE_95_cropped sr:runresult "db_KDE95 / 10000"
           set KDE_50_cropped sr:runresult "db_KDE50 / 10000"
 
@@ -3371,147 +3378,16 @@ to calc-homerange
         ;  print sr:runresult "db_KDE95"
         ;  print sr:runresult "db_KDE50"
 
-        ;  print sr:runresult "db_"
-
 
         print "==== SR debugging 11 ==== "
 
-        stop
-
-
-        ; calculating other movement metrics:
-        sr:run "mov1 <- db_ %>% mutate( step_length = step_lengths(., append_last = TRUE), turn_ang = direction_rel(., append_last = TRUE) )" ;,  turn_ang = as_degree(turn_ang) )"
-                                                                                                                                                  ;  print r:get "length(db_metr$step_length)"
-
-        print " ------------- Step lengths/Turning angles ------------------ "
-        ;  print r:get "colnames(mov1)"
-        ;  print r:get "mov1"
-        ;  print r:get "length(mov1$step_length)"
-        sr:run "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE),  step_length_sd = sd(step_length, na.rm = TRUE),  turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE),  turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
-        ;  print r:get "colnames(mov1)"
-        ;  print r:get "mov1"
-
-        ask monkeys [
-          set step_length_mean sr:runresult "mov1 %>% dplyr::select(step_length_mean) %>%  unlist() %>% as.vector()"
-          set step_length_sd sr:runresult "mov1 %>% dplyr::select(step_length_sd) %>%  unlist() %>% as.vector()"
-          set turn_ang_mean sr:runresult "mov1 %>% dplyr::select(turn_ang_mean) %>%  unlist() %>% as.vector()"
-          set turn_ang_sd sr:runresult "mov1 %>% dplyr::select(turn_ang_sd) %>%  unlist() %>% as.vector()"
-        ]
-
-
-        print " ------------- Other movement metrics ------------------ "
-
-        ; nested by day
-        ;type "*******" print sr:runresult "db"
-        ;  type "*******" print sr:runresult "colnames(db)"
-        sr:run "db_metr <- db %>%  make_track(.x=Y, .y=X, id = day, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs',  all_cols = TRUE)"
-        sr:run "db_metr <- db_metr %>% amt::nest(data = -'day')  %>%   mutate( MSD = amt::map(data, ~ msd(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),  intensity_use = amt::map(data, ~ intensity_use(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),    straightness = amt::map(data, ~ straightness(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric() )  "
-        sr:run "db_metr <- db_metr %>% dplyr::select(-data)"
-        ; you can print all the movement matric variables by day:
-        print "movement metrics by day ---- " print sr:runresult "colnames(db_metr)" print sr:runresult "db_metr"
-
-        sr:run "db_metr <- db_metr %>% na.omit() %>% summarize_all(  list(mean = ~ mean(., na.rm = TRUE)  ) ) "
-
-        print "==== SR debugging 11 ==== "
-
-    ; not nested by day (considers all days as one path) (WRONG)
-    ;  sr:run "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
-    ;  sr:run "db_metr <- db_metr %>% summarise( MSD = msd(.),  intensity_use = intensity_use(.), straightness = straightness(.), sinuosity = sinuosity(.) )"
-
-;    print sr:runresult "colnames(db_metr)"
-;    print sr:runresult "db_metr"
-
-;    print "checkpoint 1"
-
-
-;    ask monkeys [
-;      set MSD sr:runresult "db_metr %>% dplyr::select(MSD_mean) %>%  unlist() %>% as.vector()"
-;      set intensity_use sr:runresult "db_metr %>% dplyr::select(intensity_use_mean) %>%  unlist() %>% as.vector()"
-;      set straightness sr:runresult "db_metr %>% dplyr::select(straightness_mean) %>%  unlist() %>% as.vector()"
-;;          set sinuosity sr:runresult "db_metr %>% dplyr::select(sinuosity_mean) %>%  unlist() %>% as.vector()"
-;;      set sinuosity "wrong"
-;    ]
-;
-;    ; calculating mean and sd DPL, MR and PT ONLY IF THE MONKEYS RAN FOR MORE THAN 3 DAYS
-;
-;    if day > 3 [
-;      ask monkeys [
-;        let aux-list []
-;        foreach DPL_d [
-;          ax -> ;print x
-;          set aux-list lput (ax ^ 2) aux-list
-;          ;     print aux-list
-;        ]
-;
-;        foreach aux-list [
-;          ax -> set PT_d lput (ax / (KDE_95 * 10000 ) ) PT_d ; PT = PL² (m)/HR (m²)
-;                                                             ;     print PT_d
-;        ]
-;
-;        set MR_mean mean (MR_d)
-;        set MR_mean precision MR_mean 4
-;        set MR_sd standard-deviation (MR_d)
-;        set MR_sd precision MR_sd 4
-;
-;        set PT_mean mean (PT_d)
-;        set PT_mean precision PT_mean 4
-;        set PT_sd standard-deviation (PT_d)
-;        set PT_sd precision PT_sd 4
-;
-;        set DPL_mean mean (DPL_d)
-;        set DPL_mean precision DPL_mean 4
-;        set DPL_sd standard-deviation (DPL_d)
-;        set DPL_sd precision DPL_sd 4
-;
-;        type "MR mean = " print MR_mean
-;        type "PT mean = " print PT_mean
-;        type "DPL mean = " print DPL_mean
-;
-;        ;round also other outputs
-;        set KDE_95 precision KDE_95 4
-;        set KDE_50 precision KDE_50 4
-;        set p_feeding precision p_feeding 4
-;        set p_foraging precision p_foraging 4
-;        set p_traveling precision p_traveling 4
-;        set p_resting precision p_resting 4
-;
-;        set step_length_mean precision step_length_mean 4
-;        set step_length_sd precision step_length_sd 4
-;        set turn_ang_mean precision turn_ang_mean 4
-;        set turn_ang_sd precision turn_ang_sd 4
-;        set MSD precision MSD 4
-;        set intensity_use precision intensity_use 4
-;
-;        set straightness precision straightness 6
-;        ;      set sinuosity precision sinuosity 6
-;
-;
-;        ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
-;        set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 100 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
-;        type "DI index = " print DI_index
-;        ;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                     ; in case KDE is in m² and not in ha
-;        let d_ ( 4 * ( KDE_95 / 100 ) / pi )                                                ; in case KDE is in ha
-;        type "diameter of home range (d' in km) =  " print d_
-;        set M_index ( 1 * ( 0.120 * (DPL_mean / 1000) / (d_ ^ 2) ) )                        ; (M = N(sv/d²) Lowen & Dunbar 1994. s value from Ruiz-Miranda et al. 2019 MLD
-;        type "M index = " print M_index
-;
-;      ]
-;
-;    ]
-;
-;
-;  ]
-;
-
-
-
-
+;        stop
 
 
       ]
-    ]
+;    ]
 
-  ]
+;  ]
 ; ############################################# end of SimpleR extension code ############################################# ;
 
 
@@ -3714,8 +3590,94 @@ to calc-homerange
 ;    ;  r:eval "db <- db %>%    select(-c(KDE_value, area))"
 ;    ;  print "db: "
 ;    ;  show r:get "db"
+
+
+;  ; ############################################# end of R extension code ############################################# ;
+
+
+  ; remake lists to be readable in R with nlrx (I COULDN'T MANAGE TO PASTE A "_" BETWEEN EACH VALUE)
+;  ask monkeys [
+;    let a "_"
+;    foreach DPL_d [
+;      x ->
+;      set DPL_d lput a DPL_d
 ;
-;    ; calculating other movement metrics
+;    ]
+;    print DPL_d
+;
+;
+;  ]
+
+  ; SET RESOURCE REVISITATION
+  set n_visited_trees count feeding-trees with [visitations > 0]
+  set n_unvisited_trees count feeding-trees with [visitations = 0]
+
+
+end
+
+to calc-movement-metrics
+
+  ; ############################################# start of SimpleR extension code ############################################# ;
+
+  ; calculating other movement metrics:
+  sr:run "mov1 <- db_ %>% mutate( step_length = step_lengths(., append_last = TRUE), turn_ang = direction_rel(., append_last = TRUE) )" ;,  turn_ang = as_degree(turn_ang) )"
+                                                                                                                                        ;  print r:get "length(db_metr$step_length)"
+
+  print " ------------- Step lengths/Turning angles ------------------ "
+  ;  print r:get "colnames(mov1)"
+  ;  print r:get "mov1"
+  ;  print r:get "length(mov1$step_length)"
+  sr:run "mov1 <- mov1 %>% summarise( step_length_mean = mean(step_length, na.rm = TRUE),  step_length_sd = sd(step_length, na.rm = TRUE),  turn_ang_mean = circular::mean.circular(turn_ang, na.rm = TRUE),  turn_ang_sd = circular::sd.circular(turn_ang, na.rm = TRUE) )"
+  ;  print r:get "colnames(mov1)"
+  ;  print r:get "mov1"
+
+  ask monkeys [
+    set step_length_mean sr:runresult "mov1 %>% dplyr::select(step_length_mean) %>%  unlist() %>% as.vector()"
+    set step_length_sd sr:runresult "mov1 %>% dplyr::select(step_length_sd) %>%  unlist() %>% as.vector()"
+    set turn_ang_mean sr:runresult "mov1 %>% dplyr::select(turn_ang_mean) %>%  unlist() %>% as.vector()"
+    set turn_ang_sd sr:runresult "mov1 %>% dplyr::select(turn_ang_sd) %>%  unlist() %>% as.vector()"
+  ]
+
+
+  print " ------------- Other movement metrics ------------------ "
+
+  ; nested by day
+  ;type "*******" print sr:runresult "db"
+  ;  type "*******" print sr:runresult "colnames(db)"
+  sr:run "db_metr <- db %>%  make_track(.x=Y, .y=X, id = day, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs',  all_cols = TRUE)"
+  sr:run "db_metr <- db_metr %>% amt::nest(data = -'day')  %>%   mutate( MSD = amt::map(data, ~ msd(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),  intensity_use = amt::map(data, ~ intensity_use(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric(),    straightness = amt::map(data, ~ straightness(.)) %>% amt::map(., ~mean(., na.rm = TRUE)) %>% as.numeric() )  "
+  sr:run "db_metr <- db_metr %>% dplyr::select(-data)"
+  ; you can print all the movement matric variables by day:
+  print "movement metrics by day ---- " print sr:runresult "colnames(db_metr)" print sr:runresult "db_metr"
+
+  sr:run "db_metr <- db_metr %>% na.omit() %>% summarize_all(  list(mean = ~ mean(., na.rm = TRUE)  ) ) "
+
+  print "==== SR debugging 11 ==== "
+
+  ; not nested by day (considers all days as one path) (WRONG)
+  ;  sr:run "db_metr <- db %>%  make_track(.x=Y, .y=X, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+  ;  sr:run "db_metr <- db_metr %>% summarise( MSD = msd(.),  intensity_use = intensity_use(.), straightness = straightness(.), sinuosity = sinuosity(.) )"
+
+  ;    print sr:runresult "colnames(db_metr)"
+  ;    print sr:runresult "db_metr"
+
+  ;    print "checkpoint 1"
+
+
+  ;    ask monkeys [
+  ;      set MSD sr:runresult "db_metr %>% dplyr::select(MSD_mean) %>%  unlist() %>% as.vector()"
+  ;      set intensity_use sr:runresult "db_metr %>% dplyr::select(intensity_use_mean) %>%  unlist() %>% as.vector()"
+  ;      set straightness sr:runresult "db_metr %>% dplyr::select(straightness_mean) %>%  unlist() %>% as.vector()"
+  ;;          set sinuosity sr:runresult "db_metr %>% dplyr::select(sinuosity_mean) %>%  unlist() %>% as.vector()"
+  ;;      set sinuosity "wrong"
+  ;    ]
+
+  ; ############################################# end of SimpleR extension code ############################################# ;
+
+
+
+  ; ############################################# start of R extension code ############################################# ;
+ ;    ; calculating other movement metrics
 ;    r:eval "db_metr <- db %>%  make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
 ;    print r:get "colnames(db_metr)"
 ;    ;  print r:get "db_metr"
@@ -3840,26 +3802,78 @@ to calc-homerange
 ;
 ;
 ;  ]
-;
-;  ; ############################################# end of R extension code ############################################# ;
+  ; ############################################# end of R extension code ############################################# ;
 
 
-  ; remake lists to be readable in R with nlrx (I COULDN'T MANAGE TO PASTE A "_" BETWEEN EACH VALUE)
-;  ask monkeys [
-;    let a "_"
-;    foreach DPL_d [
-;      x ->
-;      set DPL_d lput a DPL_d
-;
-;    ]
-;    print DPL_d
-;
-;
-;  ]
 
-  ; SET RESOURCE REVISITATION
-  set n_visited_trees count feeding-trees with [visitations > 0]
-  set n_unvisited_trees count feeding-trees with [visitations = 0]
+  ; setting mean and sd DPL, MR and PT ONLY IF THE MONKEYS RAN FOR MORE THAN 3 DAYS
+
+  if day > 3 [
+    ask monkeys [
+      let aux-list []
+      foreach DPL_d [
+        ax -> ;print x
+        set aux-list lput (ax ^ 2) aux-list
+        ;     print aux-list
+      ]
+
+      foreach aux-list [
+        ax -> set PT_d lput (ax / (KDE_95 * 10000 ) ) PT_d ; PT = PL² (m)/HR (m²)
+                                                           ;     print PT_d
+      ]
+
+      set MR_mean mean (MR_d)
+      set MR_mean precision MR_mean 4
+      set MR_sd standard-deviation (MR_d)
+      set MR_sd precision MR_sd 4
+
+      set PT_mean mean (PT_d)
+      set PT_mean precision PT_mean 4
+      set PT_sd standard-deviation (PT_d)
+      set PT_sd precision PT_sd 4
+
+      set DPL_mean mean (DPL_d)
+      set DPL_mean precision DPL_mean 4
+      set DPL_sd standard-deviation (DPL_d)
+      set DPL_sd precision DPL_sd 4
+
+      type "MR mean = " print MR_mean
+      type "PT mean = " print PT_mean
+      type "DPL mean = " print DPL_mean
+
+      ;round also other outputs
+      set KDE_95 precision KDE_95 4
+      set KDE_50 precision KDE_50 4
+      set p_feeding precision p_feeding 4
+      set p_foraging precision p_foraging 4
+      set p_traveling precision p_traveling 4
+      set p_resting precision p_resting 4
+
+      set step_length_mean precision step_length_mean 4
+      set step_length_sd precision step_length_sd 4
+      set turn_ang_mean precision turn_ang_mean 4
+      set turn_ang_sd precision turn_ang_sd 4
+      set MSD precision MSD 4
+      set intensity_use precision intensity_use 4
+
+      set straightness precision straightness 6
+      ;      set sinuosity precision sinuosity 6
+
+
+      ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
+      set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 100 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
+      type "DI index = " print DI_index
+      ;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                     ; in case KDE is in m² and not in ha
+      let d_ ( 4 * ( KDE_95 / 100 ) / pi )                                                ; in case KDE is in ha
+      type "diameter of home range (d' in km) =  " print d_
+      set M_index ( 1 * ( 0.120 * (DPL_mean / 1000) / (d_ ^ 2) ) )                        ; (M = N(sv/d²) Lowen & Dunbar 1994. s value from Ruiz-Miranda et al. 2019 MLD
+      type "M index = " print M_index
+
+    ]
+
+  ]
+
+
 
 
 end
@@ -5958,7 +5972,7 @@ BUTTON
 398
 398
 calc-homerange
-;repeat 3 [ next_day ]\n;ask monkeys [ print DPL_d ]\n\ncalc-homerange
+;repeat 3 [ next_day ]\n;ask monkeys [ print DPL_d ]\n\nstart-r-extension\ncalc-homerange
 NIL
 1
 T
@@ -5987,10 +6001,10 @@ NIL
 1
 
 BUTTON
-273
-403
-381
-436
+586
+272
+694
+305
 set ref values
 set-ref-values
 NIL
@@ -6010,6 +6024,23 @@ BUTTON
 576
 color disputed trees
 ask feeding-trees [ set color green ]\n\ntest-long-distance\n\n ask monkeys [\n  \n  if travel_mode = \"long_distance\" [\n    let let_pot_list tree_pot_list\n\n    if ld-target-random? = TRUE [\n      ifelse tree_target_mem2 = -1 [\n        set ld_tree_target one-of feeding-trees with [member? who let_pot_list]\n      ] [\n        set ld_tree_target tree_target_mem2\n        set tree_target_mem2 -1 ; reset\n      ]\n\n    ]\n\n\n    if ld-target-random? = FALSE [\n      ;; RANDOM TREE AT THE BORDER OF THE HOME RANGE (TERRITORIALITY)\n      set let_pot_list tree_pot_list\n      set candidate_ld_targets feeding-trees with [member? who let_pot_list]\n      type \"candidate_ld_targets = \" print candidate_ld_targets\n\n\n;      print \"LD_CHECK\"\n\n      set candidate_ld_targets max-n-of ( round (p_disputed_trees * (length let_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center]\n      ; debugging:\n;      ask monkeys [ ask max-n-of ( round (p_disputed_trees * (length tree_pot_list) ) ) candidate_ld_targets [dist-to-homerange-center] [ set color pink ] ]\n\n;      if length candidate_ld_targets = 0 [ set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center] ]\n;      set candidate_ld_targets candidate_ld_targets with-max [dist-to-homerange-center]\n\n      ;    print candidate_ld_targets\n      ask candidate_ld_targets [\n        set color yellow\n        if study_area = \"Taquara\" [ set size 5 ]\n      ]\n     ]\n    ]\n       \n   ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+262
+398
+396
+431
+calc-movement-metrics
+start-r-extension\ncalc-movement-metrics
 NIL
 1
 T
