@@ -1921,19 +1921,31 @@ to enhance_memory_list
     ifelse length tree_ate_list >= n_trees [
       ;if there's enough trees available in the eaten list (more than n_trees), they will take 0 to n_trees out of list to put it back in the potential list and reconsider it to visit
       set tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
+      print "CASE 1"
+
+      ; enhance potential list (taking trees from the ate_list and putting it back in the potential list)
+      ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
+
+      ; reduce ate_list and accessory lists (mem_list and add_list)
+      set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
+      set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
+      set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
+
     ][
       ;if there's not, they will take all the list and put back in the potential list
       set tree_bucket sublist tree_ate_list ( 0 ) ( length tree_ate_list)
+      print "CASE 2"
+
+      ; enhance potential list (taking trees from the ate_list and putting it back in the potential list)
+      ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
+
+      ; reduce ate_list and accessory lists (mem_list and add_list)
+      set tree_mem_list sublist tree_mem_list ( 0 ) ( length tree_mem_list)
+      set tree_add_list sublist tree_add_list ( 0 ) ( length tree_add_list)
+      set tree_ate_list sublist tree_ate_list ( 0 ) ( length tree_ate_list)
+
     ]
 ;        print tree_bucket
-
-    ; enhance potential list (taking trees from the ate_list and putting it back in the potential list)
-    ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
-
-    ; reduce ate_list and accessory lists (mem_list and add_list)
-    set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
-    set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
-    set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
 
     set tree_bucket [] ; empty the list
 
@@ -4783,7 +4795,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-30.0
+31.0
 1
 1
 NIL
@@ -5138,7 +5150,7 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "ask monkeys [ plot length tree_pot_list ]"
-"pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot 1 + length tree_mem_list ]"
+"pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot 0.1 + length tree_mem_list ]"
 "pen-2" 1.0 0 -1184463 true "" "ask monkeys [ plot length tree_ate_list ]"
 "pen-3" 1.0 0 -13840069 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) + 2 ]"
 "pen-4" 1.0 0 -11221820 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) + 3\nplot n_trees"
@@ -5542,7 +5554,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-2.0
+8.0
 1
 1
 NIL
