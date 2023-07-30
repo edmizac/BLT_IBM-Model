@@ -1917,17 +1917,20 @@ to enhance_memory_list
   ; modulating memory procedure
   if ( length tree_pot_list <= n_trees ) [
     print "ENHANCING MEMORY"
+
     ifelse length tree_ate_list >= n_trees [
+      ;if there's enough trees available in the eaten list (more than n_trees), they will take 0 to n_trees out of list to put it back in the potential list and reconsider it to visit
       set tree_bucket sublist tree_ate_list ( 0 ) ( n_trees )
     ][
+      ;if there's not, they will take all the list and put back in the potential list
       set tree_bucket sublist tree_ate_list ( 0 ) ( length tree_ate_list)
     ]
 ;        print tree_bucket
 
-    ; enhance potential list
+    ; enhance potential list (taking trees from the ate_list and putting it back in the potential list)
     ( foreach tree_bucket [ ax -> set tree_pot_list lput ax tree_pot_list ] )
 
-    ; reduce mem_list and add_list
+    ; reduce ate_list and accessory lists (mem_list and add_list)
     set tree_mem_list sublist tree_mem_list ( n_trees ) ( length tree_mem_list)
     set tree_add_list sublist tree_add_list ( n_trees ) ( length tree_add_list)
     set tree_ate_list sublist tree_ate_list ( n_trees ) ( length tree_ate_list)
@@ -3180,16 +3183,16 @@ to start-r-extension
 
         ;      stop
 
-        (sr:set-data-frame "df1" "X_coords" X_coords_sr "Y_coords" Y_coords_sr "day_list" day_list_sr)
-        ;      if ticks < 110 [
-        ;        ;sr:run "print(df1)"            ; don't use this one       ;https://github.com/NetLogo/SimpleR-Extension/issues/2
-        ;        show sr:runresult "df1"         ; use this form instead    ;https://github.com/NetLogo/SimpleR-Extension/issues/2  ; still freezes when > 110 lines thoughthough
-        ;      ]
-
-        sr:set "Name_sr" Name_sr
-        sr:run "df1 <- data.frame(df1, Name = Name_sr)"
-
-        if ticks < 110 [ show sr:runresult "df1"    ]
+;        (sr:set-data-frame "df1" "X_coords" X_coords_sr "Y_coords" Y_coords_sr "day_list" day_list_sr)
+;        ;      if ticks < 110 [
+;        ;        ;sr:run "print(df1)"            ; don't use this one       ;https://github.com/NetLogo/SimpleR-Extension/issues/2
+;        ;        show sr:runresult "df1"         ; use this form instead    ;https://github.com/NetLogo/SimpleR-Extension/issues/2  ; still freezes when > 110 lines thoughthough
+;        ;      ]
+;
+;        sr:set "Name_sr" Name_sr
+;        sr:run "df1 <- data.frame(df1, Name = Name_sr)"
+;
+;        if ticks < 110 [ show sr:runresult "df1"    ]
 
         ;      stop
 
@@ -4584,8 +4587,8 @@ end
 GRAPHICS-WINDOW
 0
 20
-491
-416
+449
+380
 -1
 -1
 3.0
@@ -4598,10 +4601,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-73
+73
+-58
+58
 0
 0
 1
@@ -4868,7 +4871,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+9
 
 CHOOSER
 1017
@@ -5135,10 +5138,10 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "ask monkeys [ plot length tree_pot_list ]"
-"pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot length tree_mem_list ]"
+"pen-1" 1.0 0 -2674135 true "" "ask monkeys [ plot 1 + length tree_mem_list ]"
 "pen-2" 1.0 0 -1184463 true "" "ask monkeys [ plot length tree_ate_list ]"
 "pen-3" 1.0 0 -13840069 true "" "ask monkeys [ plot (length tree_mem_list + length tree_pot_list) + 2 ]"
-"pen-4" 1.0 0 -16777216 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) + 3\nplot n_trees"
+"pen-4" 1.0 0 -11221820 true "" "let n_trees round ( count feeding-trees  / prop_trees_to_reset_memory ) + 3\nplot n_trees"
 
 TEXTBOX
 1007
@@ -5289,7 +5292,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.31
 0.01
 1
 NIL
@@ -5539,7 +5542,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-3.0
+2.0
 1
 1
 NIL
@@ -5639,7 +5642,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-0
+3
 
 BUTTON
 245
@@ -5760,7 +5763,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+55.92
 5
 1
 NIL
@@ -5775,7 +5778,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+0.751
 0.1
 1
 NIL
@@ -5790,7 +5793,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+1.794
 0.1
 1
 NIL
@@ -5805,7 +5808,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+63.61
 1
 1
 NIL
@@ -5887,7 +5890,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.05
+0.6
 0.05
 1
 NIL
