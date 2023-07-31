@@ -4401,8 +4401,8 @@ end
 to store-as-globals
   set g_energy_stored energy_stored
 
-  set g_KDE_95 KDE_95
-  set g_KDE_50 KDE_50
+  set g_KDE_95 KDE_95_cropped
+  set g_KDE_50 KDE_50_cropped
   set g_p_feeding p_feeding
   set g_p_foraging p_foraging
   set g_p_traveling p_traveling
