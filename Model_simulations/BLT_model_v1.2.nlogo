@@ -384,6 +384,9 @@ to setup
   if USER = "PC02"
   [ set local-path "D:/Eduardo_LaP/" ]
 
+  if USER = "AORUS-2"
+  [ set local-path "C:/Users/User/Documents/Eduardo_LaP/" ]
+
   if USER = "Others"
   [ set local-path "~/" ]
 
@@ -617,7 +620,7 @@ to get-patch-scale
       move-to patch 0 0
 
       set x_UTM (item 0 gis:envelope-of self)
-      set y_UTM (item 0 gis:envelope-of self)
+      set y_UTM (item 2 gis:envelope-of self)
       set patch_before patch-here
 
       move-to patch 1 0
@@ -1464,29 +1467,18 @@ to move-monkeys
       forget_trees
       defecation
 
+
       ifelse on-feeding-tree? = TRUE [
-        if patch-type = "empirical" [
-          set x_UTM [ x_UTM ] of tree_current
-          set y_UTM [ y_UTM ] of tree_current
-        ]
-        if patch-type = "generated" [
-          set xcor [xcor] of tree_current
-          set ycor [ycor] of tree_current
-        ]
-
         store_energy ; tamarins have arrived and they are gonna feed. Thus, store the extra energy they have
-
+        ; movement and x_ and y_UTM setting is done in the on-feeding-tree? reporter (to avoid target errors)
       ][
+        ; if tamarins are not in the target trees, just update its x_ and y_UTM
         if patch-type = "empirical" [
           set x_UTM (item 0 gis:envelope-of self)
           set y_UTM (item 2 gis:envelope-of self)
         ]
-;        if patch-type = "generated" [
-;          set xcor [xcor] of tree_current
-;          set ycor [ycor] of tree_current
-;        ]
-
       ]
+
       set DPL DPL + dist-traveled
 
     ] ; end of daily routine
@@ -1693,8 +1685,10 @@ to-report on-feeding-tree?
         move-to tree_target
 
         ; make UTM of tamarins match UTM of trees (like empirical data collection):
-;        set x_UTM [ x_UTM ] of tree_current
-;        set y_UTM [ y_UTM ] of tree_current
+        if patch-type = "empirical" [
+          set x_UTM [ x_UTM ] of tree_current
+          set y_UTM [ y_UTM ] of tree_current
+        ]
         ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
         set xcor [xcor] of tree_current + 0.01
         set ycor [ycor] of tree_current + 0.01
@@ -1741,10 +1735,13 @@ to-report on-feeding-tree?
         set tree_current ld_tree_target
 
         set dist-traveled dist-traveled + distance ld_tree_target
-        move-to ld_tree_target
+        move-to ld_tree_target   ; agent coordinates are going to be matched outside of on-feeding-tree? reporter
 
-;        set x_UTM [ x_UTM ] of tree_current
-;        set y_UTM [ y_UTM ] of tree_current
+        ; make UTM of tamarins match UTM of trees (like empirical data collection):
+        if patch-type = "empirical" [
+          set x_UTM [ x_UTM ] of tree_current
+          set y_UTM [ y_UTM ] of tree_current
+        ]
         ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
         set xcor [xcor] of tree_current + 0.01
         set ycor [ycor] of tree_current + 0.01
@@ -2005,8 +2002,10 @@ to to-feeding-tree
       move-to tree_target
 
       ; make UTM of tamarins match UTM of trees (like empirical data collection):
-;      set x_UTM [ x_UTM ] of tree_current
-;      set y_UTM [ y_UTM ] of tree_current
+      if patch-type = "empirical" [
+        set x_UTM [ x_UTM ] of tree_current
+        set y_UTM [ y_UTM ] of tree_current
+      ]
       ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
       set xcor [xcor] of tree_current + 0.01
       set ycor [ycor] of tree_current + 0.01
@@ -2099,8 +2098,10 @@ to to-feeding-tree
       move-to ld_tree_target
 
       ; make UTM of tamarins match UTM of trees (like empirical data collection):
-;      set x_UTM [ x_UTM ] of tree_current
-;      set y_UTM [ y_UTM ] of tree_current
+      if patch-type = "empirical" [
+        set x_UTM [ x_UTM ] of tree_current
+        set y_UTM [ y_UTM ] of tree_current
+      ]
       ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
       set xcor [xcor] of tree_current + 0.01
       set ycor [ycor] of tree_current + 0.01
@@ -2640,7 +2641,7 @@ to defecation
             ]
             if patch-type = "empirical" [
               set x_UTM (item 0 gis:envelope-of self)
-              set y_UTM (item 0 gis:envelope-of self)
+              set y_UTM (item 2 gis:envelope-of self)
             ]
 
             set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
@@ -2691,7 +2692,7 @@ to defecation
           ]
           if patch-type = "empirical" [
             set x_UTM (item 0 gis:envelope-of self)
-            set y_UTM (item 0 gis:envelope-of self)
+            set y_UTM (item 2 gis:envelope-of self)
           ]
 
           set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
@@ -2740,7 +2741,7 @@ to morning-defecation
       ]
       if patch-type = "empirical" [
         set x_UTM (item 0 gis:envelope-of self)
-        set y_UTM (item 0 gis:envelope-of self)
+        set y_UTM (item 2 gis:envelope-of self)
       ]
       set mother-tree [id-tree] of feeding-trees with [ who = ax ]
       set mother-tree-agent feeding-trees with [ who = ax ]
@@ -2816,8 +2817,10 @@ to sleeping
 
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
-      set y_UTM [ y_UTM ] of tree_target
-      set x_UTM [ x_UTM ] of tree_target
+      if patch-type = "empirical" [
+        set y_UTM [ y_UTM ] of tree_target
+        set x_UTM [ x_UTM ] of tree_target
+      ]
       ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
       ; use set timestep 108 to test this
       set xcor [xcor] of tree_target + 0.01
@@ -4066,18 +4069,21 @@ to calc-seed-aggregation
 
     if patch-type = "generated" [
 
-
-
       (sr:set-agent-data-frame  "seeds" seeds "who" "x_scaled" "y_scaled")
       ;    (r:putagentdf  "seeds" seeds "who" "xcor" "ycor")
       ;    print r:get "colnames(seeds)"
       ;    print r:get "seeds"
 
-      ;; use all turtle locations as owin (MCP)
-      (sr:set-agent-data-frame "bbox" turtles "who" "x_scaled" "y_scaled")
-      ;    (r:putagentdf "trees" feeding-trees "who" "xcor" "ycor")
-      ;    print r:get "trees"
-      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
+;      ;; OPTION 1: use all turtle locations as owin (as MCP)
+;      (sr:set-agent-data-frame "bbox" turtles "who" "x_scaled" "y_scaled")
+;      ;    (r:putagentdf "trees" feeding-trees "who" "xcor" "ycor")
+;      ;    print r:get "trees"
+;      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
+;      ;    print r:get "xy"
+;      ;    type "xy = " print r:get "xy <- SpatialPoints(trees[ , 2:3])"
+
+      ;; OPTION 2: use the MCP monkey locations as owin (as MCP)
+      sr:run "xy <- SpatialPoints(db[ , 1:2])"
       ;    print r:get "xy"
       ;    type "xy = " print r:get "xy <- SpatialPoints(trees[ , 2:3])"
 
@@ -4119,22 +4125,48 @@ to calc-seed-aggregation
       ;    print r:get "colnames(seeds)"
       ;    print r:get "seeds"
 
-      ; load the poligon (.shp) to determine the window (owin) ;; IDEALLY SHOULD BE THE MCP OF THE GROUP
-      ;  if study_area = "Guareí" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp" ]
-      ;  if study_area = "Suzano" [ set limitsOwin       "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp" ]
-      ;  if study_area = "Taquara" [ set limitsOwin      "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp" ]
-      ;  if study_area = "SantaMaria" [ set limitsOwin  "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp" ]
-      ;  r:put "limitsOwin" limitsOwin
-      ;  print r:get "limitsOwin"
-      ;  sr:run "limitsOwin) <- sf::st_read(limitsOwin)"
-      ;  sr:run "limitsOwin <- as.owin(limitsOwin))"
-
-      ;; use agents' locations locations as owin (MCP)
+      ;; OPTION 1: use all turtle locations as owin (as MCP)
       (sr:set-agent-data-frame "bbox" turtles "who" "x_UTM" "y_UTM")
+      sr:run "bbox <- unique(bbox)"
       sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
       sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
       sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
       sr:run "limitsOwin <- as.owin(limitsOwin)"
+
+;      stop
+
+
+;      ;; OPTION 2: use the MCP monkey locations as owin (as MCP)
+;      sr:run "xy <- SpatialPoints(db[ , 1:2])"       ; db is estimated within the SimpleR setup
+;;      print sr:runresult "xy[1:10, ]"
+;      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+;      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
+;      sr:run "limitsOwin <- as.owin(limitsOwin)"
+
+      ; make monkey locations unique (ppp requires it)
+;      sr:run "xy <- unique(db[ , 1:2])"
+;      show sr:runresult "nrow(db)"
+;      print sr:runresult "nrow(xy)"
+
+;;      sr:run "limitsOwin <- owin(poly = list(x = db[ , 1], y = db[ , 2]))"
+;      sr:run "limitsOwin <- spatstat.geom::owin(poly = list(x = xy[ , 1], y = xy[ , 2]))"
+;      sr:run "limitsOwin <- spatstat.geom::ppp(x = xy[ , 1], y = xy[ , 2], limitsOwin)"
+;;      sr:run "limitsOwin <- as.owin(limitsOwin)"
+;      sr:run "limitsOwin <- spatstat.geom::as.owin(xy)"
+
+;      print sr:runresult "limitsOwin"
+;      stop
+
+
+;      sr:run "xy <- SpatialPoints(xy[ , 1:2])"       ; db is estimated within the SimpleR setup
+;;      print sr:runresult "xy[1:10, ]"
+;      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+;      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
+;      sr:run "limitsOwin <- spatstat.geom::as.owin(limitsOwin)"
+
+
+
+
 
       ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
       sr:run "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
@@ -4144,20 +4176,20 @@ to calc-seed-aggregation
       sr:run "NN_seeds <- mean(nndist(sim))"
 
       ; same for trees and sleeping trees
-      (sr:set-agent-data-frame  "ftrees" feeding-trees "who" "x_UTM" "y_UTM")
-      (sr:set-agent-data-frame  "strees" sleeping-trees "who" "x_UTM" "y_UTM")
-
+      ;    (sr:set-agent-data-frame  "ftrees" feeding-trees "who" "x_UTM" "y_UTM")
+      ;    (sr:set-agent-data-frame  "strees" sleeping-trees "who" "x_UTM" "y_UTM")
+      ;
       ;    sr:run "ftrees <- ftrees %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
       ;    sr:run "strees <- strees %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
       ;    sr:run "simf <- ppp(ftrees[,1], ftrees[,2], window=limitsOwin)"
       ;    sr:run "sims <- ppp(strees[,1], strees[,2], window=limitsOwin)"
       ;    sr:run "NN_feeding_trees <- mean(nndist(simf))"
       ;    sr:run "NN_sleeping_trees <- mean(nndist(sims))"
-
+      ;
       ;    set NN_seeds r:get "NN_seeds"
       ;    set NN_feeding_trees r:get "NN_feeding_trees"
       ;    set NN_sleeping_trees r:get "NN_sleeping_trees"
-
+      ;
       ;    type "NN_seeds = " print NN_seeds
       ;    type "NN_feeding_trees = " print NN_feeding_trees
       ;    type "NN_sleeping_trees = " print NN_sleeping_trees
