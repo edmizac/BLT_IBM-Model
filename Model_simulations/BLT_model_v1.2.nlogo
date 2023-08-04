@@ -637,17 +637,17 @@ to setup-trees
 
   if patch-type = "generated" [
     ask feeding-trees [
-        set size 3
-        set shape "tree"
-        set color green
-        set visitations 0
+      set size 3
+      set shape "tree"
+      set color green
+      set visitations 0
 ;        setxy item 0 location item 1 location
-        set species "general"
-        set id-tree random 100000
+      set species "general"
+      set id-tree random 100000
 ;        if species = "" [ set species "NA" ]
 ;        if id-tree = "" [ set id-tree "NA" ]
-        set x_scaled xcor * patch-scale
-        set y_scaled ycor * patch-scale
+      set x_scaled xcor * patch-scale         ; generated patches do not have coordinate projection
+      set y_scaled ycor * patch-scale         ; generated patches do not have coordinate projection
     ]
 
     ask sleeping-trees [
@@ -657,8 +657,8 @@ to setup-trees
       set visitations 0
 ;      setxy item 0 location-slp item 1 location-slp
       set id-tree random 100000
-      set x_scaled xcor * patch-scale
-      set y_scaled ycor * patch-scale
+      set x_scaled xcor * patch-scale         ; generated patches do not have coordinate projection
+      set y_scaled ycor * patch-scale         ; generated patches do not have coordinate projection
     ]
   ]
 
@@ -776,22 +776,6 @@ to setup-trees
       print "NO TREES FOR THIS MONTH! CHOOSE ANOTHER MONTH!"
     ]
 
-    ;  ;; DOES NOT SEEM TO BE NEEDED (LOOK AT BORDER TREES IN SUZANO)
-    ;;   do this for tamarins not to avoid approaching trees close to border (avoid-matrix)
-    ;  ask feeding-trees [
-    ;    ask patches in-radius travel_speed with [habitat = "matrix" ] [
-    ;      set habitat "border"
-    ;      set pcolor brown
-    ;    ]
-    ;  ]
-    ;
-    ;
-    ;  ask sleeping-trees [
-    ;   ask patches in-radius travel_speed with [habitat = "matrix" ] [
-    ;      set habitat "border"
-    ;      set pcolor brown
-    ;    ]
-    ;  ]
   ]
 
 
@@ -1363,8 +1347,8 @@ to move-monkeys
       set Y_coords lput y_UTM Y_coords
     ]
     if patch-type = "generated" [
-      set x_scaled (xcor * patch-scale)
-      set y_scaled (ycor * patch-scale)
+      set x_scaled (xcor * patch-scale)         ; generated patches do not have coordinate projection
+      set y_scaled (ycor * patch-scale)         ; generated patches do not have coordinate projection
       set X_coords lput (xcor * patch-scale) X_coords
       set Y_coords lput (ycor * patch-scale) Y_coords
     ]
@@ -2650,8 +2634,15 @@ to defecation
 
           hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
             setxy xcor ycor
-            set x_scaled (xcor * patch-scale)
-            set y_scaled (ycor * patch-scale)
+            if patch-type = "generated" [
+              set x_scaled (xcor * patch-scale)         ; generated patches do not have coordinate projection
+              set y_scaled (ycor * patch-scale)         ; generated patches do not have coordinate projection
+            ]
+            if patch-type = "empirical" [
+              set x_UTM (item 0 gis:envelope-of self)
+              set y_UTM (item 0 gis:envelope-of self)
+            ]
+
             set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
             set mother-tree-agent feeding-trees with [ who = loc_who ]
 ;            set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
@@ -2693,8 +2684,16 @@ to defecation
 
         hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
           setxy xcor ycor
-          set x_scaled (xcor * patch-scale)
-          set y_scaled (ycor * patch-scale)
+
+          if patch-type = "generated" [
+            set x_scaled (xcor * patch-scale)         ; generated patches do not have coordinate projection
+            set y_scaled (ycor * patch-scale)         ; generated patches do not have coordinate projection
+          ]
+          if patch-type = "empirical" [
+            set x_UTM (item 0 gis:envelope-of self)
+            set y_UTM (item 0 gis:envelope-of self)
+          ]
+
           set mother-tree [id-tree] of feeding-trees with [ who = loc_who ]
 ;          set mother-tree-who [who] of feeding-trees with [ who = loc_who ]
           set mother-tree-agent feeding-trees with [ who = loc_who ]
@@ -2735,8 +2734,14 @@ to morning-defecation
   foreach seed_ate_list [
     ax ->  hatch-seeds n_seeds_hatched [ ; change to hatch more seeds! <<<
       setxy xcor ycor
-      set x_scaled (xcor * patch-scale)
-      set y_scaled (ycor * patch-scale)
+      if patch-type = "generated" [
+        set x_scaled (xcor * patch-scale)         ; generated patches do not have coordinate projection
+        set y_scaled (ycor * patch-scale)         ; generated patches do not have coordinate projection
+      ]
+      if patch-type = "empirical" [
+        set x_UTM (item 0 gis:envelope-of self)
+        set y_UTM (item 0 gis:envelope-of self)
+      ]
       set mother-tree [id-tree] of feeding-trees with [ who = ax ]
       set mother-tree-agent feeding-trees with [ who = ax ]
 ;      set mother-tree-who [who] of feeding-trees with [ who = loc_who ] ; loc_who has to be redefined
@@ -2812,6 +2817,7 @@ to sleeping
       set dist-traveled dist-traveled + distance tree_target
       move-to tree_target
       set y_UTM [ y_UTM ] of tree_target
+      set x_UTM [ x_UTM ] of tree_target
       ; don't make actual xcor and ycor of tamrins the same as tres to avoid the point (x,y) error; instead add a small variation (0.01 = 0.1 m) to xcor and ycor
       ; use set timestep 108 to test this
       set xcor [xcor] of tree_target + 0.01
@@ -4599,11 +4605,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-449
-380
+526
+403
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -4613,10 +4619,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--73
-73
--58
-58
+-129
+129
+-93
+93
 0
 0
 1
@@ -4883,7 +4889,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-9
+1
 
 CHOOSER
 1017
@@ -5304,7 +5310,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.31
+0.21
 0.01
 1
 NIL
@@ -5654,7 +5660,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-3
+2
 
 BUTTON
 245
@@ -5775,7 +5781,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-55.92
+43.02
 5
 1
 NIL
@@ -5790,7 +5796,7 @@ step_len_forage
 step_len_forage
 0
 20
-0.751
+3.089
 0.1
 1
 NIL
@@ -5805,7 +5811,7 @@ step_len_travel
 step_len_travel
 0
 20
-1.794
+3.931
 0.1
 1
 NIL
@@ -5820,7 +5826,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-63.61
+17.85
 1
 1
 NIL
