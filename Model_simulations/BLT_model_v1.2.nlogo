@@ -4089,6 +4089,7 @@ to calc-seed-aggregation
 
       sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
       sr:run "limitsOwin <- as.owin(limitsOwin)"
+      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 1)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
 
       ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
       sr:run "seeds <- seeds %>%  dplyr::select(x_scaled, y_scaled)  %>%  dplyr::distinct()"
@@ -4132,6 +4133,7 @@ to calc-seed-aggregation
       sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
       sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
       sr:run "limitsOwin <- as.owin(limitsOwin)"
+      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 1)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
 
 ;      stop
 
@@ -4564,15 +4566,13 @@ to print-parameters
   type "energy-loss-resting = "        print energy-loss-resting
 
   type "step_forget = "                print step_forget
-  type "visualevel_1 = "               print visual
   type "prop_trees_to_reset_memory = " print prop_trees_to_reset_memory
+  type "p_disputed_trees = "           print p_disputed_trees
   type "p-timesteps-to-rest = "        print p-timesteps-to-rest
   type "duration = "                   print duration
-  type "p_disputed_trees = "           print p_disputed_trees
 
-  if feedingbout-on? = "FALSE" [
-    type "species_time_val = "           print species_time_val
-  ]
+
+  if feedingbout-on? = FALSE [    type "species_time_val = "   print species_time_val  ]
 end
 
 to set-ref-values
@@ -4637,11 +4637,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-526
-403
+491
+416
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -4651,10 +4651,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -4739,7 +4739,7 @@ energy-from-fruits
 energy-from-fruits
 0
 300
-73.0
+120.6
 1
 1
 NIL
@@ -4833,7 +4833,7 @@ energy-from-prey
 energy-from-prey
 0
 300
-31.0
+60.8
 1
 1
 NIL
@@ -4848,7 +4848,7 @@ energy-loss-traveling
 energy-loss-traveling
 -100
 0
--15.0
+-100.0
 1
 1
 NIL
@@ -4863,7 +4863,7 @@ energy-loss-foraging
 energy-loss-foraging
 -100
 0
--10.0
+-20.8
 1
 1
 NIL
@@ -4878,7 +4878,7 @@ energy-loss-resting
 energy-loss-resting
 -100
 0
--5.0
+-20.8
 1
 1
 NIL
@@ -4921,7 +4921,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+5
 
 CHOOSER
 1017
@@ -4953,7 +4953,7 @@ step_forget
 step_forget
 0
 500
-400.0
+82.4
 1
 1
 NIL
@@ -5023,7 +5023,7 @@ energy_level_1
 energy_level_1
 100
 2000
-900.0
+1000.0
 1
 1
 NIL
@@ -5038,7 +5038,7 @@ energy_level_2
 energy_level_2
 100
 2000
-1350.0
+2000.0
 1
 1
 NIL
@@ -5239,7 +5239,7 @@ duration
 duration
 0
 30
-5.0
+20.2
 1
 1
 NIL
@@ -5319,7 +5319,7 @@ CHOOSER
 510
 USER
 USER
-"Ronald" "Eduardo" "LEEC" "LASi" "PC02" "Others"
+"Ronald" "Eduardo" "LEEC" "LASi" "PC02" "AORUS-2" "Others"
 1
 
 SWITCH
@@ -5342,7 +5342,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.36
 0.01
 1
 NIL
@@ -5592,7 +5592,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-8.0
+6.8
 1
 1
 NIL
@@ -5692,7 +5692,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 245
@@ -5813,7 +5813,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+68.98
 5
 1
 NIL
@@ -5828,7 +5828,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.4060000000000001
 0.1
 1
 NIL
@@ -5843,7 +5843,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.343
 0.1
 1
 NIL
@@ -5858,7 +5858,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+67.86
 1
 1
 NIL
@@ -5940,7 +5940,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.6
+0.64
 0.05
 1
 NIL
@@ -6141,7 +6141,7 @@ energy_stored_val
 energy_stored_val
 0
 10000
-1000.0
+480.0
 1
 1
 NIL
@@ -6166,7 +6166,7 @@ p-timesteps-to-rest
 p-timesteps-to-rest
 0
 1
-0.15
+0.56
 0.01
 1
 NIL
