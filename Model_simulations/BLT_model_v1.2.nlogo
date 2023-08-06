@@ -3195,10 +3195,10 @@ to start-r-extension
       ask monkeys [
         ;        print "==== SR debugging 1 ==== "
 
-        let X_coords_sr [X_coords] of self    ;print X_coords_sr  print length X_coords_sr
-        let Y_coords_sr [Y_coords] of self    ;print Y_coords_sr  print length Y_coords_sr
-        let day_list_sr [day_list] of self    ;print day_list_sr  print length day_list_sr
-        let Name_sr [Name] of self            ;print Name_sr      print length Name_sr
+;        let X_coords_sr [X_coords] of self    ;print X_coords_sr  print length X_coords_sr
+;        let Y_coords_sr [Y_coords] of self    ;print Y_coords_sr  print length Y_coords_sr
+;        let day_list_sr [day_list] of self    ;print day_list_sr  print length day_list_sr
+;        let Name_sr [Name] of self            ;print Name_sr      print length Name_sr
 
         ;        print "==== SR debugging 2 ==== "
 
@@ -4126,53 +4126,86 @@ to calc-seed-aggregation
       ;    print r:get "colnames(seeds)"
       ;    print r:get "seeds"
 
-      ;; OPTION 1: use all turtle locations as owin (as MCP)
-      (sr:set-agent-data-frame "bbox" turtles "who" "x_UTM" "y_UTM")
-      sr:run "bbox <- unique(bbox)"
-      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
-      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
-      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
-      sr:run "limitsOwin <- as.owin(limitsOwin)"
-      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 1)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
-
-;      stop
-
-
-;      ;; OPTION 2: use the MCP monkey locations as owin (as MCP)
-;      sr:run "xy <- SpatialPoints(db[ , 1:2])"       ; db is estimated within the SimpleR setup
-;;      print sr:runresult "xy[1:10, ]"
+;      ;; OPTION 1: use all turtle locations as owin (as MCP)
+;      (sr:set-agent-data-frame "bbox" turtles "who" "x_UTM" "y_UTM")
+;      sr:run "bbox <- unique(bbox)"
+;      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
 ;      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
 ;      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
 ;      sr:run "limitsOwin <- as.owin(limitsOwin)"
-
-      ; make monkey locations unique (ppp requires it)
-;      sr:run "xy <- unique(db[ , 1:2])"
-;      show sr:runresult "nrow(db)"
-;      print sr:runresult "nrow(xy)"
-
-;;      sr:run "limitsOwin <- owin(poly = list(x = db[ , 1], y = db[ , 2]))"
-;      sr:run "limitsOwin <- spatstat.geom::owin(poly = list(x = xy[ , 1], y = xy[ , 2]))"
-;      sr:run "limitsOwin <- spatstat.geom::ppp(x = xy[ , 1], y = xy[ , 2], limitsOwin)"
-;;      sr:run "limitsOwin <- as.owin(limitsOwin)"
-;      sr:run "limitsOwin <- spatstat.geom::as.owin(xy)"
-
-;      print sr:runresult "limitsOwin"
+;      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 5)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
+;      ; otherwise: check gis:intersecting
 ;      stop
 
-
-;      sr:run "xy <- SpatialPoints(xy[ , 1:2])"       ; db is estimated within the SimpleR setup
-;;      print sr:runresult "xy[1:10, ]"
+;;      ;; OPTION 2: use the MCP monkey locations as owin (as MCP)
+;      ; make monkey locations unique (ppp requires it)
+;      sr:run "xy <- unique(db[ , 1:2])"
+;;      sr:run "write.csv(xy, 'D:/Data/Documentos/Study/Mestrado/Analises/xy_monkeys.csv', row.names = FALSE)"
+;;      show sr:runresult "nrow(db)"
+;;      print sr:runresult "nrow(xy)"
+;      sr:run "xy <- SpatialPoints(xy)"
 ;      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
 ;      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
 ;      sr:run "limitsOwin <- spatstat.geom::as.owin(limitsOwin)"
+;      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 5)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
 
+;      ;; OPTION 3: with as.ppp.SpatialPoints() (it works in R, see "Owin-spatstat.R")
+      sr:run "xy <- unique(db[ , 1:2])"
+      sr:run "xy <- SpatialPoints(xy)"
+      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+      sr:run "xy <- maptools::as.ppp.SpatialPoints(xy)"
+      sr:run "limitsOwin <- spatstat.geom::as.owin(xy)"
+      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 5)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
+
+;      sr:run "xy <- with(xy,data.frame(x=rev(X),y=rev(Y)))"
+;      sr:run "limitsOwin <- owin(poly=xy)"
+;      sr:run "limitsOwin <- owin(poly = list(x = rev(xy[ , 1]), y = rev(xy[ , 2])))"
+;      sr:run "poly <- list(x = xy[ , 1], y = xy[ , 2])"
+;      sr:run "xmin <- min(db[ , 1], na.rm=TRUE)"
+;      sr:run "xmax <- max(db[ , 1], na.rm=TRUE)"
+;      sr:run "ymin <- min(db[ , 1], na.rm=TRUE)"
+;      sr:run "ymax <- max(db[ , 1], na.rm=TRUE)"
+;      sr:run "limitsOwin <- owin(xrange=c(xmin,xmax), yrange=c(ymin,ymax))"
+;      sr:run "limitsOwin <- spatstat.geom::owin(poly = lapply(poly, rev)" ; using rev as suggested here: https://stackoverflow.com/questions/18885777/how-do-i-ensure-that-the-polygon-in-spatstatowinpoly-polygon-does-not-have
+;      sr:run "limitsOwin <- spatstat.geom::ppp(x = xy[ , 1], y = xy[ , 2], limitsOwin)"
+;      sr:run "limitsOwin <- as.owin(limitsOwin)"
+;      sr:run "limitsOwin <- spatstat.geom::as.owin(xy)"
+;      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 5)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
+      ; otherwise: check gis:intersecting
+;      print sr:runresult "limitsOwin"
+;      stop
 
 
 
 
       ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
       sr:run "seeds <- seeds %>%  dplyr::select(x_UTM, y_UTM)  %>%  dplyr::distinct()"
-      sr:run "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+;      sr:run "write.csv(seeds, 'D:/Data/Documentos/Study/Mestrado/Analises/xy_seeds.csv', row.names = FALSE)"
+
+      sr:run "seeds.sp <- SpatialPoints(seeds)"
+      sr:run "proj4string(seeds.sp) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+      sr:run "seeds.sp <- maptools::as.ppp.SpatialPoints(seeds.sp)"
+;      stop
+
+      ; test if all seed locations are inside the owin, otherwise NetLogo freezes. If there's any out, save as csv and stop the model before freezing (it freezes with ppp())
+      sr:run "ok <- inside.owin(seeds.sp, w = limitsOwin.dil)"
+;      stop
+      sr:run "outside.points <- length(ok[ok == FALSE])"
+;     stop
+      ifelse ( sr:runresult "length(ok[ok == FALSE]) == 0" = TRUE ) [
+        sr:run "xy.out <- cbind(xy, ok)"
+        sr:set "filepath" word (local-path) "Model_analysis/Sensitivity-analysis/xy_seeds_outside_owin.csv"
+        sr:run "write.csv(xy.out, filepath, row.names = FALSE)"
+        print "no seeds outside owin"
+      ][
+        print "at least one seed outside owin"
+;        stop
+      ]
+
+      stop
+
+;      sr:run "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+      sr:run "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin.dil)"
 
       ;; calc Nearest Neighbor distance
       sr:run "NN_seeds <- mean(nndist(sim))"
@@ -4921,7 +4954,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-5
+8
 
 CHOOSER
 1017
@@ -4953,7 +4986,7 @@ step_forget
 step_forget
 0
 500
-82.4
+299.0
 1
 1
 NIL
@@ -5342,7 +5375,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.7
 0.01
 1
 NIL
@@ -5813,7 +5846,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+77.22
 5
 1
 NIL
@@ -5828,7 +5861,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+1.387
 0.1
 1
 NIL
@@ -5843,7 +5876,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+2.5300000000000002
 0.1
 1
 NIL
@@ -5858,7 +5891,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+59.53
 1
 1
 NIL
@@ -5940,7 +5973,7 @@ p_disputed_trees
 p_disputed_trees
 0
 1
-0.64
+0.85
 0.05
 1
 NIL
@@ -6200,10 +6233,10 @@ NIL
 1
 
 BUTTON
-157
-365
-236
-398
+438
+334
+517
+367
 print var
   ask one-of monkeys [\n      print \"==== SR debugging ==== \"\n\n      let X_coords_sr [X_coords] of self    print X_coords_sr  print length X_coords_sr\n      let Y_coords_sr [Y_coords] of self    print Y_coords_sr  print length Y_coords_sr\n      let day_list_sr [day_list] of self    print day_list_sr  print length day_list_sr\n      let Name_sr [Name] of self            print Name_sr  ;print length Name_sr\n]
 NIL
@@ -6257,6 +6290,57 @@ BUTTON
 431
 calc-movement-metrics
 if sr-extension-set? = FALSE [ start-r-extension ]\ncalc-movement-metrics
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+247
+331
+396
+364
+NIL
+calc-seed-aggregation
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+0
+376
+105
+409
+show Syagrus
+ask feeding-trees with [species = \"Syagrus romanzoffiana\"] [ set size 5 set color 43]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+162
+331
+242
+364
+test owin
+let r.seed one-of seeds\nask r.seed [ move-to patch 57 22 ]\nask r.seed [ set x_UTM (item 0 gis:envelope-of self) set y_UTM (item 2 gis:envelope-of self) ]\ncalc-seed-aggregation\n\n
 NIL
 1
 T
