@@ -114,6 +114,63 @@ dat.all.ltraj.df %>% str()
 #   )
 
 
+# Absolute angles For Ronald (11d/08/2023) -----
+
+## With amt ------
+library("amt")
+trk <- dat.all.ltraj.df %>% 
+  amt::make_track(.x=x, .y=y, id = c(group, id_month),
+                      crs = our_crs,
+                      all_cols = TRUE)
+
+trk <- trk %>% 
+  mutate(
+    IU = intensity_use(.),
+    sl = step_lengths(.),
+    ta = amt::direction_rel(.)
+  )
+
+trk %>% 
+  ggplot() +
+  geom_histogram(aes(rel.angle, fill = group)) +
+  geom_histogram(aes(abs.angle, fill = NA), alpha = 0.6) +
+  scale_y_sqrt() +
+  ylab("sqrt(count)") +
+  theme_bw() +
+  facet_grid(group ~ id_month)
+
+# # Save
+# ggsave(filename = here("Data", "Movement","Curated", "Param_siminputrow",
+#                        "02_angles_amt.png"),
+#        dpi = 300,  width = 14, height = 10)
+
+
+
+
+## With adehabitatLT ------
+par(mfrow = c(2,1))
+hist(dat.all.ltraj.df$abs.angle)
+hist(dat.all.ltraj.df$rel.angle)
+par(mfrow = c(1,1))
+
+dat.all.ltraj.df$group
+dat.all.ltraj.df$id_month
+
+dat.all.ltraj.df %>% 
+  ggplot() +
+  geom_histogram(aes(rel.angle, fill = group)) +
+  geom_histogram(aes(abs.angle, fill = NA), alpha = 0.6) +
+  scale_y_sqrt() +
+  ylab("sqrt(count)") +
+  theme_bw() +
+  facet_grid(group ~ id_month)
+
+# # Save
+# ggsave(filename = here("Data", "Movement","Curated", "Param_siminputrow",
+#                        "02_angles_adehabitat.png"),
+#        dpi = 300,  width = 14, height = 10)
+
+
 # Summarize step length and turning angles for travel behavior only
 target_behav <- c("Travel", "Foraging")
 dat.mv.summary <- dat.all.ltraj.df %>% 
