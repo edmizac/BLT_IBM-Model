@@ -447,8 +447,8 @@ dfexp1gg %>%
     ) +
   theme(axis.text.x = element_text(size=9))
 
-ggsave(filename = paste0(pathexp1, "NN_sleeping_trees.png"),
-       dpi = 300, width = 30, height = 18, units = "cm")
+# ggsave(filename = paste0(pathexp1, "NN_sleeping_trees.png"),
+#        dpi = 300, width = 30, height = 18, units = "cm")
 
 
 
@@ -560,7 +560,10 @@ corrplot::corrplot(M
 # dim(dfexp1_num)
 # colnames(dfexp1_num)
 
-hc = findCorrelation(M, cutoff=0.75) # putt any value as a "cutoff" 
+hc = findCorrelation(M, cutoff=0.75, names = TRUE) # putt any value as a "cutoff" 
+hc = findCorrelation(M, cutoff=0.84, names = TRUE) # putt any value as a "cutoff" 
+hc = findCorrelation(M, cutoff=0.84) # putt any value as a "cutoff" 
+# hc = findCorrelation(M, cutoff=0.81) # putt any value as a "cutoff" 
 hc = sort(hc)
 hc
 
@@ -808,6 +811,16 @@ plot_models(glm16, glm1, grid = TRUE)
 
 
 
+# Predict
+newdata <- glm16$data[0, ]
+predictSDD <- data.frame(
+  
+)
+
+# predict(glm16, newdata = 
+
+
+
 ### NN seeds -----
 
 # Check distributions #http://www.di.fc.ul.pt/~jpn/r/distributions/fitting.html
@@ -1033,3 +1046,226 @@ p1 <- plot_model(glm14, type = "pred")
 
 # Various models in a grid
 plot_models(glm14, glm16, grid = TRUE)
+
+
+
+
+
+
+
+# IPS 2023 ----- 
+
+# Plotar efeitos fortes pra Lo apresentar no IPS 2023
+
+
+# SDD -> Effect of PT and DPL
+dfexp1gg %>% 
+  mutate(
+    fragment_size = as.numeric(as.character(fragment_size)),
+    field.shape.factor = as.factor(as.character(field.shape.factor))
+  ) %>% 
+  ggplot() +
+  aes(x = DPL, y = SDD
+      # , color = density
+      , shape = density
+      , group = fragment_size
+  ) +
+  # geom_boxplot(width = 50) +
+  geom_point(size = 2, alpha = 0.3
+             , position = position_jitter(width = 30)
+  ) +
+  # geom_smooth() +
+  # scale_colour_viridis_d("magma") +
+  # scale_color_manual(values = c("#922B21", "#D98880")) + # red densitty
+  # scale_color_manual(values = c("#85C1E9", "#154360")) + # blue densitty
+  # scale_discrete_manual(aesthetics = "color", 
+  #                       values = c("#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#012333")) +
+  # scale_color_gradient(low = "#ffc197", high = "#d23600") +
+  scale_shape_manual(values = c(16,4)) +
+  facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(density)) +
+  # facet_wrap(vars(field.shape.factor)) +
+  # facet_wrap(vars(fragment_size)) +
+  # rename axis:
+  xlab("DPL (m)") +
+  ylab("mean SSD (m)") #+
+  # theme(    axis.text.x = element_text(angle = 45)  )
+# # create secondary axis:
+# scale_y_continuous(sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)) +
+#   scale_x_continuous(
+#     sec.axis = sec_axis(~ . , name = "Fragment size (ha)", breaks = NULL, labels = NULL)
+#     , limits = c(30, 90)
+#   )
+
+# ggsave(filename = paste0(pathexp1, "SDD_DPL-density-grid.png"),
+#        dpi = 300, width = 25, height = 18, units = "cm")
+
+dfexp1gg %>% 
+  
+  mutate(
+    fragment_size = as.numeric(as.character(fragment_size)),
+    field.shape.factor = as.factor(as.character(field.shape.factor))
+  ) %>% 
+  ggplot() +
+  aes(x = DPL, y = SDD
+      , color = PT
+      # , shape = density
+      , group = fragment_size
+  ) +
+  # geom_boxplot(width = 50) +
+  geom_point(size = 2, alpha = 0.8
+             , position = position_jitter(width = 30)
+  ) +
+  # geom_smooth() +
+  # scale_colour_viridis_d("magma") +
+  # scale_color_manual(values = c("#922B21", "#D98880")) + # red densitty
+  # scale_color_manual(values = c("#85C1E9", "#154360")) + # blue densitty
+  # scale_discrete_manual(aesthetics = "color", 
+  #                       values = c("#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#012333")) +
+  # scale_color_gradient(low = "#ffc197", high = "#d23600") +
+  scale_shape_manual(values = c(16,4)) +
+  facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(density)) +
+  # facet_wrap(vars(field.shape.factor)) +
+  # facet_wrap(vars(fragment_size)) +
+  # rename axis:
+  xlab("DPL (m)") +
+  # xlab("PT") +
+  ylab("mean SSD (m)") +
+  theme(  axis.text.x = element_text(angle = 45))
+  # xlim(min(dfexp1gg$PT), max(dfexp1gg$PT))
+# create secondary axis:
+# scale_x_continuous(
+#   sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)
+#   , limits = c(0, 1600)
+# ) #+
+
+# ggsave(filename = paste0(pathexp1, "SDD_DPL-PT-grid.png"),
+#        dpi = 300, width = 25, height = 18, units = "cm")
+
+
+
+
+# NN -> Effect of PT and DPL and p_feeding on SDD
+
+dfexp1gg %>% 
+  mutate(
+    fragment_size = as.numeric(as.character(fragment_size)),
+    field.shape.factor = as.factor(as.character(field.shape.factor))
+  ) %>% 
+  ggplot() +
+  aes(x = DPL, y = NN_seeds
+      , color = PT
+      # , shape = density
+      , group = fragment_size
+  ) +
+  # geom_boxplot(width = 50) +
+  geom_point(size = 2, alpha = 0.8
+             , position = position_jitter(width = 30)
+  ) +
+  # geom_smooth() +
+  # scale_colour_viridis_d("magma") +
+  # scale_color_manual(values = c("#922B21", "#D98880")) + # red densitty
+  # scale_color_manual(values = c("#85C1E9", "#154360")) + # blue densitty
+  # scale_discrete_manual(aesthetics = "color", 
+  #                       values = c("#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#012333")) +
+  # scale_color_gradient(low = "#ffc197", high = "#d23600") +
+  scale_shape_manual(values = c(16,4)) +
+  facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(density)) +
+  # facet_wrap(vars(field.shape.factor)) +
+  # facet_wrap(vars(fragment_size)) +
+  # rename axis:
+  xlab("DPL (m)") +
+  ylab("mean NN (m)") +
+  theme(  axis.text.x = element_text(angle = 45))
+# create secondary axis:
+# scale_x_continuous(
+#   sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)
+#   , limits = c(0, 1600)
+# ) #+
+
+# ggsave(filename = paste0(pathexp1, "NN_DPL-PT-grid.png"),
+#        dpi = 300, width = 25, height = 18, units = "cm")
+
+
+
+dfexp1gg %>% 
+  mutate(
+    fragment_size = as.numeric(as.character(fragment_size)),
+    field.shape.factor = as.factor(as.character(field.shape.factor))
+  ) %>% 
+  ggplot() +
+  aes(x = DPL, y = NN_seeds
+      , color = p_feeding
+      # , shape = density
+      , group = fragment_size
+  ) +
+  # geom_boxplot(width = 50) +
+  geom_point(size = 2, alpha = 0.8
+             , position = position_jitter(width = 30)
+  ) +
+  # geom_smooth() +
+  # scale_colour_viridis_d("magma") +
+  scale_color_gradient(low = "#25670E", high = "#B7F8A1") +
+  # scale_shape_manual(values = c(16,4)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(density)) +
+  # facet_wrap(vars(field.shape.factor)) +
+  # facet_wrap(vars(fragment_size)) +
+  # rename axis:
+  xlab("DPL (m)") +
+  ylab("mean NN (m)") #+
+  # theme(  axis.text.x = element_text(angle = 45)) 
+# create secondary axis:
+# scale_x_continuous(
+#   sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)
+#   , limits = c(0, 1600)
+# ) #+
+
+# ggsave(filename = paste0(pathexp1, "NN_DPL-pfeeding.png"),
+#        dpi = 300, width = 25, height = 18, units = "cm")
+
+
+# With regression line (smooth)
+dfexp1gg %>% 
+  mutate(
+    fragment_size = as.numeric(as.character(fragment_size)),
+    field.shape.factor = as.factor(as.character(field.shape.factor))
+  ) %>% 
+  ggplot() +
+  aes(x = DPL, y = NN_seeds
+      , color = PT
+      # , shape = density
+      # , group = fragment_size
+      , group = density
+  ) +
+  # geom_boxplot(width = 50) +
+  geom_point(size = 2, alpha = 0.8
+             , position = position_jitter(width = 30)
+  ) +
+  # geom_smooth() +
+  geom_smooth(method="glm", method.args=list(family="gaussian"),
+              fullrange=FALSE, se=TRUE
+              , color = "red"
+              ) +
+  # scale_colour_viridis_d("magma") +
+  # scale_color_gradient(low = "#25670E", high = "#B7F8A1") +
+  # scale_shape_manual(values = c(16,4)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(density)) +
+  # facet_wrap(vars(field.shape.factor)) +
+  # facet_wrap(vars(fragment_size)) +
+  # rename axis:
+  xlab("DPL (m)") +
+  ylab("mean NN (m)") #+
+  # ylab("PT") #+
+# theme(  axis.text.x = element_text(angle = 45)) 
+# create secondary axis:
+# scale_x_continuous(
+#   sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)
+#   , limits = c(0, 1600)
+# ) #+
+
+# ggsave(filename = paste0(pathexp1, "DPL-PT-NN.png"),
+#        dpi = 300, width = 25, height = 18, units = "cm")
