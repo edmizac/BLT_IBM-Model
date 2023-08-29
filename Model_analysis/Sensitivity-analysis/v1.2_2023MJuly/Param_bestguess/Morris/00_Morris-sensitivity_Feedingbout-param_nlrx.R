@@ -41,7 +41,7 @@ if(Sys.getenv("JAVA_HOME") == "") {
     Sys.setenv(JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64")
     unixtools::set.tempdir(".")
   } else {
-    Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_321")
+    Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk-11")
   }
 }
 
@@ -51,14 +51,14 @@ if(Sys.getenv("JAVA_HOME") == "") {
 ## Step 1: Create nl object ------------------------ 
 
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
-  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
   # modelpath <- here("Model_development", "BLT_model_v1.2.nlogo")
   modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
   outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023May", "Param_bestguess", "Morris", "temp")
   user_scp = "\"Eduardo\""
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
-  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
   # modelpath <- here("Model_development", "BLT_model_v1.2.nlogo")
   modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
   # outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_December2022", "temp")
@@ -66,7 +66,7 @@ if(Sys.info()[["nodename"]] == "PC9") { # LEEC
   user_scp = "\"LEEC\""
 }
 if(Sys.info()[["nodename"]] == "DESKTOP-71SL58S") { # PC 02 LEEC
-  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
   modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
   outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023MJuly",
                   "Param_bestguess", "Morris", "temp")
@@ -74,9 +74,19 @@ if(Sys.info()[["nodename"]] == "DESKTOP-71SL58S") { # PC 02 LEEC
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_341")
   user_scp = "\"PC02\""
 }
+if(Sys.info()[["nodename"]] == "DESKTOP-1SKTQUA") { # AORUS-2 (LaP)
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
+  modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023MJuly",
+                  "Param_bestguess", "Morris", "temp")
+  # Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8/bin")
+  # Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_341")
+  user_scp = "\"AORUS-2\""
+}
 
 
-nl <- nl(nlversion = "6.2.2",
+
+nl <- nl(nlversion = "6.3.0",
          nlpath = netlogopath,
          modelpath = modelpath,
          jvmmem = 1024)
@@ -92,14 +102,14 @@ param.table <- read.csv(here("Data", "Parameter_table.csv"),
                                "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
 
 # Substet runs if needed
-# param.table <- param.table[7:8, ]
+param.table <- param.table[4:6, ]
 
 ## Step 2: Attach an experiment and run ------------------------
 
 i <- 1
 for (i in i:nrow(param.table)) {
   
-  set.seed(42) # for having the same generated seeds everytime
+  set.seed(21) # for having the same generated seeds everytime
 
   
   ### Loop (unblock for{} above) or decide which area/month to run the sensitivity on: ---
@@ -108,8 +118,11 @@ for (i in i:nrow(param.table)) {
     month_run_scp <- paste0('\"', param.table$id_month[i], '\"')
   
   # Specify area:
-  area_run_scp <- '"Guareí"' #scaped
-  month_run_scp <- '"May"'   #scaped
+  # area_run_scp <- '"Guareí"' #scaped
+  # month_run_scp <- '"May"'   #scaped
+  
+  # area_run_scp <- '"Suzano"' #scaped
+  # month_run_scp <- '"Sep"'   #scaped
 
     
   ### Define run and parameterisation -----
@@ -119,10 +132,10 @@ for (i in i:nrow(param.table)) {
   # Decide feedinbout parameterization to run the sensitivity on:
   feedingbout <- "true"
   
-  if (feedingbout == "false") { 
-    print("RUNNING WITH FEEDING BOUT PARAMETERIZATION OFF, COMMENT IN 'species_time' FROM EXPERIMENT")
+  if (feedingbout == "true") { 
+    print("RUNNING WITH FEEDING BOUT PARAMETERIZATION ON, COMMENT OUT (LOCK) 'species_time' FROM THE EXPERIMENT SLOT")
   } else {
-    print("RUNNING WITH FEEDING BOUT PARAMETERIZATION ON, COMMENT OUT 'species_time' FROM EXPERIMENT")
+    print("RUNNING WITH FEEDING BOUT PARAMETERIZATION OFF, COMMENT IN (UNLOCK) 'species_time' FROM THE EXPERIMENT SLOT")
   }
     
   # Decide if long distance targets are random or focused on the trees close to borders
@@ -322,7 +335,7 @@ for (i in i:nrow(param.table)) {
                               runtime = 2000, #(if = 0 or NA_integer_, define stopcond_)
                               stopcond= "day > no_days", # reporter that returns TRUE
                               evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
-                              idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
+                              # idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
                               # reporters:
                               metrics = c(
                                 # "timestep",
@@ -426,8 +439,8 @@ for (i in i:nrow(param.table)) {
                                 "energy-loss-traveling" = list(min=-100, max = -1, qfun="qunif"), #, step = 2
                                 "energy-loss-foraging" = list(min=-100, max = -1, qfun="qunif"),
                                 "energy-loss-resting" = list(min=-100, max = -1, qfun="qunif"),
-                                
-                                "start-energy" = list(min=1000, max=2000, qfun="qunif"),
+
+                                # "start-energy" = list(min=1000, max=2000, qfun="qunif"),
                                 # "energy_level_1" = list(min=100, max=2000, qfun="qunif"),
                                 # "energy_level_2" = list(min=100, max=2000, qfun="qunif"),
                                 
@@ -446,7 +459,7 @@ for (i in i:nrow(param.table)) {
                                 # memory
                                 "step_forget" = list(min=3, max = 400, qfun="qunif"),
                                 # "visual" = list(min=0, max = 3),
-                                'prop_trees_to_reset_memory' = list(min=2, max=5, qfun="qunif"),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
+                                'prop_trees_to_reset_memory' = list(min=2, max=8, qfun="qunif"),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
                                 
                                 # 5. Feeding bout (only when "feedingbout-on?" = 'false')
                                 # 'species_time_val' = list(min = 1, max = 10, qfun="qunif"),
@@ -514,7 +527,7 @@ for (i in i:nrow(param.table)) {
   # install.packages("morris")
   # library("morris")
   
-  nseeds <- 20  #4  # (= num repetitions -> match with n runs and ncores)
+  nseeds <- 10  #4  # (= num repetitions -> match with n runs and ncores)
   # Specify seeds manually (not needed if set.seed() is used at the start of the loop)
   # nseeds = c(
   #   184309146, -1836669376,  -143944772,  -687600015,   815694198,    60805450,    64093864,   195482662,
@@ -524,9 +537,9 @@ for (i in i:nrow(param.table)) {
   
   nl@simdesign <- simdesign_morris(nl = nl,
                                    morristype = "oat",
-                                   morrislevels = 20, # sets the number of different values for each parameter (sampling density)
-                                   morrisr = 10, # 10, # sets the number of repeated samplings (sampling size)
-                                   morrisgridjump = 10, # sets the number of levels that are increased/decreased for computing the elementary effects. . Morris recommendation is to set this value to levels / 2.
+                                   morrislevels = 8, # sets the number of different values for each parameter (sampling density)
+                                   morrisr = 20, # 10, # sets the number of repeated samplings (sampling size)
+                                   morrisgridjump = 4, # sets the number of levels that are increased/decreased for computing the elementary effects. . Morris recommendation is to set this value to levels / 2.
                                    nseeds = nseeds)
 
   # Check seeds:  
@@ -577,7 +590,7 @@ for (i in i:nrow(param.table)) {
   progressr::handlers("progress")
   results %<-% progressr::with_progress(
     run_nl_all(nl = nl
-               , split = 1)
+               , split = 10)
   )
   tictoc::toc()
   print("================ Finished! =========================")

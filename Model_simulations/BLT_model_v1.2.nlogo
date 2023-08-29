@@ -4155,7 +4155,7 @@ to calc-seed-aggregation
       sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
       sr:run "xy <- maptools::as.ppp.SpatialPoints(xy)"
       sr:run "limitsOwin <- spatstat.geom::as.owin(xy)"
-      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 5)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
+      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 10)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
 
 ;      sr:run "xy <- with(xy,data.frame(x=rev(X),y=rev(Y)))"
 ;      sr:run "limitsOwin <- owin(poly=xy)"
@@ -4191,9 +4191,11 @@ to calc-seed-aggregation
       sr:run "ok <- inside.owin(seeds.sp, w = limitsOwin.dil)"
 ;      stop
       sr:run "outside.points <- length(ok[ok == FALSE])"
-;     stop
+
+;      stop
+
       ifelse ( sr:runresult "length(ok[ok == FALSE]) == 0" = TRUE ) [
-        sr:run "xy.out <- cbind(xy, ok)"
+        sr:run "xy.out <- cbind(seeds, ok)"
         sr:set "filepath" word (local-path) "Model_analysis/Sensitivity-analysis/xy_seeds_outside_owin.csv"
         sr:run "write.csv(xy.out, filepath, row.names = FALSE)"
         print "no seeds outside owin"
@@ -4201,6 +4203,10 @@ to calc-seed-aggregation
         print "at least one seed outside owin"
 ;        stop
       ]
+
+      ; get outside of owin points:
+      sr:run "out <- seeds[ok == FALSE]"
+;      sr:runresult "out"
 
       stop
 

@@ -34,7 +34,7 @@ if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
   # modelpath <- here("Model_development", "BLT_model_v1.2.nlogo")
   modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
-  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023May", "Param_bestguess", "Morris", "temp")
+  outpath <- here("Model_analysis", "Sensitivity-analysis", "v1.2_2023MJuly", "Param_bestguess", "Morris", "temp")
   user_scp = "\"Eduardo\""
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
@@ -55,6 +55,10 @@ path <- paste0(outpath, "/")
 
 ### Grep files -----
 nls_to_df <- list.files(path, pattern = "[0-9].rds")
+
+# # Specify one file only:
+# nls_to_df <- nls_to_df[2]
+
 
 n <- 1 #counter
 for (f in nls_to_df) {
@@ -414,15 +418,15 @@ morris_db_long %>%
   # xlab("mustar - Home range area (ha)") +
   xlab(expression(paste(mu, "*", " - Seed dispersal distance (m)")))+
   ylab(expression(paste(mu,      " - Seed dispersal distance (m)"))) +
-  # xlim(0, 15) +
-  # ylim(0, 15) +
+  # ylim(-15, 80) +
+  # xlim(0, 80) +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
                       npcx = "center", npcy = "top"
                       )
   
 # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_SDD_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_SDD_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 # Interaction effects
 morris_db_long %>% 
@@ -465,15 +469,15 @@ morris_db_long %>%
   # xlab("mustar - Home range area (ha)") +
   xlab(expression(paste(mu, "*", " - Seed dispersal distance (m)")))+
   ylab(expression(paste(mu,      " - Seed dispersal distance (m)"))) +
-  # xlim(0, 15) +
-  # ylim(0, 15)
+  # ylim(0, 100) +
+  # xlim(0, 100) +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
                       npcx = "center", npcy = "top"
   )
 
 # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_SDD_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_SDD_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 ### Seed dispersal aggregation ---------------
@@ -500,8 +504,8 @@ morris_db_long %>%
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
   # define plot limits:
-  # xlim(0, 40) +
-  # ylim(0, 40) +
+  # xlim(0, 8) +
+  # ylim(-4, 4) +
   ggtitle("Morris first-order effects on Seed aggregation") +
   ylab(expression(paste(mu,      " - Nearest neighbor distance (meters)"))) +
   xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)"))) +
@@ -511,8 +515,8 @@ morris_db_long %>%
 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_NNseeds_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_NNseeds_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 
 # Interaction
@@ -538,8 +542,8 @@ morris_db_long %>%
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
   # define plot limits:
-  # xlim(0, 40) +
-  # ylim(0, 40) +
+  # xlim(0, 8) +
+  # ylim(0, 10) +
   ggtitle("Morris interaction effects on Seed aggregation") +
   ylab(expression(paste(sigma, " - Nearest neighbor distance (meters)"))) +
   xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)"))) +
@@ -549,8 +553,8 @@ morris_db_long %>%
 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_NNseeds_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_NNseeds_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 
@@ -586,8 +590,8 @@ morris_db_long %>%
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_KDE50_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE50_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 
 ### ggsave('C:/Users/eduar/Desktop/Sensitivity_analysis_bkp/01_Morris_KDE50_option2_first-order.png',
@@ -626,8 +630,8 @@ morris_db_long %>%
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_KDE50_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE50_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 ### KDE95 -----------------------
@@ -665,8 +669,8 @@ morris_db_long %>%
   )
   
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_KDE95_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE95_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 
 # Interaction effects
@@ -705,8 +709,8 @@ morris_db_long %>%
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_KDE95_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE95_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 
@@ -740,15 +744,15 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter)))+ # add this to take shape + color into account (too many categories)
   # define plot limits:
-  # xlim(0, 4) +
-  # ylim(0, 4)
+  # xlim(0, 600) +
+  # ylim(0, 150) +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
                       npcx = "center", npcy = "top"
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_DPL_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_DPL_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 # Interaction
 morris_db_long %>%
@@ -775,15 +779,15 @@ morris_db_long %>%
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter)))+ #+ # add this to take shape + color into account (too many categories)
   # define plot limits:
-  # xlim(0, 4) +
-  # ylim(0, 4)
+  # xlim(0, 600) +
+  # ylim(0, 800) +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
                       npcx = "center", npcy = "top"
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_DPL_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_DPL_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
   
@@ -811,8 +815,8 @@ morris_db_long %>%
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
   # define plot limits:
-  # xlim(0, 0.4) +
-  # ylim(0, 0.4) +
+  # xlim(0, 60) +
+  # ylim(0, 15) +
   xlab(expression(paste(mu, "*", " - MR (km/hours active)"))) +
   ylab(expression(paste(mu, " - MR (km/hours active)"))) +
   ggtitle("Morris first-order effects on Movement rate") +
@@ -821,8 +825,8 @@ morris_db_long %>%
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_MR_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_MR_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 
 # Interaction
@@ -848,8 +852,8 @@ morris_db_long %>%
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
   # define plot limits:
-  # xlim(0, 0.4) +
-  # ylim(0, 0.4) +
+  # xlim(0, 60) +
+  # ylim(0, 70) +
   xlab(expression(paste(mu, "*", " - MR (km/hours active)"))) +
   ylab(expression(paste(sigma, " - MR (km/hours active)"))) +
   ggtitle("Morris interaction effects on Movement rate") +
@@ -858,8 +862,8 @@ morris_db_long %>%
   )
   
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_MR_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_MR_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 ### PT -----------------------
@@ -896,8 +900,8 @@ morris_db_long %>%
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_PT_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_PT_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 # Interaction
 morris_db_long %>%
@@ -932,8 +936,8 @@ morris_db_long %>%
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_PT_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_PT_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 
@@ -1067,8 +1071,8 @@ morris_db_long %>%
 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_Hours-active_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_Hours-active_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 
 
@@ -1106,8 +1110,8 @@ morris_db_long %>%
   )
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_Hours-active_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_Hours-active_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 
@@ -1153,8 +1157,8 @@ morris_db_long %>%
 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_Stored-energy_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_Stored-energy_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 
 # Interaction
@@ -1198,8 +1202,8 @@ morris_db_long %>%
 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_Stored-energy_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_Stored-energy_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 
@@ -1244,8 +1248,8 @@ morris_db_long %>%
 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_P-visited-trees_option2_first-order.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_P-visited-trees_option2_first-order.png'), height = 7, width = 14, dpi = 600)
 
 
 
@@ -1290,8 +1294,8 @@ morris_db_long %>%
 
 
 # # Save plot
-# ggsave(paste0(outpath, "/",
-#               '01_Morris_P-visited-trees_option2_interaction.png'), height = 7, width = 14, dpi = 600)
+ggsave(paste0(outpath, "/",
+              '01_Morris_P-visited-trees_option2_interaction.png'), height = 7, width = 14, dpi = 600)
 
 
 
