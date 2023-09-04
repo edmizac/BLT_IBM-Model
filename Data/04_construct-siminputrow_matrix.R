@@ -27,7 +27,13 @@ library("hms")
 siminputmatrix <- read.csv(here("Data", "Movement", "Curated", #"Param_Simulation-time",
                                 "BLT_groups_data_summary_siminputrow.csv"),
                            sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
+  mutate(group = recode(group, 
+                        "Guarei" = "Guareí", # to match all other datasets
+                        "Santa Maria" = "SantaMaria"
+  )) %>% 
+  rename(
+    "month" = "id_month"
+  )
 siminputmatrix %>% str()
 
 # groups <- siminputmatrix$group
@@ -39,10 +45,17 @@ siminputmatrix %>% str()
 ## to gather GTT, timesteps to morning defecation, number of defecations per day, etc
 dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminputrow",  "Siminputrow_disp-day_nex-day_params.csv"),
                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  # mutate(group = recode(group, "Guarei" = "Guareí")) %>% 
-  
-  # Rename variables of interest:
+  mutate(group = recode(group, 
+                        "Guarei" = "Guareí", # to match all other datasets
+                        "Santa Maria" = "SantaMaria"
+  )) %>% 
   rename(
+    "month" = "id_month"
+  )
+  
+# Rename variables of interest:
+dat.all.sd <- dat.all.sd %>% 
+rename(
     GTT_mean = GTT_timesteps_mean_same_day,
     GTT_sd = GTT_timesteps_sd_same_day,
     morning_defecation_GTT_mean = timesteps_wakeup_to_def_mean_next_day,
@@ -89,7 +102,7 @@ dat.all.sd <- read.csv(here("Data", "Seed_dispersal", "Curated", "Param_siminput
 #   )  
 
 ## Santa Maria APRIL HAS NO SEED DISPERSAL DATA. AS SANTA MARIA HAS ONLY ONE MORE MONTH, I'LL AVERAGE OUT FROM GUAREI AS WELL
-target <- c("Santa Maria", "Guareí")
+target <- c("SantaMaria", "Guareí")
 
 dat.all.sd[ 5 , "GTT_mean"] <- dat.all.sd %>% 
   dplyr::filter(group %in% target) %>% 
@@ -164,7 +177,13 @@ siminputmatrix_mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminpu
 dat.mv <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_siminputrow.csv")
                     , stringsAsFactors = TRUE
 )  %>% 
-  mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
+  mutate(group = recode(group, 
+                        "Guarei" = "Guareí", #%>%  # to match all other datasets
+                        "Santa Maria" = "SantaMaria"
+    )) %>% 
+  rename(
+    "month" = "id_month"
+  )
 
 # dat.mv %>%  dplyr::filter(behavior == "Sleeping site")
 
@@ -172,7 +191,7 @@ target_behav <- c("Sleeping site", "Frugivory")
 
 siminputmatrix_others <- dat.mv %>% 
   dplyr::filter(behavior %in% target_behav) %>%
-  group_by(group, id_month, behavior) %>%
+  group_by(group, month, behavior) %>%
   summarise(
     n_trees = n_distinct(id_tree)
   ) %>% 
