@@ -191,7 +191,8 @@ globals [
   g_SDD_nextday
   g_SDD_sd_sameday
   g_SDD_sd_nextday
-  g_energy_stored
+  g_energy_stored         ; final energy stored
+  g_energy                ; final energy
   g_KDE_95
   g_KDE_50
   g_p_feeding
