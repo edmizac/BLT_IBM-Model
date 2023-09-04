@@ -24,7 +24,7 @@ library("ggh4x")
 # ggplot theme
 theme_set(theme_bw(base_size = 15))
 theme_update(
-          axis.text.x = element_text(size = 11)
+  axis.text.x = element_text(size = 11, angle = 45, vjust = 1, hjust = 0.75) 
 )
 
 
@@ -91,6 +91,11 @@ for (f in nls_to_df) {
     morris_db$area_run <- nl_file@experiment@constants$study_area %>% gsub(., pattern = ('\"'), replacement = '', fixed = T)
     morris_db$month_run <- nl_file@experiment@constants$`feeding-trees-scenario` %>% gsub(., pattern = ('\"'), replacement = '', fixed = T)
     
+    print("--- Run details ---")
+    print(morris_n$area_run[1])
+    print(morris_n$month_run[1])
+    print(paste("feeding bout = ", nl_file@experiment@constants$`feedingbout-on?`))
+    
     if (nl_file@experiment@constants$`feedingbout-on?` == "true") {
       morris_db$feedingbout <- "feedingbout on"
     } else {
@@ -114,7 +119,12 @@ for (f in nls_to_df) {
     # add identifiers
     morris_n$area_run <- nl_file@experiment@constants$study_area %>% gsub(., pattern = ('\"'), replacement = '', fixed = T)
     morris_n$month_run <- nl_file@experiment@constants$`feeding-trees-scenario` %>% gsub(., pattern = ('\"'), replacement = '', fixed = T)
-
+    
+    print("--- Run details ---")
+    print(morris_n$area_run[1])
+    print(morris_n$month_run[1])
+    print(paste("feeding bout = ", nl_file@experiment@constants$`feedingbout-on?`))
+    
     if (nl_file@experiment@constants$`feedingbout-on?` == "true") {
       morris_n$feedingbout <- "feedingbout on"
     } else {
@@ -156,6 +166,7 @@ warnings() #-> sigma values are not estimated correctly
 morris_db$unviable_runs %>% unique()
 # morris_db %>% ggplot() + 
 #   geom_density(aes(x = unviable_runs))
+
 
 
 ### Recode parameters and Rename columns ----
@@ -269,6 +280,20 @@ morris_db <- morris_db %>%
                                                "SantaMaria_Mar", "SantaMaria_Apr",
                                                "Taquara_Jan"
                                                )) 
+
+### Transform output scale ------
+morris_db %>% colnames()
+morris_db$metric %>% unique()
+
+morris_db <- morris_db %>% 
+  mutate(metrics = case_when(
+    metrics == DPL_mean ~ DPL_mean / 1000,
+    metrics == DPL_sd_mean ~ DPL_sd_mean / 1000,
+    
+  )
+  )
+
+
 ### Transform data ----
 a <- morris_db %>% 
   dplyr::filter(metric == "KDE_50_mean")
@@ -296,7 +321,7 @@ morris_db_summary <- morris_db %>%
     sd = sd(value, na.rm=TRUE),
     # n = n(),
     # sqrt = sqrt(5), # = morrisr in the nlrx morris design
-    var = var(value),
+    var = var(value, na.rm=TRUE),
     # SEM = var/sqrt(5)        # Standard error of the mean as in Morris (1991). 5 = morrisr
     # across(mustar:sigma,
     #        list(
@@ -305,8 +330,8 @@ morris_db_summary <- morris_db %>%
     #          # length = length
     #          # sqrt = sqrt(length)
     #       )
-    max = max(value),
-    min = min(value)
+    max = max(value, na.rm=TRUE),
+    min = min(value, na.rm=TRUE)
     #       
     
   ) 
@@ -392,6 +417,7 @@ morris_db_long %>%
              , color = parameter, shape = parameter)) + # position_jitterdodge() requires fill and color
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
   # Mean values (summarizing n=6)
   # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
@@ -400,12 +426,15 @@ morris_db_long %>%
   ) +
   # facet_nested(feedingbout ~ metric+simulation_scenario
   facet_nested(feedingbout ~ simulation_scenario
-               , scales = "free_x"
+               # , scales = "free_x"
+               , scales = "free_y"
                # , scales = "free"
                # , independent = "all"
                # ,rows = 
   ) +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
   # Errorbars:
   # geom_errorbar(aes(ymin=mean_sigma-2*se, ymax=mean_sigma+2*se)
   #               #, position = position_dodge(.9)
@@ -457,6 +486,7 @@ morris_db_long %>%
                # ,rows = 
   ) +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # Errorbars:
   # geom_errorbarh(aes(xmin=mean_mustar-2*se, xmax=mean_mustar+2*se)
   #                #, position = position_dodge(.9)
@@ -497,12 +527,14 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   # facet_nested(feedingbout ~ metric+simulation_scenario) +
   facet_nested(feedingbout ~ simulation_scenario
                , scales = "free_x") +
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 8) +
   # ylim(-4, 4) +
@@ -541,6 +573,7 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 8) +
   # ylim(0, 10) +
@@ -568,6 +601,7 @@ morris_db_long %>%
              , color = parameter, shape = parameter)) + # position_jitterdodge() requires fill and color
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
              , alpha = 0.7
              ) +
@@ -579,6 +613,7 @@ morris_db_long %>%
                # ,rows = 
   ) +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   theme(legend.position="bottom") +
   ggtitle("Morris first-order effects on KDE50") +
   xlab(expression(paste(mu, "*", " - Home range area (ha)")))+
@@ -619,6 +654,7 @@ morris_db_long %>%
                # ,rows = 
   ) +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   theme(legend.position="bottom") +
   ggtitle("Morris interaction effects on KDE50") +
   xlab(expression(paste(mu, "*", " - Home range area (ha)"))) +
@@ -644,6 +680,7 @@ morris_db_long %>%
              , color = parameter, shape = parameter)) + # position_jitterdodge() requires fill and color
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   # Mean values (summarizing n=6)
   # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
   geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #,shape = 20
@@ -656,6 +693,7 @@ morris_db_long %>%
                # ,rows = 
   ) +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   theme(legend.position="bottom") +
   # facet_grid(metric ~ feedingbout) +
   ggtitle("Morris first-order effects on KDE95") +
@@ -695,6 +733,7 @@ morris_db_long %>%
                # ,rows = 
   ) +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   theme(legend.position="bottom") +
   # theme(strip.background = element_rect(fill=strip))
   # scale_color_viridis_d()
@@ -735,14 +774,16 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   facet_nested(feedingbout ~ simulation_scenario
                , scales = "free_x") +
   ggtitle("Morris first-order effects on DPL") +
-  xlab(expression(paste(mu, "*", " - DPL (km)"))) +
-  ylab(expression(paste(mu,      " - DPL (km)"))) +
+  xlab(expression(paste(mu, "*", " - DPL (m)"))) +
+  ylab(expression(paste(mu,      " - DPL (m)"))) +
   # add color+shape combination for every parameter:
   theme(legend.position="bottom") +
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter)))+ # add this to take shape + color into account (too many categories)
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 600) +
   # ylim(0, 150) +
@@ -773,11 +814,12 @@ morris_db_long %>%
   geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
   facet_nested(feedingbout ~ simulation_scenario) +
   ggtitle("Morris interaction effects on DPL") +
-  xlab(expression(paste(mu, "*", " - DPL (km)"))) +
-  ylab(expression(paste(sigma, " - DPL (km)"))) +
+  xlab(expression(paste(mu, "*", " - DPL (m)"))) +
+  ylab(expression(paste(sigma, " - DPL (m)"))) +
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter)))+ #+ # add this to take shape + color into account (too many categories)
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 600) +
   # ylim(0, 800) +
@@ -808,17 +850,19 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   # facet_nested(feedingbout ~ metric+simulation_scenario) +
   facet_nested(feedingbout ~ simulation_scenario
                , scales = "free_x") +
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 60) +
   # ylim(0, 15) +
-  xlab(expression(paste(mu, "*", " - MR (km/hours active)"))) +
-  ylab(expression(paste(mu, " - MR (km/hours active)"))) +
+  xlab(expression(paste(mu, "*", " - MR (m/hours active)"))) +
+  ylab(expression(paste(mu, " - MR (m/hours active)"))) +
   ggtitle("Morris first-order effects on Movement rate") +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
                       npcx = "center", npcy = "top"
@@ -851,11 +895,12 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 60) +
   # ylim(0, 70) +
-  xlab(expression(paste(mu, "*", " - MR (km/hours active)"))) +
-  ylab(expression(paste(sigma, " - MR (km/hours active)"))) +
+  xlab(expression(paste(mu, "*", " - MR (m/hours active)"))) +
+  ylab(expression(paste(sigma, " - MR (m/hours active)"))) +
   ggtitle("Morris interaction effects on Movement rate") +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
                       npcx = "center", npcy = "top"
@@ -883,12 +928,14 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   # facet_nested(feedingbout ~ metric+simulation_scenario
   facet_nested(feedingbout ~ simulation_scenario
                , scales = "free_x") +
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 0.01) +
   # ylim(0, 0.01) +
@@ -925,6 +972,7 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 0.01) +
   # ylim(0, 0.01) +
@@ -961,6 +1009,7 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   facet_nested(metric+feedingbout ~ simulation_scenario
                # , scales = "free_x"
                ) +
@@ -968,6 +1017,7 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   theme(
     axis.text.x = element_text(
       # angle = 90,
@@ -1014,6 +1064,7 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 0.45) +
   # ylim(0, 0.45) +
@@ -1051,6 +1102,7 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   
   # facet_nested(feedingbout ~ metric+simulation_scenario) +
   facet_nested(feedingbout ~ simulation_scenario
@@ -1059,6 +1111,7 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 0.8) +
   # ylim(0, 1) +
@@ -1099,6 +1152,7 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 0.8) +
   # ylim(0, 1) +
@@ -1133,16 +1187,18 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   # facet_nested(feedingbout ~ metric+simulation_scenario
   facet_nested(feedingbout ~ simulation_scenario
                , scales = "free_x") +
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   theme(
     axis.text.x = element_text(
-      angle = 90,
-      hjust = 1,
+      # angle = 90,
+      # hjust = 1,
       size = 12
     )) +
   # define plot limits:
@@ -1184,10 +1240,11 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   theme(
     axis.text.x = element_text(
-      angle = 90,
-      hjust = 1,
+      # angle = 90,
+      # hjust = 1,
       size = 12
     )) +
   # define plot limits:
@@ -1224,18 +1281,20 @@ morris_db_long %>%
   # add reference lines:
   geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
   geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
   facet_nested(feedingbout ~ simulation_scenario
                # , scales = "free_x"
   ) +
   theme(legend.position="bottom") +
   theme(
     axis.text.x = element_text(
-      angle = 90,
-      hjust = 1,
+      # angle = 90,
+      # hjust = 1,
       size = 12
     )) +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 0.5) +
   # ylim(0, 0.5) +
@@ -1276,12 +1335,13 @@ morris_db_long %>%
   theme(legend.position="bottom") +
   theme(
     axis.text.x = element_text(
-      angle = 90,
-      hjust = 1,
+      # angle = 90,
+      # hjust = 1,
       size = 12
     )) +
   # add color+shape combination for every parameter:
   scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
   # define plot limits:
   # xlim(0, 0.5) +
   # ylim(0, 0.5) +

@@ -1,9 +1,39 @@
 library("here")
 library("hues")
 
+
+pal1_4C <- c("#003f5c", "#58508d", "#ff6361", "#ffa600")
+swatch(pal1_4C)
+saveRDS(pal1_4C, file = here("Data", "pallete_validation4c.rds"))
+
+pal1_4C <- c("#94b8b8", "#53b5a2", "#1baf73", "#29a329")
+swatch(pal1_4C)
+saveRDS(pal1_4C, file = here("Data", "pallete_validation4c.rds"))
+
+pal1_4C <- c("#94b8b8","#4ca997","#00975e","#008000")
+swatch(pal1_4C)
+saveRDS(pal1_4C, file = here("Data", "pallete_validation4c.rds"))
+
+pal1_4C <- c("#ffa600", "#b69f00", "#6c9200", "#008000")
+swatch(pal1_4C)
+saveRDS(pal1_4C, file = here("Data", "pallete_validation4c.rds"))
+
+pal1_4C <- c("#d1eac7","#98c689", "#5da34c", "#008000")
+swatch(pal1_4C)
+saveRDS(pal1_4C, file = here("Data", "pallete_validation4c.rds"))
+
+# Color blind friendly:
+c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+pal1_4C <- c("#009E73", "#999999", "#E69F00", "#D55E00")
+swatch(pal1_4C)
+saveRDS(pal1_4C, file = here("Data", "pallete_validation4c.rds"))
+
+
+
 # 1) Color palette https://www.learnui.design/tools/data-color-picker.html#palette
 pal1_5C <- c("#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600")
 swatch(pal1_5C)
+
 pal1b_8C <- c("#003f5c","#2f4b7c","#665191","#a05195","#d45087","#f95d6a","#ff7c43","#ffa600") # 8 colors
 swatch(pal1b_8C)
 
@@ -41,5 +71,3 @@ saveRDS(list, file = here("Data", "palletes.rds"))
 # Check it
 palletes <- readRDS(here("Data", "palletes.rds")) #%>% unlist()
 # palletes <- load(here("Data", "palletes.RData")) %>% unlist()  # does not work
-
-

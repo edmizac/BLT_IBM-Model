@@ -43,6 +43,7 @@ for (f in nls_to_df) {
   # paste0("df_", i)
   if (i == 1) {
    db <- unnest_simoutput(nl_file) #%>% 
+   db$run <- i
      # mutate(
        # turn_ang_sd = as.character(turn_ang_sd)
      #   turn_ang_sd = case_when(turn_ang_sd == "false" ~ NA), # turn angles are "false" in Guareí Aug (value from amt package)
@@ -65,6 +66,7 @@ for (f in nls_to_df) {
                          #     turn_ang_sd = as.numeric(turn_ang_sd)
                            )
                          )
+  db$run <- i
 
   
   i <- i + 1
@@ -197,26 +199,27 @@ db1 %>% write.csv(
 
 
 
-# Split into tables
+# # Split into tables
+# 
+# # # Write csv (plants)
+# db_seeds <- db1 %>%
+#   dplyr::filter(breed != "monkeys") %>%
+#   dplyr::select(-c("duration":"agent"))     ##### *** PAY ATTENTION HERE
+# db_seeds %>%   write.csv(paste0(path, "/", "02_Simoutput-simple_plants.csv"),
+#             row.names = FALSE)
+# 
+# # # Write csv (monkeys)
+# 
+# db_monkeys <- db1 %>%
+#   dplyr::filter(breed == "monkeys") %>%
+#   dplyr::select(-c("x":"disp_day"))         ##### *** PAY ATTENTION HERE
+#   # mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
+# db_monkeys %>% write.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv"),
+#             row.names = FALSE)
+# 
+# 
+# db_monkeys$group %>% as.factor() %>% levels()  
 
-# # Write csv (plants)
-db_seeds <- db1 %>%
-  dplyr::filter(breed != "monkeys") %>%
-  dplyr::select(-c("duration":"agent"))     ##### *** PAY ATTENTION HERE
-db_seeds %>%   write.csv(paste0(path, "/", "02_Simoutput-simple_plants.csv"),
-            row.names = FALSE)
-
-# # Write csv (monkeys)
-
-db_monkeys <- db1 %>%
-  dplyr::filter(breed == "monkeys") %>%
-  dplyr::select(-c("x":"disp_day"))         ##### *** PAY ATTENTION HERE
-  # mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
-db_monkeys %>% write.csv(paste0(path, "/", "02_Simoutput-simple_monkeys.csv"),
-            row.names = FALSE)
-
-
-db_monkeys$group %>% as.factor() %>% levels()  
 
 # a <- db1 %>% 
 #   # dplyr::filter(group == "Taquara") %>%

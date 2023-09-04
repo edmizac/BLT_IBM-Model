@@ -24,6 +24,7 @@ library("ggspatial")
 library("sf")
 library("purrr")
 library("stringr")
+library("see")
 
 path <- here("Model_analysis", "Sensitivity-analysis",
              "v1.2_2023MJuly", "Param_bestguess", "Simple", "temp")
@@ -34,6 +35,8 @@ theme_set(theme_bw(base_size = 15))
 theme_update(
   axis.text.x = element_text(size = 11)
 )
+
+validation_pallete <- readRDS(here("Data", "pallete_validation4c.rds"))
 
 # 1) Only if spatial data was outputted (for spatial plots):  -----
 
@@ -504,15 +507,23 @@ obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminpu
                     sep = ",", stringsAsFactors = TRUE)  %>%  
   # mutate(group = recode(group, "Guarei" = "Guareí")) #%>%  # to match all other datasets
   mutate(source = as.factor("observed")) %>% 
+  mutate(group = recode(group,
+                        "Santa Maria" = "SantaMaria"
+  )) %>% 
   rename(
     month = id_month,
     SDD_seeds = SDD
     ) %>% 
   group_by(group, month) %>% 
-  mutate(
-    SDD = mean(SDD_seeds, na.rm = TRUE),
-    SDD_sd = sd(SDD_seeds, na.rm = TRUE)
-    ) %>% 
+  
+  # mutate(
+  #   SDD = mean(SDD_seeds, na.rm = TRUE),
+  #   SDD_sd = sd(SDD_seeds, na.rm = TRUE)
+  #   ) %>%
+  # rename(
+    # SDD = SDD_seeds
+  # ) %>% 
+  
   # group_by(group, month, disp_day) %>% 
   # mutate(
   #   SDD_sameday = SDD_seeds
@@ -523,24 +534,26 @@ obs <- read.csv(here("Data", "Seed_dispersal", "Curated", "Validation", "Siminpu
 obs %>% str()
 
 # Simulated data
-db_sd <- read.csv(paste0(path, "/", "02_Simoutput-simple-all.csv"))
-db_sd %>% str()
+db_sd_raw <- read.csv(paste0(path, "/", "02_Simoutput-simple-all.csv"))
+db_sd_raw %>% str()
 
 # Filter unviable runs
-db_sd <- db_sd %>% 
+db_sd_raw <- db_sd_raw %>% 
   dplyr::filter(`survived.` == "yes")
 
 # Remove runs that presented issues: 
-db_sd <- db_sd %>% dplyr::filter(DPL > 100) # most of them Guareí May and Suzano Sep 
+# db_sd <- db_sd %>% dplyr::filter(DPL > 100) # most of them Guareí May and Suzano Sep
 
+db_sd_raw$X.run_number. %>% unique()
+db_sd_raw$random_seed %>% unique()
 
 # Filter seed data
-db_sd <- db_sd %>% 
+db_sd_raw <- db_sd_raw %>% 
   # rename(group = study_area) %>% 
   dplyr::filter(breed == "seeds") %>%
   mutate_if(is.character, as.factor) %>% 
-  group_by(group, random_seed) %>% 
   mutate(source = "simulated") %>% 
+  group_by(group, random_seed) %>% # each random seed = 1 run (~ run number)
   mutate(day = as.factor(day),
          disp_day = recode(disp_day,
                         "sameday" = "same day",
@@ -554,23 +567,56 @@ db_sd <- db_sd %>%
   mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day")) %>% 
   ungroup()
 
-db_sd$disp_day %>% str()
-db_sd$source %>% str()
-db_sd$group %>% levels()
-db_sd$month %>% levels()
+# Relevel all fragment names to size categories
+db_sd_raw <- db_sd_raw %>% 
+  mutate(
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous",
+      TRUE ~ "check"
+    )
+  ) %>% 
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  )
+
+db_sd_raw$disp_day %>% str()
+db_sd_raw$source %>% str()
+db_sd_raw$group %>% levels()
+db_sd_raw$month %>% levels()
+db_sd_raw$fragment %>% levels()
 # db1_sdd <- db1_sdd %>% 
 #   filter(SDD > 0)
 # db1_sdd <- db1_sdd %>%
 #   dplyr::filter(disp_day == "sameday") # next_day SDD is all 0 (check model)
 
+
+# Summarise mean SDD values as we always compare distribution of means with all observetions of one empirical case
+db_sd <- db_sd_raw %>% 
+  group_by(group, random_seed) %>% # each random seed = 1 run (~ run number)
+  mutate(
+    SDD = mean(SDD_seeds, na.rm = TRUE),
+    SDD_sd = sd(SDD_seeds, na.rm = TRUE)
+  ) %>% 
+  dplyr::select(-c(x, y, SDD_seeds, id_seed, species, mother_tree)) %>% 
+  distinct()# %>% 
+  # ungroup()
+
+obs2 <- obs %>% 
+  rename(
+    SDD = SDD_seeds
+  )
+
+
 # Merge obserded data into db1_sd
-db_sd <- db_sd %>% dplyr::bind_rows(obs)
+db_sd <- db_sd %>% dplyr::bind_rows(obs2) # summarized (with mean SDD of simulated)
+
+db_sd_raw <- db_sd_raw %>% dplyr::bind_rows(obs) # not summarized (with mean SDD of simulated = used to plot examples)
 
 db_sd <- db_sd %>% 
   mutate(source = as.factor(source)) %>% 
-  mutate(group = recode(group,
-    "Santa Maria" = "SantaMaria"
-  )) %>% 
   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                       "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
@@ -599,6 +645,7 @@ db_sd <- db_sd %>%
   mutate(disp_day = forcats::fct_relevel(disp_day, "same day", "next day"))
 
 db_sd %>% str()
+db_sd$source %>% summary()
 
 
 # Relevel all fragment names to size categories
@@ -618,6 +665,8 @@ db_sd <- db_sd %>%
 
 #check:
 db_sd$fragment %>% unique()
+
+db_sd$source %>% unique()
 
 
 
@@ -639,7 +688,7 @@ db_sd %>%
   # droplevels() %>%
   ggplot(
   # aes(x = SDD, fill = group, group = group)
-  aes(x = SDD, fill = fragment, group = fragment)
+  aes(x = SDD, group = fragment, fill = fragment)
 ) +
   geom_density(
     alpha = 0.5
@@ -650,6 +699,7 @@ db_sd %>%
   # facet_wrap(vars(source, disp_day), nrow = 2) +
   # facet_grid(disp_day ~ source) +
   facet_wrap(~source) +
+  scale_fill_manual(values = validation_pallete) +
   # ggtitle("Density plot with adjustment = 2") +
 
   # others
@@ -674,7 +724,32 @@ db_sd %>%
   # aes(x = group, y = SDD, fill = group) +
   aes(x = fragment, y = SDD, fill = fragment) +
   geom_violin() +
-  geom_boxplot(width = 0.2, fill = "white", alpha = 0.5) +
+  # see::geom_violinhalf() +
+  geom_boxplot(width = 0.3, #alpha = 0.8) + 
+               fill = "white", alpha = 0.5) +
+  # Half violin half dotplot option 1:
+  # geom_dotplot(
+  #   binaxis = "y",
+  #   stackdir = "center",
+  #   stackratio = 0.3,
+  #   position = position_jitter(width = 0.01),
+  #   dotsize = 0.5
+  # ) +
+  geom_point(
+    size = 0.7,
+    shape = 21,
+    color = "black",
+    # position = position_jitterdodge(jitter.width = .65) # only way of dodging the points and jitter it
+    position = position_jitterdodge(seed = 41, dodge.width = 0.9),
+  ) +
+  # # Half violin half dotplot option 2:
+  # geom_violindot(
+  #   dots_size = 1.2
+  # ) +
+  
+  scale_fill_manual(values = validation_pallete) +
+  # scale_fill_brewer(palette="Spectral") +
+  # scale_fill_grey(start = 0.20)+
   theme(axis.title.x = element_blank()) +
   facet_wrap(~disp_day, nrow = 2) +
   ylab("Mean SDD (m)") +
@@ -683,6 +758,9 @@ db_sd %>%
   # facet_wrap(vars(disp_day, source), nrow = 2) +
   facet_grid(disp_day ~ source) +
   
+  # Mean
+  stat_summary(fun=mean, geom="point", shape = 23, #shape=18,
+               size=1.5, color="white", fill = "red") +
   # others
   theme(
     axis.text = element_text(size = 10), 
@@ -919,13 +997,45 @@ db_sd %>%
                                       "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
   ggplot(
   # aes(x = group, y = SDD, color = month)
-  aes(x = fragment, y = SDD, color = month)
+  aes(x = fragment, y = SDD, group = month, color = month, fill = month)
 ) +
-  geom_boxplot() +
+  # # Option 1:
+  # geom_boxplot() +
+  # geom_point(
+  #   size = 0.5,
+  #   # position = position_jitterdodge(jitter.width = .65) # only way of dodging the points and jitter it
+  #   position = position_dodge(0.9)
+  # ) +
+  # Option 2:
+  geom_violin(lwd = 0.65, position = position_dodge(0.9)
+              , fill = "white"
+              ) +
+  # see::geom_violinhalf() +
+  # geom_boxplot(width = 0.3, #alpha = 0.8) + 
+  #              fill = "white", alpha = 0.5,
+  #              position = position_dodge(0.9)
+  #              ) +
+  # Half violin half dotplot option 1:
+  # geom_dotplot(
+  #   binaxis = "y",
+  #   stackdir = "center",
+  #   stackratio = 0.3,
+  #   # position = position_jitter(width = 0.01),
+  #   position = position_dodge(0.9),
+  #   dotsize = 0.5
+# ) +
   geom_point(
-    size = 0.5,
-    position = position_jitterdodge(jitter.width = .65) # only way of dodging the points and jitter it
+    size = 0.6,
+    shape = 21,
+    color = "black",
+    # position = position_jitterdodge(jitter.width = .65) # only way of dodging the points and jitter it
+    position = position_jitterdodge(seed = 41, dodge.width = 0.9),
   ) +
+  # Mean
+  stat_summary(fun=mean, geom="point", shape = 23, #shape=18,
+               size=1.5, color="white", fill = "red"
+               , position = position_dodge(0.9)
+               ) +
   
   # geom_boxplot(position=position_dodge2(preserve = "single"),
   #              aes(group = month)) + # to preserve SantaMaria April missing
@@ -938,38 +1048,51 @@ db_sd %>%
   #            aes(group = month)
   #            ) +
   # ylab("SDD (in meters)") +
-  ylim(0, 800) +
+  # ylim(0, 800) +
   facet_wrap(~disp_day, nrow = 2) +
-  # scale_color_viridis_d() +
   # facet_wrap(vars(disp_day, source), nrow = 2) +
   
   # others
   theme(axis.text = element_text(size = 9)) +
 # geom_point(position = position_jitterdodge(jitter.width = 0.7)) 
 
-
-# Save plot
-# ggsave(paste0(path, "/", '02_simple_SDD_disp_day_boxplot.png'), height = 5, width = 7)
-
-
   # facet_grid(cols = vars(disp_day), rows = vars(source)) +
   facet_grid(cols = vars(source), rows = vars(disp_day)) +
   scale_color_viridis_d() +
-  ylab("SDD (m)")
+  scale_fill_viridis_d() +
+  ylab("SDD (m)") +
+  ggtitle("Seed dispersal distance by fragment and month")
 
 # # Save plot
-ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-boxplot.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_grid-violin.png'), height = 5, width = 7)
 
 
 
 #### Example run density By group and month ####
-
-ex_seed <- db_sd$seed %>%
+ex_seed <- db_sd_raw$seed %>%
   na.exclude() %>%
   sample(size = 1)
 
+# Relevel fragment order
+db_sd_raw$fragment %>% summary()
+db_sd_raw <- db_sd_raw %>%
+  mutate(
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous",
+      TRUE ~ "check"
+    )
+  ) %>%
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  )
+a <- db_sd_raw %>% dplyr::filter(fragment == "check")
+a
+
 # Reduce seed dispersal dataset to plot good ggridges and boxplots:
-db_sd_example <- db_sd %>% 
+db_sd_example <- db_sd_raw %>% 
   # group_by(group, month, feedingbout_on., seed) %>% 
   group_by(group, month, feedingbout_on.) %>% 
   dplyr::filter(seed == ex_seed | source == "observed") %>% 
@@ -981,11 +1104,25 @@ db_sd_example <- db_sd %>%
     )
   )
 
+# Relevel fragment order
+db_sd_example <- db_sd_example %>%
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  ) %>% 
+  mutate(
+    source = forcats::fct_relevel(source, "observed")
+  )
+
+
 # check:
 db_sd_example$seed %>% unique()
 db_sd_example$source %>% unique()
 db_sd_example$SDD_seeds %>% unique()
+db_sd_example$fragment %>% unique()
+db_sd_example$fragment
 
+
+db_sd_example %>% colnames()
 
 
 # density
@@ -1055,7 +1192,7 @@ db_sd_example %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(rows = vars(source)) +
   scale_fill_viridis_d() +
-  ggtitle(paste0("Ex. run: Distance of seeds dispersed on the next day", "\nrseed: ", ex_seed)) +
+  ggtitle(label = paste0("Ex. run: SDD of all events (same + next day). ", "rseed: ", ex_seed)) +
   theme(plot.title = element_text(size = 14))
 
 # Save plot
@@ -1084,7 +1221,7 @@ db_sd_example %>%
     position = position_points_jitter(width = 0.5, height = 0)
   ) +
   xlab("SDD (m)") +
-  ggtitle(paste0("rseed = ", ex_seed)) +
+  ggtitle(label = paste0("Ex. run: SDD of same and next day events. ", "rseed: ", ex_seed)) +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -1119,7 +1256,7 @@ db_sd_example %>%
     width = .20, position = position_nudge(y = -.25) #, outlier.shape = NA
   ) +
   xlab("SDD (m)") +
-  ggtitle(paste0("rseed = ", ex_seed)) +
+  ggtitle(paste0("Ex. run: SDD of same and next day events. ", "rseed: ", ex_seed)) +
   # facet_grid(source ~ disp_day) +
   facet_grid(source ~ disp_day) +
   scale_fill_viridis_d()
@@ -1145,16 +1282,17 @@ db_sd_example %>%
     # position = "stack"
     # stat = "identity",
     # trim = TRUE,
-    scale = 1.5, # heigth
+    scale = 1.2, # heigth
     jittered_points = TRUE,
     point_shape = "|", point_size = 2,
     position = position_points_jitter(width = 0.5, height = 0)
   ) +
   xlab("SDD (m)") +
+  xlim(0, 800) +
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle("Ex. run: SDD of all events (same and next day\nrseed:", ex_seed) +
+  ggtitle(paste0("Example run: SDD of all events. ","rseed: ", ex_seed)) +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
@@ -1191,11 +1329,11 @@ db_sd_example %>%
   # facet_grid(source ~ disp_day) +
   facet_grid(~source) +
   scale_fill_viridis_d() +
-  ggtitle(paste0("Ex. run: SDD all events (same and next day)", "\nrseed: ", ex_seed)) +
+  ggtitle(paste0("Ex. run: SDD all events (same and next day). ", "rseed: ", ex_seed)) +
   theme(plot.title = element_text(size = 16))
 
 # # Save plot
-ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2_withboxplot_example.png'), height = 5, width = 7)
+ggsave(paste0(path, "/", '02_simple_SDD_disp_day_density_ridges2_example.png'), height = 5, width = 7)
 
 
 
