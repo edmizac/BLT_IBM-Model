@@ -4961,7 +4961,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-8
+1
 
 CHOOSER
 1017
@@ -5382,7 +5382,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.7
+0.36
 0.01
 1
 NIL
@@ -5732,7 +5732,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-0
+2
 
 BUTTON
 245
@@ -5853,7 +5853,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-77.22
+68.98
 5
 1
 NIL
@@ -5868,7 +5868,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.387
+1.4060000000000001
 0.1
 1
 NIL
@@ -5883,7 +5883,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.5300000000000002
+2.343
 0.1
 1
 NIL
@@ -5898,7 +5898,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-59.53
+67.86
 1
 1
 NIL

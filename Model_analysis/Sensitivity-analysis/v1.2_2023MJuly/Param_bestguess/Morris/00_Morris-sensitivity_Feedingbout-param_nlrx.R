@@ -115,7 +115,7 @@ for (i in i:nrow(param.table)) {
   ### Loop (unblock for{} above) or decide which area/month to run the sensitivity on: ---
     # All (loop):
     area_run_scp <- paste0('\"', param.table$group[i], '\"')
-    month_run_scp <- paste0('\"', param.table$id_month[i], '\"')
+    month_run_scp <- paste0('\"', param.table$month[i], '\"')
   
   # Specify area:
   # area_run_scp <- '"Guareí"' #scaped
@@ -176,13 +176,13 @@ for (i in i:nrow(param.table)) {
   
   no_days_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run_scp, pattern = ('\"'), replacement = '', fixed = T),
-                  id_month == gsub(month_run_scp, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+                  month == gsub(month_run_scp, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(ndays) %>% 
     pull() #+ 1 # one day more for "initializing" the model (take this first day out when analyzing data?)
   
   simultime_run <- param.table %>% 
     dplyr::filter(group == gsub(area_run_scp, pattern = ('\"'), replacement = '', fixed = T),
-                  id_month == gsub(month_run_scp, pattern = ('\"'), replacement = '', fixed = T)) %>% 
+                  month == gsub(month_run_scp, pattern = ('\"'), replacement = '', fixed = T)) %>% 
     dplyr::select(mean_timesteps) %>% 
     pull()
   simultime_run <- round(simultime_run * 0.9) # that's the timestep when tamarins should start looking for the sleeping site
