@@ -33,7 +33,8 @@ outpath <- here("Model_analysis", "Genetic_analysis", "v1.2", "temp")
 # suz <- readRDS(suz)
 
 
-filesga <- list.files(path, pattern = "feedingbouton.csv")
+filesga <- list.files(path, pattern = ".csv")
+# filesga <- list.files(path, pattern = "feedingbouton.csv")
 filesga <- paste0(path, "/", filesga)
 
 dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
@@ -97,11 +98,11 @@ dfga_en %>%
   # geom_pointrange(aes(ymin = min, ymax = max, x = parameter)) +
   geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
                 , width = 0.2
-                , size = 0.2) +
+                , linewidth = 0.2) +
   geom_point(aes(x = parameter, y = value, color = expname),
              size = 3
-             # , alpha = 0.5
-             # , position = "jitter"
+             , alpha = 0.7
+             , position = position_jitter(w = 0.1)
              ) +
   theme(
     axis.text.x = element_text(
@@ -111,11 +112,12 @@ dfga_en %>%
     )
     , axis.title.y = element_blank()
   ) +
+  scale_color_viridis_d() +
   # ggtitle("Optimization of energy variables")
   ggtitle("Optimization of energy levels")
 
 # Save plot
-# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_feedingbout-on1.png'), height = 5, width = 7)
+# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_energylevels.png'), height = 5, width = 7)
 
 
 # Plot showing how the optimization differed for each energy parameter
@@ -124,11 +126,11 @@ dfga_en2 %>%
   # geom_pointrange(aes(ymin = min, ymax = max, x = parameter)) +
   geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
                 , width = 0.2
-                , size = 0.2) +
+                , lwd = 0.2) +
   geom_point(aes(x = parameter, y = value, color = expname),
              size = 3
-             # , alpha = 0.5
-             # , position = "jitter"
+             , alpha = 0.7
+             , position = position_jitter(w = 0.1)
   ) +
   theme(
     axis.text.x = element_text(
@@ -138,11 +140,12 @@ dfga_en2 %>%
     )
     , axis.title.y = element_blank()
   ) +
+  scale_color_viridis_d() +  
   # ggtitle("Optimization of energy variables")
   ggtitle("Optimization of energy gain and loss")
 
 # Save plot
-# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_feedingbout-on2.png'), height = 5, width = 7)
+# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_energygainloss.png'), height = 5, width = 7)
 
 
 # Plot showing how the optimization differed for each parameter (others)
@@ -151,11 +154,12 @@ dfga_otr %>%
   # geom_pointrange(aes(ymin = min, ymax = max, x = parameter)) +
   geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
                 , width = 0.2
-                , size = 0.2) +
+                , lwd = 0.2
+                ) +
   geom_point(aes(x = parameter, y = value, color = expname),
              size = 3
-             # , alpha = 0.5
-             # , position = "jitter"
+             , alpha = 0.7
+             , position = position_jitter(w = 0.1)
   ) +
   theme(
     axis.text.x = element_text(
@@ -165,11 +169,12 @@ dfga_otr %>%
     )
     , axis.title.y = element_blank()
   ) +
+  scale_color_viridis_d() +
   # ggtitle("Optimization of other parameters")
   ggtitle("Optimization of non-energy parameters")
 
 # Save plot
-# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_feedingbout-on3.png'), height = 5, width = 7)
+# ggsave(paste0(outpath,  "/", '01_GA_optimized-params_nonenergy.png'), height = 5, width = 7)
 
 
 dfga <- dfga %>% 
@@ -203,8 +208,8 @@ dfga %>%
                 , size = 0.2) +
   geom_point(aes(x = parameter, y = value, color = expname),
              size = 3
-             # , alpha = 0.5
-             # , position = "jitter"
+             , alpha = 0.7
+             , position = position_jitter(w = 0.1)
   ) +
   theme(
     axis.text.x = element_text(
@@ -216,6 +221,7 @@ dfga %>%
     , axis.title.x = element_blank()
     , legend.position = "bottom"
   ) +
+  scale_color_viridis_d() +
   # scale_color_manual(values = c("#C833EC", "#33A4EC")) +
   ggtitle("Optimization of model parameters") +
   facet_wrap(~param_category, scales = "free", nrow = 1)

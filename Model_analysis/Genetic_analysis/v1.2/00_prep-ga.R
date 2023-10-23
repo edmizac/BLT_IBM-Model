@@ -3,14 +3,10 @@
 # tamarins movement patterns/range behavior of Taquara group, the group which inhabits
 # the most 'natural' condition
 
-
-
-## *** REMEMBER TO COMMENT OUT THE CALC-SEED PROCEDURE, OTHERWISE THE ANALYSIS WILL TAKE LONGER **** ##
-
-
-
 # Date created: 2022-11-25d
+# Last update: 2023-10-23d
 # Author: Eduardo Zanette
+
 
 ## Notes --------------------------- 
 
@@ -96,7 +92,7 @@ param.table <- read.csv(here("Data", "Parameter_table.csv"),
 
 ## Step 2: Attach an experiment and run ------------------------
 
-i <- 7
+i <- 1
 # for (i in i:nrow(param.table)) {
     for (i in i:nrow(param.table)) {   # subset runs here, not before (otherwise min and max values change)
   
@@ -786,7 +782,7 @@ i <- 7
       # print(paste("energy_lvl_2", en2))
       
       if ( en1 > en2 ) {
-        crit <- 99999
+        crit <- 0
         # runs <- runs + 1
         print("energy_lvl_1 is bigger than energy_lvl 2, dropping simulation")
         return(crit)
@@ -796,7 +792,7 @@ i <- 7
       }
       
     } else {
-      crit <- 99999 # if monkeys died, the crit value is high and the run is dropped
+      crit <- 0 # if monkeys died, the crit value is low and the run is dropped
       print("tamarins died, dropping simulation")
       # deaths <- deaths + 1
       return(crit)
@@ -873,29 +869,50 @@ i <- 7
   # setsim(nl, "simoutput") <- tibble::enframe(results)
   # saveRDS(nl, file.path(nl@experiment@outpath, paste0(expname, ".rds")))
   
-  
-  
-  ## --- ##
-  # ?genalg::rbga
-  # nl <- readRDS(paste0(outpath, "/GA_Guareí_Aug_nl_feedingbouton_2023-09-09.rds"))
-  # resultsrbga <- readRDS(paste0(outpath, "/GA_Guareí_Aug_results_feedingbouton_2023-09-09.rds"))
-  # nl <- readRDS(paste0(outpath, "/wrong_presting_max-values", "/GA_Taquara_Jan_nl_feedingbouton_2023-09-26.rds"))
-  # nl <- readRDS(paste0(outpath, "/wrong_presting_max-values", "/GA_SantaMaria_Mar_nl_feedingbouton_2023-09-21.rds"))
-  # resultsrbga <- readRDS(paste0(outpath, "/wrong_presting_max-values", "/GA_SantaMaria_Mar_results_feedingbouton_2023-09-21.rds"))
-  # nl <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_nl_feedingbouton.rds"))
-  # resultsrbga <- readRDS(paste0(outpath, "/GA_SantaMaria_Mar_results_feedingbouton.rds"))
-  # nl <- readRDS(paste0(outpath, "/GA_Suzano_Dec_nl_feedingbouton.rds"))
-  # resultsrbga <- readRDS(paste0(outpath, "/GA_Suzano_Dec_results_feedingbouton.rds"))
-  
   resultsrbga <- results
+  
+  
+  
+  
+  
+  
+  ## ------------------------------------------------------------------------------------ ##
+  # Load specific runs:
+  
+  # ?genalg::rbga
+  
+  # nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl_feedingbouton_2023-10-20.rds"))
+  # resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_feedingbouton_2023-10-20.rds"))
+  
+  filesga <- list.files(path, pattern = "results_")  # use the rgba file
+  filesga <- paste0(path, "/", filesga)
+  filesganl <- list.files(path, pattern = "nl_feedingbouton")  # use the rgba file
+  filesganl <- paste0(path, "/", filesganl)
+  
+  for (gaindex in 1:length(filesga)) { 
+    
+    # print(gaindex)
+    # gaindex <- 9
+    
+    nl <- readRDS(filesganl[gaindex])
+    resultsrbga <- readRDS(filesga[gaindex])
+
+    expname <- nl@experiment@expname
+    area_run <- str_split_1(expname, pattern = "_")[2]
+    month_run <- str_split_1(expname, pattern = "_")[3]
+  
+  
+
+  ## ------------------------------------------------------------------------------------ ##
+
+
+
   # resultsrbga <- resultsrbga@simdesign@simoutput
   cat(summary(resultsrbga))
-  
   # resultsrbga %>% class()
   # resultsrbga %>% str()
-  
   # resultsrbga@experiment
-  
+
   nl@experiment@constants$study_area
   nl@experiment@constants$`feeding-trees-scenario`
   min_param <- resultsrbga[2] # parameters min
@@ -903,6 +920,14 @@ i <- 7
   resultsrbga[4] # popSize
   resultsrbga[5] # iter
   # population <- resultsrbga[7] %>% unlist(recursive = FALSE) # population
+
+
+
+
+
+
+
+  # As in 00_prep-ga.R (original)
   population <- resultsrbga[7] %>% purrr::map_df(., ~as.data.frame(.))
   colnames(population) <- names(min_param)
   fitness <- resultsrbga[10] %>% unlist() # evaluations
@@ -910,33 +935,116 @@ i <- 7
   best_result <- fitness %>% max() # best
   # idx <- resultsrbga$population[resultsrbga$evaluations == max(resultsrbga$best),][1,] #https://wittline.github.io/Data-Analytics-with-R/Genetic%20algorithms/Genetic_algorithms_with_R.html
   idx <- fitness == best_result
-  
+
   idx <- match(best_result, fitness)
-  
+
   min_param <- min_param %>% unlist()
   # min_param %>% class()
   max_param <- max_param %>% unlist()
-  
+
   ga_input <- data.frame(
     min = min_param,
     max = max_param
   )
-  
+
   # best <- best_results %>% unlist() %>% max()
   # best %>% class()
   # best_results %>% class()
-  
-  
-  
+
+
+
   # best <- resultsrbga$population[resultsrbga$evaluations == max(resultsrbga$best),][1,] #https://wittline.github.io/Data-Analytics-with-R/Genetic%20algorithms/Genetic_algorithms_with_R.html
-  
-  
+
+
   # idx <- match(best, best_results)
   # best %in% best_results
   # best_results %in% best
-  
+
   optimized_param <- population[idx, ]
-  
+
+
+
+
+
+
+
+
+
+
+
+  # ## As in 02_ga_plots_5best.R
+  # population <- resultsrbga[7] %>% purrr::map_df(., ~as.data.frame(.))
+  # best_results <- resultsrbga[11] %>% unlist() #%>% as_tibble()
+  #
+  # # best5 <- tail(resultsrbga$best, 5)
+  #
+  # # cat(summary(resultsrbga))
+  #
+  # bestSolution<-resultsrbga$population[which.max(resultsrbga$evaluations), ]
+  # # values[which(GA@solution[1,] == 1)]
+  #
+  # # best5_idx <- pmatch(best5, best_results)
+  # # bestSolutions<-resultsrbga$population[best5_idx, ]
+  #
+  #
+  # resultsrbga$evaluations
+  # # resultsrbga[10]
+  # resultsrbga$best
+  # # resultsrbga[11]
+  #
+  # # best5 <- resultsrbga$best %>% unlist() %>% as.vector() #sort(., decreasing = TRUE)
+  # # fitness <- resultsrbga$best %>% unlist() %>% as.vector() #sort(., decreasing = TRUE)
+  # fitness <- resultsrbga$evaluations %>% unlist() %>% as.vector() #sort(., decreasing = TRUE)
+  # idx <- 1:length(fitness)
+  # fitness <- cbind(fitness, idx)
+  # best5 <- fitness %>%
+  #   as_tibble() %>%
+  #   arrange(desc(fitness)) %>%
+  #   slice_head(n=5)
+  # # slice_max(fitness, n = 5, with_ties = FALSE)
+  #
+  # best5
+  #
+  # # ### Option 1: filtering despite the number of chromosomes: ###
+  # # best5_idx <- resultsrbga$best[resultsrbga$best %in% best5] ; length(best5_idx)
+  # # # idx <- match(best5, resultsrbga$best)
+  # # optimized_param <- population[1:length(best5_idx), ]
+  #
+  #
+  # ### Option 2:  filtering only one chromossome per fitness value: ###
+  # # best5_idx <- pmatch(best5, best_results)
+  # # best5_idx <- pmatch(best5, resultsrbga$population)
+  #
+  # # best5_idx <- pmatch(best5$idx, row_number(population))
+  # best5_idx <- best5$idx
+  #
+  # optimized_param <- population[best5_idx, ]
+  #
+  # # get parameter names:
+  # params <- resultsrbga[2] %>% unlist()
+  # # names(params)
+  #
+  # colnames(optimized_param) <- names(params) %>% stringr::str_sub(., end=-5)
+  # colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_sub(., start=11)
+  # colnames(optimized_param)
+  # # a <- colnames(optimized_param)
+  #
+  # optimized_param <- cbind(optimized_param, best5)
+  # len <- colnames(optimized_param) %>% length()
+  # # colnames(optimized_param)[len] <- "fitness"
+  #
+  # # optimized_param$expname <- basename(i) %>% str_match(., '(?:_[^_]+){3}') %>% as.character() %>%
+  #   # str_remove(., '^_{1}') %>% str_remove(., "_results")
+  # optimized_param$expname <- resultsrbga$expname %>% str_remove(., "GA_")
+  # # optimized_param <- optimized_param %>% t() %>% as.data.frame(row.names = TRUE)
+  # # optimized_param <- cbind(optimized_param, a)
+  # # optimized_param$simulation_scenario <- paste0(area_run, "_", month_run)
+  # # optimized_param <- optimized_param[, c(3, 2, 1)]
+  #
+
+
+
+
   # Save optimized
   library("stringr")
   # colnames(optimized_param) <- colnames(optimized_param) #%>% stringr::str_replace_all(., c("stringMin.", ".min"), "" )
@@ -944,55 +1052,55 @@ i <- 7
   colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_sub(., start=11)
   colnames(optimized_param)
   a <- colnames(optimized_param)
-  
+
   optimized_param <- optimized_param %>% t() %>% as.data.frame(row.names = TRUE)
   optimized_param <- cbind(optimized_param, a)
   optimized_param$simulation_scenario <- paste0(area_run, "_", month_run)
   optimized_param <- optimized_param[, c(3, 2, 1)]
-  
+
   optimized_param <- cbind(optimized_param, ga_input)
   row.names(optimized_param) <- NULL
-  
+
   colnames(optimized_param) <- c("expname", "parameter", "value", "min", "max")
-  
+
   optimized_param %>% write.csv(paste0(outpath, "/", expname, "_optimized_feedingbouton"
                                        , Sys.Date(), ".csv"), row.names = FALSE)
-  
-  
+
+
   par(mar = c(2, 2, 2, 2))
   # par(oma=c(5,7,1,1))
-  
+
   # png(file=paste0(outpath, "/", expname, "_optimized_feedingbouton_points"
   #                 , Sys.Date(), ".png")
   #     , width = 480, height = 900
   #     )
   # plot(resultsrbga, type = "vars")
   # dev.off()
-  # 
+  #
   # png(file=paste0(outpath, "/", expname, "_optimized_feedingbouton_hist", Sys.Date(), ".png")
   #     , width = 480, height = 900
   #     )
   # plot(resultsrbga, type = "hist")
   # dev.off()
-  
-  
+
+
   eval <- resultsrbga$evaluations
   popSize <- 1:resultsrbga$popSize
   best <- resultsrbga$best %>% unique()
   bestn <- length(best)
-  
+
   dfga <- data.frame(evaluations = eval,
                      popSize = popSize
                      # ,best = best
   )
-  
+
   dfga %>% str()
-  
-  # dfga <- dfga %>% 
+
+  # dfga <- dfga %>%
   #   dplyr::filter(evaluations < 9000)
 
   library(ggplot2)
-  dfga %>% 
+  dfga %>%
     ggplot() +
     geom_density(
       # aes(x = evaluations)
@@ -1000,52 +1108,60 @@ i <- 7
     ) +
     geom_vline(xintercept = mean(dfga$evaluations, na.rm=T), col = "blue") +
     geom_vline(xintercept = max(dfga$evaluations, na.rm=T), col = "red") +
-    annotate("text", 
+    annotate("text",
              # Inf, Inf, col = "red" #, size = 10
-             x = Inf, y = max(density(dfga$evaluations)$y, na.rm = TRUE), col = "red" #, size = 10
+             x = Inf, y = 1.0 * max(density(dfga$evaluations)$y, na.rm = TRUE), col = "red" #, size = 10
              # max(dfga$evaluations, na.rm=T), max(dfga$evaluations, na.rm=T), col = "red" #, size = 10
              , label = paste0("best = ", max(dfga$evaluations, na.rm=T)
                               , hjust = 0, vjust = 1
                               )
              ) +
-    annotate("text", 
-             x = 1.5* mean(dfga$evaluations, na.rm=T), y = max(density(dfga$evaluations)$y, na.rm = TRUE), col = "blue" #, size = 10
+    annotate("text",
+             x = Inf,  #1.25 * mean(dfga$evaluations, na.rm=T), 
+             y = 0.9 * max(density(dfga$evaluations)$y, na.rm = TRUE), col = "blue" #, size = 10
              # max(dfga$evaluations, na.rm=T), max(dfga$evaluations, na.rm=T), col = "red" #, size = 10
-             , label = paste0("mean = ", round(mean(dfga$evaluations, na.rm=T), 2)
+             , label = paste0("mean = ", mean(dfga$evaluations, na.rm=T)
                               , hjust = 0, vjust = 0
              )
     ) +
     # xlim(0, 500) +
     xlab("criteval value") +
-    ggtitle("Fitness values")
-  
+    ggtitle(paste("Fitness values", "of", area_run, " - ", month_run))
+
   ggsave(filename = paste0(outpath, "/", expname, "_criteval_values", Sys.Date(), ".png"),
          dpi = 300, width = 7, height = 7)
-  
-  
-  # 
+
+
+
+  } # finish loop for reploting fitness values
+
+
+
+
+
+
   # # Animation plot (didn't work). Based on https://www.r-bloggers.com/2012/08/genetic-algorithms-a-simple-r-example/
   # animate_plot <- function(x) {
   #   for (i in seq(1, bestn)) {
-  #     temp <- data.frame(Generation = c(seq(1, i), seq(1, i)), 
-  #                        Variable = c(rep("mean", i), rep("best", i)), 
+  #     temp <- data.frame(Generation = c(seq(1, i), seq(1, i)),
+  #                        Variable = c(rep("mean", i), rep("best", i)),
   #                        Survivalpoints = c(-resultsrbga$mean[1:i], -resultsrbga$best[1:i])
   #     )
   #   }
-  #   
-  #   pl <- ggplot(dat= temp, 
+  #
+  #   pl <- ggplot(dat= temp,
   #                aes(x = Generation, y = Survivalpoints, group = Variable,
   #                    colour = Variable)
-  #   ) + 
-  #     geom_line() + 
-  #     scale_x_continuous(limits = c(0, bestn)) + 
-  #     scale_y_continuous(limits = c(0, 110)) #+ 
-  #     # geom_hline(y = max(temp$Survivalpoints), 
+  #   ) +
+  #     geom_line() +
+  #     scale_x_continuous(limits = c(0, bestn)) +
+  #     scale_y_continuous(limits = c(0, 110)) #+
+  #     # geom_hline(y = max(temp$Survivalpoints),
   #     #            opts(title = "Evolution Knapsack optimization model")
   #     #            print(pl)
-  #                
+  #
   # }
   # in order to save the animation
   # library(animation)
   # saveGIF(animate_plot(), interval = 0.1, outdir = outpath)
-}
+# }
