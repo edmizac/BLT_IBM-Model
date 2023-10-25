@@ -299,7 +299,7 @@ dfga_en2 %>%
   ggtitle("Optimization of energy gain and loss")
 
 # Save plot
-# ggsave(paste0(path,  '02_GA_optimized-params_energygainloss_best5.png'), height = 5, width = 7)
+# ggsave(paste0(path,  '/02_GA_optimized-params_energygainloss_best5.png'), height = 5, width = 7)
 
 
 # Plot showing how the optimization differed for each parameter (others)
@@ -668,7 +668,7 @@ dfga_paired %>%
   # summary()
 
 # ## Save plot
-# ggsave(paste0(path,  "02_GA_optimized-params_fitness_best5_connected.png")
+# ggsave(paste0(path,  "/02_GA_optimized-params_fitness_best5_connected.png")
 #        , height = 5, width = 7)
 
 
@@ -958,7 +958,7 @@ dfga_otr3 %>%
     , axis.title.x = element_blank()
   ) +
   scale_colour_viridis_d() +
-  ggtitle("Optimization of memory decay")
+  ggtitle("Optimization of revisitation period")
 
 # # Save plot
 # ggsave(paste0(path, '/02_GA_optimized-params_nonenergy3_best5_connected_dashed.png')
@@ -1010,8 +1010,8 @@ dfga_paired[dfga_paired$parameter == "fitness", ] %>% summary()
 
 dfga_paired %>% 
   dplyr::filter(parameter == "fitness") %>% 
-  dplyr::select("value")# %>% 
-# summary()
+  dplyr::select("value") %>% 
+  print(n = 20)
 
 # # Save plot
 # ggsave(paste0(path, '/02_GA_optimized-params_fitness_best5_connected_dashed.png')
@@ -1037,8 +1037,8 @@ dfga_paired <- dfga_paired %>%
       parameter == "p_disputed_trees" ~ "others",
       parameter == "p_timesteps_to_rest" ~ "others",
       
-      parameter == "prop_reset_memory" ~ "memory reset",
-      parameter == "step_forget" ~ "memory decay",
+      parameter == "prop_reset_memory" ~ "memory\nreset",
+      parameter == "step_forget" ~ "revisitation\nperiod",
       
       parameter == "energy_from_fruits" ~ "energy gain",
       parameter == "energy_from_prey" ~ "energy gain",
@@ -1054,7 +1054,7 @@ dfga_paired <- dfga_paired %>%
   mutate(
     param_category = forcats::fct_relevel(param_category, 
                                           "energy levels", "energy gain", "energy loss"
-                                          , "others", "memory decay", "memory reset"
+                                          , "others", "revisitation\nperiod", "memory\nreset"
                                           , "fitness"
                                           )
     
@@ -1145,6 +1145,8 @@ dfga_paired %>%
     , axis.title.y = element_blank()
     , axis.title.x = element_blank()
     , legend.position = "bottom"
+    # , legend.position = "right"
+    # , strip.text = element_text(size = 10)
   ) +
   scale_color_viridis_d() +
   # scale_color_manual(values = c("#C833EC", "#33A4EC")) +
