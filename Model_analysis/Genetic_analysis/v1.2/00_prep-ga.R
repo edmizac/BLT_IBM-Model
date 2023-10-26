@@ -877,32 +877,32 @@ i <- 1
   
   
   ## ------------------------------------------------------------------------------------ ##
-  # Load specific runs:
-  
-  # ?genalg::rbga
-  
-  # nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl_feedingbouton_2023-10-20.rds"))
-  # resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_feedingbouton_2023-10-20.rds"))
-  
-  filesga <- list.files(path, pattern = "results_")  # use the rgba file
-  filesga <- paste0(path, "/", filesga)
-  filesganl <- list.files(path, pattern = "nl_feedingbouton")  # use the rgba file
-  filesganl <- paste0(path, "/", filesganl)
-  
-  for (gaindex in 1:length(filesga)) { 
-    
-    # print(gaindex)
-    # gaindex <- 9
-    
-    nl <- readRDS(filesganl[gaindex])
-    resultsrbga <- readRDS(filesga[gaindex])
-
-    expname <- nl@experiment@expname
-    area_run <- str_split_1(expname, pattern = "_")[2]
-    month_run <- str_split_1(expname, pattern = "_")[3]
-  
-  
-
+  # # Load specific runs:
+  # 
+  # # ?genalg::rbga
+  # 
+  # # nl <- readRDS(paste0(outpath, "/GA_Taquara_Jan_nl_feedingbouton_2023-10-20.rds"))
+  # # resultsrbga <- readRDS(paste0(outpath, "/GA_Taquara_Jan_results_feedingbouton_2023-10-20.rds"))
+  # 
+  # filesga <- list.files(path, pattern = "results_")  # use the rgba file
+  # filesga <- paste0(path, "/", filesga)
+  # filesganl <- list.files(path, pattern = "nl_feedingbouton")  # use the rgba file
+  # filesganl <- paste0(path, "/", filesganl)
+  # 
+  # for (gaindex in 1:length(filesga)) { 
+  #   
+  #   # print(gaindex)
+  #   # gaindex <- 9
+  #   
+  #   nl <- readRDS(filesganl[gaindex])
+  #   resultsrbga <- readRDS(filesga[gaindex])
+  # 
+  #   expname <- nl@experiment@expname
+  #   area_run <- str_split_1(expname, pattern = "_")[2]
+  #   month_run <- str_split_1(expname, pattern = "_")[3]
+  # 
+  # 
+  # 
   ## ------------------------------------------------------------------------------------ ##
 
 
@@ -1133,7 +1133,7 @@ i <- 1
 
 
 
-  } # finish loop for reploting fitness values
+  # } # finish loop for reploting fitness values
 
 
 
@@ -1164,4 +1164,4 @@ i <- 1
   # in order to save the animation
   # library(animation)
   # saveGIF(animate_plot(), interval = 0.1, outdir = outpath)
-# }
+}
