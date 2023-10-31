@@ -2025,6 +2025,10 @@ ggsave(paste0(path,  "/", '02_simple_M_index_secaxis.png'), height = 4, width = 
 
 # Resource visitation -----
 
+theme_update(
+  axis.title.x = element_blank()
+)
+
 # Not ideal, but grab number of fruiting trees from param.table
 visits <- read.csv(here("Data", "Parameter_table.csv"),
                         sep = ",", dec = ".", stringsAsFactors = TRUE,
