@@ -38,465 +38,7 @@ theme_update(
 
 validation_pallete <- readRDS(here("Data", "pallete_validation4c.rds"))
 
-# 1) Only if spatial data was outputted (for spatial plots):  -----
 
-# 
-# # GIS
-# our_crs <- "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-# gua_xlim_all = c(780000, 782350)
-# gua_ylim_all = c(7407080, 7408250)
-# gua.x.min = 781587
-# gua.x.max = 782361.5
-# gua_xlim_set = c(781050, 782350)   # c(781200, 782350) # closer
-# gua_ylim_set = c(7407050, 7408250) # c(7407250, 7408250)  # closer
-# sma_xlim_set = c(364400, 366000)
-# sma_ylim_set = c(7540500, 7541700)
-# taq_xlim_set = c(370500, 373200)
-# taq_ylim_set = c(7498750, 7500550)
-# suz_xlim_set = c(705300, 706200)
-# suz_ylim_set = c(7480800, 7481600) # 7480990,
-# 
-# 
-# # Plots
-# # behav_simulated_shapes <- c("foraging" = 1,
-# #                       "frugivory" = 19, 
-# #                       "resting" = 1, 
-# #                       "sleeping" = 17, 
-# #                       "travel" = 1)
-# # 
-# # behav_simulated_colors <- c("foraging" = "magenta",
-# #                       "frugivory" = "#1E8449", 
-# #                       "resting" = "grey", 
-# #                       "sleeping" = "#E74C3C", 
-# #                       "travel" = "grey")
-# 
-# # sf objects
-# load(here("Data", "06_sf-plots.RData"))
-# 
-# 
-# # ggplot theme
-# theme_set(theme_bw(base_size = 15,
-#                    theme(axis.text.x = element_text(size = 11))))
-# 
-# # db1 <- db1
-# 
-# 
-# db1 <- readRDS(paste0(path, "/", "02_Simoutput-simple.rds"))
-# # db1 <- read.csv(paste0(path, "/", "02_Simoutput-simple.csv"))
-# # db_monkeys <- readRDS(paste0(path, "/", "02_Simoutput-simple_monkeys_long.rds"))
-# # db_plants <- readRDS(paste0(path, "/", "02_Simoutput-simple_plants.rds"))
-# 
-# # db1 %>% str()
-# 
-# db1$month %>% unique()
-# db1$group %>% unique()
-# # db_monkeys$month %>% unique()
-# # db_monkeys$group %>% unique()
-# 
-# db1 <- db1 %>% 
-#   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
-#   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
-#                                          "Jun", "Jul", "Aug", "Sep", "Dec"))
-# # # 
-# # db_monkeys <- db_monkeys %>%
-# #   mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>%
-# #   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May",
-# #                                       "Jun", "Jul", "Aug", "Sep", "Dec"))
-# 
-# 
-# # db1_monkeys <- db1 %>%
-# #   dplyr::filter(breed == "monkeys") #%>%
-# #   dplyr::select(-c("x":disp_day)) %>%
-# #   mutate_all(~stringr::str_replace_all(., c("\\[" = "", "\\]" = "")))
-# 
-# 
-# # Plants (feeding, sleeping-trees and seeds)
-# # db1 <- db1 %>%
-# #   dplyr::filter(breed != "monkeys") %>%
-# #   dplyr::select(-c(energy:PT)) %>%
-# #   dplyr::select(-species.y) #%>%
-# #   # dplyr::filter(if (breed != "seeds") species != "Syagrus romanzoffiana" else TRUE)
-#   
-# db1$species %>% as.factor() %>% levels()
-# 
-# 
-# # define boxplot width
-# bpw <- 4/length(unique(paste(db1$group, db1$month)))
-# bpw # 0.44444
-# 
-# ## Plot example runs -------------------------
-# 
-# ### 1) Guareí -------------------------
-# rseed <- db1 %>% 
-#   dplyr::filter(group == "Guareí") %>% 
-#   dplyr::select(random_seed) %>%
-#   pull(1) %>% 
-#   sample(size = 1)
-# breed_ <- "seeds"
-# 
-# 
-# db1_filt <- db1 %>%
-#   dplyr::filter(
-#     group == "Guareí" &
-#       breed == breed_ &
-#       random_seed == rseed
-#   )
-# 
-# # gua.p1  
-# gua.p1 <- gua.sf +
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                                  size = SDD
-#                                  # shape = disp_day
-#                                  ),
-#                                  
-#                                   alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   )
-# 
-# gua.p1
-# 
-# # gua.p2
-# # target <- c("feeding-trees", "sleeping-trees")
-# trees.gua <- db1 %>% 
-#   dplyr::filter(
-#     group == group &
-#       breed != "seeds" &
-#       # breed == "feeding-trees" | breed == "sleeping-trees" &
-#       # breed %in% target &
-#       random_seed == rseed
-#   )
-# # trees.gua$breed %>% as.factor %>%  levels()
-# # trees.gua$species %>% as.factor %>%  levels()
-# 
-# 
-# gua.sf + 
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                  size = SDD
-#                  # shape = disp_day
-#              ),
-#              
-#              alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   ) +
-#   
-#   geom_point(data = trees.gua, # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, #group = breed,
-#                  # size = breed,
-#                  # color = species,
-#                  shape = breed
-#              ),
-#              size = 2
-#              # alpha = 0.4
-#              ) +
-#   scale_shape_manual(values = c(16, 17)) +
-#   # scale_color_viridis_d(option = "inferno") +
-#   
-#   # change SDD legend point size:
-#   scale_size_continuous(
-#     limits=c(1,1000), 
-#     breaks=c(100,200, 300, 500, 750, 1000),
-#     range=c(1,10) 
-#   ) +
-#   # change legend symbol sizes:
-#   guides(
-#     color = guide_legend(override.aes = list(size = 3, alpha = 1, shape = 15) ),  # , alpha = 0.6
-#     shape = guide_legend(override.aes = list(size = 3, alpha = 1) )
-#   )
-#   
-# #### Save plot
-# # ggsave(paste0(path, "/",
-# #             '02_simple_Spatial_SDD_Guareí-example.png'), height = 7, width = 10)
-# 
-# 
-# ### 2) Santa Maria -------------------------
-# rseed <- db1 %>% 
-#   dplyr::filter(group == "Santa Maria") %>% 
-#   dplyr::select(random_seed) %>%
-#   pull(1) %>% 
-#   sample(size = 1)
-# breed_ <- "seeds"
-# 
-# 
-# db1_filt <- db1 %>%
-#   dplyr::filter(
-#     group == "Santa Maria" &
-#       breed == breed_ &
-#       random_seed == rseed
-#   )
-# 
-# 
-# sma.p1 <- sma.sf +
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                  size = SDD
-#                  # shape = disp_day
-#              ),
-#              
-#              alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   )
-# 
-# sma.p1
-# 
-# # sma.p2
-# # target <- c("feeding-trees", "sleeping-trees")
-# trees.sma <- db1 %>% 
-#   dplyr::filter(
-#     group == "Santa Maria" &
-#       breed != "seeds" &
-#       # breed == "feeding-trees" | breed == "sleeping-trees" &
-#       # breed %in% target &
-#       random_seed == rseed
-#   )
-# # trees.gua$breed %>% as.factor %>%  levels()
-# # trees.gua$species %>% as.factor %>%  levels()
-# 
-# sma.sf + 
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                  size = SDD
-#                  # shape = disp_day
-#              ),
-#              
-#              alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   ) +
-#   
-#   geom_point(data = trees.sma, # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, #group = breed,
-#                  # size = breed,
-#                  # color = species,
-#                  shape = breed
-#              ),
-#              size = 2
-#              # alpha = 0.4
-#              ) +
-#   scale_shape_manual(values = c(16, 17)) +
-#   # scale_color_viridis_d(option = "inferno") +
-#   
-#   # change SDD legend point size:
-#   scale_size_continuous(
-#     limits=c(1,1000), 
-#     breaks=c(100,200, 300, 500, 750, 1000),
-#     range=c(1,10) 
-#   ) +
-#   # change legend symbol sizes:
-#   guides(
-#     color = guide_legend(override.aes = list(size = 2, alpha = 1) ),  # , alpha = 0.6
-#     shape = guide_legend(override.aes = list(size = 3, alpha = 1) )
-#   )
-# 
-# #### Save plot
-# # ggsave(paste0(path, "/",
-# #             '02_simple_Spatial_SDD_SantaMaria-example.png'), height = 7, width = 10)
-# 
-# 
-# 
-# ### 3) Taquara -------------------------
-# rseed <- db1 %>% 
-#   dplyr::filter(group == "Taquara") %>%
-#   droplevels() %>% 
-#   dplyr::select(random_seed) %>%
-#   pull(1) %>% 
-#   sample(size = 1)
-# breed_ <- "seeds"
-# 
-# 
-# db1_filt <- db1 %>%
-#   dplyr::filter(
-#     group == group &
-#       breed == breed_ &
-#       random_seed == rseed
-#   )
-# 
-# 
-# taq.p1 <- taq.sf +
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                  size = SDD
-#                  # shape = disp_day
-#              ),
-#              
-#              alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   )
-# 
-# taq.p1
-# 
-# # taq.p2
-# # target <- c("feeding-trees", "sleeping-trees")
-# trees.taq <- db1 %>% 
-#   dplyr::filter(
-#     group == "Taquara" &
-#       breed != "seeds" &
-#       # breed == "feeding-trees" | breed == "sleeping-trees" &
-#       # breed %in% target &
-#       random_seed == rseed
-#   )
-# # trees.gua$breed %>% as.factor %>%  levels()
-# # trees.gua$species %>% as.factor %>%  levels()
-# 
-# taq.sf + 
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                  size = SDD
-#                  # shape = disp_day
-#              ),
-#              
-#              alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   ) +
-#   
-#   geom_point(data = trees.taq, # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, #group = breed,
-#                  # size = breed,
-#                  # color = species,
-#                  shape = breed
-#              ),
-#              size = 2
-#              # alpha = 0.4
-#   ) +
-#   scale_shape_manual(values = c(16, 17)) +
-#   # scale_color_viridis_d(option = "inferno") +
-#   
-#   # change SDD legend point size:
-#   scale_size_continuous(
-#     limits=c(1,1000), 
-#     breaks=c(100,200, 300, 500, 750, 1000),
-#     range=c(1,10) 
-#   ) +
-#   # change legend symbol sizes:
-#   guides(
-#     color = guide_legend(override.aes = list(size = 3, alpha = 1) ),  # , alpha = 0.6
-#     shape = guide_legend(override.aes = list(size = 3, alpha = 1) )
-#   )
-# 
-# #### Save plot
-# # ggsave(paste0(path, "/",
-# #             '02_simple_Spatial_SDD_Taquara-example.png'), height = 7, width = 10)
-# 
-# 
-# ### 4) Suzano -------------------------
-# rseed <- db1 %>% 
-#   dplyr::filter(group == "Suzano") %>%
-#   droplevels() %>% 
-#   dplyr::select(random_seed) %>%
-#   pull(1) %>% 
-#   sample(size = 1)
-# breed_ <- "seeds"
-# 
-# 
-# db1_filt <- db1 %>%
-#   dplyr::filter(
-#     group == group &
-#       breed == breed_ &
-#       random_seed == rseed
-#   )
-# 
-# 
-# suz.p1 <- suz.sf +
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                  size = SDD
-#                  # shape = disp_day
-#              ),
-#              
-#              alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   )
-# 
-# suz.p1
-# 
-# # suz.p2
-# # target <- c("feeding-trees", "sleeping-trees")
-# trees.suz <- db1 %>% 
-#   dplyr::filter(
-#     group == "Suzano" &
-#       breed != "seeds" &
-#       # breed == "feeding-trees" | breed == "sleeping-trees" &
-#       # breed %in% target &
-#       random_seed == rseed
-#   )
-# # trees.gua$breed %>% as.factor %>%  levels()
-# # trees.gua$species %>% as.factor %>%  levels()
-# 
-# suz.sf + 
-#   geom_point(data = subset(db1_filt, species != "Syagrus romanzoffiana"),  # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, color = species,
-#                  size = SDD
-#                  # shape = disp_day
-#              ),
-#              
-#              alpha = 0.4) +
-#   # scale_shape_manual(17) +
-#   ggtitle(paste0("Simulated seed dispersal coordinates", 
-#                  " (", unique(db1_filt$month), ") - one run")
-#   ) +
-#   
-#   geom_point(data = trees.suz, # they don't disperse Syagrus (this has to be corrected in the model)
-#              aes(x = x, y = y, #group = breed,
-#                  # size = breed,
-#                  # color = species,
-#                  shape = breed
-#              ),
-#              size = 2
-#              # alpha = 0.4
-#   ) +
-#   scale_shape_manual(values = c(16, 17)) +
-#   # scale_color_viridis_d(option = "inferno") +
-#   
-#   # change SDD legend point size:
-#   scale_size_continuous(
-#     limits=c(1,1000), 
-#     breaks=c(100,200, 300, 500, 750, 1000),
-#     range=c(1,10) 
-#   ) +
-#   # change legend symbol sizes:
-#   guides(
-#     color = guide_legend(override.aes = list(size = 3, alpha = 1) ),  # , alpha = 0.6
-#     shape = guide_legend(override.aes = list(size = 3, alpha = 1) )
-#   )
-# 
-# #### Save plot
-# # ggsave(paste0(path, "/",
-# #             '02_simple_Spatial_SDD_Suzano-example.png'), height = 7, width = 10)
-# 
-# 
-# ### 5) Facet -------------------------
-# 
-# # gridExtra::grid.arrange()
-# 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 2) Validation plots only:  -----
 
 ## SDD -------------------------
 
@@ -2477,3 +2019,128 @@ db1_mv_summaryDI %>% ggplot(
 # # Save plot
 ggsave(paste0(path,  "/", '02_simple_M_index_secaxis.png'), height = 4, width = 7.5)
 
+
+
+
+
+# Resource visitation -----
+
+# Not ideal, but grab number of fruiting trees from param.table
+visits <- read.csv(here("Data", "Parameter_table.csv"),
+                        sep = ",", dec = ".", stringsAsFactors = TRUE,
+                        encoding = "UTF-8") %>% 
+  dplyr::mutate(group = recode(group, "Guarei" = "Guareí",
+                               "Santa Maria" = "SantaMaria")) %>%  # only to match those of the NetLogo model
+  rename(
+    n_trees = n_trees_Frugivory
+  ) %>% 
+  mutate(
+    p_visited_trees = 1,
+    source = "observed",
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous"
+    )
+  ) %>% 
+  dplyr::select(group, month, source, fragment, n_trees, p_visited_trees)
+
+
+db1_mv_vi <- db1_mv %>% 
+  dplyr::filter(source == "simulated")
+
+db1_mv_vi <- dplyr::full_join(db1_mv_vi, visits) #, by = join_by(group, month))
+
+# db1_mv_vi <- db1_mv_vi %>%
+#   mutate(
+#     p_visited_trees = case_when(
+#       p_visited_trees == "NA" ~ 1,
+#       TRUE ~ as.numeric(p_visited_trees)
+#     )
+#   )
+
+db1_mv_vi %>% str()
+
+db1_mv_vi_summary <- db1_mv_vi %>% 
+  group_by(group, month, source) %>% 
+  dplyr::summarise(
+    visit_mean = mean(p_visited_trees, na.rm = TRUE),
+    visit_sd = sd(p_visited_trees, na.rm = TRUE)
+  ) %>% 
+  # dplyr::filter(source == "simulated") %>% 
+    mutate(
+      visit_mean = case_when(
+        visit_mean == "NaN" ~ 1,
+        TRUE ~ as.numeric(visit_mean)
+      ),
+      visit_sd = case_when(
+        is.na(visit_sd) ~ 0,
+        TRUE ~ as.numeric(visit_sd)
+      )
+    ) %>% 
+  ungroup()
+
+# db1_mv_summaryDI <- db1_mv_summaryDI %>% 
+#   bind_rows(obs.mv.metrics.summary) 
+
+db1_mv_vi_summary <- db1_mv_vi_summary %>% 
+  mutate(
+    # group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara"),
+    month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                 "Jun", "Jul", "Aug", "Sep", "Dec"), 
+    source = forcats::fct_relevel(source, "observed", "simulated")
+  ) %>% 
+# Relevel all fragment names to size categories
+  mutate(
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous",
+      TRUE ~ "check"
+    )
+  ) %>% 
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  ) 
+
+#check:
+db1_mv_vi_summary$fragment %>% unique()
+db1_mv_vi_summary$source %>% unique()
+
+db1_mv_vi_summary %>% summary()
+
+
+
+# Plot visits
+# db1_mv_vi %>% 
+#   ggplot(
+#   aes(x = fragment, y = p_visited_trees, 
+#       color = month,
+#       shape = source,
+#       size = source
+#   )
+db1_mv_vi_summary %>% 
+  ggplot() +
+  aes(x = fragment, y = visit_mean, 
+      ymin = visit_mean - visit_sd,
+      ymax = visit_mean + visit_sd,
+      color = month
+      # shape = source
+  ) +
+  geom_pointrange(aes(shape = source), position = position_dodge2(width = .5), size = 0.9) +
+  scale_color_viridis_d() +
+  scale_shape_manual(values = c(16, 17)) +
+  ylab("% of visited trees") +
+  ggtitle("Proportion of visited fruiting trees")  +
+  # facet_grid(~source) +
+  theme(
+    # legend.position = "none",
+    # axis.text.y = element_blank(),
+    axis.text = element_text(size = 9),
+  ) #+
+  # guides(shape = FALSE) # drop legend of shape only
+
+# Save plot
+ggsave(paste0(path,  "/", '02_simple_visited-trees.png'), height = 5, width = 5)
