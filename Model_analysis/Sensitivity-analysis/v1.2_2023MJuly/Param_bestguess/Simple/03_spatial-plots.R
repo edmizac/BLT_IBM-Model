@@ -779,16 +779,20 @@ p3 <-
              aes(x = x_UTM, y = y_UTM
                  , size = SDD
                  , color = species
+                 , fill = species
                  # shape = disp_day
-                 , shape = species
+                 # , shape = species
              ),
-             # alpha = 0.5
+             alpha = 0.4
+             , shape = 21
+             , stroke = 1
              # , size = 4
              # , position = position_jitter(width = 3)
              ) +
   scale_color_viridis_d(option = "inferno") +
+  scale_fill_viridis_d(option = "inferno") +
   # scale_color_viridis_d(option = "viridis") +
-  scale_shape_manual(values = nshapes) +
+  # scale_shape_manual(values = nshapes) +
   # scale_fill_gradient(low = "#7F7E7C", high = "#B50404") +
   ggtitle(" ") +
   custom_theme
