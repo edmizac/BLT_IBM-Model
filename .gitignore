@@ -27,6 +27,8 @@
 !*/Tree-points-unique.R
 !*/Tree-points-to-shapefile.R
 /Model_development/Model-cleaning/runtime
+# Shapefiles
+/Model_Documentation/
 # Specific files in specific folders:
 /Documentation/2022-05-12_Talk-EcoMod/
 /Documentation/Brazilian_Congress_of_Primatology/

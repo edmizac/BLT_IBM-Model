@@ -52,13 +52,15 @@ if(Sys.info()[["nodename"]] == "simul02") {
   netlogopath <- file.path("/home/rbialozyt/Software/NetLogo 6.2.0")
   modelpath <- "/home/rbialozyt/BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo"
   outpath <- "/home/rbialozyt/BLT_IBM-Model/Model_analysis/Genetic_analysis/temp"
+  user_scp = "\"Ronald\""
 }
 if(Sys.info()[["nodename"]] == "PC146") {
   netlogopath <- file.path("/opt/netlogo_620")
-  modelpath <- paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
+  modelpath <- paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/"
                       , "BLT_IBM-Model/Model_development/BLT_model_v1.1.nlogo")
-  outpath <-  paste0("/home/rbialozyt/ownCloud-Forst/Projektideen/FAPESP_Project_Eduardo/"
+  outpath <-  paste0("/home/rbialozyt/ownCloud-Forst/Projektideen"
                      , "BLT_IBM-Model/Model_analysis/Genetic_analysis/temp")
+  user_scp = "\"Ronald\""
 }
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")

@@ -40,7 +40,7 @@ library("genalg")
 if(Sys.getenv("JAVA_HOME") == "") {
   if(Sys.info()[["sysname"]] == "Linux") {
     Sys.setenv(JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64")
-    unixtools::set.tempdir(".")
+    # unixtools::set.tempdir(".")
   } else {
     Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk-11")
   }
@@ -69,10 +69,16 @@ if(Sys.info()[["nodename"]] == "DESKTOP-1SKTQUA") { # AORUS-2 (LaP)
   outpath <- here("Model_analysis", "Genetic_analysis", "v1.2", "temp")
   user_scp = "\"AORUS-2\""
 }
+if(Sys.info()[["nodename"]] == "PC146") { # Ronald (NW-FVA)
+  netlogopath <- file.path("/opt/netlogo_622")
+  modelpath <- here("Model_simulations", "BLT_model_v1.2.nlogo") # Last version with stored-energy
+  outpath <- here("Model_analysis", "Genetic_analysis", "v1.2", "temp")
+  user_scp = "\"Ronald\""
+}
 
 
 
-nl <- nl(nlversion = "6.3.0",
+nl <- nl(nlversion = "6.2.2",  ## "6.3.0"
          nlpath = netlogopath,
          modelpath = modelpath,
          jvmmem = 1024)

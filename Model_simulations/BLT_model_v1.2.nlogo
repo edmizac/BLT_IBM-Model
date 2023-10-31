@@ -371,7 +371,7 @@ to setup
   clear-all
 
   if USER = "Ronald"
-  [ set local-path "/home/rbialozyt/BLT_IBM-Model/" ]
+  [ set local-path "/home/rbialozyt/ownCloud-Forst/Projektideen/BLT_IBM-Model/" ]
   if USER = "Eduardo"
   [
     set local-path "D:/Data/Documentos/github/BLT_IBM-Model/"
@@ -1069,7 +1069,11 @@ to go
         ; calc resource metrics
         NNdist
         SDDcalc
+<<<<<<< HEAD
 ;        calc-seed-aggregation
+=======
+        ;; calc-seed-aggregation
+>>>>>>> af88a7fe62ac149932d0a4a19f5448489a38d67a
       ][
       print "not enough days to calculate movement and seed dispersal metrics"
       ]
@@ -1122,9 +1126,15 @@ to go
       NNdist
       SDDcalc
 
+<<<<<<< HEAD
 ;      output-print "calculating R index for seeds"
 ;      calc-seed-aggregation
 ;      output-print "calculating R index for seeds finished"
+=======
+      output-print "calculating R index for seeds"
+      ;; calc-seed-aggregation
+      output-print "calculating R index for seeds finished"
+>>>>>>> af88a7fe62ac149932d0a4a19f5448489a38d67a
 
       set survived? "yes" ; tamarins are alive by the end of the run
 
@@ -4036,7 +4046,11 @@ to calc-movement-dead ; if tamarins die before days > no_days, their variables g
     ;      calc-movement-metrics ; these are being estimated within calc-homerange
     NNdist
     SDDcalc
+<<<<<<< HEAD
 ;    calc-seed-aggregation
+=======
+    ;; calc-seed-aggregation
+>>>>>>> af88a7fe62ac149932d0a4a19f5448489a38d67a
     print "estimated from movemend-dead (>3 days)"
 
   ][
@@ -4677,11 +4691,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-491
-416
+526
+403
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -4691,10 +4705,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+-129
+129
+-93
+93
 0
 0
 1
@@ -5360,7 +5374,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "LEEC" "LASi" "PC02" "AORUS-2" "Others"
-1
+0
 
 SWITCH
 3
@@ -5382,7 +5396,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.36
+0.21
 0.01
 1
 NIL
@@ -5632,7 +5646,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-6.8
+8.0
 1
 1
 NIL
@@ -5853,7 +5867,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-68.98
+43.02
 5
 1
 NIL
@@ -5868,7 +5882,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.4060000000000001
+3.089
 0.1
 1
 NIL
@@ -5883,7 +5897,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.343
+3.931
 0.1
 1
 NIL
@@ -5898,7 +5912,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-67.86
+17.85
 1
 1
 NIL
