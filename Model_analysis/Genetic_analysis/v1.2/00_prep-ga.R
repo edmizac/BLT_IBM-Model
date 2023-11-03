@@ -760,7 +760,8 @@ i <- 1
       # 'strong patterns' sensu Chudzinska et al. Table S11:
       w <- 1 # weight 
       crit <- 
-        1/sum(vi) * w + 1/sum(hr95) * w + 1/sum(hr50) * w + 
+        # 1/sum(vi) * w + 
+        1/sum(hr95) * w + 1/sum(hr50) * w + 
         1/sum(dp) * w + 1/sum(mr) * w + 1/sum(pt) * w
         
       w <- 0.5 # weight 
@@ -836,8 +837,8 @@ i <- 1
                                    evalcrit = critfun, # 1, # "e.g. 1 would use the first defined metric of the experiment to evaluate each iteration)"
                                    
                                    popSize = 121, # or chromosomes. suggestion: population_size > num_genes^2 (https://stackoverflow.com/questions/7559274/prevent-inbreeding-and-monoculture-in-genetic-algorithm-newbie-question/7609715#7609715)
-                                   iters = 50,
-                                   elitism = 2, # from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
+                                   iters = 100,
+                                   elitism = NA, # default= 20%; from stackoverflow link above: "New members of the population are created in essentially one of three ways. The first is usually referred to as 'elitism' and in practice usually refers to just taking the highest ranked candidate solutions and passing them straight through--unmodified--to the next generation. The other two ways that new members of the population are usually referred to as 'mutation' and 'crossover'."
                                    mutationChance = 0.1,
                                    nseeds = 1
   )
