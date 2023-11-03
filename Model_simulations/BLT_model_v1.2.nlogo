@@ -60,8 +60,6 @@ monkeys-own [
   energy          ; energy the tamarin has left
   enlvl1             ; energy level 1 of every simulation
   enlvl2             ; energy level 2 of every simulation
-  enstart             ; start energy of every simulation
-;  status         ; what is the desire ===== DO WE REALLY NEED THIS? ==============
   action          ; what was the last action
   action-time     ; how long you do the same action again (other than frugivory)
   frugivory-time  ; how long you consume the same species (= feeding bout)
@@ -1069,11 +1067,7 @@ to go
         ; calc resource metrics
         NNdist
         SDDcalc
-<<<<<<< HEAD
-;        calc-seed-aggregation
-=======
         ;; calc-seed-aggregation
->>>>>>> af88a7fe62ac149932d0a4a19f5448489a38d67a
       ][
       print "not enough days to calculate movement and seed dispersal metrics"
       ]
@@ -1126,15 +1120,9 @@ to go
       NNdist
       SDDcalc
 
-<<<<<<< HEAD
-;      output-print "calculating R index for seeds"
-;      calc-seed-aggregation
-;      output-print "calculating R index for seeds finished"
-=======
       output-print "calculating R index for seeds"
       ;; calc-seed-aggregation
       output-print "calculating R index for seeds finished"
->>>>>>> af88a7fe62ac149932d0a4a19f5448489a38d67a
 
       set survived? "yes" ; tamarins are alive by the end of the run
 
@@ -4046,11 +4034,7 @@ to calc-movement-dead ; if tamarins die before days > no_days, their variables g
     ;      calc-movement-metrics ; these are being estimated within calc-homerange
     NNdist
     SDDcalc
-<<<<<<< HEAD
-;    calc-seed-aggregation
-=======
     ;; calc-seed-aggregation
->>>>>>> af88a7fe62ac149932d0a4a19f5448489a38d67a
     print "estimated from movemend-dead (>3 days)"
 
   ][
