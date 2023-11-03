@@ -34,13 +34,6 @@ theme_set(theme_bw())
 ## ---------------------------
 
 
-# Empirical data for parameterisation:
-param.table <- read.csv(here("Data", "Parameter_table.csv"),
-                        sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
-  dplyr::mutate(group = recode(group, "Guarei" = "Guareí",
-                               "Santa Maria" = "SantaMaria")) # only to match those of the NetLogo model
-
-
 # Options (plotting, memory limit, decimal digits)
 
 ## Config cores
@@ -497,7 +490,7 @@ for (i in i:nrow(param.table)) {
   
   
   
-  nseeds <- 10 # repetitions (ideally n = 30)
+  nseeds <- 30 # repetitions (ideally n = 30)
   
   # Step 3: Attach a simulation design.
   # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)

@@ -27,7 +27,8 @@ path <- here("Model_analysis", "Sensitivity-analysis",
 # db1$turn_ang_sd%>% str()
 
 # Grep files
-nls_to_df <- list.files(path, pattern = "tempRDS") #%>% # .RData does not work; "v1.1" works.
+nls_to_df <- list.files(path, pattern = "tempRDS") #%>% # .RData does not work;
+# nls_to_df <- list.files(path, pattern = "v1.2") #%>% # "v1.2" works.
   # as.factor() 
   
 i <- 1
