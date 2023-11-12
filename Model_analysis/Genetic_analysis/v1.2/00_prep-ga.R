@@ -4,7 +4,7 @@
 # the most 'natural' condition
 
 # Date created: 2022-11-25d
-# Last update: 2023-10-23d
+# Last update: 2023-11-03d
 # Author: Eduardo Zanette
 
 
@@ -78,7 +78,7 @@ if(Sys.info()[["nodename"]] == "PC146") { # Ronald (NW-FVA)
 
 
 
-nl <- nl(nlversion = "6.2.2",  ## "6.3.0"
+nl <- nl(nlversion = "6.3.0",  ## "6.3.0"
          nlpath = netlogopath,
          modelpath = modelpath,
          jvmmem = 1024)
