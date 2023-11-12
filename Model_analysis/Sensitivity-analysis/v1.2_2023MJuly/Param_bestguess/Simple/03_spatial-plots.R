@@ -73,7 +73,7 @@ suz_ylim_set = c(7480800, 7481600) # 7480990,
 #   )
   
 
-# Plots
+# Plot aesthetics
 behav_simulated_shapes <- c("foraging" = 1,
                             "frugivory" = 19,
                             "resting" = 1,
@@ -169,10 +169,10 @@ p_timesteps_to_rest <- 0.15 # resting not allowed on the 15% of the start and en
 
 
 i <- 1
-# for (i in i:nrow(param.table)) {
-for (i in 1:nrow(param.table)) {
+for (i in i:nrow(param.table)) {
+# for (i in 1:nrow(param.table[2:9, ])) {
   
-  set.seed(42) # generate always the same set of seeds
+  set.seed(41) # generate always the same set of seeds
   
   ### Define area and month  -----
   # (all strings must use escaped quotes) 
@@ -540,9 +540,17 @@ for (i in 1:nrow(param.table)) {
       unnest_legacy() %>% 
       mutate_at(c("x_UTM", "y_UTM"), as.numeric)
     
-    results_monkeys$behavior[1] = "sleeping"
+    
+    results_monkeys <- results_monkeys %>% 
+      mutate(
+        behavior = case_when(
+          behavior == "" ~ "sleeping",
+          TRUE ~ behavior
+        )
+      )
     
     results_monkeys %>% str()
+    results_monkeys$behavior %>% unique()
     
     results <- full_join(results_monkeys, results_seeds)
     # rm(results_monkeys) ; rm(results_seeds)
@@ -632,6 +640,14 @@ for (i in 1:nrow(param.table)) {
 
 
 ##### Screening data #####
+  
+  
+# # Load test run:
+# nl <- readRDS(here("Model_analysis", "Sensitivity-analysis",
+#                           "v1.2_2023MJuly", "Param_bestguess", "Simple", "temp",
+#                           "spatial","v1.2_Guareí_Jul_spatial1781578391.Rdata"))
+  
+  
 # results_unnest <- unnest_simoutput(nl)
 results_unnest <- nl@simdesign@simoutput
 # results_unnest <- results_unnest %>% 
@@ -771,6 +787,8 @@ mov <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_siminputrow
 
 mov %>% str()
 mov$behavior %>% unique()
+mov$species %>% unique()
+mov$group %>% unique()
 
 
 # (dataset created in Data/Seed_dispersal/03_Validation-patterns.R)
@@ -784,10 +802,17 @@ sdd <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDispers
     x_UTM = def_x,
     y_UTM = def_y
   ) %>% 
-  mutate(def_datetime = lubridate::ymd_hms(def_datetime))
+  mutate(def_datetime = lubridate::ymd_hms(def_datetime)) %>% 
+  mutate(
+    species = case_when(
+      species == "inch_pass" ~ "Unindentified",
+      TRUE ~ species
+    )
+  )
 
 sdd %>% str()
 sdd$species %>% unique()
+sdd$group %>% unique()
 
 
 trees.id <- read.csv(here("Data", "Movement", "Resource-trees", "Siminputrow_trees.csv")) %>% 
@@ -804,7 +829,7 @@ trees.id <- read.csv(here("Data", "Movement", "Resource-trees", "Siminputrow_tre
 
 trees.id %>% str()
 trees.id$species %>% unique()
-
+trees.id$group %>% unique()
 
 
 
@@ -816,6 +841,9 @@ mov.db <- mov %>%
   rename(
     x_UTM = x,
     y_UTM = y
+  ) %>% 
+  mutate(
+    timestep = seq(1:nrow(.))
   )
 
 
@@ -831,11 +859,14 @@ trees.db <- trees.id %>%
   dplyr::filter(
     group == area_run & month == month_run 
   )
-trees.db$species
+trees.db$species %>% unique()
+
 
 area_run_vec <- as.character(area_run)
 str(area_run_vec)
 str(a)
+
+
   
   
   ### Define base sf plot
@@ -862,10 +893,53 @@ base.name
 
 ### Spatial plots -----
 
+# Subset simulated agents:
+mov_sim <- subset(db1, breed == "monkeys")
+seed_sim <- subset(db1, breed == "seeds")
+
+
+# Aesthetic levels for plotting:
+n_sp <- length(sdd$species %>% unique()) + 1 # add one more to NA values
+n_sp_names <- sdd$species %>% unique()
+n_sp_names <- c(n_sp_names, "NA")
+
+set.seed(42)
+
+species_colors <- viridis::turbo(n = n_sp)
+names(species_colors) <- n_sp_names
+
+species_shapes <- rep(1, n_sp)
+names(species_shapes) <- n_sp_names
+# species_shapes <- sample(x = c(1:25), n_sp, replace = TRUE)
+
+unique(seed_sim$species) %in% names(species_shapes)
+seed_sim$species %in% names(species_shapes)
+species_shapes[names(species_shapes) %in% seed_sim$species]
+
+sp_sim <- n_sp_names[n_sp_names %in% seed_sim$species]
+
+# check if there are repeated shape values:
+# sp_sim <- seed_sim$species %>% unique()
+
+
+if ( length(sp_sim) >= length(unique(mov.db$species))) {
+  
+  # species_shapes <- species_shapes[names(species_shapes) %in% sp_sim]
+  b <- sample(x = c(2:10, 15:25), length(sp_sim), replace = FALSE)
+  species_shapes <- b
+  names(species_shapes) <- sp_sim
+  
+} else {
+  species_shapes <- sample(x = c(1:10, 15:25), length(unique(mov.db$species))
+                           , replace = FALSE)
+  
+}
+
+
 #### sim1
 sim1 <-
   base.sf +
-  geom_point(data = subset(db1, breed == "monkeys"),
+  geom_point(data = mov_sim,
              aes(x = x_UTM, y = y_UTM
                  # , group = behavior
                  , color = behavior
@@ -879,11 +953,14 @@ sim1 <-
   scale_size_manual(values = c(1, 3, 1, 3, 1)) +
   labs(color  = "behavior", shape = "behavior", size = "behavior") +
   
-  geom_path(data = subset(db1, breed == "monkeys"),
-            aes(x = x_UTM, y = y_UTM)
+  ggnewscale::new_scale_color() +
+  geom_path(data = mov_sim,
+            aes(x = x_UTM, y = y_UTM, color = timestep)
             , lwd = 0.15
-            , linetype = "dashed"
-            , color = "grey25") +
+            # , linetype = "dashed"
+            # , color = "grey25") +
+            ) +
+  scale_color_viridis_b() +
   
   ggtitle(paste0(#base.name, #"Simulated path and seed dispersal events",
     # " (rseed = ", aux_run, ")")
@@ -894,7 +971,9 @@ sim1 <-
     axis.text.x = element_text(hjust = 1)
   ) +
   xlab("") +
-  guides(shape = "none"#,
+  ylab("") +
+  guides(shape = "none",
+         color = "none"
          # shape = guide_legend(order = 1)
   )
 
@@ -904,7 +983,7 @@ sim1
 #### sim2
 sim2 <- 
   base.sf +
-  geom_point(data = subset(db1, breed == "seeds"),
+  geom_point(data = seed_sim,
              aes(x = x_UTM, y = y_UTM
                  # , size = SDD
                  , color = SDD
@@ -918,11 +997,13 @@ sim2 <-
              # , size = 4
              # , position = position_jitter(width = 3)
   ) +
+  scale_shape_manual(values = species_shapes) +
   # scale_color_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
   # scale_fill_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
   scale_color_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
   scale_fill_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
   ggtitle(" ") +
+  ylab("") +
   custom_theme +
   theme(
     axis.text.x = element_text(hjust = 1)
@@ -999,24 +1080,29 @@ obs1 <-
   scale_size_manual(values = c(1, 3, 3, 1, 3, 1)) +
   labs(color  = "behavior", shape = "behavior", size = "behavior") +
   
+  ggnewscale::new_scale_color() +
   geom_path(data = mov.db,
-            aes(x = x_UTM, y = y_UTM)
+            aes(x = x_UTM, y = y_UTM, color = timestep)
             , lwd = 0.15
-            , linetype = "dashed"
-            , color = "grey25") +
+            # , linetype = "dashed"
+            # , color = "grey25") +
+  ) +
+  # scale_color_viridis_b() +
+  scale_color_continuous(type = "viridis") +
   
   # ggtitle(paste0("Observed, ", base.name, " (", month_run, ")")
   ggtitle(paste0("Observed")
   ) +
   xlab("") +
-  ylab("") +
+  ylab("y_UTM") +
   custom_theme +
   theme(
     axis.text.x = element_text(hjust = 1)
-  ) #+
-  # guides(shape = "none"
+  ) +
+  guides( color = "none"
+    #shape = "none"
   #        # shape = guide_legend(order = 1)
-  # )
+  )
 
 obs1
 
@@ -1038,18 +1124,19 @@ obs2 <-
              # , size = 4
              # , position = position_jitter(width = 3)
   ) +
+  scale_shape_manual(values = species_shapes) +
   # scale_color_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
   # scale_fill_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
   scale_color_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
   scale_fill_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
   ggtitle(" ") +
-  ylab("") +
+  # ylab("") +
   custom_theme +
   theme(
     axis.text.x = element_text(hjust = 1)
   ) +
   guides(fill = "none", 
-         color = guide_colorbar(order = 1)
+         color = guide_colorbar(order = 1, hjust = 0.5)
   )
 
 obs2
@@ -1116,112 +1203,51 @@ obs2
 # cow <- cowplot::plot_grid(sim1, sim2, labels = c('A', 'B'))
 # cow
 
-# Simulated + observed:
 
+# Extract legend of observed behaviors
+behav_legend <- get_legend(obs1)
+seed_legend <- get_legend(sim2)
+
+legend <- plot_grid(behav_legend, seed_legend
+                    , ncol = 1
+                    , rel_widths = c(1, 1)
+                    )
+
+# Simulated + observed:
 cow <- cowplot::plot_grid(
+  obs1 + theme(legend.position = "none"),
   sim1 + theme(legend.position = "none"),
-  obs1, 
-  sim2 + theme(legend.position = "none"),
-  obs2
+  obs2 + theme(legend.position = "none"),
+  sim2 + theme(legend.position = "none")
+  # behav_legend
   , labels = c('A', 'B', 'C', 'D')
   , label_size = 24
 )
 
-cow %>%
-  save_plot(filename = paste0(
-    outpath, "/", "03_", expname, ".png")
-    , base_height = 8, base_width = 14
-    , bg = "white"
-    )
+cow <- plot_grid(cow, legend, ncol = 2,
+                 rel_widths = c(0.8, 0.2))
 
+# cow %>%
+#   save_plot(filename = paste0(
+#     outpath, "/", "03_", expname, ".png")
+#     , base_height = 8, base_width = 14
+#     , bg = "white"
+#     )
 
-
-#### Grid plot
-
-cow1 <- cowplot::plot_grid(sim1 +
-                             theme(#plot.title = element_blank(),
-                                   #plot.subtitle = element_blank(),
-                                   legend.position = "none",
-                                   plot.margin = unit(c(0,0,0,0), "cm")
-                                   ),
-                           obs1 +
-                             theme(legend.position = "none",
-                                   plot.margin = unit(c(0,0,0,0), "cm")
-                                   ),
-                           align = "h"
-                           # , rel_widths = c(1.5, 1)
-                           , labels = c('A', 'B')
-)
-cow1
-
-legend1 <- get_legend(obs1 +
-                        theme(legend.position = "right"))
-
-cow1_grid <- plot_grid(cow1, legend1, ncol = 2,
-                       rel_heights = c(0.5, 0.9),
-                       rel_widths = c(0.2, 0.05))
-# cow1_grid <- plot_grid(title1, legend1, cow1, ncol = 1,
-#                   rel_heights = c(0.1, 0.1, 1),
-#                   rel_widths = c(0.1, 0.5, 0.1))
-cow1_grid
-
-cow1_grid %>%
-  save_plot(filename = paste0(
-    outpath, "/", "03_", expname, "grid_upper.png")
-    , base_height = 4, base_width = 12
-    , bg = "white"
-  )
-
-
-cow2 <- cowplot::plot_grid(sim2 +
-                             theme(#plot.title = element_blank(),
-                               #plot.subtitle = element_blank(),
-                               plot.margin = unit(c(0,0,0,0), "cm"),
-                               legend.position = "none"),
-                           obs2 +
-                             theme(
-                               legend.position = "none",
-                               plot.margin = unit(c(0,0,0,0), "cm")
-                               ),
-                           align = "h"
-                           # , rel_widths = c(1.5, 1)
-                           , labels = c('C', 'D')
-)
-cow2
-
-legend2 <- get_legend(sim2 +
-                        theme(legend.position = "right"))
-
-cow2_grid <- plot_grid(cow2, legend2, ncol = 2,
-                       rel_heights = c(0.8, 0.9),
-                       rel_widths = c(0.2, 0.05)
-                       # , label_size = 18
-                       )
-cow2_grid
-
-cow2_grid %>%
-  save_plot(filename = paste0(
-    outpath, "/", "03_", expname, "grid_lower.png")
-    , base_height = 4, base_width = 12
-    , bg = "white"
-  )
-
-
-
-
+# Create title
 title1 <- ggdraw() +
   draw_label(label = paste0(base.name, " (", month_run, ")"),
-             size = 20
+             size = 24
              # theme = theme_georgia(),# element = "plot.title",
-             , x = 0.5, hjust = 0.5, vjust = 1)
+             , x = 0.5, hjust = 0.5, vjust = 0)
+
 
 cow_combined <- plot_grid(title1
-                          , cow1_grid + theme(plot.margin = unit(c(0,0,0,0), "cm"))
-                          , cow2_grid + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+                          , cow
                           , ncol = 1,
-                          rel_heights = c(0.15, 0.8, 0.8),
-                          rel_widths = c(0.9, 0.9, 0.2),
-                          label_size = 18)
+                          rel_heights = c(0.05, 1),
+                          rel_widths = c(1, 1),
+                          label_size = 24)
 
 
 # cow_combined
@@ -1229,9 +1255,106 @@ cow_combined <- plot_grid(title1
 cow_combined %>%
   save_plot(filename = paste0(
     outpath, "/", "03_", expname, "grid.png")
-    , base_height = 10, base_width = 12
+    , base_height = 9, base_width = 14
     , bg = "white"
-    )
+  )
+
+
 
 } # stop 2
+
+
+
+
+
+
+# #### Grid plot
+# 
+# cow1 <- cowplot::plot_grid(obs1 +
+#                              theme(#plot.title = element_blank(),
+#                                    #plot.subtitle = element_blank(),
+#                                    legend.position = "none",
+#                                    plot.margin = unit(c(0,0,0,0), "cm")
+#                                    ),
+#                            sim1 +
+#                              theme(legend.position = "none",
+#                                    plot.margin = unit(c(0,0,0,0), "cm")
+#                                    ),
+#                            align = "h"
+#                            # , rel_widths = c(1.5, 1)
+#                            , labels = c('A', 'B')
+# )
+# cow1
+# 
+# legend1 <- get_legend(obs1 +
+#                         theme(legend.position = "right"))
+# 
+# cow1_grid <- plot_grid(cow1, legend1, ncol = 2,
+#                        rel_heights = c(0.5, 0.9),
+#                        rel_widths = c(0.2, 0.05))
+# # cow1_grid <- plot_grid(title1, legend1, cow1, ncol = 1,
+# #                   rel_heights = c(0.1, 0.1, 1),
+# #                   rel_widths = c(0.1, 0.5, 0.1))
+# cow1_grid
+# 
+# # cow1_grid %>%
+# #   save_plot(filename = paste0(
+# #     outpath, "/", "03_", expname, "grid_upper.png")
+# #     , base_height = 4, base_width = 12
+# #     , bg = "white"
+# #   )
+# 
+# 
+# cow2 <- cowplot::plot_grid(obs2 +
+#                              theme(#plot.title = element_blank(),
+#                                #plot.subtitle = element_blank(),
+#                                plot.margin = unit(c(0,0,0,0), "cm"),
+#                                legend.position = "none"),
+#                            sim2 +
+#                              theme(
+#                                legend.position = "none",
+#                                plot.margin = unit(c(0,0,0,0), "cm")
+#                                ),
+#                            align = "h"
+#                            # , rel_widths = c(1.5, 1)
+#                            , labels = c('C', 'D')
+# )
+# cow2
+# 
+# legend2 <- get_legend(sim2 +
+#                         theme(legend.position = "right"))
+# 
+# cow2_grid <- plot_grid(cow2, legend2, ncol = 2,
+#                        rel_heights = c(0.8, 0.9),
+#                        rel_widths = c(0.2, 0.05)
+#                        # , label_size = 18
+#                        )
+# cow2_grid
+# 
+# # cow2_grid %>%
+# #   save_plot(filename = paste0(
+# #     outpath, "/", "03_", expname, "grid_lower.png")
+# #     , base_height = 4, base_width = 12
+# #     , bg = "white"
+# #   )
+# 
+# 
+# cow_combined <- plot_grid(title1
+#                           , cow1_grid #+ theme(plot.margin = unit(c(0,0,0,0), "cm"))
+#                           , cow2_grid #+ theme(plot.margin = unit(c(0,0,0,0), "cm"))
+#                           , ncol = 1,
+#                           rel_heights = c(0.10, 0.80, 0.80),
+#                           rel_widths = c(0.9, 0.9, 0.1),
+#                           label_size = 24)
+# 
+# 
+# # cow_combined
+# 
+# cow_combined %>%
+#   save_plot(filename = paste0(
+#     outpath, "/", "03_", expname, "grid.png")
+#     , base_height = 10, base_width = 12
+#     , bg = "white"
+#     )
+# 
 
