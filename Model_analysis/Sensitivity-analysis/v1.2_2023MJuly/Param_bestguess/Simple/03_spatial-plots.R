@@ -21,17 +21,21 @@ library("cowplot")
 ## ---------------------------
 # Options (plotting, memory limit, decimal digits)
 # ggplot theme
-theme_set(theme_bw(base_size = 18))
+# theme_set(theme_bw(base_size = 24))
 
 custom_theme <- list(
+  
+  theme_bw(base_size = 14) +
+    
   theme(
-    legend.position = "bottom",
-    axis.text.x = element_text(angle = 45)
+    legend.position = "right",
+    axis.text.x = element_text(angle = 45),
+    plot.margin = unit(c(0, 0, 0, 0), "cm")
   ),
   guides(
-    col = guide_legend(nrow = 3),
-    shape = guide_legend(nrow = 3),
-    size = guide_legend(nrow = 3)
+    col = guide_legend(ncol = 1),
+    shape = guide_legend(ncol = 1),
+    size = guide_legend(ncol = 1)
   )
 )
 
@@ -43,9 +47,13 @@ custom_theme <- list(
 # sf objects
 load(here("Data", "06_sf-plots.RData"))
 
+
+# set new lims to sf objects
 our_crs <- "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-gua_xlim_all = c(780000, 782350)
-gua_ylim_all = c(7407080, 7408250)
+# gua_xlim_all = c(780000, 782350)
+# gua_ylim_all = c(7407080, 7408250)
+gua_xlim_all = c(781600, 782350)
+gua_ylim_all = c(7407200, 7408250)
 gua.x.min = 781587
 gua.x.max = 782361.5
 gua_xlim_set = c(781050, 782350)   # c(781200, 782350) # closer
@@ -57,6 +65,14 @@ taq_ylim_set = c(7498750, 7500550)
 suz_xlim_set = c(705300, 706200)
 suz_ylim_set = c(7480800, 7481600) # 7480990,
 
+
+# gua.sf <- gua.sf +
+#   coord_sf(
+#     xlim = gua_xlim_all,
+#     ylim = gua_ylim_all
+#   )
+  
+
 # Plots
 behav_simulated_shapes <- c("foraging" = 1,
                             "frugivory" = 19,
@@ -64,11 +80,12 @@ behav_simulated_shapes <- c("foraging" = 1,
                             "sleeping" = 17,
                             "travel" = 1)
 
-behav_simulated_colors <- c("foraging" = "magenta",
+behav_simulated_colors <- c("foraging" = "grey",
                             "frugivory" = "#1E8449",
                             "resting" = "grey",
                             "sleeping" = "#E74C3C",
-                            "travel" = "grey")
+                            "travel" = "grey",
+                            "others" = "grey25")
 
 
 
@@ -397,8 +414,8 @@ for (i in 1:nrow(param.table)) {
                                 # "path-color-by-day?" = "false",
                                 
                                 ### resource scenario
-                                "study_area" = area_run, #"\"Guareí\"",
-                                'feeding-trees-scenario' = month_run, #"\"May\"",
+                                "study_area" = area_run_scp, #"\"Guareí\"",
+                                'feeding-trees-scenario' = month_run_scp, #"\"May\"",
                                 'no_days' = no_days_run, # DON'T TRY no_days = 1
                                 'simulation-time' = simultime_run,
                                 # 'feeding-trees?' = "true",
@@ -503,7 +520,7 @@ for (i in 1:nrow(param.table)) {
     
     results_seeds <- results %>% 
       tail(n = 1) %>% 
-      dplyr::select(-metrics.monkeys) %>% 
+      dplyr::select(-metrics.monkeys) %>%
       mutate(
         metrics.seeds = purrr::map(metrics.seeds, ~ if ("breed" %in% names(.x)) dplyr::filter(., breed == "seeds")),
         metrics.seeds = purrr::map(metrics.seeds, ~ mutate_if(., is.numeric, as.character))
@@ -511,7 +528,10 @@ for (i in 1:nrow(param.table)) {
       unnest_legacy() %>% 
       mutate_at(c("x_UTM", "y_UTM", "SDD"), as.numeric) %>% 
       # filter out species that are not dispersed:
-      dplyr::filter(species != "[Syagrus romanzoffiana]")
+      dplyr::filter(species != "[Syagrus romanzoffiana]") %>% 
+      mutate(
+        species = stringr::str_replace_all(species, c("\\[" = "", "\\]" = ""))
+        )
       
     results_seeds %>% str()
       
@@ -606,7 +626,8 @@ for (i in 1:nrow(param.table)) {
   
   print(paste0("finishing ", expname))
   i <- i + 1
-}
+  
+# } # strop 1
 
 
 
@@ -615,6 +636,7 @@ for (i in 1:nrow(param.table)) {
 results_unnest <- nl@simdesign@simoutput
 # results_unnest <- results_unnest %>% 
 #   rename(x = x_UTM, y = y_UTM)
+
 
 # Select random run by selecting random seed (run of x days = seed)
 aux_run <- results_unnest$random_seed %>%
@@ -688,11 +710,14 @@ db1 <- results_unnest
 #   dplyr::filter(breed != "monkeys") %>%
 #   dplyr::select(-c(energy:PT)) %>%
 #   dplyr::select(-species.y) #%>%
-#   # dplyr::filter(if (breed != "seeds") species != "Syagrus romanzoffiana" else TRUE)
+  # dplyr::filter(if (breed != "seeds") species != "Syagrus romanzoffiana" else TRUE) %>% 
+  # mutate(species = stringr::str_replace_all(species, c("\\[" = "", "\\]" = "")))
 
 db1$species %>% as.factor() %>% levels()
+db1 %>% str()
 
-
+a <- db1 %>% dplyr::filter(feeding_trees_scenario == as.character(month_run)) 
+a$species %>% unique()
 # define boxplot width
 # bpw <- 4/length(unique(paste(db1$group, db1$month)))
 # bpw # 0.44444
@@ -719,25 +744,126 @@ db1$species %>% as.factor() %>% levels()
 #   )
 
 
-# Define base sf plot
-if( area_run == "Guareí" ) { 
-  base.sf <- gua.sf 
-  base.name <- "Small fragment"
-  }
-if( area_run == "SantaMaria" ) { 
-  base.sf <- sma.sf 
-  base.name <- "Medium fragment"
-  }
-if( area_run == "Taquara" ) { 
-  base.sf <- taq.sf 
-  base.name <- "Continuous forest"
-  }
-if( area_run == "Suzano" ) { 
-  base.sf <- suz.sf 
-  base.name <- "Riparian forest"
+### Load empirical data -----
+
+# (code from Data/Movement/Curated/02_params-siminputrow_movement.R)
+mov <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data_siminputrow.csv")
+                    #, stringsAsFactors = TRUE
+)  %>% 
+  mutate(group = recode(group, 
+                        "Guarei" = "Guareí",
+                        "Santa Maria" = "SantaMaria"
+  )) %>%  # to match all other datasets
+  rename(
+    month = id_month
+  ) %>% 
+  mutate(datetime = lubridate::ymd_hms(datetime)) %>% 
+  mutate(
+    behavior = case_when(
+      behavior == "Sleeping site" ~ "sleeping", 
+      behavior == "Travel" ~ "travel", 
+      behavior == "Frugivory" ~ "frugivory", 
+      behavior == "Foraging" ~ "foraging", 
+      behavior == "Resting" ~ "resting", 
+      TRUE ~ "others"
+    )
+  )
+
+mov %>% str()
+mov$behavior %>% unique()
+
+
+# (dataset created in Data/Seed_dispersal/03_Validation-patterns.R)
+sdd <- read.csv(here("Data", "Seed_dispersal", "Curated", "All-areas_SeedDispersal.csv")) %>%
+  mutate(group = recode(group, 
+                        "Guarei" = "Guareí",
+                        "Santa Maria" = "SantaMaria"
+  )) %>%  # to match all other datasets
+  rename(
+    month = id_month,
+    x_UTM = def_x,
+    y_UTM = def_y
+  ) %>% 
+  mutate(def_datetime = lubridate::ymd_hms(def_datetime))
+
+sdd %>% str()
+sdd$species %>% unique()
+
+
+trees.id <- read.csv(here("Data", "Movement", "Resource-trees", "Siminputrow_trees.csv")) %>% 
+  mutate(group = recode(group, 
+                        "Guarei" = "Guareí",
+                        "Santa Maria" = "SantaMaria"
+  )) %>%  # to match all other datasets
+  rename(
+    month = id_month,
+    x_UTM = x,
+    y_UTM = y
+  ) %>% 
+  mutate(datetime = lubridate::ymd_hms(datetime))
+
+trees.id %>% str()
+trees.id$species %>% unique()
+
+
+
+
+### Define empirical movement data
+mov.db <- mov %>% 
+  dplyr::filter(
+    group == area_run & month == month_run 
+  ) %>% 
+  rename(
+    x_UTM = x,
+    y_UTM = y
+  )
+
+
+### Define empirical seed dispersal data
+sdd.db <- sdd %>% 
+  dplyr::filter(
+    group == area_run & month == month_run 
+  )
+
+
+### Define empirical tree species data
+trees.db <- trees.id %>% 
+  dplyr::filter(
+    group == area_run & month == month_run 
+  )
+trees.db$species
+
+area_run_vec <- as.character(area_run)
+str(area_run_vec)
+str(a)
+  
+  
+  ### Define base sf plot
+  if(area_run_vec == "Guareí") { 
+    base.sf <- gua.sf
+    base.name <- "Small fragment"
+    # sdd.shapes <- sdd.db %>% 
+    #   dplyr::select(species) %>% 
+    #   unique()
+  } else if ( area_run_vec == "SantaMaria" ) { 
+      base.sf <- sma.sf
+      base.name <- "Medium fragment"
+  } else if( area_run_vec == "Taquara" ) { 
+      base.sf <- taq.sf
+      base.name <- "Continuous forest"
+  } else if ( area_run_vec == "Suzano" ) { 
+      base.sf <- suz.sf
+      base.name <- "Riparian forest"
   }
 
-p1 <-
+base.sf
+base.name
+
+
+### Spatial plots -----
+
+#### sim1
+sim1 <-
   base.sf +
   geom_point(data = subset(db1, breed == "monkeys"),
              aes(x = x_UTM, y = y_UTM
@@ -754,54 +880,184 @@ p1 <-
   labs(color  = "behavior", shape = "behavior", size = "behavior") +
   
   geom_path(data = subset(db1, breed == "monkeys"),
-            aes(x = x_UTM, y = y_UTM),
-            lwd = 0.15
+            aes(x = x_UTM, y = y_UTM)
+            , lwd = 0.15
+            , linetype = "dashed"
             , color = "grey25") +
   
   ggtitle(paste0(#base.name, #"Simulated path and seed dispersal events",
     # " (rseed = ", aux_run, ")")
-    "rseed = ", aux_run)
+    "Simulated (seed = ", aux_run, ")")
   ) +
-  custom_theme
+  custom_theme  +
+  theme(
+    axis.text.x = element_text(hjust = 1)
+  ) +
+  xlab("") +
+  guides(shape = "none"#,
+         # shape = guide_legend(order = 1)
+  )
 
-p1
+sim1
 
-nshapes <- subset(db1, breed == "seeds") %>% 
-  dplyr::select(species) %>% 
-  unique() %>% 
-  nrow()
 
-nshapes <- rep(1, nshapes)
-  
-p3 <- 
+#### sim2
+sim2 <- 
   base.sf +
   geom_point(data = subset(db1, breed == "seeds"),
              aes(x = x_UTM, y = y_UTM
-                 , size = SDD
-                 , color = species
-                 , fill = species
+                 # , size = SDD
+                 , color = SDD
+                 , fill = SDD
                  # shape = disp_day
-                 # , shape = species
+                 , shape = species
              ),
-             alpha = 0.4
-             , shape = 21
+             alpha = 0.7
+             # , shape = 21
              , stroke = 1
              # , size = 4
              # , position = position_jitter(width = 3)
-             ) +
-  scale_color_viridis_d(option = "inferno") +
-  scale_fill_viridis_d(option = "inferno") +
-  # scale_color_viridis_d(option = "viridis") +
-  # scale_shape_manual(values = nshapes) +
-  # scale_fill_gradient(low = "#7F7E7C", high = "#B50404") +
+  ) +
+  # scale_color_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
+  # scale_fill_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
+  scale_color_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
+  scale_fill_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
   ggtitle(" ") +
-  custom_theme
+  custom_theme +
+  theme(
+    axis.text.x = element_text(hjust = 1)
+    # axis.title.x = element_blank()
+  ) +
+  guides(fill = "none", 
+         color = guide_colorbar(order = 1)
+  )
 
-p3
+sim2
 
-# p2 <- 
+# shapes <- subset(db1, breed == "seeds") %>% 
+#   dplyr::select(species) %>% 
+#   unique() %>% 
+#   nrow()
+# 
+# nshapes <- rep(1, nshapes)
+#   
+# sim2 <- 
+#   base.sf +
+#   geom_point(data = subset(db1, breed == "seeds"),
+#              aes(x = x_UTM, y = y_UTM
+#                  , size = SDD
+#                  , color = species
+#                  , fill = species
+#                  # shape = disp_day
+#                  # , shape = species
+#              ),
+#              alpha = 0.4
+#              , shape = 21
+#              , stroke = 1
+#              # , size = 4
+#              # , position = position_jitter(width = 3)
+#              ) +
+#   scale_color_viridis_d(option = "inferno") +
+#   scale_fill_viridis_d(option = "inferno") +
+#   scale_size_continuous(limits = c(0, 1000)) +
+#   # scale_size_identity(trans="log10",guide="legend") +
+#   # scale_color_viridis_d(option = "viridis") +
+#   # scale_shape_manual(values = nshapes) +
+#   # scale_fill_gradient(low = "#7F7E7C", high = "#B50404") +
+#   ggtitle(" ") +
+#   custom_theme +
+#   theme(
+#     axis.text.x = element_text(hjust = 1)
+#   ) #+
+#   # guides 
+# 
+# sim2
 
 
+
+
+
+
+
+
+
+
+#### obs1
+obs1 <-
+  base.sf +
+  geom_point(data = mov.db,
+             aes(x = x_UTM, y = y_UTM
+                 # , group = behavior
+                 , color = behavior
+                 , shape = behavior
+                 , size = behavior
+             ),
+             # size = 3
+  ) +
+  scale_color_manual(values = behav_simulated_colors) +
+  scale_shape_manual(values = c(1, 16, 4, 1, 16, 1)) +
+  scale_size_manual(values = c(1, 3, 3, 1, 3, 1)) +
+  labs(color  = "behavior", shape = "behavior", size = "behavior") +
+  
+  geom_path(data = mov.db,
+            aes(x = x_UTM, y = y_UTM)
+            , lwd = 0.15
+            , linetype = "dashed"
+            , color = "grey25") +
+  
+  # ggtitle(paste0("Observed, ", base.name, " (", month_run, ")")
+  ggtitle(paste0("Observed")
+  ) +
+  xlab("") +
+  ylab("") +
+  custom_theme +
+  theme(
+    axis.text.x = element_text(hjust = 1)
+  ) #+
+  # guides(shape = "none"
+  #        # shape = guide_legend(order = 1)
+  # )
+
+obs1
+
+
+#### obs2
+obs2 <- 
+  base.sf +
+  geom_point(data = sdd.db,
+             aes(x = x_UTM, y = y_UTM
+                 # , size = SDD
+                 , color = SDD
+                 , fill = SDD
+                 # shape = disp_day
+                 , shape = species
+             ),
+             alpha = 0.7
+             # , shape = 21
+             , stroke = 1
+             # , size = 4
+             # , position = position_jitter(width = 3)
+  ) +
+  # scale_color_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
+  # scale_fill_gradient(low = "grey70", high = "#F51616", limits = c(0, 1000)) +
+  scale_color_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
+  scale_fill_gradient(low = "blue", high = "#F51616", limits = c(0, 1000)) +
+  ggtitle(" ") +
+  ylab("") +
+  custom_theme +
+  theme(
+    axis.text.x = element_text(hjust = 1)
+  ) +
+  guides(fill = "none", 
+         color = guide_colorbar(order = 1)
+  )
+
+obs2
+
+
+
+
+# Fruiting trees:
 
 # # target <- c("feeding-trees", "sleeping-trees")
 # trees.gua <- db1 %>%
@@ -855,15 +1111,127 @@ p3
 #   )
 
 #### Save plot
-cow <- cowplot::plot_grid(p1, p3, labels = c('A', 'B'))
-cow
 
-cow %>% 
+# Simulated only:
+# cow <- cowplot::plot_grid(sim1, sim2, labels = c('A', 'B'))
+# cow
+
+# Simulated + observed:
+
+cow <- cowplot::plot_grid(
+  sim1 + theme(legend.position = "none"),
+  obs1, 
+  sim2 + theme(legend.position = "none"),
+  obs2
+  , labels = c('A', 'B', 'C', 'D')
+  , label_size = 24
+)
+
+cow %>%
   save_plot(filename = paste0(
     outpath, "/", "03_", expname, ".png")
-    , base_height = 6, base_width = 12
+    , base_height = 8, base_width = 14
     , bg = "white"
     )
 
 
+
+#### Grid plot
+
+cow1 <- cowplot::plot_grid(sim1 +
+                             theme(#plot.title = element_blank(),
+                                   #plot.subtitle = element_blank(),
+                                   legend.position = "none",
+                                   plot.margin = unit(c(0,0,0,0), "cm")
+                                   ),
+                           obs1 +
+                             theme(legend.position = "none",
+                                   plot.margin = unit(c(0,0,0,0), "cm")
+                                   ),
+                           align = "h"
+                           # , rel_widths = c(1.5, 1)
+                           , labels = c('A', 'B')
+)
+cow1
+
+legend1 <- get_legend(obs1 +
+                        theme(legend.position = "right"))
+
+cow1_grid <- plot_grid(cow1, legend1, ncol = 2,
+                       rel_heights = c(0.5, 0.9),
+                       rel_widths = c(0.2, 0.05))
+# cow1_grid <- plot_grid(title1, legend1, cow1, ncol = 1,
+#                   rel_heights = c(0.1, 0.1, 1),
+#                   rel_widths = c(0.1, 0.5, 0.1))
+cow1_grid
+
+cow1_grid %>%
+  save_plot(filename = paste0(
+    outpath, "/", "03_", expname, "grid_upper.png")
+    , base_height = 4, base_width = 12
+    , bg = "white"
+  )
+
+
+cow2 <- cowplot::plot_grid(sim2 +
+                             theme(#plot.title = element_blank(),
+                               #plot.subtitle = element_blank(),
+                               plot.margin = unit(c(0,0,0,0), "cm"),
+                               legend.position = "none"),
+                           obs2 +
+                             theme(
+                               legend.position = "none",
+                               plot.margin = unit(c(0,0,0,0), "cm")
+                               ),
+                           align = "h"
+                           # , rel_widths = c(1.5, 1)
+                           , labels = c('C', 'D')
+)
+cow2
+
+legend2 <- get_legend(sim2 +
+                        theme(legend.position = "right"))
+
+cow2_grid <- plot_grid(cow2, legend2, ncol = 2,
+                       rel_heights = c(0.8, 0.9),
+                       rel_widths = c(0.2, 0.05)
+                       # , label_size = 18
+                       )
+cow2_grid
+
+cow2_grid %>%
+  save_plot(filename = paste0(
+    outpath, "/", "03_", expname, "grid_lower.png")
+    , base_height = 4, base_width = 12
+    , bg = "white"
+  )
+
+
+
+
+title1 <- ggdraw() +
+  draw_label(label = paste0(base.name, " (", month_run, ")"),
+             size = 20
+             # theme = theme_georgia(),# element = "plot.title",
+             , x = 0.5, hjust = 0.5, vjust = 1)
+
+cow_combined <- plot_grid(title1
+                          , cow1_grid + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+                          , cow2_grid + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+                          , ncol = 1,
+                          rel_heights = c(0.15, 0.8, 0.8),
+                          rel_widths = c(0.9, 0.9, 0.2),
+                          label_size = 18)
+
+
+# cow_combined
+
+cow_combined %>%
+  save_plot(filename = paste0(
+    outpath, "/", "03_", expname, "grid.png")
+    , base_height = 10, base_width = 12
+    , bg = "white"
+    )
+
+} # stop 2
 
