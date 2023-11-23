@@ -54,8 +54,8 @@ dat.all.mv <- read.csv(here("Data", "Movement", "Curated", "Param_siminputrow",
             #row.names = FALSE
             ) %>% 
   mutate(group = recode(group, "Guarei" = "Guareí")) %>%  # to match all other datasets
-  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "Santa Maria", "Taquara")) %>% 
-  mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Mar", "Apr", "May", 
+  mutate(group = forcats::fct_relevel(group, "Suzano", "Guareí", "SantaMaria", "Taquara")) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
                                          "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
   mutate(
     datetime = ymd_hms(datetime),
@@ -83,7 +83,7 @@ target_behav <- c("Frugivory", "Travel", "Foraging", "Resting")
 
 # By day
 dat.ab.summary.day <- dat.all.mv %>% 
-  group_by(group, id_month, date, behavior) %>%
+  group_by(group, month, date, behavior) %>%
   summarise(
     n = n()
   ) %>% 
@@ -104,8 +104,8 @@ dat.ab.summary.day %>%
 dat.all.mv$behavior %>% unique()
 gumivory <- c("Gummivory")
 gum <- dat.all.mv %>% 
-  group_by(group, id_month, behavior) %>%
-  # group_by(group, id_month, date, behavior) %>%
+  group_by(group, month, behavior) %>%
+  # group_by(group, month, date, behavior) %>%
   summarise(
     n = n()
   ) %>% 
@@ -119,7 +119,7 @@ gum <- dat.all.mv %>%
 # By month (first summarize by day and get average of percentages)
 dat.ab.summary <- dat.ab.summary.day %>% 
   ungroup() %>% 
-  group_by(group, id_month, behavior) %>% 
+  group_by(group, month, behavior) %>% 
   summarise(
     perc_behavior_mean = mean(perc_behavior),
     perc_behavior_sd = sd(perc_behavior)
@@ -134,7 +134,7 @@ dat.ab.summary <- dat.ab.summary.day %>%
 
 
 # Summarize DPL -------------------------
-dat.dpl.summary <- dat.all.ltraj.df %>% group_by(group, id_month, date) %>% 
+dat.dpl.summary <- dat.all.mv %>% group_by(group, month, date) %>% 
   summarise(
     DPL = sum(dist, na.rm = TRUE)
   )
@@ -144,7 +144,7 @@ dat.dpl.summary <- dat.all.ltraj.df %>% group_by(group, id_month, date) %>%
 #   write.csv(here("Data", "Movement", "Curated", "Validation", "Siminputrow_DPL_by-day.csv"),
 #             row.names = FALSE)
 
-dat.dpl.summary.mo <- dat.dpl.summary %>% group_by(group, id_month) %>% 
+dat.dpl.summary.mo <- dat.dpl.summary %>% group_by(group, month) %>% 
   summarise(
     DPL_mean = mean(DPL, na.rm = TRUE)
   )
@@ -160,10 +160,10 @@ dat.dpl.summary.mo <- dat.dpl.summary %>% group_by(group, id_month) %>%
 
 dat.all.mv.tr <- dat.all.mv %>%
   mutate(
-    id = paste0(group, " - ", id_month)
+    id = paste0(group, " - ", month)
   ) %>% 
   make_track(.x=x, .y=y, id = id, crs = 32722, all_cols = TRUE) %>% 
-  nest(data = -c(id, group, id_month))
+  nest(data = -c(id, group, month))
 
 KDE <- dat.all.mv.tr %>%
 # hrvalues <- dat.all.mv.tr %>%
@@ -198,8 +198,9 @@ KDE_sf <- KDE_sf %>%
     shp = case_when(
       group == "Suzano" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp",
       group == "Guareí" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp",
-      group == "Santa Maria" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp",
+      group == "SantaMaria" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp",
       group == "Taquara" ~ "D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp",
+      TRUE ~ NA
       )
   ) %>% 
   # read shp as sf
@@ -213,6 +214,7 @@ KDE_sf <- KDE_sf %>%
   #   shp = purrr::map(shp, ~ sf::st_set_crs(., 32722))
   # )
 # (no need to set crs because it is 32722 already)
+
 
 # Intersecting only one line of the df:
 library("tmap")
@@ -243,7 +245,8 @@ tm_shape(cropped) +
   tm_polygons()
 # It works. Why it does not work inside map()?
 
-for (i in 1:nrow(KDE_sf)) {ex_shp <- KDE_sf$shp[i]
+for (i in 1:nrow(KDE_sf)) {
+  ex_shp <- KDE_sf$shp[i]
   ex_isop <- KDE_sf$isop_50[i]
   ex_isop95 <- KDE_sf$isop_95[i]
   
@@ -297,6 +300,56 @@ for (feature in 1:nrow(KDE_sf)) {
   
  i <- i+1 
 }
+
+# # KDE_sf2 <- bind_cols(KDE_sf$shp, KDE_sf$id, KDE_sf$group, KDE_sf$month) 
+# KDE_sf2 <- KDE_sf$shp
+# 
+# KDE_sf2 <- KDE_sf2 %>% 
+#   mutate(
+#     id = KDE_sf$id,
+#     group = KDE_sf$group,
+#     month = KDE_sf$month
+#   )
+#   dplyr::left_join(KDE_sf[, 1:3])
+
+
+KDE_sf <- KDE_sf %>%
+  # group_by(id) %>% 
+  mutate(
+    id.x = id %>% str_remove_all(., " ") %>% str_replace(., "-", "_"),
+    pathsave = paste0(here("Data", "Movement", "Curated", "Validation"), "/", id, ".shp")
+    )
+
+# KDE_sf %>% 
+#   mutate(
+#     purrr::map(cropped95, 
+#                ~sf::st_write(., dsn = pathsave)
+#     )
+#   )
+
+# Save all shapes separetly
+rm(id)
+i <- 1
+for (feature in 1:nrow(KDE_sf)) {
+  
+  shp <- KDE_sf[i, "shp"] %>% pull()
+    # dplyr::filter(i) #%>% 
+    # pull(shp) #%>% 
+    # st_as_
+  
+  sf::st_write(shp, dsn = pathsave)
+  
+  i <- i + 1
+}
+
+shp <- KDE_sf$shp[1]
+
+
+
+
+sf::st_write(KDE_sf[1, "geometry"]
+             , path = here("Data", "Movement", "Curated", "Validation", "Test.shp")
+             )
 
 # Wrangle and select valuable columns
 KDE_sf %>% colnames()
@@ -366,9 +419,9 @@ KDE_sf %>% str()
 # KDE 95
 hrvalues %>% 
   dplyr::filter(KDE_value == "KDE95") %>%
-  group_by(group, id_month) %>%
+  group_by(group, month) %>%
   # facet_wrap(~KDE_value) +
-  ggplot(aes(x = group, y = hr_area_ha, color = id_month)) +
+  ggplot(aes(x = group, y = hr_area_ha, color = month)) +
   geom_boxplot() +
   guides(fill=FALSE) +
   ylim(0, 350) +
@@ -387,9 +440,9 @@ hrvalues %>%
 # KDE50
 hrvalues %>% 
   dplyr::filter(KDE_value == "KDE50") %>%
-  group_by(group, id_month) %>%
+  group_by(group, month) %>%
   # facet_wrap(~KDE_value) +
-  ggplot(aes(x = group, y = hr_area_ha, color = id_month)) +
+  ggplot(aes(x = group, y = hr_area_ha, color = month)) +
   geom_boxplot() +
   # geom_point() +
   guides(fill=FALSE) +
@@ -415,7 +468,7 @@ ggsave(filename = here("Data", "Movement", "Curated", "Validation",
 # Movement Rate
 mv.metrics <- dat.all.mv %>% 
   dplyr::select(-id) %>% 
-  group_by(group, id_month, date) %>% 
+  group_by(group, month, date) %>% 
   summarise(
     DPL = sum(dist, na.rm = TRUE),
     activitytime = sum(dt, na.rm = TRUE) / 60 / 60, # / minutes / hours
