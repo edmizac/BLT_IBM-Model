@@ -25,8 +25,8 @@ library("stringr")
 theme_set(theme_bw(base_size = 18))
 
 # path <- here("Model_analysis", "Genetic_analysis", "temp", "without_stored_energy")
-path <- here("Model_analysis", "Genetic_analysis",  "v1.2", "temp")
-outpath <- here("Model_analysis", "Genetic_analysis", "v1.2", "temp")
+path <- here("Model_analysis", "Genetic_analysis",  "v1.2", "1-step-calibration", "temp")
+outpath <- here("Model_analysis", "Genetic_analysis", "v1.2", "1-step-calibration", "temp")
 
 # suz <- filesga <- list.files(path, pattern = "Dec_nl.rds")
 # suz <- paste0(path, "/", filesga)
@@ -110,7 +110,7 @@ for (i in filesga) {
   
   optimized_param <- cbind(optimized_param, best5)
   len <- colnames(optimized_param) %>% length()
-  # colnames(optimized_param)[len] <- "fitness"
+  # colnames(optimized_param)[len] <- "fitness_log"
   
   optimized_param$expname <- basename(i) %>% str_match(., '(?:_[^_]+){3}') %>% as.character() %>% 
     str_remove(., '^_{1}') %>% str_remove(., "_results")
@@ -146,15 +146,25 @@ rownames(ga_input) <- rownames(ga_input) %>% stringr::str_sub(., end=-5)
 ga_input$parameter <- rownames(ga_input)
 rownames(ga_input) <- NULL
 
+
+# Transform fitness to log scale
+dfga$fitness
+dfga <- dfga %>% 
+  rename(fitness_log = fitness) %>% 
+  mutate(fitness_log = log10(fitness_log))
+dfga$fitness_log
+
 # create custom min/max for fitness and bind to ga_input
 fitmax <- dfga %>% 
-  dplyr::filter(parameter == "fitness") %>% 
+  # dplyr::filter(parameter == "fitness") %>% 
+  dplyr::select(fitness_log) %>% 
+  max(., na.rm = TRUE)
   # there are infinite values sometimes
   
 
 fitinfo <- data.frame(stringMin = 0, 
                       stringMax = fitmax,
-                      parameter = "fitness")
+                      parameter = "fitness_log")
 
 ga_input <- ga_input %>% rbind(fitinfo)
 
@@ -162,7 +172,7 @@ ga_input <- ga_input %>% rbind(fitinfo)
 # pivot into longer for plotting
 dfga <- dfga %>% 
   tidyr::pivot_longer(names_to = "parameter", values_to = "value",
-                      cols = `energy-from-fruits`:fitness)
+                      cols = `energy-from-fruits`:fitness_log)
 
 # join min and max values from ga_input
 dfga <- dfga %>% dplyr::left_join(ga_input, by="parameter")
@@ -197,6 +207,23 @@ dfga$parameter %>% levels()
 
 # take all punctuation out
 dfga$expname %>% stringr::str_replace_all(.,"[^[:graph:]]", "") 
+
+
+# Save csv
+dfga %>% 
+  writexl::write_xlsx(path = paste0(outpath, "/optimized_best5.xlsx"))
+
+dfga %>% 
+  group_by(group, month, parameter) %>% 
+  dplyr::summarise(
+    value_mean = mean(value, na.rm = TRUE),
+    value_sd = sd(value, na.rm = TRUE),
+    value_max = max(value, na.rm = TRUE),
+    value_min = min(value, na.rm = TRUE),
+    value_n = n()
+  ) %>% 
+  writexl::write_xlsx(path = paste0(outpath, "/optimized_best5_summary.xlsx"))
+
 
 # dfga_en <- dfga %>% 
 #   dplyr::filter(str_detect(parameter, "energy"))
@@ -307,7 +334,7 @@ dfga_otr %>%
   ggplot() +
   # geom_pointrange(aes(ymin = min, ymax = max, x = parameter)) +
   geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
-                , width = 0.2
+                , linewidth = 0.2
                 , size = 0.2) +
   geom_point(aes(x = parameter, y = value, color = month),
              size = 3
@@ -335,7 +362,7 @@ dfga_otr %>%
 dfga <- dfga %>% 
   mutate(
     param_category = case_when(
-      parameter == "fitness" ~ "fitness",
+      parameter == "fitness_log" ~ "fitness",
       
       parameter == "start_energy" ~ "energy levels",
       parameter == "energy_level_1" ~ "energy levels",
@@ -390,9 +417,9 @@ dfga %>%
   facet_wrap(~param_category, scales = "free", nrow = 6) +
   coord_flip()
 
-# # # Save plot
-# ggsave(paste0(path, '/02_GA_optimized-params-grid-best5_opt1.png'),
-#        height = 12, width = 8)
+# # Save plot
+ggsave(paste0(path, '/02_GA_optimized-params-grid-best5_opt1.png'),
+       height = 12, width = 8)
 
 
 # Plot grid
@@ -424,9 +451,9 @@ dfga %>%
   facet_wrap(~param_category, scales = "free", nrow = 1)
   # coord_flip()
 
-# # # Save plot
-# ggsave(paste0(path, '/02_GA_optimized-params-grid-best5_opt2.png'),
-#        height = 8, width = 12)
+# # Save plot
+ggsave(paste0(path, '/02_GA_optimized-params-grid-best5_opt2.png'),
+       height = 8, width = 12)
 
 
 
@@ -442,7 +469,7 @@ dfga %>%
 # For plotting paired plots
 dfga_paired <- dfga %>% 
   group_by(month, parameter) %>%
-  # arrange(parameter=="fitness", .by_group = TRUE)
+  # arrange(parameter=="fitness_log", .by_group = TRUE)
   mutate(paired = 1:n())
 
 # dfga_paired <- dfga_paired %>% 
@@ -635,7 +662,7 @@ dfga_otr2 %>%
 
 ## Plot showing fitness
 dfga_paired %>% 
-  dplyr::filter("fitness" %in% parameter) %>% 
+  dplyr::filter("fitness_log" %in% parameter) %>% 
   ggplot(aes(x = parameter, y = value, group = interaction(month, paired))) +
   geom_errorbar(aes(ymin = min, ymax = max, x = parameter)
                 , width = 0.2
@@ -660,10 +687,10 @@ dfga_paired %>%
   scale_color_viridis_d() +
   ggtitle("Fitness values")
 
-dfga_paired[dfga_paired$parameter == "fitness", ] %>% summary()
+dfga_paired[dfga_paired$parameter == "fitness_log", ] %>% summary()
 
 dfga_paired %>% 
-  dplyr::filter(parameter == "fitness") %>% 
+  dplyr::filter(parameter == "fitness_log") %>% 
   dplyr::select("value")# %>% 
   # summary()
 
@@ -684,13 +711,13 @@ dfga_paired %>%
 # # For plotting paired plots
 # dfga_paired <- dfga_noninf %>% 
 #   group_by(expname, parameter) %>%
-#   # arrange(parameter=="fitness", .by_group = TRUE)
+#   # arrange(parameter=="fitness_log", .by_group = TRUE)
 #   mutate(paired = 1:n())
 
 
 # Define which is the best run based on fitness
 dfga_paired_fitness <- dfga_paired %>% 
-  dplyr::filter(parameter == "fitness") %>% 
+  dplyr::filter(parameter == "fitness_log") %>% 
   group_by(month) %>%
   arrange(desc(value), .by_group = TRUE) %>% 
   mutate(
@@ -714,7 +741,7 @@ dfga_paired <- dfga_paired %>%
 # Get max fitness value 
 maxfitness <- dfga_paired %>% 
   ungroup() %>% 
-  dplyr::filter(parameter == "fitness") %>% 
+  dplyr::filter(parameter == "fitness_log") %>% 
   # group_by(expname) %>%
   dplyr::filter(value != Inf) %>% 
   summarise(
@@ -967,7 +994,7 @@ dfga_otr3 %>%
 
 ## Plot showing fitness
 dfga_paired %>% 
-  dplyr::filter("fitness" %in% parameter) %>% 
+  dplyr::filter("fitness_log" %in% parameter) %>% 
   ggplot(aes(x = parameter, y = value, group = interaction(month, paired))) +
   geom_errorbar(aes(ymin = min(value, na.rm=TRUE), ymax = max(value, na.rm = TRUE)
                     , x = parameter)
@@ -1006,10 +1033,10 @@ dfga_paired %>%
   scale_shape_manual(values = c(16, 21)) +
   ggtitle("Fitness values")
 
-dfga_paired[dfga_paired$parameter == "fitness", ] %>% summary()
+dfga_paired[dfga_paired$parameter == "fitness_log", ] %>% summary()
 
 dfga_paired %>% 
-  dplyr::filter(parameter == "fitness") %>% 
+  dplyr::filter(parameter == "fitness_log") %>% 
   dplyr::select("value") %>% 
   print(n = 20)
 
@@ -1026,7 +1053,7 @@ dfga_paired %>%
 dfga_paired <- dfga_paired %>% 
   mutate(
     param_category = case_when(
-      parameter == "fitness" ~ "fitness",
+      parameter == "fitness_log" ~ "fitness_log",
       
       parameter == "start_energy" ~ "energy levels",
       parameter == "energy_level_1" ~ "energy levels",
@@ -1108,9 +1135,9 @@ dfga_paired %>%
   facet_wrap(~param_category, scales = "free", nrow = 7) +
   coord_flip()
 
-# # # Save plot
-# ggsave(paste0(path, '/02_GA_optimized-params-grid-best5_opt1_dashed.png'),
-#        height = 15, width = 8)
+# # Save plot
+ggsave(paste0(path, '/02_GA_optimized-params-grid-best5_opt1_dashed.png'),
+       height = 15, width = 8)
 
 
 dfga_paired %>% 
