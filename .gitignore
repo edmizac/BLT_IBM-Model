@@ -16,6 +16,14 @@
 .prj
 .shp
 .asc
+*/Data/Movement/Curated/*.cpg
+*/Data/Movement/Curated/*.qpj
+*/Data/Movement/Curated/*.shx
+*/Data/Movement/Curated/*.dbf
+*/Data/Movement/Curated/*.prj
+*/Data/Movement/Curated/*.shp
+*/Data/Movement/Curated/*.asc
+
 # drawio related
 .bkp
 # Folders:

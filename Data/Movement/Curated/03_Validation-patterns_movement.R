@@ -31,6 +31,7 @@ library("lubridate")
 library("hms")
 library("amt")
 library("sf")
+library("stringr")
 
 ## Options -------------------------
 # (plotting, memory limit, decimal digits)
@@ -317,39 +318,23 @@ KDE_sf <- KDE_sf %>%
   # group_by(id) %>% 
   mutate(
     id.x = id %>% str_remove_all(., " ") %>% str_replace(., "-", "_"),
-    pathsave = paste0(here("Data", "Movement", "Curated", "Validation"), "/", id, ".shp")
+    pathsave95 = paste0(here("Data", "Movement", "Curated", "Validation"), "/", id.x, "_cropped_KDE95.shp"),
+    pathsave50 = paste0(here("Data", "Movement", "Curated", "Validation"), "/", id.x, "_cropped_KDE50.shp")
     )
 
-# KDE_sf %>% 
-#   mutate(
-#     purrr::map(cropped95, 
-#                ~sf::st_write(., dsn = pathsave)
-#     )
-#   )
-
 # Save all shapes separetly
-rm(id)
 i <- 1
 for (feature in 1:nrow(KDE_sf)) {
   
-  shp <- KDE_sf[i, "shp"] %>% pull()
-    # dplyr::filter(i) #%>% 
-    # pull(shp) #%>% 
-    # st_as_
+  shp_95 <- KDE_sf$cropped95[[i]] %>% st_as_sf()
+  shp_50 <- KDE_sf$cropped50[[i]] %>% st_as_sf()
   
-  sf::st_write(shp, dsn = pathsave)
+  sf::st_write(shp_95, dsn = KDE_sf$pathsave95[i])
+  sf::st_write(shp_50, dsn = KDE_sf$pathsave50[i])
   
   i <- i + 1
 }
 
-shp <- KDE_sf$shp[1]
-
-
-
-
-sf::st_write(KDE_sf[1, "geometry"]
-             , path = here("Data", "Movement", "Curated", "Validation", "Test.shp")
-             )
 
 # Wrangle and select valuable columns
 KDE_sf %>% colnames()
