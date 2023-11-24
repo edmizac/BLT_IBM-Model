@@ -23,6 +23,13 @@
 /Data/Movement/Curated/Validation/*.prj
 /Data/Movement/Curated/Validation/*.shp
 /Data/Movement/Curated/Validation/*.asc
+/Data/Movement/Curated/Param_all-data/*.cpg
+/Data/Movement/Curated/Param_all-data/*.qpj
+/Data/Movement/Curated/Param_all-data/*.shx
+/Data/Movement/Curated/Param_all-data/*.dbf
+/Data/Movement/Curated/Param_all-data/*.prj
+/Data/Movement/Curated/Param_all-data/*.shp
+/Data/Movement/Curated/Param_all-data/*.asc
 
 # drawio related
 .bkp
