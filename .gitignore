@@ -16,13 +16,13 @@
 .prj
 .shp
 .asc
-*/Data/Movement/Curated/*.cpg
-*/Data/Movement/Curated/*.qpj
-*/Data/Movement/Curated/*.shx
-*/Data/Movement/Curated/*.dbf
-*/Data/Movement/Curated/*.prj
-*/Data/Movement/Curated/*.shp
-*/Data/Movement/Curated/*.asc
+*/Data/Movement/Curated/Validation/*.cpg
+*/Data/Movement/Curated/Validation/*.qpj
+*/Data/Movement/Curated/Validation/*.shx
+*/Data/Movement/Curated/Validation/*.dbf
+*/Data/Movement/Curated/Validation/*.prj
+*/Data/Movement/Curated/Validation/*.shp
+*/Data/Movement/Curated/Validation/*.asc
 
 # drawio related
 .bkp
