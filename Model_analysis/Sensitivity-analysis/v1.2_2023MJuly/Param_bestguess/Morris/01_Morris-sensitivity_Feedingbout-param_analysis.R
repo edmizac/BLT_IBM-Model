@@ -292,13 +292,13 @@ morris_db <- morris_db %>%
 morris_db %>% colnames()
 morris_db$metric %>% unique()
 
-morris_db <- morris_db %>% 
-  mutate(metric = case_when(
-    metric == DPL_mean ~ DPL_mean / 1000,
-    metric == DPL_sd_mean ~ DPL_sd_mean / 1000,
-    
-  )
-  )
+# morris_db <- morris_db %>% 
+#   mutate(metric = case_when(
+#     metric == DPL_mean ~ DPL_mean / 1000,
+#     metric == DPL_sd_mean ~ DPL_sd_mean / 1000,
+#     TRUE ~ 
+#   )
+#   )
 
 
 ### Transform data ----
@@ -642,8 +642,8 @@ morris_db_long %>%
   scale_color_manual(values = rainbow(n = 14)) +
   theme(legend.position="bottom") +
   ggtitle("Morris first-order effects on KDE50") +
-  xlab(expression(paste(mu, "*", " - Home range area (ha)")))+
-  ylab(expression(paste(mu,      " - Home range area (ha)"))) +
+  xlab(expression(paste(mu, "*", " - Core UD area (ha)")))+
+  ylab(expression(paste(mu,      " - Core UD area (ha)"))) +
   # xlim(0, 15) +
   # ylim(0, 15)
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
@@ -683,8 +683,8 @@ morris_db_long %>%
   scale_color_manual(values = rainbow(n = 14)) +
   theme(legend.position="bottom") +
   ggtitle("Morris interaction effects on KDE50") +
-  xlab(expression(paste(mu, "*", " - Home range area (ha)"))) +
-  ylab(expression(paste(sigma, " - Home range area (ha)"))) +
+  xlab(expression(paste(mu, "*", " - Core UD area (ha)"))) +
+  ylab(expression(paste(sigma, " - Core UD area (ha)"))) +
   # xlim(0, 15) +
   # ylim(0, 15)
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
@@ -724,8 +724,8 @@ morris_db_long %>%
   # facet_grid(metric ~ feedingbout) +
   ggtitle("Morris first-order effects on KDE95") +
   # xlab("mustar - Home range area (ha)") +
-  xlab(expression(paste(mu, "*", " - Home range area (ha)"))) +
-  ylab(expression(paste(mu,      " - Home range area (ha)"))) +
+  xlab(expression(paste(mu, "*", " - Total UD area (ha)"))) +
+  ylab(expression(paste(mu,      " - Total UD area (ha)"))) +
   # xlim(0, 250) +
   # ylim(-250, 150)
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
@@ -765,8 +765,8 @@ morris_db_long %>%
   # scale_color_viridis_d()
   # facet_grid(metric ~ feedingbout) +
   ggtitle("Morris interaction effects on KDE95") +
-  xlab(expression(paste(mu, "*", " - Home range area (ha)")))+
-  ylab(expression(paste(sigma, " - Home range area (ha)"))) +
+  xlab(expression(paste(mu, "*", " - Total UD area (ha)")))+
+  ylab(expression(paste(sigma, " - Total UD area (ha)"))) +
   # xlim(0, 45) +
   # ylim(0, 45)
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)), 
@@ -1332,8 +1332,8 @@ morris_db_long %>%
   # xlim(0, 0.5) +
   # ylim(0, 0.5) +
   ggtitle("Morris first-order effects on Proportion of visited trees") +
-  xlab(expression(paste(mu,      " - proportion of trees (%)"))) +
-  ylab(expression(paste(sigma, " - proportion of trees (%)"))) +
+  xlab(expression(paste(mu, "*",      " - proportion of visited trees (%)"))) +
+  ylab(expression(paste(mu, " - proportion of visited trees (%)"))) +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)),
                       npcx = "center", npcy = "top"
   )
@@ -1379,8 +1379,8 @@ morris_db_long %>%
   # xlim(0, 0.5) +
   # ylim(0, 0.5) +
   ggtitle("Morris interaction effects on Proportion of visited trees") +
-  xlab(expression(paste(mu, "*", " - proportion of trees (%)"))) +
-  ylab(expression(paste(sigma, " - proportion of trees (%)"))) +
+  xlab(expression(paste(mu, "*", " - proportion of visited trees (%)"))) +
+  ylab(expression(paste(sigma, " - proportion of visited trees (%)"))) +
   ggpp::geom_text_npc(data = n_runs, aes(label=paste("n=", viable_runs)),
                       npcx = "center", npcy = "top"
   )
@@ -1402,8 +1402,9 @@ ggsave(paste0(outpath, "/",
 # Plots per parameter category ## ----
 
 ## Use mean effects of all areas/month:
+
 # bkp <- morris_db_long
-morris_db_long <- bkp
+# morris_db_long <- bkp
 
 morris_db_long_avg <- morris_db_long %>% 
   group_by(metric, feedingbout, param_category, parameter) %>% 
@@ -1492,7 +1493,7 @@ morris_db_long_areas %>%
   theme(legend.position="bottom") +
   # scale_color_viridis_d()
   # facet_grid(metric ~ feedingbout) +
-  ggtitle("Morris first-order effects on SDD per parameter category") +
+  ggtitle("Morris first-order effects on SDD") +
   # xlab("mustar - Home range area (ha)") +
   xlab(expression(paste(mu, "*", " - Seed dispersal distance (m)"))) +
   ylab(expression(paste(mu,      " - Seed dispersal distance (m)"))) +
@@ -1535,7 +1536,7 @@ morris_db_long_areas %>%
   # theme(strip.background = element_rect(fill=strip))
   # scale_color_viridis_d()
   # facet_grid(metric ~ feedingbout) +
-  ggtitle("Morris interaction effects on SDD by parameter category") +
+  ggtitle("Morris interaction effects on SDD") +
   # xlab("mustar - Home range area (ha)") +
   xlab(expression(paste(mu, "*", " - Seed dispersal distance (m)")))+
   ylab(expression(paste(sigma,      " - Seed dispersal distance (m)"))) +
@@ -1597,7 +1598,7 @@ morris_db_long_avg %>%
   theme(legend.position="bottom") +
   # scale_color_viridis_d()
   # facet_grid(metric ~ feedingbout) +
-  ggtitle("Morris first-order effects on SDD per parameter category") +
+  ggtitle("Morris first-order effects on SDD") +
   # xlab("mustar - Home range area (ha)") +
   xlab(expression(paste(mu, "*", " - Seed dispersal distance (m)"))) +
   ylab(expression(paste(mu,      " - Seed dispersal distance (m)"))) +
@@ -1650,11 +1651,11 @@ morris_db_long_avg %>%
   # theme(strip.background = element_rect(fill=strip))
   # scale_color_viridis_d()
   # facet_grid(metric ~ feedingbout) +
-  ggtitle("Morris interaction effects on SDD by parameter category") +
+  ggtitle("Morris interaction effects on SDD") +
   # xlab("mustar - Home range area (ha)") +
   xlab(expression(paste(mu, "*", " - Seed dispersal distance (m)")))+
   ylab(expression(paste(sigma,      " - Seed dispersal distance (m)"))) +
-  ylim(0, 100) +
+  ylim(50, 100) +
   xlim(50, 100) +
   ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
                       npcx = "center", npcy = "top"
@@ -1667,4 +1668,1174 @@ ggsave(paste0(outpath, "/",
               '01_Morris_SDD_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
 
 
+
+### Seed aggregation ----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="NN_seeds_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on Seed aggregation") +
+  ylab(expression(paste(mu,      " - Nearest neighbor distance (meters)"))) +
+  xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_NNseeds_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="NN_seeds_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on Seed aggregation") +
+  ylab(expression(paste(sigma, " - Nearest neighbor distance (meters)"))) +
+  xlab(expression(paste(mu, "*", " - Nearest neighbor distance (meters)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) +
+  xlim(5, 20) +
+  ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_NNseeds_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+
+
+
+### KDE50 ----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="KDE_50_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on KDE50") +
+  xlab(expression(paste(mu, "*", " - Core UD area (ha)")))+
+  ylab(expression(paste(mu,      " - Core UD area (ha)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE50_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="KDE_50_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on KDE50") +
+  xlab(expression(paste(mu, "*", " - Core UD area (ha)"))) +
+  ylab(expression(paste(sigma, " - Core UD area (ha)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+  # xlim(5, 20) +
+  # ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE50_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+
+
+### KDE95 ----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="KDE_95_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on KDE95") +
+  xlab(expression(paste(mu, "*", " - Total UD area (ha)")))+
+  ylab(expression(paste(mu,      " - Total UD area (ha)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE95_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="KDE_95_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on KDE95") +
+  xlab(expression(paste(mu, "*", " - Total UD area (ha)"))) +
+  ylab(expression(paste(sigma, " - Total UD area (ha)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_KDE95_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+
+## Movement patterns ------------
+
+
+### DPL ----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="DPL_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on DPL") +
+  xlab(expression(paste(mu, "*", " - DPL (m)"))) +
+  ylab(expression(paste(mu,      " - DPL (m)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_DPL_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="DPL_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on DPL") +
+  xlab(expression(paste(mu, "*", " - DPL (m)"))) +
+  ylab(expression(paste(sigma, " - DPL (m)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_DPL_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+### MR ----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="MR_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  xlab(expression(paste(mu, "*", " - MR (m/hours active)"))) +
+  ylab(expression(paste(mu, " - MR (m/hours active)"))) +
+  ggtitle("Morris first-order effects on Movement rate") +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_MR_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="MR_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  xlab(expression(paste(mu, "*", " - MR (m/hours active)"))) +
+  ylab(expression(paste(sigma, " - MR (m/hours active)"))) +
+  ggtitle("Morris interaction effects on Movement rate") +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_MR_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+
+
+### PT ----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="PT_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on Path twisting") +
+  xlab(expression(paste(mu, "*", " - PT (unitless)"))) +
+  ylab(expression(paste(mu,      " - PT (unitless)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_PT_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="PT_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on Path twisting") +
+  xlab(expression(paste(mu, "*", " - PT (unitless)"))) +
+  ylab(expression(paste(sigma, " - PT (unitless)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_PT_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+
+
+### Activity Budget ----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric == "p_feeding_mean" | metric == "p_foraging_mean" | metric == "p_resting_mean" | metric == "p_traveling_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(metric+feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on Acitivyt Budget") +
+  xlab(expression(paste(mu, "*", "- Percentage of activity budget"))) +
+  ylab(expression(paste(mu,      "- Percentage of activity budget"))) #+
+  # ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+  #                     npcx = "center", npcy = "top"
+  # ) #+
+  # xlim(0)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_Activity-budget_option2_first-order_paramcategory_average.png')
+       , height = 12.5, width = 10, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric == "p_feeding_mean" | metric == "p_foraging_mean" | metric == "p_resting_mean" | metric == "p_traveling_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(metric+feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on Acitivyt Budget") +
+  xlab(expression(paste(mu, "*", "- Percentage of activity budget"))) +
+  ylab(expression(paste(sigma, "- Percentage of activity budget"))) #+
+  # ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+  #                     npcx = "center", npcy = "top"
+  # ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_Activity-budget_option2_interaction_paramcategory_average.png')
+       , height = 12.5, width = 10, dpi = 600)
+
+
+
+
+## Survival -----
+
+### Simulation time -----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="timestep_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on activity period") +
+  xlab(expression(paste(mu, "*", " - hours active"))) +
+  ylab(expression(paste(mu,      " - hours active"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_timestep_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="timestep_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on activity period") +
+  xlab(expression(paste(mu, "*", " - hours active"))) +
+  ylab(expression(paste(sigma, " - hours active"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_timestep_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+
+
+### Stored energy -----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="energy_stored_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on stored energy") +
+  xlab(expression(paste(mu, "*", " - energy (unitless)"))) +
+  ylab(expression(paste(mu,      " - energy (unitless)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_Stored-energy_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="energy_stored_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on stored energy") +
+  xlab(expression(paste(mu, "*", " - energy (unitless)"))) +
+  ylab(expression(paste(sigma, " - energy (unitless)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_Stored-energy_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+
+
+### Revisits -----
+
+
+# First order effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="p-visited-trees_mean") %>%
+  # ggplot(aes(x=value_mustar, y=value_mu
+  ggplot(aes(x=mean_mustar, y=mean_mu
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  geom_abline(aes(slope = -1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0, intercept=0), linetype = 2) +
+  # geom_abline(aes(slope = SEM_mu, intercept = 0, linetype = 4)) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_mu), size=2.5 #, shape = 20
+             # geom_point(aes(x=value_mustar, y=value_mu), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  # facet_nested(feedingbout ~ metric+simulation_scenario
+  facet_nested(feedingbout ~ param_category
+               # facet_nested(~feedingbout
+               # facet_nested(~ feedingbout
+               # , scales = "free_x"
+               # , scales = "free_y"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # scale_color_viridis_d(option = "turbo") +
+  # Errorbars:
+  # geom_errorbar(aes(ymin=mean_mu-sd_mu, ymax=mean_mu+sd_mu)
+  geom_errorbar(aes(ymin=mean_mu-se_mu, ymax=mean_mu+se_mu)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris first-order effects on Proportion of visited trees") +
+  xlab(expression(paste(mu, "*", " - proportion of visited trees (%)"))) +
+  ylab(expression(paste(mu, " - proportion of visited trees (%)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)),
+                      npcx = "center", npcy = "top"
+  )
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_P-visited-trees_option2_first-order_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
+
+
+
+# Interaction effects (average)
+morris_db_long_avg %>% 
+  dplyr::filter(metric =="p-visited-trees_mean") %>%
+  ggplot(aes(x=mean_mustar, y=mean_sigma
+             , color = parameter
+             , shape = parameter
+  )) + # position_jitterdodge() requires fill and color
+  # All observations:
+  # geom_point(alpha = 0.8) + 
+  geom_abline(aes(slope = 1, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.5, intercept=0), linetype = 2) +
+  geom_abline(aes(slope = 0.1, intercept=0), linetype = 2) +
+  # Mean values (summarizing n=6)
+  # geom_point(aes(x=log10(mean_mustar), y=log10(mean_sigma)), shape=17, size=4
+  geom_point(aes(x=mean_mustar, y=mean_sigma), size=2.5 #, shape = 20
+             # , alpha = 0.7
+  ) +
+  facet_nested(feedingbout ~ param_category
+               # , scales = "free_x"
+               # , scales = "free"
+               # , independent = "all"
+               # ,rows = 
+  ) +
+  scale_shape_manual(values=1:nlevels(as.factor(morris_db_long$parameter))) +
+  scale_color_manual(values = rainbow(n = 14)) +
+  # Errorbars:
+  geom_errorbar(aes(ymin=mean_sigma-se_sigma, ymax=mean_sigma+se_sigma)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  # geom_errorbar(aes(xmin=mean_mustar-sd_mustar, xmax=mean_mustar+sd_mustar)
+  geom_errorbar(aes(xmin=mean_mustar-se_mustar, xmax=mean_mustar+se_mustar)
+                #, position = position_dodge(.9)
+                , lwd = 0.2
+  ) +
+  theme(legend.position="bottom") +
+  # theme(strip.background = element_rect(fill=strip))
+  # scale_color_viridis_d()
+  # facet_grid(metric ~ feedingbout) +
+  ggtitle("Morris interaction effects on Proportion of visited trees") +
+  xlab(expression(paste(mu, "*", " - proportion of visited trees (%)"))) +
+  ylab(expression(paste(sigma, " - proportion of visited trees (%)"))) +
+  ggpp::geom_text_npc(data = n_runs_avg, aes(label=paste("n=", viable_runs)), 
+                      npcx = "center", npcy = "top"
+  ) #+
+# xlim(5, 20) +
+# ylim(5, 20)
+
+# Save plot
+ggsave(paste0(outpath, "/",
+              '01_Morris_P-visited-trees_option2_interaction_paramcategory_average.png'), height = 7, width = 12, dpi = 600)
 

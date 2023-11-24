@@ -6,10 +6,10 @@ library("tidyverse")
 path <- "D:/Data/Documentos/github/BLT_IBM-Model/Model_analysis/Sensitivity-analysis/v1.2_2023MJuly/Param_bestguess/Morris/temp/"
 
 # Correctly estimates sigma:
-nl_file <- readRDS(paste0(path, "/", "v1.2_Morris_Guareí_Aug_Feedingbout_on_2023-06-08.rds"))
+nl_file <- readRDS(paste0(path, "/", "v1.2_Morris_SantaMaria_Apr_Feedingbout_on_2023-08-21.rds"))
 
 # Incorrectly estimates sigma:
-nl_file <- readRDS(paste0(path, "/", "v1.2_Morris_Taquara_Jan_Feedingbout_on_2023-06-21.rds"))
+nl_file <- readRDS(paste0(path, "/", "v1.2_Morris_Taquara_Jan_Feedingbout_off_2023-08-22.rds"))
 
 
 
@@ -18,6 +18,9 @@ nl_file <- readRDS(paste0(path, "/", "v1.2_Morris_Taquara_Jan_Feedingbout_on_202
 # https://github.com/ropensci/nlrx/blob/master/R/analyze_nl.R
 
 mo <- getsim(nl_file, "simobject")[[1]]
+nl_file@simdesign@simobject
+nl_file@simdesign@simoutput
+
 mo$X
 
 mo$ee # only available after sensitivity::te
@@ -36,7 +39,7 @@ na.discovered <- FALSE
 # Calculate sensitivity indices separately for each random seed:
 # for (i in getsim(nl, "simseeds")) {
   
-  i <- getsim(nl, "simseeds")[19] # TEST EACH SEED
+  i <- getsim(nl, "simseeds")[1] # TEST EACH SEED
   
   # Select seed runs, aggregate across steps and select only output columns:
   simoutput.i <- getsim(nl, "simoutput") %>%
