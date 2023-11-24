@@ -1,11 +1,10 @@
 # Script name: 00_prep-ga.R
 # Script purpose: identify the best set of energetic parameters that better predict 
-# tamarins movement patterns/range behavior. This script will identify the best
-# energy_level_1 and energy_level_2 parameters by using best-guessed parameter
-# and step2.R will identify all other params
+# tamarins movement patterns/range behavior of multiple groups after getting the
+# likely energy levels 1 and 2 (00_prep-ga-step1.R)
 
-# Date created: 2022-11-25d
-# Last update: 2023-11-23d
+# Date created: 2023-11-16d
+# Last update: 
 # Author: Eduardo Zanette
 
 
@@ -87,6 +86,124 @@ nl <- nl(nlversion = "6.3.0",  ## "6.3.0"
 nlogo_model_param <- report_model_parameters(nl)
 nlogo_model_param
 
+
+
+# Load data from last calibration (step 1) -----
+
+path <- here("Model_analysis", "Genetic_analysis",  "v1.2", "1-step-calibration", "temp")
+
+filesga <- list.files(path, pattern = "results_", full.names = TRUE)
+
+
+n <- 1
+for (i in filesga) {
+  # i <- filesga[9]
+  # resultsrbga <- read.csv(i, encoding = "latin1")
+  resultsrbga <- readRDS(i)
+  
+  expname <- stringr::str_extract(i, pattern = "\\w+(?=_results)")
+  expname <- stringr::str_remove(expname, pattern = "GA_")
+  
+  population <- resultsrbga[7] %>% purrr::map_df(., ~as.data.frame(.))
+  best_results <- resultsrbga[11] %>% unlist() #%>% as_tibble()
+  
+  # best5 <- tail(resultsrbga$best, 5)
+  
+  # cat(summary(resultsrbga))
+  
+  bestSolution<-resultsrbga$population[which.max(resultsrbga$evaluations), ]
+  # values[which(GA@solution[1,] == 1)]
+  
+  # best5_idx <- pmatch(best5, best_results)
+  # bestSolutions<-resultsrbga$population[best5_idx, ]
+  
+  
+  resultsrbga$evaluations
+  # resultsrbga[10]
+  resultsrbga$best
+  # resultsrbga[11]
+  
+  # best5 <- resultsrbga$best %>% unlist() %>% as.vector() #sort(., decreasing = TRUE)
+  # fitness <- resultsrbga$best %>% unlist() %>% as.vector() #sort(., decreasing = TRUE)
+  fitness <- resultsrbga$evaluations %>% unlist() %>% as.vector() #sort(., decreasing = TRUE)
+  idx <- 1:length(fitness)
+  fitness <- cbind(fitness, idx)
+  best5 <- fitness %>%
+    as_tibble() %>%
+    arrange(desc(fitness)) %>% 
+    slice_head(n=5)
+  # slice_max(fitness, n = 5, with_ties = FALSE) 
+  
+  best5
+  
+  # ### Option 1: filtering despite the number of chromosomes: ###
+  # best5_idx <- resultsrbga$best[resultsrbga$best %in% best5] ; length(best5_idx)
+  # # idx <- match(best5, resultsrbga$best)
+  # optimized_param <- population[1:length(best5_idx), ]
+  
+  
+  ### Option 2:  filtering only one chromossome per fitness value: ###
+  # best5_idx <- pmatch(best5, best_results)
+  # best5_idx <- pmatch(best5, resultsrbga$population)
+  
+  # best5_idx <- pmatch(best5$idx, row_number(population))
+  best5_idx <- best5$idx
+  
+  optimized_param <- population[best5_idx, ]
+  
+  # get parameter names:
+  params <- resultsrbga[2] %>% unlist()
+  # names(params)
+  
+  colnames(optimized_param) <- names(params) %>% stringr::str_sub(., end=-5)
+  colnames(optimized_param) <- colnames(optimized_param) %>% stringr::str_sub(., start=11)
+  colnames(optimized_param)
+  # a <- colnames(optimized_param)
+  
+  optimized_param <- cbind(optimized_param, best5)
+  len <- colnames(optimized_param) %>% length()
+  # colnames(optimized_param)[len] <- "fitness"
+  
+  optimized_param$expname <- basename(i) %>% str_match(., '(?:_[^_]+){3}') %>% as.character() %>% 
+    str_remove(., '^_{1}') %>% str_remove(., "_results")
+  # optimized_param <- optimized_param %>% t() %>% as.data.frame(row.names = TRUE)
+  # optimized_param <- cbind(optimized_param, a)
+  # optimized_param$simulation_scenario <- paste0(area_run, "_", month_run)
+  # optimized_param <- optimized_param[, c(3, 2, 1)]
+  
+  
+  if (n == 1) {
+    dfga <- optimized_param
+  }
+  
+  dfga <- dplyr::bind_rows(dfga, optimized_param)
+  n <- n + 1
+  
+}
+
+
+# pivot into longer for plotting
+dfga <- dfga %>% 
+  tidyr::pivot_longer(names_to = "parameter", values_to = "value",
+                      cols = `energy-from-fruits`:fitness)
+
+# only energy levels
+dfga_enlevels <- dfga %>% 
+  dplyr::filter(parameter == "energy_level_1" | parameter == "energy_level_2")
+
+
+# Plot best energy levels
+dfga_enlevels %>% 
+  ggplot(aes(x = parameter, y = value, color = expname)) +
+  geom_point() +
+  scale_color_viridis_d()
+
+dfga_enlevels %>% 
+  ggplot(aes(x = expname, y = value, color = expname)) +
+  geom_point() +
+  scale_color_viridis_d() +
+  facet_wrap(~parameter) +
+  xlab("")
 
 
 
@@ -506,16 +623,16 @@ i <- 1
                                 
                                 ### DO NOT SPECIFY STEPS FOR GA:
                                 
-                                # # energy
-                                # "energy-from-fruits" = list(min=1, max = 300),
-                                # 'energy-from-prey' = list(min=1, max=300),
-                                # "energy-loss-traveling" = list(min=-100, max = -5), # at least 5 times more than the minimum resting
-                                # "energy-loss-foraging" = list(min=-100, max = -1),
-                                # "energy-loss-resting" = list(min=-100, max = -1),
-
+                                # energy
+                                "energy-from-fruits" = list(min=1, max = 300),
+                                'energy-from-prey' = list(min=1, max=300),
+                                "energy-loss-traveling" = list(min=-100, max = -5), # at least 5 times more than the minimum resting
+                                "energy-loss-foraging" = list(min=-100, max = -1),
+                                "energy-loss-resting" = list(min=-100, max = -1),
+                                
                                 # trying to make energy_level_1 always lower than energy_level_2
                                 "energy_level_1" = list(min=100, max=1000, qfun="qunif"),
-                                "energy_level_2" = list(min=1001, max=2000, qfun="qunif")
+                                "energy_level_2" = list(min=1001, max=2000, qfun="qunif"),
                                 # "start-energy" = list(min=100, max=2000), -> does not exist anymore (=enlvl1)
                                 
                                 
@@ -527,16 +644,16 @@ i <- 1
                                 
                                 # "p_foraging_while_traveling" = list(min= 0, max= 1) # only when p-forage-param? = 'false'
                                 
-                                # # # memory
-                                # "step_forget" = list(min=3, max = 400, qfun="qunif"),
-                                # # # "visual" = list(min=0, max = 3),
-                                # 'prop_trees_to_reset_memory' = list(min=2, max=8, qfun="qunif"),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
-                                # # 
-                                # # # 5. Feeding bout (only when "feedingbout-on?" = 'false')
-                                # # # 'species_time' = list(min = 1, max = 10), #
-                                # # 'duration' = list(min = 1, max = 25, qfun="qunif"),      #
-                                # 'p-timesteps-to-rest' = list(min = 0.05, max = 0.9, qfun="qunif"),
-                                # 'p_disputed_trees' = list(min = 0.1, max = 1, qfun="qunif")
+                                # # memory
+                                "step_forget" = list(min=3, max = 400, qfun="qunif"),
+                                # # "visual" = list(min=0, max = 3),
+                                'prop_trees_to_reset_memory' = list(min=2, max=8, qfun="qunif"),   # Initially I didn't think this one is needed (mainly because of the first sensitivity analysis in Guareí), but this might help (as step_forget) making some regions of the home range to not be targeted
+                                # 
+                                # # 5. Feeding bout (only when "feedingbout-on?" = 'false')
+                                # # 'species_time' = list(min = 1, max = 10), #
+                                # 'duration' = list(min = 1, max = 25, qfun="qunif"),      #
+                                'p-timesteps-to-rest' = list(min = 0.05, max = 0.9, qfun="qunif"),
+                                'p_disputed_trees' = list(min = 0.1, max = 1, qfun="qunif")
                                 
                                 # 6. Seed dispersal -> not aimed at the calibration
                                 # "gut_transit_time_val" = 15,    # this won't be optimized as it is an emerging pattern
@@ -573,11 +690,11 @@ i <- 1
                                 
                                 
                                 # Guessing values to optimize energy parameters
-                                "step_forget" = 87,
-                                'prop_trees_to_reset_memory' = 3,
-                                'duration' = duration,
-                                'p-timesteps-to-rest' = 0.15,
-                                'p_disputed_trees' = 0.25,
+                                # "step_forget" = 250,
+                                # 'prop_trees_to_reset_memory' = 4,
+                                'duration' = duration
+                                # 'p-timesteps-to-rest' = 0.25,
+                                # 'p_disputed_trees' = 0.5
                                 
                                 
                                 ### memory
@@ -586,16 +703,14 @@ i <- 1
                                 # "step_forget" = 130,
                                 
                                 ### energy
-                                'energy_stored_val' = 1000,
+                                # 'start-energy' = 980,
                                 # "energy_level_1" = 80,
                                 # "energy_level_2" = 150,
-                                "energy-from-fruits" = 73,# ?
-                                "energy-from-prey" = 30,
-                                "energy-loss-traveling" = -15,
-                                "energy-loss-foraging" = -10,
-                                "energy-loss-resting" = -5
-                                
-                                
+                                # "energy-from-seeds" = 4,# ?
+                                # "energy-from-prey" = 4,
+                                # "energy-loss-traveling" = -1.6,
+                                # "energy-loss-foraging" = -2,
+                                # "energy-loss-resting" = -1.9,
                                 # "gut_transit_time_val" = 15,
                                 # "n_seeds_hatched" = 1,
                                 
