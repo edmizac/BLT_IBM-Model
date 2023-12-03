@@ -3919,7 +3919,7 @@ to calc-movement-metrics
       ;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                     ; in case KDE is in m² and not in ha
       let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                                ; in case KDE is in ha
       type "diameter of home range (d' in km) =  " print d_
-      set M_index ( 1 * ( 0.120 * (DPL_mean / 1000) / (d_ ^ 2) ) )                        ; (M = N(sv/d²) Lowen & Dunbar 1994. s value from Ruiz-Miranda et al. 2019 MLD
+      set M_index ( 1 * ( 0.09 * (DPL_mean / 1000) / (d_ ^ 2) ) )                        ; (M = N(sv/d²) Lowen & Dunbar 1994. s value from Ruiz-Miranda et al. 2019 MLD
       type "M index = " print M_index
 
     ]
