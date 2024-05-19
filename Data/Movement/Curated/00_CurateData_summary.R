@@ -25,13 +25,31 @@ theme_set(theme_bw(base_size = 16))
 # Read data
 dat.all <- read.csv(here("Data", "Movement", "Curated", "BLT_groups_data.csv")
                     , stringsAsFactors = TRUE
-                    )  #%>% 
+                    )  %>%
   # mutate(group = recode(group, "Guarei" = "Guareí")) # to match all other datasets
+  mutate(group = recode(group, "Santa Maria" = "SantaMaria")) %>%  # to match all other datasets
+  rename('month' = 'id_month') %>% 
+  mutate(
+    fragment = case_when(
+      group == "Suzano" ~ "Riparian",
+      group == "Guareí" ~ "Small",
+      group == "SantaMaria" ~ "Medium",
+      group == "Taquara" ~ "Continuous",
+      TRUE ~ "check"
+    )
+  ) %>%
+  mutate(
+    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+  ) %>% 
+  mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+                                      "Jun", "Jul", "Aug", "Sep", "Dec"))
+
   
 # str(dat.all)
 # dat.all$id %>% levels()
+dat.all$fragment %>% unique()
 dat.all$id_day_all %>% levels()
-dat.all$id_month %>% levels()
+dat.all$month %>% levels()
 
 dat.all$behavior %>% unique()
 
@@ -46,7 +64,7 @@ rest_data <- dat.all %>%
     time = hms::as_hms(datetime)
   ) %>% 
   # group_by(group, id_month, date) %>% 
-  group_by(group, id_month) %>% 
+  group_by(group, month) %>% 
   mutate(
     count = n() # timesteps
   ) %>% 
@@ -70,7 +88,7 @@ rest_data %>%
   geom_rug(aes(x = time, color = behavior), linewidth = 0.4,
            length = unit(0.05, "npc")
   ) +
-  facet_wrap(~group+id_month) +
+  facet_wrap(~fragment+month) +
   ggtitle("Probability of resting or idle") +
   scale_x_time(breaks = scales::breaks_width("2 hours"), limits = lims) +
   theme(
@@ -108,14 +126,15 @@ rest_data %>%
   geom_rug(aes(x = time, color = behavior), linewidth = 0.4,
            length = unit(0.05, "npc")
   ) +
-  facet_wrap(~group+id_month) +
+  facet_wrap(~fragment+month) +
   ggtitle("Probability of resting (resting + idle)") +
   scale_x_time(breaks = scales::breaks_width("2 hours"), limits = lims) +
   theme(
     axis.text.x = element_text(
       # size = 12,
       angle = 90
-    )
+      ),
+    legend.position = "none"
   ) +
   # scale_color_manual(values = c("black")) + #, "#D35400")) +
   scale_color_manual(values = c("#2E86C1")) + #, "#D35400")) +
@@ -130,7 +149,7 @@ rest_data %>%
 
 # Explore how many times in sequence tamarins rest in sequence
 rest_seq <- dat.all %>% 
-  group_by(group, id_month, id_day_all) %>% 
+  group_by(fragment, month, id_day_all) %>% 
   mutate(
     behavior = case_when(behavior == "Inactive" ~ "Resting",
                          TRUE ~ behavior)
@@ -151,33 +170,33 @@ rest_seq <- dat.all %>%
 
 # get only max values of sequential resting:
 rest_seq <- rest_seq %>% 
-  group_by(group, id_month, id_day_all) %>% 
+  group_by(fragment, month, id_day_all) %>% 
   mutate(
     max_count = max(resting_sequential)
   )
 
-# Relevel all fragment names to size categories
-rest_seq <- rest_seq %>% 
-  mutate(id_month = forcats::fct_relevel(id_month, "Jan", "Mar", "Apr", "May", 
-                                         "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
-  mutate(
-    fragment = case_when(
-      group == "Suzano" ~ "Riparian",
-      group == "Guareí" ~ "Small",
-      group == "Santa Maria" ~ "Medium",
-      group == "Taquara" ~ "Continuous",
-      TRUE ~ "check"
-    )
-  ) %>% 
-  mutate(
-    fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
-  )
+# # Relevel all fragment names to size categories
+# rest_seq <- rest_seq %>% 
+#   mutate(month = forcats::fct_relevel(month, "Jan", "Mar", "Apr", "May", 
+#                                          "Jun", "Jul", "Aug", "Sep", "Dec")) %>% 
+#   mutate(
+#     fragment = case_when(
+#       fragment == "Suzano" ~ "Riparian",
+#       fragment == "Guareí" ~ "Small",
+#       fragment == "Santa Maria" ~ "Medium",
+#       fragment == "Taquara" ~ "Continuous",
+#       TRUE ~ "check"
+#     )
+#   ) %>% 
+#   mutate(
+#     fragment = forcats::fct_relevel(fragment, "Riparian", "Small", "Medium", "Continuous")
+#   )
 
 rest_seq %>% 
   ggplot(
     aes(x = time, y = resting_sequential)
   ) +
-  geom_point() +
+  geom_point(size = 0.8) +
   # geom_density(aes(x = time, color = behavior), 
                # adjust = 5,
                # linewidth = 0.7) +
@@ -187,7 +206,7 @@ rest_seq %>%
   # geom_rug(aes(x = time, color = behavior), linewidth = 0.4,
   #          length = unit(0.05, "npc")
   # ) +
-  facet_wrap(~group+id_month) +
+  facet_wrap(~fragment+month) +
   # ggtitle("Probability of resting (resting + idle)") +
   # scale_x_time(breaks = scales::breaks_width("2 hours"), limits = lims) +
   theme(
@@ -209,14 +228,14 @@ rest_seq %>%
 
 
 rest_seq %>% 
-  dplyr::select(fragment, id_month, resting_sequential) %>% 
+  dplyr::select(fragment, month, resting_sequential) %>% 
   distinct() %>%
   ggplot(
-    aes(x = fragment, y = resting_sequential, group = id_month, color = id_month)
+    aes(x = fragment, y = resting_sequential, group = month, color = month)
   ) +
   geom_boxplot() +
   geom_point(position = position_jitterdodge(jitter.width = 0.7)) +
-  # facet_wrap(~group) +
+  # facet_wrap(~fragment) +
   ggtitle("Sequential steps resting (resting + idle)") +
   # scale_x_time(breaks = scales::breaks_width("2 hours"), limits = lims) +
   theme(
@@ -239,24 +258,24 @@ rest_seq %>%
 
 # How many times tamarins rest per day per timeframe?
 rest_seq <- rest_seq %>% 
-  group_by(group, id_month) %>% 
+  group_by(fragment, month) %>% 
   mutate(
     n_days = n_distinct(id_day_all)
   ) %>% 
-  group_by(group, id_month, id_day_all) %>% 
+  group_by(fragment, month, id_day_all) %>% 
   mutate(
     n_resting_instances = n() / n_days
   )
 
 rest_seq %>% 
-  dplyr::select(group, id_month, n_resting_instances) %>% 
+  dplyr::select(fragment, month, n_resting_instances) %>% 
   distinct() %>%
   ggplot(
-    aes(x = group, y = n_resting_instances, group = id_month, color = id_month)
+    aes(x = fragment, y = n_resting_instances, group = month, color = month)
   ) +
   geom_boxplot() +
   geom_point(position = position_jitterdodge(jitter.width = 0.7)) +
-  # facet_wrap(~group) +
+  # facet_wrap(~fragment) +
   ggtitle("Instances where tamarins rested (resting + idle) by day") +
   # scale_x_time(breaks = scales::breaks_width("2 hours"), limits = lims) +
   theme(
@@ -280,7 +299,7 @@ rest_seq %>%
 
 # Summarise important variables
 dat.summary <- dat.all %>% 
-  group_by(group, id_month) %>%
+  group_by(fragment, month) %>%
   dplyr::summarise(
     timesteps = n(),
     ndays = n_distinct(id_day_all),
@@ -292,20 +311,20 @@ dat.summary <- dat.all %>%
 
 # Attach resting+idle counts
 rest_data_summary <- rest_data %>% 
-  dplyr::select(group, id_month, count_rest) %>% 
+  dplyr::select(fragment, month, count_rest) %>% 
   distinct()
 
 dat.summary <- dat.summary %>% 
-  dplyr::left_join(rest_data_summary, by = c("group", "id_month")) %>% 
+  dplyr::left_join(rest_data_summary, by = c("fragment", "month")) %>% 
   mutate(prob_rest = count_rest/timesteps)
 
 # Attach resting+idle sequential counts
 rest_seq_summary <- rest_seq %>% 
-  group_by(group, id_month) %>% 
+  group_by(fragment, month) %>% 
   summarise(duration = max(resting_sequential))
 
 dat.summary <- dat.summary %>% 
-  dplyr::left_join(rest_seq_summary, by = c("group", "id_month"))
+  dplyr::left_join(rest_seq_summary, by = c("fragment", "month"))
 
 
 
@@ -331,7 +350,7 @@ target <- dat.summary.siminputrow[ , 1:2]
 
 dat.all.siminputrow <- dat.all %>%
   inner_join(target) %>% # FILTER IS WRONG. YOU HAVE TO USE INNER_JOIN() # https://stackoverflow.com/questions/67097301/dplyr-filter-not-filtering-entire-dataset
-  # dplyr::filter_if(group %in% dat.summary.siminputrow$group, id_month %in% dat.summary.siminputrow$id_month)
+  # dplyr::filter_if(group %in% dat.summary.siminputrow$group, month %in% dat.summary.siminputrow$month)
   droplevels()
   
 # dat.all$group %in% dat.summary.siminputrow$group
