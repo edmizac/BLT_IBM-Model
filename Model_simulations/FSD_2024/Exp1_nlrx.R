@@ -68,22 +68,25 @@ if(Sys.getenv("JAVA_HOME") == "") {
 
 # Step 1: Create nl object
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
-  path <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/"
-  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  path <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/"
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
   # modelpath <- here("Model_simulations", "Model_v1.1.nlogo")
   modelpath <- "D:/Data/Documentos/github/BLT_IBM-Model/Model_simulations/BLT_model_v1.2.nlogo"
-  outpath <- paste0(path, "Experiment1/")
+  outpath <- paste0(path, "Exp1/")
   user_scp = "\"Eduardo\"" # scaped
 }
 if(Sys.info()[["nodename"]] == "PC9") { # LEEC
-  path <- "D:/Eduardo_LaP/Model_Documentation/build_forest/"
-  netlogopath <- file.path("C:/Program Files/NetLogo 6.2.2")
+  path <- "D:/Eduardo_LaP/Model_Documentation/build_forest_2024/"
+  netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
   # modelpath <- here("Model_simulations", "Model_v1.1.nlogo")
-  modelpath <-  "D:/Eduardo_LaP/Model_simulations/BLT_model_v1.1.nlogo"
-  outpath <- paste0(path, "Experiment1/")
+  modelpath <-  "D:/Eduardo_LaP/Model_simulations/BLT_model_v1.2.nlogo"
+  outpath <- paste0(path, "Exp1/")
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
   user_scp = "\"LEEC\"" # scaped
 }
+
+
+
 
 
 nl <- nl(nlversion = "6.3.0",
@@ -98,7 +101,7 @@ nlogo_model_param
 #### Simple design experiment ( = one go button, no varibles) ####
 
 ## Step 2: Attach an experiment
-expname <- "Exp1_v1.1"
+expname <- "Exp1_v1.2"
 
 set.seed(1234)
 
@@ -108,45 +111,70 @@ param_table <- read.csv("Data/Parameter_table.csv",
                         sep = ",", dec = ".", stringsAsFactors = TRUE) %>% 
   dplyr::mutate(group = recode(group, "Guarei" = "Guareí")) # only to match those of the NetLogo model
 
-pathga <- "D:/Data/Documentos/github/BLT_IBM-Model/Model_analysis/Genetic_analysis/temp"
+### Genetic analysis data for parameterisation ----
+# pathga <- "D:/Data/Documentos/github/BLT_IBM-Model/Model_analysis/Genetic_analysis/v1.2/1-step-calibration/temp/"
+# 
+# filesga <- list.files(pathga, pattern = "feedingbouton*.csv")
+# filesga <- paste0(pathga, "/", filesga)
+# 
+# dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
+# for (i in filesga) {
+#   # i <- filesga[2]
+#   filei <- read.csv(i)
+#   dfga <- dplyr::bind_rows(dfga, filei)
+# } 
+# 
+# # dfga <- read.csv("D:/Eduardo_LaP/Model_analysis/Genetic_analysis/temp/")
+# 
+# dfga <- dfga %>% dplyr::filter(expname == "SantaMaria_Mar") # We will use Santa Maria values
+# 
+# ### memory
+# duration <- dfga %>% dplyr::filter(parameter=="duration") %>% pull("value")
+# # visual = 2,
+# step_forget <- dfga %>% dplyr::filter(parameter=="step_forget") %>% pull("value")
+# 
+# ### energy
+# start_energy <- dfga %>% dplyr::filter(parameter=="start-energy") %>% pull("value")
+# energy_level_1 <- dfga %>% dplyr::filter(parameter=="energy_level_1") %>% pull("value")
+# energy_level_2 <- dfga %>% dplyr::filter(parameter=="energy_level_2") %>% pull("value")
+# energy_from_fruits <- dfga %>% dplyr::filter(parameter=="energy-from-fruits") %>% pull("value")
+# energy_from_prey <- dfga %>% dplyr::filter(parameter=="energy-from-prey") %>% pull("value")
+# energy_loss_traveling <- dfga %>% dplyr::filter(parameter=="energy-loss-traveling") %>% pull("value")
+# energy_loss_foraging <- dfga %>% dplyr::filter(parameter=="energy-loss-foraging") %>% pull("value")
+# energy_loss_resting <- dfga %>% dplyr::filter(parameter=="energy-loss-resting") %>% pull("value")
+# 
+# 
+# ### define how much each run should take based on empirical activity periods
+# no_days_run <- 10
+# simultime_run <- param_table %>%  dplyr::select(mean_timesteps) %>% pull() %>% mean()
+# simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
 
-filesga <- list.files(pathga, pattern = "feedingbouton.csv")
-filesga <- paste0(pathga, "/", filesga)
 
-dfga <- data.frame("expname" = character(), "parameter" = character(), "value" = double())
-for (i in filesga) {
-  # i <- filesga[2]
-  filei <- read.csv(i)
-  dfga <- dplyr::bind_rows(dfga, filei)
-} 
-
-# dfga <- read.csv("D:/Eduardo_LaP/Model_analysis/Genetic_analysis/temp/")
-
-dfga <- dfga %>% dplyr::filter(expname == "SantaMaria_Mar") # We will use Santa Maria values
 
 ### memory
-duration <- dfga %>% dplyr::filter(parameter=="duration") %>% pull("value")
-# visual = 2,
-step_forget <- dfga %>% dplyr::filter(parameter=="step_forget") %>% pull("value")
+duration <- 0
+step_forget <- 0
 
 ### energy
-start_energy <- dfga %>% dplyr::filter(parameter=="start-energy") %>% pull("value")
-energy_level_1 <- dfga %>% dplyr::filter(parameter=="energy_level_1") %>% pull("value")
-energy_level_2 <- dfga %>% dplyr::filter(parameter=="energy_level_2") %>% pull("value")
-energy_from_fruits <- dfga %>% dplyr::filter(parameter=="energy-from-fruits") %>% pull("value")
-energy_from_prey <- dfga %>% dplyr::filter(parameter=="energy-from-prey") %>% pull("value")
-energy_loss_traveling <- dfga %>% dplyr::filter(parameter=="energy-loss-traveling") %>% pull("value")
-energy_loss_foraging <- dfga %>% dplyr::filter(parameter=="energy-loss-foraging") %>% pull("value")
-energy_loss_resting <- dfga %>% dplyr::filter(parameter=="energy-loss-resting") %>% pull("value")
+energy_from_fruits <- 73
+energy_from_prey <- 30 #60								
+energy_loss_traveling <- -15								
+energy_loss_foraging <- -10
+energy_loss_resting <- -5
+energy_level_1 <- 900
+energy_level_2 <- 1150
+energy_stored_val <- 1000
+step_forget <- 400
+p_memory <- 3
 
 
 ### define how much each run should take based on empirical activity periods
-no_days_run <- 10
+no_days_run <- 30
 simultime_run <- param_table %>%  dplyr::select(mean_timesteps) %>% pull() %>% mean()
 simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
 
 
-### choose which parameterizations should be on
+### choose which parameterizations should be on ----
 step_model_param <- "true" # velocity parameters are setted inside the model. up to 100 ha = Guareí data, above 200 and up to 2000 = Santa Maria data, after = Taquara data
 gtt_param <- "true" # gtt parameters are setted inside the model. Is is a rough estimate of gtt of all groups (although Suzano seems to have significantly smaller SDDs)
 p_forage_param <- "false" # we want to take some variation out of the runs, so we are using a specific value
@@ -155,7 +183,7 @@ feedingbout <- "true" # we are running general trees, and these values are speci
 
 
 ## List files patch generated csv files ------
-pathfiles <- paste0(path, "Experiment1/batch_all/") # Exp 1 and 2 turned into Exp 1 and Exp 3 turned into Exp 2
+pathfiles <- paste0(path, "Exp1/batch_all/") # Exp 1 and 2 turned into Exp 1 and Exp 3 turned into Exp 2
 
 # list generated landscapes (forests)
 files_forests <- list.files(pathfiles, pattern = ".csv")
@@ -178,6 +206,7 @@ length(files_forests) + length(files_done) # it should be = 2674
 
 # paste the file extensions again
 files_forests <- paste0(files_forests, ".csv")
+# files_forests <- paste0(files_forests, ".rds")
 
 
 ### escape strings to nlrx experiment ----
@@ -191,9 +220,10 @@ pathfiles <- paste0('"', pathfiles, '"'); noquote(pathfiles) # scaped
 
 
 ### Define expname ---- 
-expname = paste0("Exp1_2023-01-16d")
+expname = paste0("Exp1_2024-07-09d")
 
 # db <- readRDS(paste0(path, "exampleRDS.rds"))
+db <- readRDS(paste0(path, "Exp1/", "size300shapefact1253.17_R0.99_p0.896_NN104.56random.rds"))
 # db <- getsim(nl, "simoutput") %>% as.data.frame()
 # db <- db %>% unnest_simoutput() %>% as.data.frame()
 # db <- db[-1, ] # drop first line because we don't want this data, we just want the collumns
@@ -204,7 +234,7 @@ expname = paste0("Exp1_2023-01-16d")
 # loop with subset:
 # files_forests <- files_forests[1067:1069]
 
-# for (i in files_forests) {
+for (i in files_forests) {
 
 # Test loop:
 # i <- files_forests[sample(length(files_forests), 1)]
@@ -220,10 +250,13 @@ nl@experiment <- experiment(expname = expname,
                             tickmetrics = "false", # "true" for every tick, "false" for metrics only in the end of the simulation
                             idsetup = "setup",
                             idgo = "go",
-                            runtime = 2000, #(if = 0 or NA_integer_, define stopcond_)
+                            runtime = 5000, # At least 30 days * 115 steps   #(if = 0 or NA_integer_, define stopcond_)
                             stopcond= "day > no_days", # reporter that returns TRUE
                             evalticks = NA_integer_, # NA_integer_ = measures each tick. Only applied if tickmetrics = TRUE
-                            idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
+                            
+                            # *****Check if it is needed:
+                            # idfinal = "r:stop", # for making r NetLogo extension to work: https://cran.r-project.org/web/packages/nlrx/vignettes/furthernotes.html
+                            
                             # reporters:
                             metrics = c(
                               "survived?", # if tamarins are alive
@@ -365,6 +398,7 @@ nl@experiment <- experiment(expname = expname,
                             
                             constants = list(
                               
+                              "patch-type" = "\"generated\"",
                               "path" = pathfiles,
                               "generated_patch" = i,
                               
@@ -400,7 +434,6 @@ nl@experiment <- experiment(expname = expname,
                               "step_forget" = step_forget,
                               
                               ### energy
-                              'start-energy' = start_energy,
                               "energy_level_1" = energy_level_1,
                               "energy_level_2" = energy_level_2,
                               "energy-from-fruits" = energy_from_fruits,# ?
@@ -522,7 +555,7 @@ results %>% glimpse()
 # i <- i + 1
 
 
-# }
+}
 
 
 
