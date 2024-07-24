@@ -13,30 +13,17 @@
 
 # As we know a lot of variation in movement from tamarins in nature, we use parameters
 # according to forest fragment size: small fragments = Guareí group movement patterns, 
-# medium fragments (up to 800 ha) = San Maria group and >800 ha = Taquara/PEMD
+# medium fragments (>150 to 1000 ha) = San Maria group and >1000 ha = Taquara/PEMD
 # group movement patterns
 
 # For the rest of parameters, we use best guess (= Chapter 2 Model validation) #### CHECK VALUES ******
 
-# - p_foraging_while_traveling -> CHECK
-# 'duration' = 3,
-# "step_forget" = 130,
-# 'start-energy' = 980,
-# "energy_level_1" = 80,
-# "energy_level_2" = 150,
-# "energy-from-fruits" = 4,#c ?
-# "energy-from-prey" = 4,
-# "energy-loss-traveling" = -1.6,
-# "energy-loss-foraging" = -2,
-# "energy-loss-resting" = -1.9,
-
 # Here we also control some parameters we have been parameterizing so far for model development:
 # - simulation time  -> mean of empirical values
-# - day time -> still the same as for Guareí
 
 # Finally, we analyze (to decide to filter out) tamarin runs that ended up with tamarins dying 
 # based on the global survived? -> THIS RESULTS IN DIFFERENT NUMBER OF RUNS PER EXPERIMENT.
-# A POSSIBLE SOLUTION IS RAREFACTION/VIRTUAL ECOLOGIST APPROACH
+# A POSSIBLE SOLUTION IS RAREFACTION/VIRTUAL ECOLOGIST APPROACH (discussed in Manuscript of Chapter 2)
 
 
 ## Notes --------------------------- 
@@ -70,19 +57,17 @@ if(Sys.getenv("JAVA_HOME") == "") {
 if(Sys.info()[["nodename"]] == "DESKTOP-R12V3D6") {
   path <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/"
   netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
-  # modelpath <- here("Model_simulations", "Model_v1.1.nlogo")
   modelpath <- "D:/Data/Documentos/github/BLT_IBM-Model/Model_simulations/BLT_model_v1.2.nlogo"
-  outpath <- paste0(path, "Exp1/")
+  outpath <- paste0(path, "Exp1/results/")
   user_scp = "\"Eduardo\"" # scaped
 }
-if(Sys.info()[["nodename"]] == "PC9") { # LEEC
-  path <- "D:/Eduardo_LaP/Model_Documentation/build_forest_2024/"
+if(Sys.info()[["nodename"]] == "DESKTOP-1SKTQUA") { # AORUS LaP
+  path <- "C:/Users/User/Documents/Eduardo_LaP/Model_Documentation/build_forest_2024/"
   netlogopath <- file.path("C:/Program Files/NetLogo 6.3.0")
-  # modelpath <- here("Model_simulations", "Model_v1.1.nlogo")
-  modelpath <-  "D:/Eduardo_LaP/Model_simulations/BLT_model_v1.2.nlogo"
-  outpath <- paste0(path, "Exp1/")
-  Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jre1.8.0_351")
-  user_scp = "\"LEEC\"" # scaped
+  modelpath <- "C:/Users/User/Documents/Eduardo_LaP/Model_simulations/BLT_model_v1.2.nlogo"
+  outpath <- paste0(path, "Exp1/results/")
+  Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk-11")
+  user_scp = "\"LaP\"" # scaped
 }
 
 
@@ -101,7 +86,7 @@ nlogo_model_param
 #### Simple design experiment ( = one go button, no varibles) ####
 
 ## Step 2: Attach an experiment
-expname <- "Exp1_v1.2"
+expname <- "Exp1_v1.2_FSD_"
 
 set.seed(1234)
 
@@ -151,25 +136,30 @@ param_table <- read.csv("Data/Parameter_table.csv",
 
 
 
-### memory
-duration <- 0
-step_forget <- 0
+### Best guessed params (=Chapter 2) -----
 
 ### energy
+energy_level_1 <- 900
+energy_level_2 <- 1150
+energy_stored_val <- 1000
 energy_from_fruits <- 73
 energy_from_prey <- 30 #60								
 energy_loss_traveling <- -15								
 energy_loss_foraging <- -10
 energy_loss_resting <- -5
-energy_level_1 <- 900
-energy_level_2 <- 1150
-energy_stored_val <- 1000
-step_forget <- 400
+
+### memory
+step_forget <- 87
 p_memory <- 3
+
+### others
+p_disputed_trees <- 0.25
+p_timesteps_to_rest <- 0.15
+species_time <- 2
 
 
 ### define how much each run should take based on empirical activity periods
-no_days_run <- 30
+no_days_run <- 10 # 30 is too much for validating future studies but not too much for the seed dispersal process
 simultime_run <- param_table %>%  dplyr::select(mean_timesteps) %>% pull() %>% mean()
 simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
 
@@ -224,7 +214,7 @@ expname = paste0("Exp1_2024-07-09d")
 
 # db <- readRDS(paste0(path, "exampleRDS.rds"))
 db <- readRDS(paste0(path, "Exp1/", "size300shapefact1253.17_R0.99_p0.896_NN104.56random.rds"))
-# db <- getsim(nl, "simoutput") %>% as.data.frame()
+db <- getsim(nl, "simoutput") %>% as.data.frame()
 # db <- db %>% unnest_simoutput() %>% as.data.frame()
 # db <- db[-1, ] # drop first line because we don't want this data, we just want the collumns
 
