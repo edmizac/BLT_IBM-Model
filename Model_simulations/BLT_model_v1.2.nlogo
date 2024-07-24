@@ -185,6 +185,7 @@ globals [
   ; THESE ARE MONKEY VARIABLES THAT WE TAKE AS GLOBAL TO AVOID NLRX ERRORS (OR DEAD AGENTS OUTPUTING EMPTY VALUES)
   g_SDD                   ; mean seed dispersal distance for all events (same and next day)
   g_SDD_sd                ; sd of SDD for all events (same and next day)
+  g_SDD_95                ; 95th quantile SDD for all events (same and next day)
   g_SDD_sameday
   g_SDD_nextday
   g_SDD_sd_sameday
@@ -833,6 +834,28 @@ to setup-monkeys
       set tree_current start
     ]
 
+    if patch-type = "generated" [
+      let start one-of sleeping-trees
+
+      ask monkeys [
+
+        setxy [xcor] of start [ycor] of start
+        set tree_current start
+
+        ; for selecting ld_trees not randomly, but those that are distant from the home range center (this is a territoriality factor/influence)
+        ; let dist-all-trees
+        set position-all-trees-x-list ( [xcor] of feeding-trees )
+        set position-all-trees-y-list ( [ycor] of feeding-trees )
+
+        ; print position-all-trees-y-list
+
+        set homerange-center patch (mean position-all-trees-x-list) (mean position-all-trees-y-list)
+        ask homerange-center [ set pcolor red ask patches in-radius 3 [ set pcolor red ]  ]
+        ask feeding-trees [ set dist-to-homerange-center distance [ homerange-center ] of myself ]
+
+      ]
+    ]
+
     if patch-type = "empirical" [
       set x_UTM (item 0 gis:envelope-of self)
       set y_UTM (item 2 gis:envelope-of self)
@@ -905,8 +928,8 @@ to setup-monkeys
   if step-model-param? = TRUE [
 
     if patch-type = "generated" [
-      ; ROUGH ESTIMATES OF VELOCITIES
 
+      ; ROUGH ESTIMATES OF VELOCITIES
 
       if patch-size-ha <= 200 [  ; ( = Guareí )
         set step_len_travel ( 24 / patch-scale ) ; ( BLT mean velocity in meters / patch resolution)
@@ -1380,7 +1403,7 @@ to move-monkeys
 
     if timestep >= (0.95 * simulation-time) [
       ;if timestep = simulation-time [
-      ;set tree_target -1
+      ;set s
       ;set tree_target_dist 0
       set going-sleeping? TRUE
       ;] ; force monkey select a sleeping site
@@ -1419,6 +1442,7 @@ to move-monkeys
         if ld_tree_target = tree_target [
           if ld_tree_target != -1 [ set tree_target_mem2 ld_tree_target ]            ; to avoid losing the ld_tree_target on its way
           set tree_target -1 ; remove tree_target when coming from "long_distance"
+;          print "debug tree target 1 ****"
           set ld_tree_target -1  ; if this is not here it will make the tamarin lose the target very close to the tree when coming from long distance bc of the condition ld_tree_target = tree_target (Ronald debugged on the 14th of July 2022)
         ]
 ;        print " **** BEING CALLED FROM FRUGIVORY 1 ***** "
@@ -1694,6 +1718,7 @@ to-report on-feeding-tree?
 
         ask tree_target [ set visitations visitations + 1 ]
         set tree_target -1
+;        print "debug tree target 2 ****"
         ifelse feedingbout-on?
         [ set species_time [ species_time ] of tree_current ]
 ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
@@ -1748,6 +1773,7 @@ to-report on-feeding-tree?
         ask ld_tree_target [ set visitations visitations + 1 ]
 
         set tree_target -1
+;        print "debug tree target 3 ****"
         if ld_tree_target != -1 [ set tree_target_mem2 ld_tree_target ]            ; to avoid losing the ld_tree_target on its way
         set ld_tree_target -1
 
@@ -2011,6 +2037,7 @@ to to-feeding-tree
 
       ask tree_target [ set visitations visitations + 1 ]
       set tree_target -1
+;      print "debug tree target 4 ****"
       ifelse feedingbout-on?
       [ set species_time [ species_time ] of tree_current ] ; Dec 2022: this procedure is wrong because species_time is a global
       ;        [ set species_time duration ] ;; duration = 2 is the most common value over all species, but as there's a random variation on the 'random (2 * species_time), I'll leave it as the same as duration
@@ -2801,6 +2828,7 @@ to sleeping
 
     if sleeping-trees-scenario = "empirical" [ search-sleeping-defined ]  ; when using field trees ; WITH THIS IT DOES NOT           ;; EMPIRICAL
 ;    if sleeping-trees-scenario = "simulated" [ search-sleeping-tree ]     ; when simulating trees  ; ONLY WORKS WITH THIS PROCEDURE ;; SIMULATED (procedure droped on July 20th 2022)
+    if patch-type = "generated" [search-sleeping-defined]
   ][
 
 ;    avoid-patch-set
@@ -2829,6 +2857,7 @@ to sleeping
 
       set tree_current tree_target
       set tree_target -1
+;      print "debug tree target 5 ****"
 
       print "*** I am sleeping ****"
       set action "sleeping"
@@ -3172,9 +3201,9 @@ to start-r-extension
     sr:run "suppressMessages(library(adehabitatHR, quietly = T))" ;; this package the new package ('adehabitat' is removed from CRAN sind 2018)
                                                 ;  sr:run "library(udunits2)"
                                                 ;  sr:run "library(units)"
-    sr:run "suppressMessages(library('tidyverse', quietly = T))"
-    ;    sr:run "library('dplyr', quietly = T)"
-    ;    sr:run "library('tidyr', quietly = T)"
+;    sr:run "suppressMessages(library('tidyverse', quietly = T))"
+;        sr:run "library('dplyr', quietly = T)"
+;        sr:run "library('tidyr', quietly = T)"
     sr:run "suppressMessages(library('amt', quietly = T))"
     sr:run "suppressMessages(library('sf'))"
 ;    sr:run "suppressMessages(library('circular'))"
@@ -3187,7 +3216,7 @@ to start-r-extension
     ;; create an empty data.frame"
     sr:run "monkeys_df <- data.frame()"
     ;sr:run "print(monkeys_df)"
-    ;    print "==== SR debugging 0 ==== "
+        print "==== SR debugging 0 ==== "
 
     if count monkeys = 1 [
       ;; merge the Name, X- and Y-lists of all animals to one big data.frame
@@ -3199,7 +3228,7 @@ to start-r-extension
 ;        let day_list_sr [day_list] of self    ;print day_list_sr  print length day_list_sr
 ;        let Name_sr [Name] of self            ;print Name_sr      print length Name_sr
 
-        ;        print "==== SR debugging 2 ==== "
+                print "==== SR debugging 2 ==== "
 
         ;      stop
 
@@ -3216,14 +3245,14 @@ to start-r-extension
 
         ;      stop
 
-;        print "==== SR debugging 3 ==== "
+        print "==== SR debugging 3 ==== "
 
         (sr:set-agent-data-frame "tamarins" monkeys "who" "x_coords" "y_coords" "day_list")
 ;        sr:run "print(typeof(tamarins))"
 
         ;      stop
 
-;        print "==== SR debugging 4 ==== "
+        print "==== SR debugging 4 ==== "
 
         ;      sr:set "tamarins" "data.frame(tamarins, Name = 'Name')"
         ;        sr:run "print(head(tamarins))"
@@ -3242,7 +3271,7 @@ to start-r-extension
         ;        "id <- turtles$Name"
         ;        )
 
-        ;        print "==== SR debugging 5 ==== "
+                print "==== SR debugging 5 ==== "
 
         ;    ;;; calculate homerange (mcp method, needs a SpatialPointDataFrame)
         ;      sr:run "homerange <- mcp(xy, id)"
@@ -3260,7 +3289,7 @@ to start-r-extension
         ;    show r:get "colnames(db_)"
         ;    show r:get "db_"
 
-        ;        print "==== SR debugging 6 ==== "
+                print "==== SR debugging 6 ==== "
 
 
       ]
@@ -3700,7 +3729,7 @@ to calc-movement-metrics
     ; you can print all the movement matric variables by day:
 ;    print "movement metrics by day ---- " print sr:runresult "colnames(db_metr)" print sr:runresult "db_metr"
 
-    sr:run "db_metr <- db_metr %>% na.omit() %>% summarize_all(  list(mean = ~ mean(., na.rm = TRUE)  ) ) "
+    sr:run "db_metr <- db_metr %>% na.omit() %>% dplyr::summarize_all(  list(mean = ~ mean(., na.rm = TRUE)  ) ) "
 
 ;    print "==== SR debugging 11 ==== "
 
@@ -4447,6 +4476,10 @@ to SDDcalc
   set g_SDD mean [SDD] of seeds
   set g_SDD_sd standard-deviation [SDD] of seeds
 
+  ; quantify quantile in R (because NetLogo does not have it built-in)
+  sr:set "SDDdata" [SDD] of seeds
+  set g_SDD_95 sr:runresult "quantile(SDDdata, 0.95) %>% as.numeric()"
+
   set g_SDD_sameday mean [SDD] of seeds with [disp-day = "same day"]
   ifelse ( any? seeds with [disp-day = "next day"] ) [
     set g_SDD_nextday mean [SDD] of seeds with [disp-day = "next day"]
@@ -4468,6 +4501,7 @@ to SDDcalc
 
   type "g_SDD = " print g_SDD
   type "g_SDD_sd = " print g_SDD_sd
+  type "g_SDD_95 = " print g_SDD_95
   type "g_SDD_sameday = " print g_SDD_sameday
   type "g_SDD_sd_sameday = " print g_SDD_sd_sameday
   type "g_SDD_nextday = " print g_SDD_nextday
@@ -4477,6 +4511,7 @@ end
 
 
 to store-as-globals
+
   set g_energy_stored energy_stored
 
   set g_KDE_95 KDE_95_cropped
@@ -4508,8 +4543,6 @@ to store-as-globals
 
   set g_DI_index DI_index
   set g_M_index M_index
-
-
 
 end
 
@@ -4675,11 +4708,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-526
-403
+491
+416
 -1
 -1
-2.0
+3.0
 1
 10
 1
@@ -4689,10 +4722,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--129
-129
--93
-93
+-80
+80
+-64
+64
 0
 0
 1
@@ -4959,7 +4992,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-1
+8
 
 CHOOSER
 1017
@@ -5205,7 +5238,7 @@ SWITCH
 240
 print-step?
 print-step?
-1
+0
 1
 -1000
 
@@ -5358,7 +5391,7 @@ CHOOSER
 USER
 USER
 "Ronald" "Eduardo" "LEEC" "LASi" "PC02" "AORUS-2" "Others"
-0
+1
 
 SWITCH
 3
@@ -5380,7 +5413,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.21
+0.7
 0.01
 1
 NIL
@@ -5630,7 +5663,7 @@ prop_trees_to_reset_memory
 prop_trees_to_reset_memory
 2
 8
-8.0
+4.0
 1
 1
 NIL
@@ -5730,7 +5763,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-2
+0
 
 BUTTON
 245
@@ -5851,7 +5884,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-43.02
+77.22
 5
 1
 NIL
@@ -5866,7 +5899,7 @@ step_len_forage
 step_len_forage
 0
 20
-3.089
+1.387
 0.1
 1
 NIL
@@ -5881,7 +5914,7 @@ step_len_travel
 step_len_travel
 0
 20
-3.931
+2.5300000000000002
 0.1
 1
 NIL
@@ -5896,7 +5929,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-17.85
+59.53
 1
 1
 NIL
@@ -6115,10 +6148,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-733
-5
-841
-38
+160
+399
+268
+432
 mov variables
 type \"DPL_mean = \" ask monkeys [ show DPL ]\ntype \"DPL_sd = \" ask monkeys [ show DPL_sd ]\n\ntype \"PT_mean = \" ask monkeys [ show PT ]\ntype \"PT_sd = \" ask monkeys [ show PT_sd ]\ntype \"MR_mean = \" ask monkeys [ show MR ]\ntype \"MR_sd = \" ask monkeys [ show MR_sd ]\n\ntype \"DPL_d = \" ask monkeys [ show DPL_d ]\ntype \"PT_d = \" ask monkeys [ show PT_d ]\ntype \"MR_d = \" ask monkeys [ show MR_d ]\n
 NIL
@@ -6132,10 +6165,10 @@ NIL
 1
 
 BUTTON
-849
-10
-961
-43
+161
+365
+243
+398
 reset monkeys
 ;ask turtles [ die ]\nask monkeys [ die ]\nask seeds [ die ]\nset day 1\nset timestep 0\n;ask monkeys [ die ]\n;set survived? 0\n;ask seeds [ die ]\nsetup-monkeys\nreset-ticks\nclear-drawing\ninspect one-of monkeys\n\nask monkeys [ set energy_stored 1000 ]
 NIL

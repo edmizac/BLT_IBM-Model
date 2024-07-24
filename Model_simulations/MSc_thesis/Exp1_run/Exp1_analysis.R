@@ -13,7 +13,8 @@ theme_set(theme_bw(base_size = 15))
 
 
 # pathexp1 <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment1/batch_all/without_SDD/"
-pathexp1 <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment1/batch_all/"
+# pathexp1 <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment1/batch_all/"
+pathexp1 <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/Exp1/results/"
 
 filesexp1 <- list.files(pathexp1, pattern = ".rds") ; length(filesexp1)
 
@@ -57,74 +58,88 @@ rm(i)
 #     }
 #   }
 # }
-dfexp1 <- readRDS("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/exampleRDS.rds")
+dfexp1 <- readRDS("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/0_files/exampleRDS2.rds")
 dfexp1 <- nlrx::getsim(dfexp1, "simoutput")
+dfexp1 <- dfexp1 %>% 
+  as_tibble() %>% 
+  mutate_if(
+    is.logical, as.character
+  )
 
 # i <- 999
-i <- 1
+# i <- 1
+rm(i)
 
 
 for (i in filesexp1) {
-  # i <- filesexp1[2]
+  # i <- filesexp1[1]
   
-  if (i == 1) { 
-    # i <- filesexp1[500]
-    dfexp1 <- readRDS(paste0(pathexp1, i)) %>% getsim(., "simoutput") %>% as.data.frame() 
-    # dfexp1$`patch-size-ha`
-    # dfexp1$g_SDD
-    
-    dfexp1 <- dfexp1 %>%
-      dplyr::select(-c(`[run number]`, `feedingbout-on?`, `step-model-param?`, `gtt-param?`,
-                       `p-forage-param?`)) %>% 
-      mutate_if(
-        is.logical, as.character
-      ) %>%
-      mutate(
-        `survived?` = as.character(`survived?`),
-        `p-visited-trees` = as.numeric(`p-visited-trees`),
-        # `feedingbout-on?` = as.character(`feedingbout-on?`)
-        # `[run number]` = as.character(`[run number]`)
-      )
-    
-    # grab resource distribution information (random, clumped or ordered)
-    # i <- filesexp1[576] # random
-    # i <- filesexp1[990] # ordered
-    # i <- filesexp1[967] # clumped
-    i_info <- i %>% str_remove(., ".rds")
-    i_pattern <- i_info %>% str_extract(., "[:lower:]{4,8}$")
-    i_pattern
-    
-    Rpos <- i_info %>% str_locate(., "_R")
-    NNpos <- i_info %>% str_locate(., "_NN")
-    Ridx <- i %>% str_sub(., start = Rpos[2], end = NNpos[1]-1)
-    Ridx <- Ridx %>% str_split("_")
-    resource_pattern_R <- Ridx[[1]][1] %>% str_remove(., "R") %>% as.numeric()
-    resource_pattern_R_p <- Ridx[[1]][2] %>% str_remove(., "p") %>% as.numeric()
-    
-    filei <- filei %>% 
-      mutate(
-        resource_pattern = i_pattern,
-        resource_pattern_R = resource_pattern_R,
-        resource_pattern_R_p = resource_pattern_R_p
-      )
-    
-    
-  } else {
+  # if (i == 1) { 
+  #   # i <- filesexp1[500]
+  #   dfexp1 <- readRDS(paste0(pathexp1, i)) %>% getsim(., "simoutput") %>% as.data.frame() 
+  #   # dfexp1$`patch-size-ha`
+  #   # dfexp1$g_SDD
+  #   
+  #   dfexp1 <- dfexp1 %>%
+  #     # dplyr::select(-c(`[run number]`, `feedingbout-on?`, `step-model-param?`, `gtt-param?`,
+  #     #                  `p-forage-param?`)) %>% 
+  #     mutate_if(
+  #       is.logical, as.character
+  #     ) %>%
+  #     # mutate(
+  #     #   `survived?` = as.character(`survived?`),
+  #     #   `p-visited-trees` = as.numeric(`p-visited-trees`),
+  #     #   `feedingbout-on?` = as.character(`feedingbout-on?`),
+  #     #   `[run number]` = as.numeric(`[run number]`)
+  #     # ) %>% 
+  #     as_tibble()
+  #   
+  #   # grab resource distribution information (random, clumped or ordered)
+  #   # i <- filesexp1[576] # random
+  #   # i <- filesexp1[990] # ordered
+  #   # i <- filesexp1[967] # clumped
+  #   i_info <- i %>% str_remove(., ".rds")
+  #   i_pattern <- i_info %>% str_extract(., "[:lower:]{4,8}$")
+  #   i_pattern
+  #   
+  #   Rpos <- i_info %>% str_locate(., "_R")
+  #   NNpos <- i_info %>% str_locate(., "_NN")
+  #   Ridx <- i %>% str_sub(., start = Rpos[2], end = NNpos[1]-1)
+  #   Ridx <- Ridx %>% str_split("_")
+  #   resource_pattern_R <- Ridx[[1]][1] %>% str_remove(., "R") %>% as.numeric()
+  #   resource_pattern_R_p <- Ridx[[1]][2] %>% str_remove(., "p") %>% as.numeric()
+  #   
+  #   sd_disp_start <- i_info %>% str_locate(., "_sddisp")
+  #   sd_disp <- i_info %>% str_sub(., start = sd_disp_start[2]+1, end = Rpos[1]-1) %>% as.numeric()
+  #   
+  #   filei <- filei %>% 
+  #     mutate(
+  #       resource_pattern = i_pattern,
+  #       resource_pattern_R = resource_pattern_R,
+  #       resource_pattern_R_p = resource_pattern_R_p,
+  #       sd_disp = sd_disp
+  #     ) %>% 
+  #     as_tibble()
+  #     
+  #   
+  #   
+  # } else {
     filei <- readRDS(paste0(pathexp1, i)) %>% getsim(., "simoutput") %>% as.data.frame()
     
     if (!anyNA(filei)) {
       filei <- filei %>%
-        dplyr::select(-c(`[run number]`, `feedingbout-on?`, `step-model-param?`, `gtt-param?`,
-                         `p-forage-param?`)) %>% 
+        # dplyr::select(-c(`[run number]`, `feedingbout-on?`, `step-model-param?`, `gtt-param?`,
+        #                  `p-forage-param?`)) %>% 
         mutate_if(
           is.logical, as.character
         ) %>%
-        mutate(
-          `survived?` = as.character(`survived?`),
-          `p-visited-trees` = as.numeric(`p-visited-trees`)
-          # `feedingbout-on?` = as.character(`feedingbout-on?`)
-          # `[run number]` = as.character(`[run number]`)
-        )
+        # mutate(
+        #   `survived?` = as.character(`survived?`),
+        #   `p-visited-trees` = as.numeric(`p-visited-trees`),
+        #   `feedingbout-on?` = as.character(`feedingbout-on?`),
+        #   `[run number]` = as.numeric(`[run number]`)
+        # ) %>% 
+        as_tibble()
       
       # grab resource distribution information (random, clumped or ordered)
       # i <- filesexp1[576] # random
@@ -141,21 +156,28 @@ for (i in filesexp1) {
       resource_pattern_R <- Ridx[[1]][1] %>% str_remove(., "R") %>% as.numeric()
       resource_pattern_R_p <- Ridx[[1]][2] %>% str_remove(., "p") %>% as.numeric()
       
+      sd_disp_start <- i_info %>% str_locate(., "_sddisp")
+      sd_disp <- i_info %>% str_sub(., start = sd_disp_start[2]+1, end = Rpos[1]-1) %>% as.numeric()
+      
       filei <- filei %>% 
         mutate(
           resource_pattern = i_pattern,
           resource_pattern_R = resource_pattern_R,
-          resource_pattern_R_p = resource_pattern_R_p
-        )
+          resource_pattern_R_p = resource_pattern_R_p,
+          sd_disp = sd_disp
+        ) %>% 
+        as_tibble()
       
       # glue them together
-      dfexp1 <- dplyr::bind_rows(dfexp1, filei) %>% 
-        mutate(
-          `[run number]` = as.character(`[run number]`)
-        )
+      # dfexp1 %>% str() ; dfexp1 %>% class()
+      # filei %>% str() ; filei %>% class()
+      dfexp1 <- dplyr::bind_rows(dfexp1, filei) #%>% 
+        # mutate(
+        #   `[run number]` = as.character(`[run number]`)
+        # )
       
       
-    }
+    # }
   }
 }
 
@@ -167,7 +189,8 @@ dfexp1 %>% glimpse()
 # Take first row out as it is from the nlrx example file
 dfexp1 <- dfexp1[-1, ]
 
-# check for NAs
+
+# Check for NAs and filter dead runs: ----
 anyNA(dfexp1)
 # dfexp1NA <- dfexp1 %>% dplyr::filter(across(no_days:g_n_unvisited_trees, ~is.na(.)))
 dfexp1NA <- dfexp1 %>% dplyr::filter(!complete.cases(across(no_days:g_n_unvisited_trees))) # one run has dead monkeys
@@ -190,7 +213,7 @@ dfexp1$`[run number]` %>% str()
 
 # Lets check how many of those runs had dead monkeys. As there are NAs filtered above (with anti_join), maybe this procedure is not working completely
 dfexp1 %>% dplyr::filter(`survived?` == "no") %>% count() # none! wow. Why? Because I made the simulations to drop in the NetLogo code if the monkeys were dying
-
+dfexp1 %>% dplyr::filter(`survived?` == "yes") %>% count()
 
 
 # Wrangle data for our purposes
@@ -249,7 +272,7 @@ dfexp1gg <- dfexp1 %>%
   )
 
 
-# Clumped patterns sometimes are lacking
+# Ordered and clumped patterns sometimes are lacking
 dfexp1gg %>% 
   ggplot(
     aes(x = fragment_size, y = field.shape.factor
@@ -267,8 +290,8 @@ dfexp1gg %>%
   ylab("Fragment shape") +
   facet_wrap(vars(resource_pattern))
 
-# ggsave(filename = paste0(pathexp1, "FragmentExamples.png"),
-#        dpi = 300, width = 30, height = 17, units = "cm")
+ggsave(filename = paste0(pathexp1, "FragmentExamples.png"),
+       dpi = 300, width = 30, height = 17, units = "cm")
 
 
 
@@ -334,8 +357,8 @@ dfexp1gg %>%
     , limits = c(0, 1600)
     ) #+
 
-# ggsave(filename = paste0(pathexp1, "SDD_fieldshapegrid.png"),
-#        dpi = 300, width = 25, height = 18, units = "cm")
+ggsave(filename = paste0(pathexp1, "SDD_fieldshapegrid.png"),
+       dpi = 300, width = 25, height = 18, units = "cm")
 
 
 dfexp1gg %>% 
@@ -370,8 +393,8 @@ dfexp1gg %>%
     , limits = c(0, 1600)
     )
 
-# ggsave(filename = paste0(pathexp1, "SDD_densitygrid.png"),
-#        dpi = 300, width = 25, height = 18, units = "cm")
+ggsave(filename = paste0(pathexp1, "SDD_densitygrid.png"),
+       dpi = 300, width = 25, height = 18, units = "cm")
 
 
 
@@ -410,8 +433,8 @@ dfexp1gg %>%
     , limits = c(30, 90)
     )
 
-# ggsave(filename = paste0(pathexp1, "NN_feeding_trees.png"),
-#        dpi = 300, width = 30, height = 18, units = "cm")
+ggsave(filename = paste0(pathexp1, "NN_feeding_trees.png"),
+       dpi = 300, width = 30, height = 18, units = "cm")
 
 
 # If clumpiness of seeds is higher with increasing distance between sleeping trees
@@ -447,8 +470,8 @@ dfexp1gg %>%
     ) +
   theme(axis.text.x = element_text(size=9))
 
-# ggsave(filename = paste0(pathexp1, "NN_sleeping_trees.png"),
-#        dpi = 300, width = 30, height = 18, units = "cm")
+ggsave(filename = paste0(pathexp1, "NN_sleeping_trees.png"),
+       dpi = 300, width = 30, height = 18, units = "cm")
 
 
 

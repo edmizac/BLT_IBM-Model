@@ -155,13 +155,15 @@ p_memory <- 3
 ### others
 p_disputed_trees <- 0.25
 p_timesteps_to_rest <- 0.15
-species_time <- 2
+species_time <- 5
 
 
 ### define how much each run should take based on empirical activity periods
 no_days_run <- 10 # 30 is too much for validating future studies but not too much for the seed dispersal process
 simultime_run <- param_table %>%  dplyr::select(mean_timesteps) %>% pull() %>% mean()
 simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
+
+duration <- param_table %>%  dplyr::select(duration) %>% pull() %>% mean()
 
 
 ### choose which parameterizations should be on ----
@@ -210,11 +212,12 @@ pathfiles <- paste0('"', pathfiles, '"'); noquote(pathfiles) # scaped
 
 
 ### Define expname ---- 
-expname = paste0("Exp1_2024-07-09d")
+expname = paste0("Exp1_2024-07-23d")
 
-# db <- readRDS(paste0(path, "exampleRDS.rds"))
-db <- readRDS(paste0(path, "Exp1/", "size300shapefact1253.17_R0.99_p0.896_NN104.56random.rds"))
-db <- getsim(nl, "simoutput") %>% as.data.frame()
+db <- readRDS(paste0(path, "0_files/", "exampleRDS.rds"))
+
+# db <- readRDS(paste0(path, "Exp1/0_files/", "size300shapefact1253.17_R0.99_p0.896_NN104.56random.rds"))
+# db <- getsim(nl, "simoutput") %>% as.data.frame()
 # db <- db %>% unnest_simoutput() %>% as.data.frame()
 # db <- db[-1, ] # drop first line because we don't want this data, we just want the collumns
 
@@ -266,8 +269,8 @@ nl@experiment <- experiment(expname = expname,
                               # "n-sleeping-trees", # also constant (n=5)
                               "g_SDD",
                               "g_SDD_sd",
+                              "g_SDD_95", # 95th quantile
                               "n",
-                              "p-visited-trees",
                               "R_seeds",        
                               "R_seeds_p",      
                               "NN_seeds",       
@@ -304,6 +307,7 @@ nl@experiment <- experiment(expname = expname,
                               # "g_straightness",   # straightness is being wrongly estimated. DON'T USE IT NOW (first make it to be calculated in daily basis). straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                               # "g_sinuosity"       # sinuosity can't be compared across scales. DON'T USE IT straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                               
+                              "p-visited-trees",
                               "g_n_visited_trees",
                               "g_n_unvisited_trees"
                               
@@ -430,11 +434,11 @@ nl@experiment <- experiment(expname = expname,
                               "energy-from-prey" = energy_from_prey,
                               "energy-loss-traveling" = energy_loss_traveling,
                               "energy-loss-foraging" = energy_loss_foraging,
-                              "energy-loss-resting" = energy_loss_resting
+                              "energy-loss-resting" = energy_loss_resting,
                               
                               
                               # seed dispersal
-                              # "gut_transit_time_val" = 15,
+                              "gut_transit_time" = 16
                               # "n_seeds_hatched" = 1,
                               
                               
@@ -451,7 +455,7 @@ nl@experiment <- experiment(expname = expname,
 
 
 
-nseeds <- 1 # repetitions are specified in n-reps slider
+nseeds <- 8 # repetitions are probably needed -> check with Eyal
 
 # Step 3: Attach a simulation design.
 # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
@@ -492,7 +496,7 @@ tictoc::toc()
 # progressr::handlers("progress")
 # results <- progressr::with_progress(
 #   run_nl_all(nl,
-#              split = 1 # with simdesign = simple it is only possible to run one core?
+#              split = ncores # with simdesign = simple it is only possible to run one core?
 #              )
 # )
 # tictoc::toc()
