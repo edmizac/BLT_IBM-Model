@@ -181,6 +181,7 @@ globals [
   NN_seeds  ; nearest neighbor distances for seeds (defecation events)
   n_visited_trees ; number of visited trees in the end of the run
   n_unvisited_trees ; number of unvisited trees in the end of the run (calculate proportion afterwards instead of giving a very long metric to nlrx)
+  vec_owin_out ; vector of length equal to the number of points (defecations/seeds) outside of the specified owin
 
   ; THESE ARE MONKEY VARIABLES THAT WE TAKE AS GLOBAL TO AVOID NLRX ERRORS (OR DEAD AGENTS OUTPUTING EMPTY VALUES)
   g_SDD                   ; mean seed dispersal distance for all events (same and next day)
@@ -374,7 +375,7 @@ to setup
   if USER = "Eduardo"
   [
     set local-path "D:/Data/Documentos/github/BLT_IBM-Model/"
-;    if patch-type = "generated" [ set path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/Experiment7/batch_all/" ]
+    if patch-type = "generated" [ set path "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/Exp1/batch_all/" ]
   ]
   if USER = "LASi"
   [set local-path "D:/EDUARDO_LAP"]
@@ -577,8 +578,12 @@ to setup-gis
 
   if patch-type = "generated" [
 
-    set-patch-size 1
-    resize-world 0 1250 0 1250
+    ifelse lc-patch-size-ha > 1000 [
+      set-patch-size 1
+    ][
+      set-patch-size 2
+    ]
+;    resize-world 0 1250 0 1250
     import-world ( word path generated_patch )
 
     ask patches with [pcolor = 105 ] [set pcolor green + 3]
@@ -1144,7 +1149,7 @@ to go
       SDDcalc
 
       output-print "calculating R index for seeds"
-      ;; calc-seed-aggregation
+       calc-seed-aggregation
       output-print "calculating R index for seeds finished"
 
       set survived? "yes" ; tamarins are alive by the end of the run
@@ -3283,11 +3288,19 @@ to start-r-extension
         ;        if ticks < 110 [  print sr:runresult "db_" ]
 
         ; Using non-nested data as we only have one group. When multiple tamarin groups are simulated, we will need to call nest():
+        if patch-type = "empirical" [
         (
           sr:run "db_ <- db %>% make_track(.x=X, .y=Y, id = id, crs = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')" ;%>% nest(data = -c(id))"
         )
         ;    show r:get "colnames(db_)"
         ;    show r:get "db_"
+        ]
+
+        if patch-type = "generated" [
+          (
+            sr:run "db_ <- db %>% make_track(.x=X, .y=Y, id = id)" ;%>% nest(data = -c(id))"
+          )
+        ]
 
                 print "==== SR debugging 6 ==== "
 
@@ -3327,49 +3340,52 @@ to calc-homerange
 
 ;        print "==== SR debugging 7 ===="
 
-        ; Import shapefile of respective area and crop homerange UD with st_intersection()
-        ifelse USER = "Eduardo" [
-          if study_area = "Guareí" [
-            sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp' %>% sf::read_sf()"
-;            print sr:runresult "shp"
-;            print "===== read_sf debug ====="
-;            stop
-          ]
-          if study_area = "Suzano" [
-            sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
-          ]
-          if study_area = "SantaMaria" [
-            sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp' %>% sf::read_sf()"
-          ]
-          if study_area = "Taquara" [
-            sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp' %>%  sf::read_sf()"
-          ]
-        ][
-          if study_area = "Guareí" [
-            sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp"
-            sr:run "shp <- wpath %>% sf::read_sf()"
-          ]
-          if study_area = "Suzano" [
-            sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp"
-            sr:run "shp <- wpath %>% sf::read_sf()"
-          ]
-          if study_area = "SantaMaria" [
-            sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp"
-            sr:run "shp <- wpath %>% sf::read_sf()"
-          ]
-          if study_area = "Taquara" [
-            sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp"
-            sr:run "shp <- wpath %>% sf::read_sf()"
-          ]
+
+    ; CROP HOME RANGE BY FRAGMENT SHAPE IN EMPIRICAL CASES
+    if patch-type = "empirical" [
+      ; Import shapefile of respective area and crop homerange UD with st_intersection()
+      ifelse USER = "Eduardo" [
+        if study_area = "Guareí" [
+          sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp' %>% sf::read_sf()"
+          ;            print sr:runresult "shp"
+          ;            print "===== read_sf debug ====="
+          ;            stop
         ]
+        if study_area = "Suzano" [
+          sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp' %>% sf::read_sf()"
+        ]
+        if study_area = "SantaMaria" [
+          sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp' %>% sf::read_sf()"
+        ]
+        if study_area = "Taquara" [
+          sr:run "shp <- 'D:/Data/Documentos/Study/Mestrado/Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp' %>%  sf::read_sf()"
+        ]
+      ][
+        if study_area = "Guareí" [
+          sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Guarei_polyg_sept2022.shp"
+          sr:run "shp <- wpath %>% sf::read_sf()"
+        ]
+        if study_area = "Suzano" [
+          sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Suzano_polygon_unishp.shp"
+          sr:run "shp <- wpath %>% sf::read_sf()"
+        ]
+        if study_area = "SantaMaria" [
+          sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/SantaMaria_only_rec.shp"
+          sr:run "shp <- wpath %>% sf::read_sf()"
+        ]
+        if study_area = "Taquara" [
+          sr:set "wpath" word (local-path) "Model_Documentation/shapefiles-to-rasterize/Taquara_only2.shp"
+          sr:run "shp <- wpath %>% sf::read_sf()"
+        ]
+      ]
 
-;        print "==== SR debugging 8 ==== "
+      ;        print "==== SR debugging 8 ==== "
 
-        ;  sr:run "shp <- sf::read_sf(filepath)" ; make it an sf object
-        sr:run "forest_area <- shp %>% sf::st_area()" ; print total forest area
-        type "total forest area (ha) = " print sr:runresult "forest_area / 10000"
+      ;  sr:run "shp <- sf::read_sf(filepath)" ; make it an sf object
+      sr:run "forest_area <- shp %>% sf::st_area()" ; print total forest area
+      type "total forest area (ha) = " print sr:runresult "forest_area / 10000"
 
-;        stop
+;      stop
 
 
 ;        ;; NOT WORKING ;; =========================================================================
@@ -3398,8 +3414,8 @@ to calc-homerange
 ;        ;; NOT WORKING ;; =========================================================================
 
 
-;    print "==== SR debugging 9 ==== "
-;    stop
+;      print "==== SR debugging 9 ==== "
+;      stop
 
 
         ;; WORKING ;; =========================================================================
@@ -3415,29 +3431,43 @@ to calc-homerange
 ;        print "==== SR debugging 10 ==== "
 
 ;        stop
+    ]
 
-        ask monkeys [
-          set MCP_100 sr:runresult "db_MCP100 / 10000"
+    ask monkeys [
+      set MCP_100 sr:runresult "db_MCP100 / 10000"
 
-          ; correct hr values by the overlap percentage:
-          set KDE_95_cropped sr:runresult "amt_overlap[1,3] %>% as.numeric() * db_KDE95"
-          set KDE_50_cropped sr:runresult "amt_overlap[2,3] %>% as.numeric() * db_KDE50"
+      if patch-type = "empirical" [
+        ; correct hr values by the overlap percentage:
+        set KDE_95_cropped sr:runresult "amt_overlap[1,3] %>% as.numeric() * db_KDE95"
+        set KDE_50_cropped sr:runresult "amt_overlap[2,3] %>% as.numeric() * db_KDE50"
 
-          ; validate interescted values (in m²):
-          ;    type "monkey " type who type " "
-          type "KDE95 = " print sr:runresult "db_KDE95"
-          type "cropped KDE95 = " type KDE_95_cropped / 10000 print " hectares"
-          type "KDE50 = " print sr:runresult "db_KDE50"
-          type "cropped KDE50 = " type KDE_50_cropped / 10000 print " hectares"
+        ; validate interescted values (in m²):
+        ;    type "monkey " type who type " "
+        type "KDE95 = " print sr:runresult "db_KDE95 / 10000"
+        type "cropped KDE95 = " type KDE_95_cropped / 10000 print " hectares"
+        type "KDE50 = " print sr:runresult "db_KDE50 / 10000"
+        type "cropped KDE50 = " type KDE_50_cropped / 10000 print " hectares"
 
-          ; set values in hectares:
-          set KDE_95_cropped sr:runresult "db_KDE95 / 10000"
-          set KDE_50_cropped sr:runresult "db_KDE50 / 10000"
+        ; set values in hectares:
+        set KDE_95_cropped sr:runresult "db_KDE95 / 10000"
+        set KDE_50_cropped sr:runresult "db_KDE50 / 10000"
 
-          set KDE_95 sr:runresult "db_KDE95" ; in m²
-          set KDE_50 sr:runresult "db_KDE50" ; in m²
+        set KDE_95 sr:runresult "db_KDE95" ; in m²
+        set KDE_50 sr:runresult "db_KDE50"  ; in m²
 
-        ]
+      ]
+
+      if patch-type = "generated" [
+        ; values are not cropped (might be cropped in the future)
+        ; set values in hectares:
+        set KDE_95_cropped sr:runresult "db_KDE95 / 10000" ;
+        set KDE_50_cropped sr:runresult "db_KDE50 / 10000"
+      ]
+
+    ]
+
+    print "debugging cropped home range"
+    stop
         ;  print sr:runresult "db_KDE95"
         ;  print sr:runresult "db_KDE50"
 
@@ -3943,10 +3973,10 @@ to calc-movement-metrics
 
 
       ; defendability_index DI (Mitani & Rodman, 1979) and M (Lowen & Dunbar 1994)
-      set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95 / 1000000 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
+      set DI_index ( (DPL_mean / 1000) / ( sqrt ( (4 * (KDE_95_cropped / 1000000 )) / pi) ) ^ 0.5 )   ; (d / (sqrt(4A/pi)^0.5) (Mitani & Rodman 1979, Lowen & Dunbar 1994)
       type "DI index = " print DI_index
       ;      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                     ; in case KDE is in m² and not in ha
-      let d_ ( 4 * ( KDE_95 / 1000000 ) / pi )                                                ; in case KDE is in ha
+      let d_ ( 4 * ( KDE_95_cropped / 1000000 ) / pi )                                                ; in case KDE is in ha
       type "diameter of home range (d' in km) =  " print d_
       set M_index ( 1 * ( 0.09 * (DPL_mean / 1000) / (d_ ^ 2) ) )                        ; (M = N(sv/d²) Lowen & Dunbar 1994. s value from Ruiz-Miranda et al. 2019 MLD
       type "M index = " print M_index
@@ -4097,33 +4127,81 @@ to calc-seed-aggregation
 
     if patch-type = "generated" [
 
+
       (sr:set-agent-data-frame  "seeds" seeds "who" "x_scaled" "y_scaled")
       ;    (r:putagentdf  "seeds" seeds "who" "xcor" "ycor")
       ;    print r:get "colnames(seeds)"
       ;    print r:get "seeds"
 
 ;      ;; OPTION 1: use all turtle locations as owin (as MCP)
-;      (sr:set-agent-data-frame "bbox" turtles "who" "x_scaled" "y_scaled")
+      (sr:set-agent-data-frame "bbox" turtles "who" "x_scaled" "y_scaled")
 ;      ;    (r:putagentdf "trees" feeding-trees "who" "xcor" "ycor")
 ;      ;    print r:get "trees"
-;      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
+      sr:run "xy <- SpatialPoints(unique(bbox[ , 2:3]))"
 ;      ;    print r:get "xy"
 ;      ;    type "xy = " print r:get "xy <- SpatialPoints(trees[ , 2:3])"
 
       ;; OPTION 2: use the MCP monkey locations as owin (as MCP)
-      sr:run "xy <- SpatialPoints(db[ , 1:2])"
+;      sr:run "xy <- SpatialPoints(db[ , 1:2])" ; <- commented out in 2024-07-25d
       ;    print r:get "xy"
       ;    type "xy = " print r:get "xy <- SpatialPoints(trees[ , 2:3])"
 
       sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
-      sr:run "limitsOwin <- as.owin(limitsOwin)"
-      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 1)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
+      sr:run "limitsOwin <- suppressWarnings(as.owin(limitsOwin))"
+      sr:run "limitsOwin.dil <- suppressWarnings(dilation(limitsOwin, r = 25))" ; add 15 meters to it for increasing owin (and avoid further spatstat errors)
 
       ; make location of seeds unique (we are analyzing aggregation of feces, not seeds, because multiple seeds drop at the same place)
       sr:run "seeds <- seeds %>%  dplyr::select(x_scaled, y_scaled)  %>%  dplyr::distinct()"
       ;    sr:run "seeds <- seeds %>%  dplyr::select(xcor, ycor)  %>%  dplyr::distinct()"
       ;    print r:get "seeds"
-      sr:run "sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin)"
+
+
+
+      ; DEBUGG OWIN (IF YOU CAN)
+;      sr:run "sim <- ppp(xy[,1], xy[,2], window=limitsOwin)"
+;      sr:run "vec_owin <- inside.owin(xy[,1], xy[,2], w=limitsOwin)"
+;      sr:run "vec_owin_out <- length(vec_owin[vec_owin == 'FALSE'])"; # count falses
+;      set vec_owin_out sr:runresult "vec_owin_out"
+;      if (vec_owin_out > 0) [ print "********POINTS OUSIDE OWIN*********" stop ]
+
+      ; turn off warnings (it freezes SimpleR everytime)
+      sr:run "oldw <- getOption('warn')"
+      sr:run "options(warn = -1)"
+
+      sr:run "seeds.sp <- suppressWarnings(SpatialPoints(seeds))"
+;      sr:run "proj4string(seeds.sp) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
+      sr:run "seeds.sp <- suppressWarnings(maptools::as.ppp.SpatialPoints(seeds.sp))"
+;      stop
+
+      ; test if all seed locations are inside the owin, otherwise NetLogo freezes. If there's any out, save as csv and stop the model before freezing (it freezes with ppp())
+      sr:run "ok <- suppressWarnings(inside.owin(seeds.sp, w = limitsOwin.dil))"
+;      stop
+      sr:run "outside.points <- length(ok[ok == FALSE])"
+
+;      stop
+
+      ifelse ( sr:runresult "length(ok[ok == FALSE]) == 0" = TRUE ) [
+        print "no seeds outside owin"
+      ][
+        print "at least one seed outside owin"
+        sr:run "xy.out <- cbind(seeds, ok)"
+        sr:set "filepath" (word path generated_patch "_xy_seeds_outside_owin.csv")
+        sr:run "write.csv(xy.out, filepath, row.names = FALSE)"
+        type "xy_seeds_outside_owin.csv saved in" print sr:runresult "filepath"
+
+        stop
+      ]
+
+      ; get outside of owin points:
+      sr:run "out <- seeds[ok == FALSE]"
+      type "seeds outside owin = " print sr:runresult "out"
+
+;      stop
+
+;      print "warning here?"
+      sr:run "suppressWarnings(sim <- ppp(seeds[,1], seeds[,2], window=limitsOwin))"
+
+      sr:run "options(warn = oldw)"
 
       ;; calc Nearest Neighbor distance within R
       ;    sr:run "NN_seeds <- mean(nndist(sim))"
@@ -4155,9 +4233,9 @@ to calc-seed-aggregation
       ;    print r:get "seeds"
 
 ;      ;; OPTION 1: use all turtle locations as owin (as MCP)
-;      (sr:set-agent-data-frame "bbox" turtles "who" "x_UTM" "y_UTM")
+      (sr:set-agent-data-frame "bbox" turtles "who" "x_UTM" "y_UTM")
 ;      sr:run "bbox <- unique(bbox)"
-;      sr:run "xy <- SpatialPoints(bbox[ , 2:3])"
+      sr:run "xy <- SpatialPoints(unique(bbox[ , 2:3]))"
 ;      sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
 ;      sr:run "limitsOwin <- mcp(xy, percent = 100)" ; define mcp as owin
 ;      sr:run "limitsOwin <- as.owin(limitsOwin)"
@@ -4178,7 +4256,7 @@ to calc-seed-aggregation
 ;      sr:run "limitsOwin.dil <- dilation(limitsOwin, r = 5)" ; add one meter to it for increasing owin (and avoid further spatstat errors)
 
 ;      ;; OPTION 3: with as.ppp.SpatialPoints() (it works in R, see "Owin-spatstat.R")
-      sr:run "xy <- unique(db[ , 1:2])"
+;      sr:run "xy <- unique(db[ , 1:2])"  ; commented out in 2024-07-25d
       sr:run "xy <- SpatialPoints(xy)"
       sr:run "proj4string(xy) <- CRS('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')"
       sr:run "xy <- maptools::as.ppp.SpatialPoints(xy)"
@@ -4708,11 +4786,11 @@ end
 GRAPHICS-WINDOW
 0
 20
-491
-416
+408
+329
 -1
 -1
-3.0
+2.0
 1
 10
 1
@@ -4722,10 +4800,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--80
-80
--64
-64
+0
+199
+0
+149
 0
 0
 1
@@ -4992,7 +5070,7 @@ CHOOSER
 feeding-trees-scenario
 feeding-trees-scenario
 "All months" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
-8
+4
 
 CHOOSER
 1017
@@ -5413,7 +5491,7 @@ p_foraging_while_traveling
 p_foraging_while_traveling
 0
 1
-0.7
+0.61
 0.01
 1
 NIL
@@ -5763,7 +5841,7 @@ CHOOSER
 study_area
 study_area
 "Guareí" "SantaMaria" "Taquara" "Suzano"
-0
+1
 
 BUTTON
 245
@@ -5884,7 +5962,7 @@ max_rel_ang_forage_75q
 max_rel_ang_forage_75q
 0
 180
-77.22
+74.0
 5
 1
 NIL
@@ -5899,7 +5977,7 @@ step_len_forage
 step_len_forage
 0
 20
-1.387
+1.3
 0.1
 1
 NIL
@@ -5914,7 +5992,7 @@ step_len_travel
 step_len_travel
 0
 20
-2.5300000000000002
+2.4
 0.1
 1
 NIL
@@ -5929,7 +6007,7 @@ max_rel_ang_travel_75q
 max_rel_ang_travel_75q
 0
 180
-59.53
+67.0
 1
 1
 NIL
@@ -6046,7 +6124,7 @@ CHOOSER
 patch-type
 patch-type
 "empirical" "generated"
-0
+1
 
 MONITOR
 457
@@ -6065,7 +6143,7 @@ INPUTBOX
 1011
 222
 generated_patch
-generated_patches/8500_1.6.csv
+dens0.035size100_shapefact1_hr1_77.58_n30_iter2_sddisp0.2592_R0.95_p0.762_NN88.73_random.csv
 1
 0
 String
@@ -6127,7 +6205,7 @@ INPUTBOX
 1393
 73
 path
-D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/
+D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/Exp1/batch_all/
 1
 0
 String
