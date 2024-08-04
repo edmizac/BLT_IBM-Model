@@ -67,7 +67,7 @@ if(Sys.info()[["nodename"]] == "DESKTOP-1SKTQUA") { # AORUS LaP
   modelpath <- "C:/Users/User/Documents/Eduardo_LaP/Model_simulations/BLT_model_v1.2.nlogo"
   outpath <- paste0(path, "Exp1/results/")
   Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk-11")
-  user_scp = "\"LaP\"" # scaped
+  user_scp = "\"AORUS-2\"" # scaped
 }
 
 
@@ -164,6 +164,7 @@ simultime_run <- param_table %>%  dplyr::select(mean_timesteps) %>% pull() %>% m
 simultime_run <- round(simultime_run * 0.95) # that's the timestep when tamarins should start looking for the sleeping site
 
 duration <- param_table %>%  dplyr::select(duration) %>% pull() %>% mean()
+gtt <- param_table %>%  dplyr::select(GTT_mean) %>% pull() %>% mean()
 
 
 ### choose which parameterizations should be on ----
@@ -239,7 +240,7 @@ for (i in files_forests) {
 ### Attach to nl object ----
 nl@experiment <- experiment(expname = expname,
                             outpath = outpath,
-                            repetition = 1, # number of repetitions with the same seed (tamarins can spawn in distinct sleeping sites and acquire distinct species_time)
+                            repetition = 5, # number of repetitions with the same seed (tamarins can spawn in distinct sleeping sites and acquire distinct species_time)
                             tickmetrics = "false", # "true" for every tick, "false" for metrics only in the end of the simulation
                             idsetup = "setup",
                             idgo = "go",
@@ -276,6 +277,7 @@ nl@experiment <- experiment(expname = expname,
                               "NN_seeds",       
                               "NN_feeding_trees", # this is calculated again by the end of the run although it was calculated priorly within the build_forest process
                               "NN_sleeping_trees", # might be a more important factor affecting SDD than the NN of feeding trees 
+                              "aggregation_type", # want to remember which was the tree aggregation pattern
                               
                               # turtle variables as globals:
                               "g_energy_stored", # energy is reset to energy-start everyday, thus we take
@@ -308,14 +310,22 @@ nl@experiment <- experiment(expname = expname,
                               # "g_sinuosity"       # sinuosity can't be compared across scales. DON'T USE IT straightness and sinuosity are slightlty different in terms of properties (https://www.scielo.br/j/zool/a/8F9QpD7mRFttmkY9QdxZTmm/?format=pdf&lang=en) and they were not tested as predictors of SDD, so i'm not using them
                               
                               "p-visited-trees",
-                              "g_n_visited_trees",
-                              "g_n_unvisited_trees"
+                              # "g_n_visited_trees",
+                              # "g_n_unvisited_trees"
+                              
+                              # movement metrics which are parameterized inside the model (just to not lose the information)
+                              'step_len_forage', # empirical values
+                              'step_len_travel', # empirical values 
+                              'max_rel_ang_travel_75q', # empirical values
+                              'max_rel_ang_forage_75q'  # empirical values
                               
                               # metrics.turtles = list(
                               
                               # empty because I'm outputing everything as globals
                               
                               # "monkeys" = c(
+                              #   "X_coords",
+                              #   "Y_coords"
                               #   "energy_stored", # energy is reset to energy-start everyday, thus we take the surplus energy as indicator if the energy variables are good enough
                               #   # "energy",      # final energy                # the best set of parameters should make tamarins viable in energetic terms
                               #   # "enlvl1",         # value of energy_level_1 used at the start of the simulation
@@ -438,12 +448,13 @@ nl@experiment <- experiment(expname = expname,
                               
                               
                               # seed dispersal
-                              "gut_transit_time" = 16
+                              "gut_transit_time" = gtt
                               # "n_seeds_hatched" = 1,
                               
                               
                               ### movement
-                              # travel_speed = 1
+                              # patermeterized in the NetLogo model
+                              
                               
                             )
 )
@@ -455,7 +466,7 @@ nl@experiment <- experiment(expname = expname,
 
 
 
-nseeds <- 8 # repetitions are probably needed -> check with Eyal
+nseeds <- 1 # repetitions are probably needed -> check with Eyal
 
 # Step 3: Attach a simulation design.
 # nl@simdesign <- simdesign_distinct(nl, nseeds = 17)
@@ -487,19 +498,22 @@ tictoc::toc()
 
 
 # ## With run_nl_all (all 17 seeds)
+
+nseeds <- 12 # repetitions are probably needed -> check with Eyal
+
+nl@simdesign <- simdesign_simple(nl, nseeds = nseeds)
 # # Check number of simimputrows:
-# siminput_nrow <- nrow(getsim(nl, "siminput"))
-# # siminput_nrow %%
-# 
-# tictoc::tic()
-# plan(multisession)
-# progressr::handlers("progress")
-# results <- progressr::with_progress(
-#   run_nl_all(nl,
-#              split = ncores # with simdesign = simple it is only possible to run one core?
-#              )
-# )
-# tictoc::toc()
+siminput_nrow <- nrow(getsim(nl, "siminput"))
+
+tictoc::tic()
+plan(multisession)
+progressr::handlers("progress")
+results <- progressr::with_progress(
+  run_nl_all(nl,
+             split = 4 # with simdesign = simple it is only possible to run one core?
+             )
+)
+tictoc::toc()
 
 
 ## Step 5:

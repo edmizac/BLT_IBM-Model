@@ -12,7 +12,7 @@ library("xlsx")
 theme_set(theme_bw(base_size = 16))
 
 
-pathexp1 <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/Exp1/batch_all/"
+pathexp1 <- "D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/Exp1/results/"
 
 filesexp1 <- list.files(pathexp1, pattern = ".rds") ; length(filesexp1)
 
@@ -56,7 +56,7 @@ rm(i)
 #     }
 #   }
 # }
-dfexp1 <- readRDS("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest/exampleRDS.rds")
+dfexp1 <- readRDS("D:/Data/Documentos/Study/Mestrado/Model_Documentation/build_forest_2024/0_files/exampleRDS2.rds")
 dfexp1 <- nlrx::getsim(dfexp1, "simoutput")
 
 # i <- 999
@@ -66,49 +66,49 @@ i <- 1
 for (i in filesexp1) {
   # i <- filesexp1[2]
   
-  if (i == 1) { 
-    # i <- filesexp1[500]
-    dfexp1 <- readRDS(paste0(pathexp1, i)) %>% getsim(., "simoutput") %>% as.data.frame() 
-    # dfexp1$`patch-size-ha`
-    # dfexp1$g_SDD
-    
-    dfexp1 <- dfexp1 %>%
-      dplyr::select(-c(`[run number]`, `feedingbout-on?`, `step-model-param?`, `gtt-param?`,
-                       `p-forage-param?`)) %>% 
-      mutate_if(
-        is.logical, as.character
-      ) %>%
-      mutate(
-        `survived?` = as.character(`survived?`),
-        `p-visited-trees` = as.numeric(`p-visited-trees`),
-        # `feedingbout-on?` = as.character(`feedingbout-on?`)
-        # `[run number]` = as.character(`[run number]`)
-      )
-    
-    # grab resource distribution information (random, clumped or ordered)
-    # i <- filesexp1[576] # random
-    # i <- filesexp1[990] # ordered
-    # i <- filesexp1[967] # clumped
-    i_info <- i %>% str_remove(., ".rds")
-    i_pattern <- i_info %>% str_extract(., "[:lower:]{4,8}$")
-    i_pattern
-    
-    Rpos <- i_info %>% str_locate(., "_R")
-    NNpos <- i_info %>% str_locate(., "_NN")
-    Ridx <- i %>% str_sub(., start = Rpos[2], end = NNpos[1]-1)
-    Ridx <- Ridx %>% str_split("_")
-    resource_pattern_R <- Ridx[[1]][1] %>% str_remove(., "R") %>% as.numeric()
-    resource_pattern_R_p <- Ridx[[1]][2] %>% str_remove(., "p") %>% as.numeric()
-    
-    filei <- filei %>% 
-      mutate(
-        resource_pattern = i_pattern,
-        resource_pattern_R = resource_pattern_R,
-        resource_pattern_R_p = resource_pattern_R_p
-      )
-    
-    
-  } else {
+  # if (i == 1) { 
+    # # i <- filesexp1[500]
+    # dfexp1 <- readRDS(paste0(pathexp1, i)) %>% getsim(., "simoutput") %>% as.data.frame() 
+    # # dfexp1$`patch-size-ha`
+    # # dfexp1$g_SDD
+    # 
+    # dfexp1 <- dfexp1 %>%
+    #   dplyr::select(-c(`[run number]`, `feedingbout-on?`, `step-model-param?`, `gtt-param?`,
+    #                    `p-forage-param?`)) %>% 
+    #   mutate_if(
+    #     is.logical, as.character
+    #   ) %>%
+    #   mutate(
+    #     `survived?` = as.character(`survived?`),
+    #     `p-visited-trees` = as.numeric(`p-visited-trees`),
+    #     # `feedingbout-on?` = as.character(`feedingbout-on?`)
+    #     # `[run number]` = as.character(`[run number]`)
+    #   )
+    # 
+    # # grab resource distribution information (random, clumped or ordered)
+    # # i <- filesexp1[576] # random
+    # # i <- filesexp1[990] # ordered
+    # # i <- filesexp1[967] # clumped
+    # i_info <- i %>% str_remove(., ".rds")
+    # i_pattern <- i_info %>% str_extract(., "[:lower:]{4,8}$")
+    # i_pattern
+    # 
+    # Rpos <- i_info %>% str_locate(., "_R")
+    # NNpos <- i_info %>% str_locate(., "_NN")
+    # Ridx <- i %>% str_sub(., start = Rpos[2], end = NNpos[1]-1)
+    # Ridx <- Ridx %>% str_split("_")
+    # resource_pattern_R <- Ridx[[1]][1] %>% str_remove(., "R") %>% as.numeric()
+    # resource_pattern_R_p <- Ridx[[1]][2] %>% str_remove(., "p") %>% as.numeric()
+    # 
+    # filei <- filei %>% 
+    #   mutate(
+    #     resource_pattern = i_pattern,
+    #     resource_pattern_R = resource_pattern_R,
+    #     resource_pattern_R_p = resource_pattern_R_p
+    #   )
+    # 
+    # 
+  # } else {
     filei <- readRDS(paste0(pathexp1, i)) %>% getsim(., "simoutput") %>% as.data.frame()
     
     if (!anyNA(filei)) {
@@ -120,7 +120,8 @@ for (i in filesexp1) {
         ) %>%
         mutate(
           `survived?` = as.character(`survived?`),
-          `p-visited-trees` = as.numeric(`p-visited-trees`)
+          `p-visited-trees` = as.numeric(`p-visited-trees`),
+          `aggregation_type` = as.character(`aggregation_type`)
           # `feedingbout-on?` = as.character(`feedingbout-on?`)
           # `[run number]` = as.character(`[run number]`)
         )
@@ -155,7 +156,10 @@ for (i in filesexp1) {
       
       
     }
-  }
+    
+    # filesexp1 <- setdiff(filesexp1, i)
+    
+  # }
 }
 
 anyNA(filei)
@@ -168,8 +172,15 @@ dfexp1 <- dfexp1[-1, ]
 
 # check for NAs
 anyNA(dfexp1)
+
+# Drop columns that are not being assessed
+dfexp1 <- dfexp1 %>% 
+  dplyr::select(-c(`[run number]`, `feedingbout-on?`:`p-forage-param?`)) %>% 
+  dplyr::select((-c(g_n_visited_trees, g_n_unvisited_trees)))
+
+# Get only non NAs:
 # dfexp1NA <- dfexp1 %>% dplyr::filter(across(no_days:g_n_unvisited_trees, ~is.na(.)))
-dfexp1NA <- dfexp1 %>% dplyr::filter(!complete.cases(across(no_days:g_n_unvisited_trees))) # one run has dead monkeys
+dfexp1NA <- dfexp1 %>% dplyr::filter(!complete.cases(across(no_days:ncol(dfexp1)))) # one run has dead monkeys
 # dfexp1$g_n_unvisited_trees
 
 # filter NA cases
@@ -177,11 +188,11 @@ dfexp1 <- anti_join(dfexp1, dfexp1NA)
 
 # These are all true:
 dfexp1 %>% str()
-dfexp1$`feedingbout-on?` %>% str()
+# dfexp1$`feedingbout-on?` %>% str()
 # filei$`feedingbout-on?` %>% str()
 
 # This is = 1 (no repetitions or seeds in the nlrx run file)
-dfexp1$`[run number]` %>% str()
+# dfexp1$`[run number]` %>% str()
 # filei$`[run number]` %>% str()
 
 # Stimmt!
@@ -191,6 +202,9 @@ dfexp1$`[run number]` %>% str()
 dfexp1 %>% dplyr::filter(`survived?` == "no") %>% count() # none! wow. Why? Because I made the simulations to drop in the NetLogo code if the monkeys were dying
 
 
+# Some runs had density = 0
+dfexp1 <- dfexp1 %>% 
+  dplyr::filter(density != 0)
 
 # Wrangle data for our purposes
 dfexp1 <- dfexp1 %>% 
@@ -221,13 +235,25 @@ b <- dfexp1 %>% dplyr::filter(fragment_size == 0) ; dim(a) # 1 run with fragment
 c <- dfexp1 %>% dplyr::filter(density == 0) ; dim(a) # 1 run with fragment size = 0 (should be 100)
 
 
-# Filter it out
-dfexp1 <- dfexp1 %>% 
-  dplyr::filter(density != 0) %>% 
-  dplyr::filter(SDD != 0) %>% 
-  droplevels()
+# # Filter it out
+# dfexp1 <- dfexp1 %>% 
+#   dplyr::filter(density != 0) %>% 
+#   dplyr::filter(SDD != 0) %>% 
+#   droplevels()
 
 dfexp1 %>% str()
+
+
+dfexp1 %>% glimpse()
+
+# dfexp1 <- dfexp1[ -1, ]
+
+# Save dataset ----
+# dfexp1 %>% 
+#   xlsx::write.xlsx(paste0(pathexp1, "Exp1_results.xlsx"))
+dfexp1 %>% 
+  write.csv(paste0(pathexp1, "Exp1_results.csv"))
+
 
 
 
@@ -253,21 +279,22 @@ dfexp1gg %>%
   ggplot(
     aes(x = fragment_size, y = field.shape.factor
         , color = NN_feeding_trees
-        , shape = density
+        # , shape = density
         )
   ) +
   geom_point(size = 2, alpha = 0.8, 
              # position = position_dodge2(width = .8)
              position = position_jitter(width = .3, height = .08)
   ) +
-  scale_shape_manual(values = c(1,4)) +
+  # scale_shape_manual(values = c(1,4, 5)) +
   scale_color_viridis_c(option = "inferno") + 
   xlab("Fragment size (ha)") +
   ylab("Fragment shape") +
-  facet_wrap(vars(resource_pattern))
+  # facet_wrap(vars(resource_pattern, density))
+  facet_grid(cols = vars(resource_pattern), rows = vars(density))
 
-# ggsave(filename = paste0(pathexp1, "FragmentExamples.png"),
-#        dpi = 300, width = 30, height = 17, units = "cm")
+ggsave(filename = paste0(pathexp1, "FragmentExamples.png"),
+       dpi = 300, width = 30, height = 25, units = "cm")
 
 
 
@@ -304,7 +331,7 @@ dfexp1gg %>%
     ) %>% 
   ggplot() +
   aes(x = fragment_size, y = SDD
-      # , color = density
+      , color = resource_pattern
       , shape = density
       , group = fragment_size
   ) +
@@ -319,10 +346,10 @@ dfexp1gg %>%
   # scale_discrete_manual(aesthetics = "color", 
   #                       values = c("#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#012333")) +
   # scale_color_gradient(low = "#ffc197", high = "#d23600") +
-  scale_shape_manual(values = c(16,4)) +
+  scale_shape_manual(values = c(1,4, 5)) +
   # facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
-  # facet_grid(cols = vars(fragment_size), rows = vars(density)) +
-  facet_wrap(vars(field.shape.factor)) +
+  facet_grid(cols = vars(field.shape.factor), rows = vars(resource_pattern)) +
+  # facet_wrap(vars(field.shape.factor)) +
   # facet_wrap(vars(fragment_size)) +
   # rename axis:
   xlab("Fragment size (ha)") +
@@ -330,11 +357,54 @@ dfexp1gg %>%
   # create secondary axis:
   scale_x_continuous(
     sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)
-    , limits = c(0, 1600)
-    ) #+
+    , limits = c(0, 1100)
+    ) +
+  scale_color_viridis_d(option = 'viridis')
 
-# ggsave(filename = paste0(pathexp1, "SDD_fieldshapegrid.png"),
-#        dpi = 300, width = 25, height = 18, units = "cm")
+ggsave(filename = paste0(pathexp1, "SDD_fieldshapegrid.png"),
+       dpi = 300, width = 25, height = 18, units = "cm")
+
+
+## SDD 95 -----
+dfexp1gg %>% 
+  mutate(
+    fragment_size = as.numeric(as.character(fragment_size)),
+    field.shape.factor = as.factor(as.character(field.shape.factor))
+  ) %>% 
+  ggplot() +
+  aes(x = fragment_size, y = SDD_95
+      , color = resource_pattern
+      , shape = density
+      , group = fragment_size
+  ) +
+  # geom_boxplot(width = 50) +
+  geom_point(size = 2, alpha = 0.3
+             , position = position_jitter(width = 30)
+  ) +
+  # geom_smooth() +
+  # scale_colour_viridis_d("magma") +
+  # scale_color_manual(values = c("#922B21", "#D98880")) + # red densitty
+  # scale_color_manual(values = c("#85C1E9", "#154360")) + # blue densitty
+  # scale_discrete_manual(aesthetics = "color", 
+  #                       values = c("#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#012333")) +
+  # scale_color_gradient(low = "#ffc197", high = "#d23600") +
+  scale_shape_manual(values = c(1,4, 5)) +
+  # facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
+  facet_grid(cols = vars(field.shape.factor), rows = vars(resource_pattern)) +
+  # facet_wrap(vars(field.shape.factor)) +
+  # facet_wrap(vars(fragment_size)) +
+  # rename axis:
+  xlab("Fragment size (ha)") +
+  ylab("95th quantile SSD (m)") +
+  # create secondary axis:
+  scale_x_continuous(
+    sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)
+    , limits = c(0, 1100)
+  ) +
+  scale_color_viridis_d(option = 'viridis')
+
+ggsave(filename = paste0(pathexp1, "SDD_95_fieldshapegrid.png"),
+       dpi = 300, width = 25, height = 18, units = "cm")
 
 
 dfexp1gg %>% 
@@ -388,14 +458,15 @@ dfexp1gg %>%
       # , color = field.shape.factor
       # , color = `hr-size-final`
       # , color = density
+      , color = resource_pattern
       , shape = density
   ) +
-  geom_point(size = 2, alpha = 0.3) +
+  geom_point(size = 1.5, alpha = 0.3) +
   # geom_smooth() +
   # scale_colour_viridis_d("magma") +
   # scale_color_manual(values = c("#922B21", "#D98880")) + # red density
   # scale_color_manual(values = c("#85C1E9", "#154360")) + # blue density
-  scale_shape_manual(values = c(16,4)) +
+  scale_shape_manual(values = c(1,4, 5)) +
   facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
   # facet_wrap(vars(fragment_size, field.shape.factor)) +
   # rename axis:
@@ -406,11 +477,12 @@ dfexp1gg %>%
   scale_y_continuous(sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)) +
   scale_x_continuous(
     sec.axis = sec_axis(~ . , name = "Fragment size (ha)", breaks = NULL, labels = NULL)
-    , limits = c(30, 90)
-    )
+    , limits = c(0, 150)
+    ) +
+  scale_color_viridis_d(option = "viridis")
 
-# ggsave(filename = paste0(pathexp1, "NN_feeding_trees.png"),
-#        dpi = 300, width = 30, height = 18, units = "cm")
+ggsave(filename = paste0(pathexp1, "NN_feeding_trees.png"),
+       dpi = 300, width = 30, height = 18, units = "cm")
 
 
 # If clumpiness of seeds is higher with increasing distance between sleeping trees
@@ -422,16 +494,16 @@ dfexp1gg %>%
   ) %>% 
   ggplot() +
   aes(x = NN_sleeping_trees, y = NN_seeds
-      # , color = density
+      , color = resource_pattern
       , shape = density
   ) +
-  geom_point(size = 2, alpha = 0.3) +
+  geom_point(size = 1.5, alpha = 0.5) +
   # geom_smooth() +
   # scale_colour_viridis_d("magma") +
   # scale_color_manual(values = c("#922B21", "#D98880")) + # red density
   # scale_color_manual(values = c("#85C1E9", "#154360")) + # blue density
   # scale_color_manual(values = c("#922B21", "#D98880")) + # red n trees
-  scale_shape_manual(values = c(16,4)) +
+  scale_shape_manual(values = c(1,4, 5)) +
   facet_grid(cols = vars(fragment_size), rows = vars(field.shape.factor)) +
   # facet_wrap(vars(fragment_size, field.shape.factor)) +
   # rename axis:
@@ -442,19 +514,23 @@ dfexp1gg %>%
   scale_y_continuous(sec.axis = sec_axis(~ . , name = "Fragment shape\n", breaks = NULL, labels = NULL)) +
   scale_x_continuous(
     sec.axis = sec_axis(~ . , name = "Fragment size (ha)", breaks = NULL, labels = NULL)
-    , limits = c(50, 550)
+    , limits = c(0, 150)
     ) +
-  theme(axis.text.x = element_text(size=9))
+  scale_color_viridis_d(option = "viridis")
+  # theme(axis.text.x = element_text(size=9))
 
-# ggsave(filename = paste0(pathexp1, "NN_sleeping_trees.png"),
-#        dpi = 300, width = 30, height = 18, units = "cm")
+ggsave(filename = paste0(pathexp1, "NN_sleeping_trees.png"),
+       dpi = 300, width = 30, height = 18, units = "cm")
 
 
 
 
 # dfexp1_bkp <- dfexp1
-dfexp1 <- dfexp1_bkp
-dfexp1 %>% glimpse()
+# dfexp1 <- dfexp1_bkp
+
+
+
+
 
 # Liner regressions -----
 
@@ -538,21 +614,21 @@ corrplot::corrplot(M
                    # , mar = c(0,0,0,0)
 )
 # # Save corrplot
-# pdf(file = paste0(pathexp1, "Corrplot.pdf"))
-# corrplot::corrplot(M
-#                    , method = "color"
-#                    , insig='blank'
-#                    , addCoef.col ='black'
-#                    , number.cex = .58
-#                    , number.digits = 1
-#                    # , order = 'AOE'
-#                    , order = 'hclust'
-#                    # , order = 'alphabet'
-#                    , diag=FALSE
-#                    , type = "lower"
-# , mar = c(0,0,0,0)
-# )
-# dev.off()
+pdf(file = paste0(pathexp1, "Corrplot.pdf"))
+corrplot::corrplot(M
+                   , method = "color"
+                   , insig='blank'
+                   , addCoef.col ='black'
+                   , number.cex = .58
+                   , number.digits = 1
+                   # , order = 'AOE'
+                   , order = 'hclust'
+                   # , order = 'alphabet'
+                   , diag=FALSE
+                   , type = "lower"
+, mar = c(0,0,0,0)
+)
+dev.off()
 
 
 ## Remove correlated variables -----
